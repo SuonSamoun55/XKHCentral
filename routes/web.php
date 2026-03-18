@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\POSControllers\POSUserController\OrderController;
 use App\Http\Controllers\Api\ManagementSystemController\AdminNotificationController;
 use App\Http\Controllers\Api\POSControllers\POSAdminController\AdminOrderController;
 use App\Http\Controllers\Api\POSControllers\POSUserController\FavoriteController;
+use App\Http\Controllers\Api\POSControllers\POSUserController\NotificationController;
+
 // use
 // Use DashboardUserController;
 
@@ -53,8 +55,14 @@ Route::post('/pos-admin/items/{id}/update-location', [ItemPosController::class, 
 
 
     // Users Route
-     Route::get('/pos-system', [POSUserControllerItemList::class, 'getItems'])->name('user.posinterface');
-    //----------------------------------------------------------------------
+ Route::get('/pos-system', [POSUserControllerItemList::class, 'getItems'])->name('user.posinterface');
+     Route::get('/pos-system/favorites', [FavoriteController::class, 'getFavorites'])->name('user.pos.favorites');
+     Route::post('/pos-system/favorite-toggle', [FavoriteController::class, 'toggle'])
+    ->name('user.pos.favorite.toggle');
+     Route::get('/pos-system/notifications', [NotificationController::class, 'getNotifications'])->name('user.pos.notifications');
+     
+     
+     //----------------------------------------------------------------------
   Route::get('/pos-system/cart', [CartController::class, 'index'])->name('user.pos.cart');
 Route::get('/pos-system/cart/data', [CartController::class, 'getCart'])->name('user.pos.cart.data');
 Route::post('/pos-system/cart/add', [CartController::class, 'addToCart'])->name('user.pos.cart.add');

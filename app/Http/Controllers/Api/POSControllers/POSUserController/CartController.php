@@ -124,11 +124,12 @@ public function index()
             ]);
         }
 
-        return response()->json([
-            'success'   => true,
-            'message'   => 'Item added to cart successfully.',
-            'cart_item' => $cartItem,
-        ]);
+    $itemCount = $cart->items()->sum('qty');
+
+return response()->json([
+    'success' => true,
+    'cartCount' => $itemCount
+]);
     }
 
     public function updateQty(Request $request, $id)
