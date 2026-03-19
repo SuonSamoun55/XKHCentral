@@ -5,18 +5,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Create User</title>
+  <title>Connect Customer</title>
 
-  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
   <style>
     :root{
-      --primary: #ff6f91;       /* soft pink */
+      --primary: #ff6f91;
       --primary-dark: #e85a7a;
-      --ink: #0f172a;           /* strong text */
+      --ink: #0f172a;
       --muted: rgba(15,23,42,.62);
       --bg: #eef2f7;
       --card: #ffffff;
@@ -30,7 +28,6 @@
       margin: 0;
     }
 
-    /* ===== Layout ===== */
     .app-layout{
       max-width: 1200px;
       margin: 0 auto;
@@ -45,16 +42,14 @@
       min-width: 0;
     }
 
-    /* Ensure your aside has class="sidebar" */
     .sidebar{
       position: sticky;
-      top: 90px;                 /* below navbar */
+      top: 90px;
       height: calc(100vh - 110px);
       overflow: auto;
       flex-shrink: 0;
     }
 
-    /* ===== Page Header ===== */
     .page-top{
       display:flex;
       align-items:flex-start;
@@ -97,7 +92,6 @@
       font-size: .92rem;
     }
 
-    /* ===== Form Card ===== */
     .form-card{
       background: var(--card);
       border: 1px solid var(--border);
@@ -113,7 +107,6 @@
       position: relative;
     }
 
-    /* Accent bar */
     .form-card__top::before{
       content:"";
       position:absolute;
@@ -134,7 +127,6 @@
       padding: 18px;
     }
 
-    /* ===== Inputs ===== */
     .form-label{
       font-weight: 700;
       color: var(--ink);
@@ -155,10 +147,12 @@
       box-shadow: 0 0 0 .22rem rgba(255,111,145,.18) !important;
     }
 
-    .form-select{ cursor: pointer; }
+    .form-control[readonly]{
+      background: #f8fafc;
+    }
 
-    /* Icons inside inputs */
     .input-icon{ position: relative; }
+
     .input-icon i{
       position:absolute;
       left: 12px;
@@ -168,12 +162,12 @@
       font-size: 1.05rem;
       pointer-events:none;
     }
+
     .input-icon .form-control,
     .input-icon .form-select{
       padding-left: 40px;
     }
 
-    /* ===== Buttons ===== */
     .btn-primary-soft{
       border: 0;
       border-radius: 14px;
@@ -208,13 +202,11 @@
       color: var(--ink);
     }
 
-    /* Alerts */
     .alert{
       border-radius: 14px;
       border: 1px solid rgba(15,23,42,.08);
     }
 
-    /* ===== Responsive ===== */
     @media (max-width: 900px){
       .app-layout{ flex-direction: column; }
       .sidebar{
@@ -231,33 +223,37 @@
 <body>
   <div class="app-layout">
 
-        @include('ManagementSystemViews.AdminViews.Layouts.aside')
+    @include('ManagementSystemViews.AdminViews.Layouts.aside')
 
     <main class="app-content">
 
       <div class="page-top">
         <div>
           <h2 class="page-title">
-            <i class="bi bi-person-plus"></i>
-            Create New User
+            <i class="bi bi-link-45deg"></i>
+            Connect BC Customer
           </h2>
-          <p class="page-sub">Add a new account with role permissions.</p>
+          <p class="page-sub">Create login access for this Business Central customer.</p>
         </div>
 
         <div class="text-end">
-          <div class="breadcrumb-lite">Users / Create</div>
+          <div class="breadcrumb-lite">Users / Connect Customer</div>
         </div>
       </div>
 
       <div class="form-card">
         <div class="form-card__top">
-          <h5>Account Information</h5>
+          <h5>Customer Information</h5>
         </div>
 
         <div class="form-card__body">
 
           @if(session('success'))
             <div class="alert alert-success mb-3">{{ session('success') }}</div>
+          @endif
+
+          @if(session('error'))
+            <div class="alert alert-danger mb-3">{{ session('error') }}</div>
           @endif
 
           @if($errors->any())
@@ -270,87 +266,87 @@
             </div>
           @endif
 
-          <form method="POST" action="{{ route('users.store') }}">
+          <form method="POST" action="{{ route('users.store', $customer->id) }}">
             @csrf
 
             <div class="row g-3">
 
-  <!-- Name -->
-  <div class="col-12 col-lg-6">
-    <label class="form-label">Name</label>
-    <div class="input-icon">
-      <i class="bi bi-person"></i>
-      <input class="form-control"
-             type="text"
-             name="name"
-             value="{{ old('name') }}"
-             placeholder="Enter full name"
-             required>
-    </div>
-  </div>
+              <div class="col-12 col-lg-6">
+                <label class="form-label">BC Customer No</label>
+                <div class="input-icon">
+                  <i class="bi bi-person-badge"></i>
+                  <input class="form-control"
+                         type="text"
+                         value="{{ $customer->bc_customer_no }}"
+                         readonly>
+                </div>
+              </div>
 
-  <!-- Email -->
-  <div class="col-12 col-lg-6">
-    <label class="form-label">Email</label>
-    <div class="input-icon">
-      <i class="bi bi-envelope"></i>
-      <input class="form-control"
-             type="email"
-             name="email"
-             value="{{ old('email') }}"
-             placeholder="example@email.com"
-             required>
-    </div>
-  </div>
+              <div class="col-12 col-lg-6">
+                <label class="form-label">Name</label>
+                <div class="input-icon">
+                  <i class="bi bi-person"></i>
+                  <input class="form-control"
+                         type="text"
+                         value="{{ $customer->name }}"
+                         readonly>
+                </div>
+              </div>
 
-  <!-- Password -->
-  <div class="col-12 col-lg-6">
-    <label class="form-label">Password</label>
-    <div class="input-icon">
-      <i class="bi bi-lock"></i>
-      <input class="form-control"
-             type="password"
-             name="password"
-             placeholder="Create a strong password"
-             required>
-    </div>
-  </div>
+              <div class="col-12 col-lg-6">
+                <label class="form-label">Email</label>
+                <div class="input-icon">
+                  <i class="bi bi-envelope"></i>
+                  <input class="form-control"
+                         type="email"
+                         value="{{ $customer->email }}"
+                         readonly>
+                </div>
+              </div>
 
-  <!-- Role -->
-  <div class="col-12 col-lg-6">
-    <label class="form-label">Role</label>
-    <div class="input-icon">
-      <i class="bi bi-shield-check"></i>
-      <select class="form-select" name="role" required>
-        <option value="" disabled {{ old('role') ? '' : 'selected' }}>Select role</option>
-        <option value="customer" {{ old('role')=='customer'?'selected':'' }}>Customer</option>
-        <option value="admin" {{ old('role')=='admin'?'selected':'' }}>Admin</option>
-      </select>
-    </div>
-  </div>
+              <div class="col-12 col-lg-6">
+                <label class="form-label">Phone</label>
+                <div class="input-icon">
+                  <i class="bi bi-telephone"></i>
+                  <input class="form-control"
+                         type="text"
+                         value="{{ $customer->phone }}"
+                         readonly>
+                </div>
+              </div>
 
-  <!-- BC Customer No -->
-  <div class="col-12 col-lg-6">
-    <label class="form-label">BC Customer No</label>
-    <div class="input-icon">
-      <i class="bi bi-person-badge"></i>
-      <input class="form-control"
-             type="text"
-             name="BCcustomer_no"
-             value="{{ old('BCcustomer_no') }}"
-             placeholder="Enter BC Customer Number (Example: 10000)"
-             required>
-    </div>
-  </div>
+              <div class="col-12 col-lg-6">
+                <label class="form-label">Role</label>
+                <div class="input-icon">
+                  <i class="bi bi-shield-check"></i>
+                  <select class="form-select" name="role" required>
+                    <option value="" disabled {{ old('role') ? '' : 'selected' }}>Select role</option>
+                    <option value="customer" {{ old('role') == 'customer' ? 'selected' : '' }}>Customer</option>
+                    <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                  </select>
+                </div>
+              </div>
 
-</div>
+              <div class="col-12 col-lg-6">
+                <label class="form-label">Password</label>
+                <div class="input-icon">
+                  <i class="bi bi-lock"></i>
+                  <input class="form-control"
+                         type="password"
+                         name="password"
+                         placeholder="Create a password"
+                         required>
+                </div>
+              </div>
+
+            </div>
 
             <div class="d-flex gap-3 mt-4">
               <button class="btn btn-primary-soft flex-grow-1" type="submit">
-                <i class="bi bi-check2-circle me-1"></i> Create User
+                <i class="bi bi-check2-circle me-1"></i> Connect Customer
               </button>
 
-              <a class="btn btn-cancel-soft flex-grow-1" href="/users">
+              <a class="btn btn-cancel-soft flex-grow-1" href="{{ route('users.index') }}">
                 Cancel
               </a>
             </div>

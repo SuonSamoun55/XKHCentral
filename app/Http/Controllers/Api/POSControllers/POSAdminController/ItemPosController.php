@@ -20,7 +20,7 @@ class ItemPosController extends Controller
         $response = Http::withoutVerifying()
             ->withToken($token)
             ->get($this->bcUrl("items?\$filter=blocked eq false"));
-
+    
         if (!$response->successful()) {
             return response()->json([
                 'success' => false,

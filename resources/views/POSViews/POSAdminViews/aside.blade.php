@@ -32,12 +32,12 @@
                   <span class="nav-label">Pos System</span>
                 </button>
             </a>
-            {{-- <a href="/favorites">
+            <a href="/favorites">
                 <button class="nav-btn" type="button">
                   <span class="nav-icon">☆</span>
                   <span class="nav-label">Favorite</span>
                 </button>
-            </a> --}}
+            </a>
 
             {{-- <button class="nav-btn" type="button">
               <span class="nav-icon">📋</span>
@@ -52,12 +52,12 @@
             </a>
           </nav>
         </div>
-{{-- <a href="/admin/orders">
+<a href="/admin/orders">
               <button class="nav-btn" type="button">
                 <span class="nav-icon">◔</span>
                 <span class="nav-label">Approval order</span>
               </button>
-            </a> --}}
+            </a>
         <div class="sidebar-bottom">
                 @php $authUser = Auth::user(); @endphp
                  {{-- <a href="{{ route('profile') }}" class="user-link"> --}}

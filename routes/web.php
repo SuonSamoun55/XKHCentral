@@ -12,12 +12,19 @@ use App\Http\Controllers\Api\POSControllers\POSUserController\OrderController;
 use App\Http\Controllers\Api\ManagementSystemController\AdminNotificationController;
 use App\Http\Controllers\Api\POSControllers\POSAdminController\AdminOrderController;
 use App\Http\Controllers\Api\POSControllers\POSUserController\FavoriteController;
+use App\Http\Controllers\Api\ManagementSystemController\RoleController;
+use App\Http\Controllers\Api\ManagementSystemController\PermissionController;
 // use
 // Use DashboardUserController;
+
+// ================= ROLE MANAGEMENT =================
+
+
 
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
+
 Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])
     ->name('logout')
     ->middleware('auth');
@@ -25,15 +32,29 @@ Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])
     Route::middleware('auth')->group(function () {
 
     //+++++++++++++++++ Project Management Route+++++++++++++++++++++++++++++
-    Route::get('/users', [WebUserController::class, 'index'])->name('users.index');
     // Admins Route
     Route::get('/admin', [DashboardController::class, 'index'])->name('pos.index');
-    Route::get('/users/create', [WebUserController::class, 'create'])->name('users.create');
-    Route::post('/users/store', [WebUserController::class, 'store'])->name('users.store');
-    Route::get('/users/{id}', [WebUserController::class, 'show'])->name('users.show');
+//    Route::get('/users', [WebUserController::class, 'index'])->name('users.index');
     Route::get('/admin/notification', [AdminNotificationController::class, 'index'])->name('admin.notification');    // Users Route
     Route::get('/', [DashboardUserController::class, 'index'])->name('user.index');
-
+Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
+Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create');
+Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
+Route::get('/roles/{id}/edit', [RoleController::class, 'edit'])->name('roles.edit');
+Route::put('/roles/{id}', [RoleController::class, 'update'])->name('roles.update');
+Route::delete('/roles/{id}', [RoleController::class, 'destroy'])->name('roles.destroy');
+// ================= PERMISSION =================
+Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
+Route::get('/permissions/create', [PermissionController::class, 'create'])->name('permissions.create');
+Route::post('/permissions', [PermissionController::class, 'store'])->name('permissions.store');
+Route::get('/permissions/{id}/edit', [PermissionController::class, 'edit'])->name('permissions.edit');
+Route::put('/permissions/{id}', [PermissionController::class, 'update'])->name('permissions.update');
+Route::delete('/permissions/{id}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
+Route::get('/users', [WebUserController::class, 'index'])->name('users.index');
+Route::get('/users/sync-bc', [WebUserController::class, 'syncBCCustomers'])->name('users.sync');
+Route::get('/users/create/{id}', [WebUserController::class, 'create'])->name('users.create');
+Route::post('/users/store/{id}', [WebUserController::class, 'store'])->name('users.store');
+Route::get('/users/{id}', [WebUserController::class, 'show'])->name('users.show');
     //----------------------------------------------------------------------
 
     //+++++++++++++++++ POS Route+++++++++++++++++++++++++++++
