@@ -11,12 +11,15 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
 
-            // BC link
-            $table->string('bc_customer_no')->unique();
+            // company first, no foreign key yet
+            $table->unsignedBigInteger('company_id')->nullable();
 
-            // user info (from BC)
+            // BC link
+            $table->string('bc_customer_no');
+
+            // user info
             $table->string('name');
-            $table->string('email')->nullable()->unique();
+            $table->string('email')->nullable();
             $table->string('phone')->nullable();
 
             // login
@@ -29,6 +32,8 @@ return new class extends Migration
 
             $table->rememberToken();
             $table->timestamps();
+
+            $table->unique(['company_id', 'bc_customer_no']);
         });
     }
 

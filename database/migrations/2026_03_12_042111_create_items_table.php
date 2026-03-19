@@ -7,30 +7,36 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     public function up(): void
-    {
-        Schema::create('items', function (Blueprint $table) {
-            $table->id();
+{
+    Schema::create('items', function (Blueprint $table) {
+    $table->id();
 
-            $table->string('bc_id')->unique();
-            $table->string('number');
-            $table->string('display_name')->nullable();
+    $table->foreignId('company_id')
+        ->constrained('companies')
+        ->onDelete('cascade');
 
-            $table->decimal('unit_price', 18, 2)->default(0);
-            $table->integer('inventory')->default(0);
+    $table->string('bc_id');
+    $table->string('number');
+    $table->string('display_name')->nullable();
 
-            $table->boolean('blocked')->default(false);
+    $table->decimal('unit_price', 18, 2)->default(0);
+    $table->integer('inventory')->default(0);
 
-            $table->string('item_category_code')->nullable();
-            $table->string('base_unit_of_measure_code')->nullable();
+    $table->boolean('blocked')->default(false);
 
-            $table->boolean('price_includes_tax')->default(false);
+    $table->string('item_category_code')->nullable();
+    $table->string('base_unit_of_measure_code')->nullable();
 
-            $table->string('image_url')->nullable();
+    $table->boolean('price_includes_tax')->default(false);
 
-            $table->timestamps();
-        });
-    }
+    $table->string('image_url')->nullable();
+    $table->string('default_location_code')->nullable();
 
+    $table->timestamps();
+
+    $table->unique(['company_id', 'bc_id']);
+});
+}
     public function down(): void
     {
         Schema::dropIfExists('items');

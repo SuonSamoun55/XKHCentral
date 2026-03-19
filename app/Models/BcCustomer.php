@@ -12,6 +12,8 @@ class BcCustomer extends Model
     protected $table = 'bc_customers';
 
     protected $fillable = [
+        'company_id',
+        'bc_id',
         'bc_customer_no',
         'name',
         'email',
@@ -31,6 +33,14 @@ class BcCustomer extends Model
             \App\Models\MagamentSystemModel\User::class,
             'bc_customer_no',
             'bc_customer_no'
+        );
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(
+            \App\Models\MagamentSystemModel\Company::class,
+            'company_id'
         );
     }
 }

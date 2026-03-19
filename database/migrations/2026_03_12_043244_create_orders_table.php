@@ -6,42 +6,49 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
-    {
-        Schema::create('orders', function (Blueprint $table) {
+   public function up(): void
+{
+    Schema::create('orders', function (Blueprint $table) {
 
-            $table->id();
+        $table->id();
 
-            $table->string('order_no')->unique();
+        // 🔥 REQUIRED
+        $table->foreignId('company_id')
+              ->constrained('companies')
+              ->cascadeOnDelete();
 
-            $table->foreignId('user_id')
-                  ->constrained()
-                  ->cascadeOnDelete();
+        $table->string('order_no')->unique();
 
-            $table->string('currency_code')->default('USD');
+        $table->foreignId('user_id')
+              ->constrained()
+              ->cascadeOnDelete();
 
-            $table->decimal('currency_factor',18,6)->default(1);
+        // optional but recommended
+        $table->string('customer_no')->nullable();
 
-            $table->decimal('subtotal',18,2)->default(0);
+        $table->string('currency_code')->default('USD');
+        $table->decimal('currency_factor',18,6)->default(1);
 
-            $table->decimal('discount_amount',18,2)->default(0);
+        $table->decimal('subtotal',18,2)->default(0);
+        $table->decimal('discount_amount',18,2)->default(0);
+        $table->decimal('total_amount',18,2)->default(0);
 
-            $table->decimal('total_amount',18,2)->default(0);
+        // 🔥 IMPORTANT for POS
+        $table->string('location_code')->nullable();
 
-            $table->string('status')->default('pending');
-            // pending, completed, cancelled
+        $table->string('status')->default('pending');
+        // pending, completed, cancelled
 
-            $table->string('sync_status')->default('pending');
-            // pending, synced, failed
+        $table->string('sync_status')->default('pending');
+        // pending, synced, failed
 
-            $table->string('bc_document_no')->nullable();
+        $table->string('bc_document_no')->nullable();
 
-            $table->timestamp('checked_out_at')->nullable();
+        $table->timestamp('checked_out_at')->nullable();
 
-            $table->timestamps();
-
-        });
-    }
+        $table->timestamps();
+    });
+}
 
     public function down(): void
     {

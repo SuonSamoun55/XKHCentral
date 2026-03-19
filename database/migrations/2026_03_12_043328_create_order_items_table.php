@@ -12,14 +12,20 @@ return new class extends Migration
 
             $table->id();
 
+            // 🔥 link to order
             $table->foreignId('order_id')
-                  ->constrained()
+                  ->constrained('orders')
                   ->cascadeOnDelete();
 
+            // 🔥 VERY IMPORTANT (multi-company)
+            $table->foreignId('company_id')
+                  ->constrained('companies')
+                  ->cascadeOnDelete();
+
+            // 🔥 link to item
             $table->foreignId('item_id')
-                  ->nullable()
                   ->constrained('items')
-                  ->nullOnDelete();
+                  ->cascadeOnDelete();
 
             $table->string('item_no');
             $table->string('item_name')->nullable();
@@ -28,6 +34,9 @@ return new class extends Migration
 
             $table->decimal('unit_price', 18, 2)->default(0);
             $table->decimal('line_total', 18, 2)->default(0);
+
+            // 🔥 IMPORTANT for stock/location later
+            $table->string('location_code')->nullable();
 
             $table->timestamps();
         });

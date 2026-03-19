@@ -32,6 +32,19 @@
                   <span class="nav-label">Pos System</span>
                 </button>
             </a>
+            <a href="/companies">
+    <button class="nav-btn" type="button">
+        <span class="nav-icon">🏢</span>
+        <span class="nav-label">Companies</span>
+    </button>
+</a>
+
+<a href="/companies/select">
+    <button class="nav-btn" type="button">
+        <span class="nav-icon">🔄</span>
+        <span class="nav-label">Select Company</span>
+    </button>
+</a>
             {{-- <a href="/favorites">
                 <button class="nav-btn" type="button">
                   <span class="nav-icon">☆</span>

@@ -14,13 +14,24 @@ use App\Http\Controllers\Api\POSControllers\POSAdminController\AdminOrderControl
 use App\Http\Controllers\Api\POSControllers\POSUserController\FavoriteController;
 use App\Http\Controllers\Api\ManagementSystemController\RoleController;
 use App\Http\Controllers\Api\ManagementSystemController\PermissionController;
+use App\Http\Controllers\Api\ManagementSystemController\CompanyController;
+use App\Http\Controllers\Api\ManagementSystemController\CompanySelectionController;
+
 // use
 // Use DashboardUserController;
 
 // ================= ROLE MANAGEMENT =================
+Route::get('/users', [WebUserController::class, 'index'])->name('users.index');
+Route::get('/users/sync-bc', [WebUserController::class, 'syncBCCustomers'])->name('users.sync');
+Route::get('/users/create/{id}', [WebUserController::class, 'create'])->name('users.create');
+Route::post('/users/store/{id}', [WebUserController::class, 'store'])->name('users.store');
+Route::get('/users/{id}', [WebUserController::class, 'show'])->name('users.show');
 
+Route::get('/companies', [CompanyController::class, 'index'])->name('companies.index');
+Route::get('/companies/create', [CompanyController::class, 'create'])->name('companies.create');
+Route::post('/companies', [CompanyController::class, 'store'])->name('companies.store');
 
-
+Route::post('/companies/select', [CompanySelectionController::class, 'select'])->name('companies.select');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
@@ -50,12 +61,10 @@ Route::post('/permissions', [PermissionController::class, 'store'])->name('permi
 Route::get('/permissions/{id}/edit', [PermissionController::class, 'edit'])->name('permissions.edit');
 Route::put('/permissions/{id}', [PermissionController::class, 'update'])->name('permissions.update');
 Route::delete('/permissions/{id}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
-Route::get('/users', [WebUserController::class, 'index'])->name('users.index');
-Route::get('/users/sync-bc', [WebUserController::class, 'syncBCCustomers'])->name('users.sync');
-Route::get('/users/create/{id}', [WebUserController::class, 'create'])->name('users.create');
-Route::post('/users/store/{id}', [WebUserController::class, 'store'])->name('users.store');
-Route::get('/users/{id}', [WebUserController::class, 'show'])->name('users.show');
+
     //----------------------------------------------------------------------
+
+
 
     //+++++++++++++++++ POS Route+++++++++++++++++++++++++++++
     // Admins Route
@@ -74,8 +83,14 @@ Route::post('/pos-admin/items/{id}/update-location', [ItemPosController::class, 
 
 
     // Users Route
-     Route::get('/pos-system', [POSUserControllerItemList::class, 'getItems'])->name('user.posinterface');
-    //----------------------------------------------------------------------
+ Route::get('/pos-system', [POSUserControllerItemList::class, 'getItems'])->name('user.posinterface');
+     Route::get('/pos-system/favorites', [FavoriteController::class, 'getFavorites'])->name('user.pos.favorites');
+     Route::post('/pos-system/favorite-toggle', [FavoriteController::class, 'toggle'])
+    ->name('user.pos.favorite.toggle');
+    //  Route::get('/pos-system/notifications', [NotificationController::class, 'getNotifications'])->name('user.pos.notifications');
+
+
+     //----------------------------------------------------------------------
   Route::get('/pos-system/cart', [CartController::class, 'index'])->name('user.pos.cart');
 Route::get('/pos-system/cart/data', [CartController::class, 'getCart'])->name('user.pos.cart.data');
 Route::post('/pos-system/cart/add', [CartController::class, 'addToCart'])->name('user.pos.cart.add');

@@ -10,6 +10,7 @@ use App\Models\MagamentSystemModel\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
@@ -29,9 +30,17 @@ class OrderController extends Controller
             ], 401);
         }
 
-        $cart = Cart::with('items')
+        $companyId = session('selected_company_id');
+
+        if (!$companyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No company selected.',
+            ], 422);
+        }
+
+        $cart = Cart::with('items.item')
             ->where('user_id', $user->id)
-            ->where('status', 'active')
             ->first();
 
         if (!$cart || $cart->items->isEmpty()) {
@@ -44,61 +53,79 @@ class OrderController extends Controller
         DB::beginTransaction();
 
         try {
-            $subtotal = $cart->items->sum('line_total');
+            $subtotal = 0;
             $discountAmount = 0;
-            $totalAmount = $subtotal - $discountAmount;
-
-            $order = Order::create([
-                'order_no'         => 'ORD-' . now()->format('YmdHis') . '-' . $user->id,
-                'user_id'          => $user->id,
-                'currency_code'    => strtoupper($validated['currency_code']),
-                'currency_factor'  => $validated['currency_factor'] ?? 1,
-                'subtotal'         => $subtotal,
-                'discount_amount'  => $discountAmount,
-                'total_amount'     => $totalAmount,
-                'status'           => 'pending',
-                'sync_status'      => 'pending',
-                'checked_out_at'   => now(),
-            ]);
-
-            $itemNames = [];
 
             foreach ($cart->items as $cartItem) {
-                OrderItem::create([
-                    'order_id'   => $order->id,
-                    'item_id'    => $cartItem->item_id,
-                    'item_no'    => $cartItem->item_no,
-                    'item_name'  => $cartItem->item_name,
-                    'qty'        => $cartItem->qty,
-                    'unit_price' => $cartItem->unit_price,
-                    'line_total' => $cartItem->line_total,
-                ]);
+                $subtotal += ($cartItem->price * $cartItem->quantity);
+            }
 
-                $itemNames[] = $cartItem->item_name;
+            $totalAmount = $subtotal - $discountAmount;
+
+            $orderNo = 'ORD-' . now()->format('YmdHis') . '-' . strtoupper(Str::random(4));
+
+            $firstCartItem = $cart->items->first();
+            $locationCode = $firstCartItem->item->default_location_code ?? null;
+
+            $order = Order::create([
+                'company_id'      => $companyId,
+                'order_no'        => $orderNo,
+                'user_id'         => $user->id,
+                'customer_no'     => $user->bc_customer_no ?? null,
+                'currency_code'   => $validated['currency_code'],
+                'currency_factor' => $validated['currency_factor'] ?? 1,
+                'subtotal'        => $subtotal,
+                'discount_amount' => $discountAmount,
+                'total_amount'    => $totalAmount,
+                'location_code'   => $locationCode,
+                'status'          => 'pending',
+                'sync_status'     => 'pending',
+                'checked_out_at'  => now(),
+            ]);
+
+            foreach ($cart->items as $cartItem) {
+                $item = $cartItem->item;
+
+                if (!$item) {
+                    throw new \Exception('One of the cart items no longer exists.');
+                }
+
+                if ((int) $item->company_id !== (int) $companyId) {
+                    throw new \Exception("Item {$item->display_name} does not belong to the selected company.");
+                }
+
+                $lineTotal = $cartItem->price * $cartItem->quantity;
+
+                OrderItem::create([
+                    'order_id'      => $order->id,
+                    'company_id'    => $companyId,
+                    'item_id'       => $cartItem->item_id,
+                    'item_no'       => $item->number,
+                    'item_name'     => $item->display_name,
+                    'qty'           => $cartItem->quantity,
+                    'unit_price'    => $cartItem->price,
+                    'line_total'    => $lineTotal,
+                    'location_code' => $item->default_location_code,
+                ]);
             }
 
             Notification::create([
                 'user_id' => $user->id,
-                'order_id' => $order->id,
-                'item_id' => null,
-                'type' => 'order',
-                'title' => 'New Order',
-                'message' => 'User ' . $user->name . ' placed order ' . $order->order_no . ' for item(s): ' . implode(', ', $itemNames),
+                'title' => 'Order Created',
+                'message' => 'Your order #' . $order->order_no . ' has been created successfully.',
+                'type' => 'user',
                 'is_read' => false,
             ]);
 
             $cart->items()->delete();
 
-            $cart->update([
-                'status' => 'checked_out',
-            ]);
-
             DB::commit();
 
             return response()->json([
-                'success' => true,
-                'message' => 'Checkout completed successfully.',
-                'order'   => $order->load('items'),
+                'success'  => true,
+                'message'  => 'Checkout successful.',
+                'order_id' => $order->id,
+                'order_no' => $order->order_no,
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -109,27 +136,5 @@ class OrderController extends Controller
                 'error'   => $e->getMessage(),
             ], 500);
         }
-    }
-
-    public function history()
-    {
-        $user = Auth::user();
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthenticated.',
-            ], 401);
-        }
-
-        $orders = Order::with('items')
-            ->where('user_id', $user->id)
-            ->latest()
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'orders'  => $orders,
-        ]);
     }
 }

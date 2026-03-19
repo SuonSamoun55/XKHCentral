@@ -13,7 +13,11 @@ class WebUserController extends Controller
 {
     public function index()
     {
-        $customers = BcCustomer::orderBy('id', 'desc')->get();
+        $companyId = session('selected_company_id');
+
+        $customers = BcCustomer::where('company_id', $companyId)
+            ->orderBy('id', 'desc')
+            ->get();
 
         return view(
             'ManagementSystemViews.AdminViews.Layouts.UserinfoView.UserList',
@@ -23,6 +27,13 @@ class WebUserController extends Controller
 
     public function syncBCCustomers()
     {
+        $companyId = session('selected_company_id');
+
+        if (!$companyId) {
+            return redirect()->route('users.index')
+                ->with('error', 'Please select a company first.');
+        }
+
         $token = $this->getToken();
 
         if (!$token) {
@@ -31,6 +42,11 @@ class WebUserController extends Controller
         }
 
         $url = $this->bcUrl("customers?\$select=id,number,displayName,email,phoneNumber");
+
+        if (!$url) {
+            return redirect()->route('users.index')
+                ->with('error', 'Business Central URL could not be built.');
+        }
 
         $response = Http::withoutVerifying()
             ->withToken($token)
@@ -45,16 +61,23 @@ class WebUserController extends Controller
 
         foreach ($customers as $customer) {
             $customerNo = $customer['number'] ?? null;
+            $bcId = $customer['id'] ?? null;
 
-            if (!$customerNo) {
+            if (!$customerNo || !$bcId) {
                 continue;
             }
 
-            $isConnected = User::where('bc_customer_no', $customerNo)->exists();
+            $isConnected = User::where('bc_customer_no', $customerNo)
+                ->where('company_id', $companyId)
+                ->exists();
 
             BcCustomer::updateOrCreate(
-                ['bc_customer_no' => $customerNo],
                 [
+                    'bc_customer_no' => $customerNo,
+                    'company_id' => $companyId,
+                ],
+                [
+                    'bc_id' => $bcId,
                     'name' => $customer['displayName'] ?? '',
                     'email' => $customer['email'] ?? null,
                     'phone' => $customer['phoneNumber'] ?? null,
@@ -71,7 +94,9 @@ class WebUserController extends Controller
 
     public function create($id)
     {
-        $customer = BcCustomer::findOrFail($id);
+        $companyId = session('selected_company_id');
+
+        $customer = BcCustomer::where('company_id', $companyId)->findOrFail($id);
 
         if ($customer->connect_status === 'connected') {
             return redirect()->route('users.index')
@@ -86,7 +111,14 @@ class WebUserController extends Controller
 
     public function store(Request $request, $id)
     {
-        $customer = BcCustomer::findOrFail($id);
+        $companyId = session('selected_company_id');
+
+        if (!$companyId) {
+            return redirect()->route('users.index')
+                ->with('error', 'Please select a company first.');
+        }
+
+        $customer = BcCustomer::where('company_id', $companyId)->findOrFail($id);
 
         if ($customer->connect_status === 'connected') {
             return redirect()->route('users.index')
@@ -105,6 +137,7 @@ class WebUserController extends Controller
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
             'bc_customer_no' => $customer->bc_customer_no,
+            'company_id' => $companyId,
             'status' => true,
             'linked_at' => now(),
         ]);
@@ -120,9 +153,12 @@ class WebUserController extends Controller
 
     public function show($id)
     {
-        $user = User::findOrFail($id);
+        $companyId = session('selected_company_id');
 
-        return view('ManagementSystemViews.AdminViews.Layouts.UserinfoView.show',
+        $user = User::where('company_id', $companyId)->findOrFail($id);
+
+        return view(
+            'ManagementSystemViews.AdminViews.Layouts.UserinfoView.show',
             compact('user')
         );
     }

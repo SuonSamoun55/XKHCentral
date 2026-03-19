@@ -3,47 +3,78 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Routing\Controller as BaseController;
+use App\Models\MagamentSystemModel\Company;
+use App\Models\MagamentSystemModel\CompanyConnection;
 use Illuminate\Support\Facades\Http;
 
 class Controller extends BaseController
 {
-    protected $baseUrl;
-    protected $companyId;
+    protected ?string $baseUrl = null;
+    protected ?string $companyId = null;
+    protected ?CompanyConnection $connection = null;
 
-    public function __construct()
+    protected function loadCompanyConnection(): void
     {
-        $this->baseUrl   = env('BC_BASE_URL');
-        $this->companyId = env('BC_COMPANY_ID');
+        if ($this->connection) {
+            return;
+        }
+
+        $selectedCompanyId = session('selected_company_id');
+
+        if (!$selectedCompanyId) {
+            return;
+        }
+
+        $company = Company::with('connection')->find($selectedCompanyId);
+
+        /** @var CompanyConnection|null $connection */
+        $connection = $company?->connection;
+
+        if (!$connection || !$connection->status) {
+            return;
+        }
+
+        $this->connection = $connection;
+        $this->baseUrl = $connection->base_url;
+        $this->companyId = $connection->company_bc_id;
     }
 
-    protected function bcUrl(string $path): string
+    protected function bcUrl(string $path): ?string
     {
+        $this->loadCompanyConnection();
+
+        if (!$this->baseUrl || !$this->companyId) {
+            return null;
+        }
+
         return rtrim($this->baseUrl, '/') . '/companies(' . $this->companyId . ')/' . ltrim($path, '/');
     }
 
-protected function getToken(): ?string
-{
-    $loginUrl = env('BC_TOKEN_URL');
+    protected function getToken(): ?string
+    {
+        $this->loadCompanyConnection();
 
-    if (!$loginUrl) {
-        return null;
-    }
+        if (!$this->connection) {
+            return null;
+        }
 
-    $response = Http::withoutVerifying()->asForm()->post($loginUrl, [
-        'grant_type'    => 'client_credentials',
-        'client_id'     => trim(env('BC_CLIENT_ID', '')),
-        'client_secret' => trim(env('BC_CLIENT_SECRET', '')),
-        'scope'         => 'https://api.businesscentral.dynamics.com/.default',
-    ]);
-
-    if (!$response->successful()) {
-        logger()->error('BC token failed', [
-            'status' => $response->status(),
-            'body'   => $response->body(),
+        $response = Http::withoutVerifying()->asForm()->post($this->connection->token_url, [
+            'grant_type' => 'client_credentials',
+            'client_id' => trim($this->connection->client_id),
+            'client_secret' => trim($this->connection->client_secret),
+            'scope' => 'https://api.businesscentral.dynamics.com/.default',
         ]);
-        return null;
-    }
 
-    return $response->json()['access_token'] ?? null;
-}
+        if (!$response->successful()) {
+            logger()->error('BC token failed from base controller', [
+                'selected_company_id' => session('selected_company_id'),
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return null;
+        }
+
+        return $response->json()['access_token'] ?? null;
+    }
 }

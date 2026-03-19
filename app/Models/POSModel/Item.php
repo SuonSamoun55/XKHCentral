@@ -3,12 +3,14 @@
 namespace App\Models\POSModel;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\MagamentSystemModel\Company;
 
 class Item extends Model
 {
     protected $table = 'items';
 
     protected $fillable = [
+        'company_id',
         'bc_id',
         'number',
         'display_name',
@@ -21,6 +23,11 @@ class Item extends Model
         'image_url',
         'default_location_code',
     ];
+
+    public function company()
+    {
+        return $this->belongsTo(company::class);
+    }
 
     public function cartItems()
     {
