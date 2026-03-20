@@ -11,19 +11,10 @@ class BusinessCentralService
 
     public function __construct()
     {
-        $companyId = session('selected_company_id');
+        $company = Company::with('companyConnection')->first();
 
-        if (!$companyId) {
-            return;
-        }
-
-        $company = Company::with('connection')->find($companyId);
-
-        /** @var CompanyConnection|null $connection */
-        $connection = $company?->connection;
-
-        if ($connection && $connection->status) {
-            $this->connection = $connection;
+        if ($company && $company->companyConnection && $company->companyConnection->status) {
+            $this->connection = $company->companyConnection;
         }
     }
 

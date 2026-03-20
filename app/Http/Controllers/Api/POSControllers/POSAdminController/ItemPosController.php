@@ -4,54 +4,55 @@ namespace App\Http\Controllers\Api\POSControllers\POSAdminController;
 
 use App\Http\Controllers\Controller;
 use App\Models\POSModel\Item;
+use App\Models\MagamentSystemModel\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class ItemPosController extends Controller
 {
-   public function index()
-{
-    $token = $this->getToken();
-    $url = $this->bcUrl("items?\$filter=blocked eq false");
+    public function index()
+    {
+        $token = $this->getToken();
+        $url = $this->bcUrl("items?\$filter=blocked eq false");
 
-    if (!$token) {
-        return response()->json([
-            'error' => 'Business Central authentication failed',
-            'selected_company_id' => session('selected_company_id'),
-        ], 401);
+        if (!$token) {
+            return response()->json([
+                'error' => 'Business Central authentication failed',
+            ], 401);
+        }
+
+        if (!$url) {
+            return response()->json([
+                'error' => 'Business Central URL could not be built',
+            ], 422);
+        }
+
+        $response = Http::withoutVerifying()
+            ->withToken($token)
+            ->get($url);
+
+        if (!$response->successful()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch items from API',
+                'details' => $response->body()
+            ], 500);
+        }
+
+        $items = $response->json()['value'] ?? [];
+
+        $localItems = Item::select('bc_id', 'default_location_code')
+            ->get()
+            ->keyBy('bc_id');
+
+        foreach ($items as &$item) {
+            $item['defaultLocationCode'] = $item['defaultLocationCode']
+                ?? $item['locationCode']
+                ?? ($localItems[$item['id']]->default_location_code ?? null);
+        }
+
+        return view('POSViews.POSAdminViews.ItemList', compact('items'));
     }
-
-    if (!$url) {
-        return response()->json([
-            'error' => 'Business Central URL could not be built',
-            'selected_company_id' => session('selected_company_id'),
-        ], 422);
-    }
-
-    $response = Http::withoutVerifying()
-        ->withToken($token)
-        ->get($url);
-
-    if (!$response->successful()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to fetch items from API',
-            'details' => $response->body()
-        ], 500);
-    }
-
-    $items = $response->json()['value'] ?? [];
-
-    $localItems = Item::select('bc_id', 'default_location_code')->get()->keyBy('bc_id');
-
-    foreach ($items as &$item) {
-        $item['defaultLocationCode'] = $item['defaultLocationCode']
-            ?? $item['locationCode']
-            ?? ($localItems[$item['id']]->default_location_code ?? null);
-    }
-
-    return view('POSViews.POSAdminViews.ItemList', compact('items'));
-}
 
     public function showItem(string $id)
     {
@@ -117,59 +118,59 @@ class ItemPosController extends Controller
             ->header('Cache-Control', 'public, max-age=86400');
     }
 
-  public function syncFromAl(Request $request)
-{
-    $companyId = session('selected_company_id');
+    public function syncFromAl(Request $request)
+    {
+        $companyId = Company::value('id');
 
-    if (!$companyId) {
+        if (!$companyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No company found.',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'items' => ['required', 'array'],
+            'items.*.id' => ['required', 'string'],
+            'items.*.number' => ['required', 'string'],
+            'items.*.displayName' => ['nullable', 'string'],
+            'items.*.unitPrice' => ['nullable', 'numeric'],
+            'items.*.inventory' => ['nullable', 'numeric'],
+            'items.*.blocked' => ['nullable'],
+            'items.*.itemCategoryCode' => ['nullable', 'string'],
+            'items.*.baseUnitOfMeasureCode' => ['nullable', 'string'],
+            'items.*.priceIncludesTax' => ['nullable'],
+            'items.*.imageUrl' => ['nullable', 'string'],
+            'items.*.defaultLocationCode' => ['nullable', 'string'],
+        ]);
+
+        foreach ($validated['items'] as $item) {
+            $imageUrl = !empty($item['imageUrl']) ? $item['imageUrl'] : null;
+
+            Item::updateOrCreate(
+                [
+                    'company_id' => $companyId,
+                    'bc_id' => $item['id'],
+                ],
+                [
+                    'number' => $item['number'],
+                    'display_name' => $item['displayName'] ?? null,
+                    'unit_price' => $item['unitPrice'] ?? 0,
+                    'inventory' => (int) ($item['inventory'] ?? 0),
+                    'blocked' => filter_var($item['blocked'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                    'item_category_code' => $item['itemCategoryCode'] ?? null,
+                    'base_unit_of_measure_code' => $item['baseUnitOfMeasureCode'] ?? null,
+                    'price_includes_tax' => filter_var($item['priceIncludesTax'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                    'image_url' => $imageUrl,
+                    'default_location_code' => $item['defaultLocationCode'] ?? null,
+                ]
+            );
+        }
+
         return response()->json([
-            'success' => false,
-            'message' => 'No company selected.',
-        ], 422);
+            'success' => true,
+            'message' => 'Items synced successfully.',
+            'count' => count($validated['items']),
+        ]);
     }
-
-    $validated = $request->validate([
-        'items' => ['required', 'array'],
-        'items.*.id' => ['required', 'string'],
-        'items.*.number' => ['required', 'string'],
-        'items.*.displayName' => ['nullable', 'string'],
-        'items.*.unitPrice' => ['nullable', 'numeric'],
-        'items.*.inventory' => ['nullable', 'numeric'],
-        'items.*.blocked' => ['nullable'],
-        'items.*.itemCategoryCode' => ['nullable', 'string'],
-        'items.*.baseUnitOfMeasureCode' => ['nullable', 'string'],
-        'items.*.priceIncludesTax' => ['nullable'],
-        'items.*.imageUrl' => ['nullable', 'string'],
-        'items.*.defaultLocationCode' => ['nullable', 'string'],
-    ]);
-
-    foreach ($validated['items'] as $item) {
-        $imageUrl = !empty($item['imageUrl']) ? $item['imageUrl'] : null;
-
-        Item::updateOrCreate(
-            [
-                'company_id' => $companyId,
-                'bc_id' => $item['id'],
-            ],
-            [
-                'number' => $item['number'],
-                'display_name' => $item['displayName'] ?? null,
-                'unit_price' => $item['unitPrice'] ?? 0,
-                'inventory' => (int) ($item['inventory'] ?? 0),
-                'blocked' => filter_var($item['blocked'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                'item_category_code' => $item['itemCategoryCode'] ?? null,
-                'base_unit_of_measure_code' => $item['baseUnitOfMeasureCode'] ?? null,
-                'price_includes_tax' => filter_var($item['priceIncludesTax'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                'image_url' => $imageUrl,
-                'default_location_code' => $item['defaultLocationCode'] ?? null,
-            ]
-        );
-    }
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Items synced successfully.',
-        'count' => count($validated['items']),
-    ]);
-}
 }

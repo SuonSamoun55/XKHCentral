@@ -27,11 +27,11 @@ class OrderAction extends Model
 
     public function user()
     {
-        return $this->belongsTo(\App\Models\User::class, 'user_id');
+        return $this->belongsTo(\App\Models\MagamentSystemModel\User::class, 'user_id');
     }
 
     public function actionBy()
     {
-        return $this->belongsTo(\App\Models\User::class, 'action_by');
+        return $this->belongsTo(\App\Models\MagamentSystemModel\User::class, 'action_by');
     }
 }

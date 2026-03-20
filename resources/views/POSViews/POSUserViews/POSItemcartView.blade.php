@@ -185,36 +185,47 @@
 
 
         document.getElementById('checkoutBtn').onclick = async function() {
+    let currency = prompt("Choose currency (USD or KHR)", "USD");
 
-            let currency = prompt("Choose currency (USD or KHR)", "USD")
+    if (!currency) return;
 
-            if (!currency) return
+    currency = currency.toUpperCase();
 
-            currency = currency.toUpperCase()
+    let factor = 1;
 
-            let factor = 1
+    if (currency === "KHR") {
+        factor = prompt("Enter KHR rate example 4100", "4100");
+        if (!factor) return;
+    }
 
-            if (currency === "KHR") {
-                factor = prompt("Enter KHR rate example 4100", "4100")
-            }
-
-            await fetch("{{ route('user.pos.checkout') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({
-                    currency_code: currency,
-                    currency_factor: factor
-                })
+    try {
+        const response = await fetch("{{ route('user.pos.checkout') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                currency_code: currency,
+                currency_factor: factor
             })
+        });
 
-            alert("Order created")
+        const data = await response.json();
 
-            location.reload()
-
+        if (data.success) {
+            alert("Order created successfully");
+            location.reload();
+        } else {
+            alert(data.message + (data.error ? "\n\n" + data.error : ""));
+            console.error(data);
         }
+    } catch (error) {
+        console.error(error);
+        alert("Checkout request failed.");
+    }
+};
     </script>
 
 </body>

@@ -33,22 +33,15 @@ class CompanyConnection extends Model
         return $this->belongsTo(Company::class);
     }
 
-    // public function setClientSecretAttribute($value)
-    // {
-    //     $this->attributes['client_secret'] = encrypt($value);
-    // }
+    public function setClientSecretAttribute($value): void
+    {
+        $this->attributes['client_secret'] = filled($value)
+            ? encrypt(trim($value))
+            : null;
+    }
 
-    // public function getClientSecretAttribute($value)
-    // {
-    //     return decrypt($value);
-    // }
-    public function setClientSecretAttribute($value)
-{
-    $this->attributes['client_secret'] = filled($value) ? encrypt(trim($value)) : null;
-}
-
-public function getClientSecretAttribute($value)
-{
-    return filled($value) ? decrypt($value) : null;
-}
+    public function getClientSecretAttribute($value): ?string
+    {
+        return filled($value) ? decrypt($value) : null;
+    }
 }

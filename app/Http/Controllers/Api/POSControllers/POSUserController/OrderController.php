@@ -7,20 +7,17 @@ use App\Models\POSModel\Cart;
 use App\Models\POSModel\Order;
 use App\Models\POSModel\OrderItem;
 use App\Models\MagamentSystemModel\Notification;
+use App\Models\MagamentSystemModel\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
     public function checkout(Request $request)
     {
-        $validated = $request->validate([
-            'currency_code'   => ['required', 'string', 'max:10'],
-            'currency_factor' => ['nullable', 'numeric'],
-        ]);
-
         $user = Auth::user();
 
         if (!$user) {
@@ -30,12 +27,22 @@ class OrderController extends Controller
             ], 401);
         }
 
-        $companyId = session('selected_company_id');
+        $companyId = Company::value('id');
+
+        Log::info('Checkout started', [
+            'user_id' => $user->id,
+            'company_id' => $companyId,
+            'request' => $request->all(),
+        ]);
 
         if (!$companyId) {
+            Log::warning('Checkout stopped: no company found', [
+                'user_id' => $user->id,
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'No company selected.',
+                'message' => 'No company found.',
             ], 422);
         }
 
@@ -43,7 +50,22 @@ class OrderController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$cart || $cart->items->isEmpty()) {
+        if (!$cart) {
+            Log::warning('Checkout stopped: cart not found', [
+                'user_id' => $user->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Cart not found.',
+            ], 422);
+        }
+
+        if ($cart->items->isEmpty()) {
+            Log::warning('Checkout stopped: cart empty', [
+                'user_id' => $user->id,
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Cart is empty.',
@@ -57,23 +79,51 @@ class OrderController extends Controller
             $discountAmount = 0;
 
             foreach ($cart->items as $cartItem) {
-                $subtotal += ($cartItem->price * $cartItem->quantity);
+                $item = $cartItem->item;
+
+                if (!$item) {
+                    throw new \Exception("Cart item ID {$cartItem->id} has no related item.");
+                }
+
+                $qty = (float) ($cartItem->qty ?? $cartItem->quantity ?? 0);
+                $unitPrice = (float) ($cartItem->unit_price ?? $cartItem->price ?? 0);
+
+                Log::info('Cart item debug', [
+                    'cart_item_id' => $cartItem->id,
+                    'item_id' => $cartItem->item_id,
+                    'qty' => $qty,
+                    'unit_price' => $unitPrice,
+                    'item_company_id' => $item->company_id ?? null,
+                    'company_id' => $companyId,
+                ]);
+
+                if ((int) $item->company_id !== (int) $companyId) {
+                    throw new \Exception("Item {$item->display_name} does not belong to current company.");
+                }
+
+                if ($qty <= 0) {
+                    throw new \Exception("Invalid quantity for cart item ID {$cartItem->id}.");
+                }
+
+                if ($unitPrice < 0) {
+                    throw new \Exception("Invalid unit price for cart item ID {$cartItem->id}.");
+                }
+
+                $subtotal += ($unitPrice * $qty);
             }
 
             $totalAmount = $subtotal - $discountAmount;
-
-            $orderNo = 'ORD-' . now()->format('YmdHis') . '-' . strtoupper(Str::random(4));
-
             $firstCartItem = $cart->items->first();
-            $locationCode = $firstCartItem->item->default_location_code ?? null;
+            $locationCode = optional($firstCartItem->item)->default_location_code;
+            $orderNo = 'ORD-' . now()->format('YmdHis') . '-' . strtoupper(Str::random(4));
 
             $order = Order::create([
                 'company_id'      => $companyId,
                 'order_no'        => $orderNo,
                 'user_id'         => $user->id,
                 'customer_no'     => $user->bc_customer_no ?? null,
-                'currency_code'   => $validated['currency_code'],
-                'currency_factor' => $validated['currency_factor'] ?? 1,
+                'currency_code'   => $request->currency_code ?? 'USD',
+                'currency_factor' => $request->currency_factor ?? 1,
                 'subtotal'        => $subtotal,
                 'discount_amount' => $discountAmount,
                 'total_amount'    => $totalAmount,
@@ -83,18 +133,16 @@ class OrderController extends Controller
                 'checked_out_at'  => now(),
             ]);
 
+            Log::info('Order created', [
+                'order_id' => $order->id,
+                'order_no' => $order->order_no,
+            ]);
+
             foreach ($cart->items as $cartItem) {
                 $item = $cartItem->item;
-
-                if (!$item) {
-                    throw new \Exception('One of the cart items no longer exists.');
-                }
-
-                if ((int) $item->company_id !== (int) $companyId) {
-                    throw new \Exception("Item {$item->display_name} does not belong to the selected company.");
-                }
-
-                $lineTotal = $cartItem->price * $cartItem->quantity;
+                $qty = (float) ($cartItem->qty ?? $cartItem->quantity ?? 0);
+                $unitPrice = (float) ($cartItem->unit_price ?? $cartItem->price ?? 0);
+                $lineTotal = $unitPrice * $qty;
 
                 OrderItem::create([
                     'order_id'      => $order->id,
@@ -102,20 +150,26 @@ class OrderController extends Controller
                     'item_id'       => $cartItem->item_id,
                     'item_no'       => $item->number,
                     'item_name'     => $item->display_name,
-                    'qty'           => $cartItem->quantity,
-                    'unit_price'    => $cartItem->price,
+                    'qty'           => $qty,
+                    'unit_price'    => $unitPrice,
                     'line_total'    => $lineTotal,
                     'location_code' => $item->default_location_code,
                 ]);
             }
 
-            Notification::create([
-                'user_id' => $user->id,
-                'title' => 'Order Created',
-                'message' => 'Your order #' . $order->order_no . ' has been created successfully.',
-                'type' => 'user',
-                'is_read' => false,
-            ]);
+            try {
+                Notification::create([
+                    'user_id' => $user->id,
+                    'title' => 'Order Created',
+                    'message' => 'Your order #' . $order->order_no . ' has been created successfully.',
+                    'type' => 'user',
+                    'is_read' => false,
+                ]);
+            } catch (\Throwable $notifyError) {
+                Log::warning('Notification create failed', [
+                    'error' => $notifyError->getMessage(),
+                ]);
+            }
 
             $cart->items()->delete();
 
@@ -129,6 +183,14 @@ class OrderController extends Controller
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
+
+            Log::error('Checkout failed', [
+                'user_id' => $user->id,
+                'company_id' => $companyId,
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ]);
 
             return response()->json([
                 'success' => false,

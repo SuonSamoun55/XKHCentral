@@ -8,12 +8,13 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use App\Models\BcCustomer;
 use App\Models\MagamentSystemModel\User;
+use App\Models\MagamentSystemModel\Company;
 
 class WebUserController extends Controller
 {
     public function index()
     {
-        $companyId = session('selected_company_id');
+        $companyId = Company::value('id');
 
         $customers = BcCustomer::where('company_id', $companyId)
             ->orderBy('id', 'desc')
@@ -27,12 +28,7 @@ class WebUserController extends Controller
 
     public function syncBCCustomers()
     {
-        $companyId = session('selected_company_id');
-
-        if (!$companyId) {
-            return redirect()->route('users.index')
-                ->with('error', 'Please select a company first.');
-        }
+        $companyId = Company::value('id');
 
         $token = $this->getToken();
 
@@ -54,7 +50,7 @@ class WebUserController extends Controller
 
         if (!$response->successful()) {
             return redirect()->route('users.index')
-                ->with('error', 'Failed to fetch customers from Business Central.');
+                ->with('error', 'Failed to fetch customers.');
         }
 
         $customers = $response->json()['value'] ?? [];
@@ -63,9 +59,7 @@ class WebUserController extends Controller
             $customerNo = $customer['number'] ?? null;
             $bcId = $customer['id'] ?? null;
 
-            if (!$customerNo || !$bcId) {
-                continue;
-            }
+            if (!$customerNo || !$bcId) continue;
 
             $isConnected = User::where('bc_customer_no', $customerNo)
                 ->where('company_id', $companyId)
@@ -81,7 +75,6 @@ class WebUserController extends Controller
                     'name' => $customer['displayName'] ?? '',
                     'email' => $customer['email'] ?? null,
                     'phone' => $customer['phoneNumber'] ?? null,
-                    'address' => null,
                     'connect_status' => $isConnected ? 'connected' : 'not_connected',
                     'last_synced_at' => now(),
                 ]
@@ -89,14 +82,15 @@ class WebUserController extends Controller
         }
 
         return redirect()->route('users.index')
-            ->with('success', 'BC customers synced successfully.');
+            ->with('success', 'Customers synced successfully.');
     }
 
     public function create($id)
     {
-        $companyId = session('selected_company_id');
+        $companyId = Company::value('id');
 
-        $customer = BcCustomer::where('company_id', $companyId)->findOrFail($id);
+        $customer = BcCustomer::where('company_id', $companyId)
+            ->findOrFail($id);
 
         if ($customer->connect_status === 'connected') {
             return redirect()->route('users.index')
@@ -111,14 +105,10 @@ class WebUserController extends Controller
 
     public function store(Request $request, $id)
     {
-        $companyId = session('selected_company_id');
+        $companyId = Company::value('id');
 
-        if (!$companyId) {
-            return redirect()->route('users.index')
-                ->with('error', 'Please select a company first.');
-        }
-
-        $customer = BcCustomer::where('company_id', $companyId)->findOrFail($id);
+        $customer = BcCustomer::where('company_id', $companyId)
+            ->findOrFail($id);
 
         if ($customer->connect_status === 'connected') {
             return redirect()->route('users.index')
@@ -153,9 +143,10 @@ class WebUserController extends Controller
 
     public function show($id)
     {
-        $companyId = session('selected_company_id');
+        $companyId = Company::value('id');
 
-        $user = User::where('company_id', $companyId)->findOrFail($id);
+        $user = User::where('company_id', $companyId)
+            ->findOrFail($id);
 
         return view(
             'ManagementSystemViews.AdminViews.Layouts.UserinfoView.show',

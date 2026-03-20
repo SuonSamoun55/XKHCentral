@@ -19,16 +19,10 @@ class Controller extends BaseController
             return;
         }
 
-        $selectedCompanyId = session('selected_company_id');
-
-        if (!$selectedCompanyId) {
-            return;
-        }
-
-        $company = Company::with('connection')->find($selectedCompanyId);
+        $company = Company::with('companyConnection')->first();
 
         /** @var CompanyConnection|null $connection */
-        $connection = $company?->connection;
+        $connection = $company?->companyConnection;
 
         if (!$connection || !$connection->status) {
             return;
@@ -67,7 +61,7 @@ class Controller extends BaseController
 
         if (!$response->successful()) {
             logger()->error('BC token failed from base controller', [
-                'selected_company_id' => session('selected_company_id'),
+                'company_id' => $this->connection->company_id,
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);

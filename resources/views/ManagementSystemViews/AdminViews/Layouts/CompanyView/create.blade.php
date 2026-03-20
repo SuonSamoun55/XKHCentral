@@ -18,31 +18,25 @@
 
     <h3>Company Info</h3>
 
-    <input type="text" name="name" placeholder="Company Name"><br><br>
+    <input type="text" name="name" placeholder="Company Name" required><br><br>
     <input type="text" name="display_name" placeholder="Display Name"><br><br>
     <input type="text" name="phone" placeholder="Phone"><br><br>
     <input type="email" name="email" placeholder="Email"><br><br>
     <textarea name="address" placeholder="Address"></textarea><br><br>
+    <input type="text" name="logo" placeholder="Logo"><br><br>
+    <input type="text" name="tax_number" placeholder="Tax Number"><br><br>
 
     <h3>Business Central</h3>
 
-    <input type="text" name="tenant_id" placeholder="Tenant ID"><br><br>
-    <input type="text" name="client_id" placeholder="Client ID"><br><br>
-    <input type="text" name="client_secret" placeholder="Client Secret"><br><br>
-    <input type="text" name="company_bc_id" placeholder="Company BC ID"><br><br>
+    <input type="text" name="tenant_id" placeholder="Tenant ID" required><br><br>
+    <input type="text" name="client_id" placeholder="Client ID" required><br><br>
+    <input type="text" name="client_secret" placeholder="Client Secret" required><br><br>
+    <input type="text" name="company_bc_id" placeholder="Company BC ID" required><br><br>
     <input type="text" name="environment" placeholder="Environment"><br><br>
     <input type="text" name="base_url" placeholder="Base URL"><br><br>
     <input type="text" name="token_url" placeholder="Token URL"><br><br>
 
-    <label>
-        <input type="checkbox" name="is_default"> Default
-    </label><br><br>
-
-    <label>
-        <input type="checkbox" name="status" checked> Active
-    </label><br><br>
-
-    <button type="submit">Save</button>
+    <button type="submit">Save Company</button>
 </form>
 
 <br>

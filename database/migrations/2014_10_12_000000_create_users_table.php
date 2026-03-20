@@ -10,30 +10,19 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+$table->unsignedBigInteger('company_id')->nullable();
+$table->string('bc_customer_no');
+$table->string('name');
+$table->string('email')->nullable();
+$table->string('phone')->nullable();
+$table->string('password');
+$table->string('role')->default('customer');
+$table->boolean('status')->default(true);
+$table->timestamp('linked_at')->nullable();
+$table->rememberToken();
+$table->timestamps();
 
-            // company first, no foreign key yet
-            $table->unsignedBigInteger('company_id')->nullable();
-
-            // BC link
-            $table->string('bc_customer_no');
-
-            // user info
-            $table->string('name');
-            $table->string('email')->nullable();
-            $table->string('phone')->nullable();
-
-            // login
-            $table->string('password');
-            $table->string('role')->default('customer');
-
-            // status
-            $table->boolean('status')->default(true);
-            $table->timestamp('linked_at')->nullable();
-
-            $table->rememberToken();
-            $table->timestamps();
-
-            $table->unique(['company_id', 'bc_customer_no']);
+$table->unique(['company_id', 'bc_customer_no']);
         });
     }
 

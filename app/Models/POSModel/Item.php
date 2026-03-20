@@ -26,7 +26,7 @@ class Item extends Model
 
     public function company()
     {
-        return $this->belongsTo(company::class);
+        return $this->belongsTo(Company::class);
     }
 
     public function cartItems()

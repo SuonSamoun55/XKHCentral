@@ -28,124 +28,115 @@ class AdminOrderController extends Controller
         return view('POSViews.POSAdminViews.OrderList', compact('orders'));
     }
 
-    public function confirm($id)
-    {
-        $admin = Auth::user();
+  public function confirm($id)
+{
+    $admin = Auth::user();
 
-        if (!$admin || $admin->role !== 'admin') {
-            return back()->with('error', 'Unauthorized.');
+    if (!$admin || $admin->role !== 'admin') {
+        return back()->with('error', 'Unauthorized.');
+    }
+
+    $order = Order::with(['user', 'items'])->find($id);
+
+    if (!$order) {
+        return back()->with('error', 'Order not found.');
+    }
+
+    if ($order->status !== 'pending') {
+        return back()->with('error', 'Only pending orders can be confirmed.');
+    }
+
+    if (!$order->user) {
+        return back()->with('error', 'Customer not found.');
+    }
+
+    if (empty($order->user->bc_customer_no)) {
+        return back()->with('error', 'Customer BC number not found.');
+    }
+
+    if (!$order->items()->exists()) {
+        return back()->with('error', 'Order has no items.');
+    }
+
+    DB::beginTransaction();
+
+    try {
+        $token = $this->getToken();
+
+        if (!$token) {
+            throw new \Exception('Failed to get Business Central access token.');
         }
 
-        $order = Order::with(['user', 'items'])->find($id);
+        $orderResponse = Http::withoutVerifying()
+            ->withToken($token)
+            ->acceptJson()
+            ->post($this->bcUrl('salesOrders'), [
+                'customerNumber' => $order->user->bc_customer_no,
+            ]);
 
-        if (!$order) {
-            return back()->with('error', 'Order not found.');
+        if (!$orderResponse->successful()) {
+            throw new \Exception('Create BC sales order failed: ' . $orderResponse->body());
         }
 
-        if ($order->status !== 'pending') {
-            return back()->with('error', 'Only pending orders can be confirmed.');
+        $salesOrderData = $orderResponse->json();
+        $salesOrderId   = $salesOrderData['id'] ?? null;
+        $salesOrderNo   = $salesOrderData['number'] ?? null;
+
+        if (!$salesOrderId) {
+            throw new \Exception('BC sales order ID not returned.');
         }
 
-        if (!$order->user) {
-            return back()->with('error', 'Customer not found.');
-        }
-
-        if (empty($order->user->BCcustomer_no)) {
-            return back()->with('error', 'Customer BC number not found.');
-        }
-
-        if (!$order->items()->exists()) {
-            return back()->with('error', 'Order has no items.');
-        }
-
-        DB::beginTransaction();
-
-        try {
-            $token = $this->getAccessToken();
-
-            if (!$token) {
-                throw new \Exception('Failed to get Business Central access token.');
-            }
-
-            $companyId   = env('BC_COMPANY_ID', 'd295785a-4a3b-ef11-8409-002248951b0d');
-            $environment = env('BC_ENVIRONMENT', 'SandboxKH');
-
-            $baseUrl = "https://api.businesscentral.dynamics.com/v2.0/{$environment}/api/v2.0/companies({$companyId})";
-
-            // 1. Create Sales Invoice Header in Business Central
-            $invoiceResponse = Http::withToken($token)
+        foreach ($order->items as $item) {
+            $lineResponse = Http::withoutVerifying()
+                ->withToken($token)
                 ->acceptJson()
-                ->post("{$baseUrl}/salesInvoices", [
-                    'customerNumber' => $order->user->BCcustomer_no,
-                    // 'externalDocumentNumber' => $order->order_no,
+                ->post($this->bcUrl("salesOrders({$salesOrderId})/salesOrderLines"), [
+                    'lineType'         => 'Item',
+                    'lineObjectNumber' => $item->item_no,
+                    'quantity'         => (int) $item->qty,
                 ]);
 
-            if (!$invoiceResponse->successful()) {
-                throw new \Exception('Create BC sales invoice failed: ' . $invoiceResponse->body());
+            if (!$lineResponse->successful()) {
+                throw new \Exception(
+                    'Create BC sales order line failed for item [' . $item->item_no . ']: ' . $lineResponse->body()
+                );
             }
-
-            $invoiceData = $invoiceResponse->json();
-            $invoiceId   = $invoiceData['id'] ?? null;
-            $invoiceNo   = $invoiceData['number'] ?? null;
-
-            if (!$invoiceId) {
-                throw new \Exception('BC invoice ID not returned.');
-            }
-
-            // 2. Create Sales Invoice Lines
-            foreach ($order->items as $item) {
-                $lineResponse = Http::withToken($token)
-                    ->acceptJson()
-                    ->post("{$baseUrl}/salesInvoices({$invoiceId})/salesInvoiceLines", [
-                        'lineType'         => 'Item',
-                        'lineObjectNumber' => $item->item_no,
-                        'quantity'         => (int) $item->qty,
-                    ]);
-
-                if (!$lineResponse->successful()) {
-                    throw new \Exception(
-                        'Create BC invoice line failed for item [' . $item->item_no . ']: ' . $lineResponse->body()
-                    );
-                }
-            }
-
-            // 3. Update local order
-            $order->update([
-                'status'         => 'confirmed',
-                'sync_status'    => 'synced',
-                'bc_document_no' => $invoiceNo ?: $invoiceId,
-            ]);
-
-            // 4. Save action history
-            OrderAction::create([
-                'order_id'    => $order->id,
-                'user_id'     => $order->user_id,
-                'action_by'   => $admin->id,
-                'action_type' => 'confirmed',
-                'status'      => 'confirmed',
-                'note'        => 'Order confirmed by admin and stored in Business Central Sales Invoice.',
-            ]);
-
-            // 5. Notify user
-            Notification::create([
-                'user_id'  => $order->user_id,
-                'order_id' => $order->id,
-                'item_id'  => null,
-                'type'     => 'order',
-                'title'    => 'Order Confirmed',
-                'message'  => 'Your order ' . $order->order_no . ' has been confirmed and stored in Sales Invoice.',
-                'is_read'  => false,
-            ]);
-
-            DB::commit();
-
-            return back()->with('success', 'Order confirmed and stored in BC Sales Invoice successfully.');
-        } catch (\Throwable $e) {
-            DB::rollBack();
-
-            return back()->with('error', 'Confirm failed: ' . $e->getMessage());
         }
+
+        $order->update([
+            'status'         => 'confirmed',
+            'sync_status'    => 'synced',
+            'bc_document_no' => $salesOrderNo ?: $salesOrderId,
+        ]);
+
+        OrderAction::create([
+            'order_id'    => $order->id,
+            'user_id'     => $order->user_id,
+            'action_by'   => $admin->id,
+            'action_type' => 'confirmed',
+            'status'      => 'confirmed',
+            'note'        => 'Order confirmed by admin and stored in Business Central Sales Order.',
+        ]);
+
+        Notification::create([
+            'user_id'  => $order->user_id,
+            'order_id' => $order->id,
+            'item_id'  => null,
+            'type'     => 'order',
+            'title'    => 'Order Confirmed',
+            'message'  => 'Your order ' . $order->order_no . ' has been confirmed and stored in Sales Order.',
+            'is_read'  => false,
+        ]);
+
+        DB::commit();
+
+        return back()->with('success', 'Order confirmed and stored in BC Sales Order successfully.');
+    } catch (\Throwable $e) {
+        DB::rollBack();
+
+        return back()->with('error', 'Confirm failed: ' . $e->getMessage());
     }
+}
 
     public function cancel(Request $request, $id)
     {
