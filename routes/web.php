@@ -16,16 +16,18 @@ use App\Http\Controllers\Api\ManagementSystemController\RoleController;
 use App\Http\Controllers\Api\ManagementSystemController\PermissionController;
 use App\Http\Controllers\Api\ManagementSystemController\CompanyController;
 use App\Http\Controllers\Api\ManagementSystemController\CompanySelectionController;
+use App\Http\Controllers\Api\POSControllers\POSUserController\NotificationController;
+// use Illuminate\Support\Facades\Route;
 
 // use
 // Use DashboardUserController;
 
 // ================= ROLE MANAGEMENT =================
-Route::get('/users', [WebUserController::class, 'index'])->name('users.index');
-Route::get('/users/sync-bc', [WebUserController::class, 'syncBCCustomers'])->name('users.sync');
-Route::get('/users/create/{id}', [WebUserController::class, 'create'])->name('users.create');
-Route::post('/users/store/{id}', [WebUserController::class, 'store'])->name('users.store');
-Route::get('/users/{id}', [WebUserController::class, 'show'])->name('users.show');
+// Route::get('/users', [WebUserController::class, 'index'])->name('users.index');
+// Route::get('/users/sync-bc', [WebUserController::class, 'syncBCCustomers'])->name('users.sync');
+// Route::get('/users/create/{id}', [WebUserController::class, 'create'])->name('users.create');
+// Route::post('/users/store/{id}', [WebUserController::class, 'store'])->name('users.store');
+// Route::get('/users/{id}', [WebUserController::class, 'show'])->name('users.show');
 
 Route::get('/companies', [CompanyController::class, 'index'])->name('companies.index');
 Route::get('/companies/create', [CompanyController::class, 'create'])->name('companies.create');
@@ -102,8 +104,19 @@ Route::delete('/pos-system/cart/remove/{id}', [CartController::class, 'removeIte
 Route::delete('/pos-system/cart/clear', [CartController::class, 'clearCart'])->name('user.pos.cart.clear');
 Route::post('/pos-system/checkout', [OrderController::class, 'checkout'])->name('user.pos.checkout');
 Route::get('/pos-system/order-history', [OrderController::class, 'history'])->name('user.pos.order.history');
-
 Route::get('/favorites', [FavoriteController::class, 'index']);
+});
+Route::middleware('auth')->prefix('users')->name('users.')->group(function () {
+    Route::get('/', [WebUserController::class, 'index'])->name('index');
+    Route::get('/sync', [WebUserController::class, 'syncBCCustomers'])->name('sync');
 
+    Route::get('/create/{id}', [WebUserController::class, 'create'])->name('create');
+    Route::post('/store/{id}', [WebUserController::class, 'store'])->name('store');
 
+    Route::get('/show/{id}', [WebUserController::class, 'show'])->name('show');
+    Route::get('/edit/{id}', [WebUserController::class, 'edit'])->name('edit');
+    Route::put('/update/{id}', [WebUserController::class, 'update'])->name('update');
+
+    Route::delete('/destroy/{id}', [WebUserController::class, 'destroy'])->name('destroy');
+    Route::post('/delete-selected', [WebUserController::class, 'deleteSelected'])->name('deleteSelected');
 });

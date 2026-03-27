@@ -1,5 +1,4 @@
 @include('ManagementSystemViews.AdminViews.Layouts.navbar')
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,66 +6,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Detail</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body{
-            background:#eef2f7;
-            font-family:system-ui;
-            margin:0;
-        }
-
-        .app-layout{
-            display:flex;
-            gap:20px;
-            padding:20px;
-        }
-
-        .app-content{
-            flex:1;
-        }
-
-        .box{
-            background:#fff;
-            border-radius:14px;
-            padding:24px;
-            box-shadow:0 10px 25px rgba(0,0,0,0.08);
-            margin-bottom:20px;
-        }
-    </style>
 </head>
-<body>
+<body style="background:#f4f6f8;">
+<div class="container py-4">
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+            <h3 class="mb-4 text-info">User Detail</h3>
 
-<div class="app-layout">
-    @include('ManagementSystemViews.AdminViews.Layouts.aside')
-
-    <div class="app-content">
-        <div class="box">
-            <h3>User Detail</h3>
-
-            <p><strong>ID:</strong> {{ $user->id }}</p>
-            <p><strong>Name:</strong> {{ $user->name }}</p>
-            <p><strong>Email:</strong> {{ $user->email }}</p>
-            <p><strong>Role:</strong> {{ $user->role }}</p>
-            <p><strong>BC Customer No:</strong> {{ $user->BCcustomer_no }}</p>
-        </div>
-
-        <div class="box">
-            <h3>BC Customer Background</h3>
-
-            @if($customer)
-                <p><strong>Customer No:</strong> {{ $customer['number'] ?? '' }}</p>
-                <p><strong>Name:</strong> {{ $customer['displayName'] ?? '' }}</p>
-                <p><strong>Email:</strong> {{ $customer['email'] ?? '' }}</p>
-                <p><strong>Phone:</strong> {{ $customer['phoneNumber'] ?? '' }}</p>
-                <p><strong>City:</strong> {{ $customer['city'] ?? '' }}</p>
-                <p><strong>Country:</strong> {{ $customer['country'] ?? '' }}</p>
-            @else
-                <div class="alert alert-warning mb-0">
-                    No matching BC customer found.
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="fw-bold">BC Customer No</label>
+                    <div>{{ $customer->number ?? $customer->bc_customer_no ?? '-' }}</div>
                 </div>
+                <div class="col-md-6">
+                    <label class="fw-bold">BC Name</label>
+                    <div>{{ $customer->display_name ?? $customer->name ?? '-' }}</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="fw-bold">BC Email</label>
+                    <div>{{ $customer->email ?? '-' }}</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="fw-bold">BC Phone</label>
+                    <div>{{ $customer->phone_number ?? $customer->phone ?? '-' }}</div>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <h5 class="mb-3">Connected User</h5>
+
+            @if($user)
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="fw-bold">Name</label>
+                        <div>{{ $user->name ?? '-' }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="fw-bold">Email</label>
+                        <div>{{ $user->email ?? '-' }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="fw-bold">Phone</label>
+                        <div>{{ $user->phone ?? '-' }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="fw-bold">Role</label>
+                        <div>{{ $user->role ?? '-' }}</div>
+                    </div>
+                </div>
+            @else
+                <div class="alert alert-warning mb-0">This customer is not connected yet.</div>
             @endif
+
+            <div class="mt-4">
+                <a href="{{ route('users.index') }}" class="btn btn-secondary">Back</a>
+            </div>
         </div>
     </div>
 </div>
-
 </body>
 </html>

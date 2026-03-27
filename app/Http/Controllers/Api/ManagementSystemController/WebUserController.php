@@ -20,6 +20,34 @@ class WebUserController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
+        $userMap = User::where('company_id', $companyId)
+            ->get()
+            ->keyBy('bc_customer_no');
+
+        foreach ($customers as $customer) {
+            $linkedUser = $userMap->get($customer->bc_customer_no);
+
+            if ($linkedUser) {
+                $customer->connect_status = 'connected';
+                $customer->role = $linkedUser->role ?? 'user';
+                $customer->local_user_id = $linkedUser->id;
+                $customer->local_name = $linkedUser->name ?? ($customer->display_name ?? '-');
+                $customer->local_email = $linkedUser->email ?? ($customer->email ?? '-');
+                $customer->local_phone = $linkedUser->phone ?? ($customer->phone_number ?? '-');
+            } else {
+                $customer->connect_status = 'not_connected';
+                $customer->role = '-';
+                $customer->local_user_id = null;
+                $customer->local_name = $customer->display_name ?? '-';
+                $customer->local_email = $customer->email ?? '-';
+                $customer->local_phone = $customer->phone_number ?? '-';
+            }
+
+            $customer->name = $customer->display_name ?? '-';
+            $customer->email = $customer->email ?? '-';
+            $customer->phone = $customer->phone_number ?? '-';
+        }
+
         return view(
             'ManagementSystemViews.AdminViews.Layouts.UserinfoView.UserList',
             compact('customers')
@@ -41,7 +69,7 @@ class WebUserController extends Controller
 
         if (!$url) {
             return redirect()->route('users.index')
-                ->with('error', 'Business Central URL could not be built.');
+                ->with('error', 'Unable to build Business Central URL.');
         }
 
         $response = Http::withoutVerifying()
@@ -50,107 +78,150 @@ class WebUserController extends Controller
 
         if (!$response->successful()) {
             return redirect()->route('users.index')
-                ->with('error', 'Failed to fetch customers.');
+                ->with('error', 'Failed to fetch BC customers.');
         }
 
-        $customers = $response->json()['value'] ?? [];
+        $data = $response->json('value', []);
 
-        foreach ($customers as $customer) {
-            $customerNo = $customer['number'] ?? null;
-            $bcId = $customer['id'] ?? null;
-
-            if (!$customerNo || !$bcId) continue;
-
-            $isConnected = User::where('bc_customer_no', $customerNo)
-                ->where('company_id', $companyId)
-                ->exists();
-
+        foreach ($data as $row) {
             BcCustomer::updateOrCreate(
                 [
-                    'bc_customer_no' => $customerNo,
                     'company_id' => $companyId,
+                    'bc_customer_no' => $row['number'] ?? null,
                 ],
                 [
-                    'bc_id' => $bcId,
-                    'name' => $customer['displayName'] ?? '',
-                    'email' => $customer['email'] ?? null,
-                    'phone' => $customer['phoneNumber'] ?? null,
-                    'connect_status' => $isConnected ? 'connected' : 'not_connected',
-                    'last_synced_at' => now(),
+                    'bc_id' => $row['id'] ?? null,
+                    'display_name' => $row['displayName'] ?? null,
+                    'email' => $row['email'] ?? null,
+                    'phone_number' => $row['phoneNumber'] ?? null,
                 ]
             );
         }
 
         return redirect()->route('users.index')
-            ->with('success', 'Customers synced successfully.');
+            ->with('success', 'BC customers synced successfully.');
     }
 
     public function create($id)
     {
-        $companyId = Company::value('id');
-
-        $customer = BcCustomer::where('company_id', $companyId)
-            ->findOrFail($id);
-
-        if ($customer->connect_status === 'connected') {
-            return redirect()->route('users.index')
-                ->with('error', 'This customer is already connected.');
-        }
-
-        return view(
-            'ManagementSystemViews.AdminViews.Layouts.UserinfoView.create',
-            compact('customer')
-        );
+        return redirect()->route('users.index');
     }
 
     public function store(Request $request, $id)
     {
+        $customer = BcCustomer::findOrFail($id);
         $companyId = Company::value('id');
 
-        $customer = BcCustomer::where('company_id', $companyId)
-            ->findOrFail($id);
+        $request->validate([
+            'role' => 'required|string|max:50',
+            'password' => 'required|min:6|confirmed',
+        ]);
 
-        if ($customer->connect_status === 'connected') {
+        $bcCustomerNo = $customer->bc_customer_no ?? null;
+
+        if (!$bcCustomerNo) {
+            return redirect()->route('users.index')
+                ->with('error', 'This BC customer has no customer number.');
+        }
+
+        if (User::where('company_id', $companyId)
+            ->where('bc_customer_no', $bcCustomerNo)
+            ->exists()) {
             return redirect()->route('users.index')
                 ->with('error', 'This customer is already connected.');
         }
 
-        $validated = $request->validate([
-            'password' => ['required', 'string', 'min:6'],
-            'role' => ['required', 'string', 'in:customer,admin'],
-        ]);
-
         User::create([
-            'name' => $customer->name,
-            'email' => $customer->email,
-            'phone' => $customer->phone,
-            'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
-            'bc_customer_no' => $customer->bc_customer_no,
             'company_id' => $companyId,
+            'bc_customer_no' => $bcCustomerNo,
+            'name' => $customer->display_name ?? '-',
+            'email' => $customer->email ?? null,
+            'phone' => $customer->phone_number ?? null,
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
             'status' => true,
             'linked_at' => now(),
         ]);
 
-        $customer->update([
-            'connect_status' => 'connected',
-            'last_synced_at' => now(),
-        ]);
-
         return redirect()->route('users.index')
-            ->with('success', 'Customer connected successfully.');
+            ->with('success', 'User connected successfully.');
     }
 
     public function show($id)
     {
-        $companyId = Company::value('id');
+        $customer = BcCustomer::findOrFail($id);
 
-        $user = User::where('company_id', $companyId)
-            ->findOrFail($id);
+        $user = User::where('bc_customer_no', $customer->bc_customer_no)->first();
 
         return view(
-            'ManagementSystemViews.AdminViews.Layouts.UserinfoView.show',
-            compact('user')
+            'ManagementSystemViews.AdminViews.Layouts.UserinfoView.UserShow',
+            compact('customer', 'user')
         );
+    }
+
+    public function edit($id)
+    {
+        return redirect()->route('users.index');
+    }
+
+    // use Illuminate\Support\Facades\Hash;
+
+public function update(Request $request, $id)
+{
+    $customer = BcCustomer::findOrFail($id);
+
+    $user = User::where('bc_customer_no', $customer->bc_customer_no)->firstOrFail();
+
+    $request->validate([
+        'role' => 'required|string|max:50',
+        'old_password' => 'required',
+        'password' => 'nullable|min:6|confirmed',
+    ]);
+
+    // 🔥 CHECK OLD PASSWORD
+    if (!Hash::check($request->old_password, $user->password)) {
+        return redirect()->route('users.index')
+            ->with('error', 'Old password is incorrect.');
+    }
+
+    $data = [
+        'role' => $request->role,
+    ];
+
+    // 🔥 UPDATE PASSWORD IF FILLED
+    if ($request->filled('password')) {
+        $data['password'] = Hash::make($request->password);
+    }
+
+    $user->update($data);
+
+    return redirect()->route('users.index')
+        ->with('success', 'User updated successfully.');
+}
+
+    public function destroy($id)
+    {
+        $customer = BcCustomer::findOrFail($id);
+
+        User::where('bc_customer_no', $customer->bc_customer_no)->delete();
+
+        return redirect()->route('users.index')->with('success', 'User deleted successfully.');
+    }
+
+    public function deleteSelected(Request $request)
+    {
+        $ids = $request->input('selected_ids', []);
+
+        if (empty($ids)) {
+            return redirect()->route('users.index')->with('error', 'Please select at least one user.');
+        }
+
+        $customers = BcCustomer::whereIn('id', $ids)->get();
+
+        foreach ($customers as $customer) {
+            User::where('bc_customer_no', $customer->bc_customer_no)->delete();
+        }
+
+        return redirect()->route('users.index')->with('success', 'Selected users deleted successfully.');
     }
 }

@@ -34,19 +34,28 @@
                     </a>
                 </div>
                 <div class="search-area">
+    <div class="search-wrapper">
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchInput" placeholder="Search Product">
+            <button type="button" id="searchSubmitBtn" class="search-submit-btn">
+                <i class="bi bi-send"></i>
+            </button>
+        </div>
 
-                    <div class="search-box">
-                        <i class="bi bi-search"></i>
-                        <input type="text" id="searchInput" placeholder="Search products...">
-                    </div>
+        <div class="search-dropdown" id="searchDropdown">
+            <div class="search-dropdown-left">
+                <div class="search-section-title">Your Searches</div>
+                <div id="searchSuggestions"></div>
+            </div>
 
-                    <div class="category-buttons">
-                        <button class="cat-btn active">All Products</button>
-                        <button class="cat-btn">🥩 Meat</button>
-                        <button class="cat-btn">🥬 Vegetables</button>
-                    </div>
-
-                </div>
+            <div class="search-dropdown-right">
+                <div class="search-section-title">Products</div>
+                <div id="searchPreviewProducts" class="search-preview-products"></div>
+            </div>
+        </div>
+    </div>
+</div>
 
                 <h2 class="page-title">All Products</h2>
 
@@ -55,62 +64,57 @@
                 @if ($items->isEmpty())
                     <div class="empty-box">No items found.</div>
                 @else
-                    <div class="products-grid" id="productsGrid">
-                        @foreach ($items as $item)
-                            <div class="product-card product-item"
-                                data-name="{{ strtolower($item->display_name ?? '') }}"
-                                data-uom="{{ strtolower($item->base_unit_of_measure_code ?? '') }}">
+                        <div class="products-grid" id="productsGrid">
+    @foreach ($items as $item)
+        <div class="product-card product-item"
+            data-id="{{ $item->id }}"
+            data-name="{{ strtolower($item->display_name ?? '') }}"
+            data-display-name="{{ $item->display_name ?? '' }}"
+            data-uom="{{ strtolower($item->base_unit_of_measure_code ?? '') }}"
+            data-category="{{ strtolower($item->item_category_code ?? '') }}"
+            data-price="{{ number_format($item->unit_price ?? 0, 2, '.', '') }}"
+            data-image="{{ $item->image_url ?: asset('images/no-image.png') }}">
 
-                                <div class="product-img-box">
+            <div class="product-img-box">
+                <button class="fav-btn" data-item-id="{{ $item->id }}">
+                    <i class="bi {{ in_array($item->id, $favoriteIds) ? 'bi-heart-fill text-danger' : 'bi-heart' }}"></i>
+                </button>
 
-                                    <button class="fav-btn" data-item-id="{{ $item->id }}">
-                                        <i
-                                            class="bi {{ in_array($item->id, $favoriteIds) ? 'bi-heart-fill text-danger' : 'bi-heart' }}"></i>
-                                    </button>
+                <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
+                    alt="{{ $item->display_name ?? 'No Name' }}"
+                    loading="lazy"
+                    onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
+            </div>
 
-                                    <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
-                                        alt="{{ $item->display_name ?? 'No Name' }}" loading="lazy"
-                                        onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
+            <div class="product-info">
+                <div class="product-title">
+                    {{ $item->display_name ?: 'No Name' }}
+                </div>
 
-                                </div>
+                {{-- <div class="product-desc">
+                    {{ $item->descriptio    n ?: ($item->base_unit_of_measure_code ?: 'No description') }}
+                </div> --}}
 
-                                <div class="product-info">
+                <div class="price">
+                    ${{ number_format($item->unit_price ?? 0, 2) }}
+                </div>
 
-                                    <div class="product-title">
-                                        {{ $item->display_name ?: 'No Name' }}
-                                    </div>
-
-                                    <div class="product-bottom">
-
-                                        <div class="price">
-                                            ${{ number_format($item->unit_price ?? 0, 2) }}
-                                        </div>
-                                    </div>
-                                    <div class="qty-section">
-                                        <span>Quantity:</span>
-                                        <div class="qty-box">
-
-                                            <button class="qty-btn minus">-</button>
-
-                                            <span class="qty">0</span>
-
-                                            <button class="qty-btn plus add-to-cart-btn"
-                                                data-id="{{ $item->id }}">+</button>
-
-                                        </div>
-
-
-                                    </div>
-                                    <button class="add-cart-btn" data-id="{{ $item->id }}">
-                                        <i class="bi bi-cart"></i>
-                                        Add to Cart
-                                    </button>
-
-                                </div>
-
-                            </div>
-                        @endforeach
+                <div class="qty-section">
+                    <span>Quantity:</span>
+                    <div class="qty-box">
+                        <button type="button" class="qty-btn minus">−</button>
+                        <span class="qty">1</span>
+                        <button type="button" class="qty-btn plus">+</button>
                     </div>
+                </div>
+
+                <button type="button" class="add-cart-btn" data-id="{{ $item->id }}">
+                    Add to cart
+                </button>
+            </div>
+        </div>
+    @endforeach
+</div>
                     <div id="noSearchResult" class="empty-box" style="display:none; margin-top:16px;">
                         No matching products found.
                     </div>
@@ -121,162 +125,389 @@
 
     </div>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const appShell = document.querySelector('.app-shell');
-            const collapseHandle = document.querySelector('.collapse-handle');
-            const settingsBox = document.getElementById('settingsBox');
+document.addEventListener("DOMContentLoaded", () => {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
+    const els = {
+        appShell: document.getElementById("appShell"),
+        collapseHandle: document.getElementById("collapseHandle"),
+        settingsBtn: document.getElementById("settingsBtn"),
+        settingsBox: document.getElementById("settingsBox"),
+        navButtons: document.querySelectorAll(".nav-btn"),
 
-            if (collapseHandle && appShell) {
-                collapseHandle.addEventListener('click', () => {
-                    appShell.classList.toggle('collapsed');
-                    // close settings menu if sidebar collapsed
-                    if (appShell.classList.contains('collapsed')) {
-                        settingsBox?.classList.remove('open');
-                    }
-                });
-            }
+        cartCount: document.getElementById("cartCount"),
+        messageBox: document.getElementById("messageBox"),
+
+        searchInput: document.getElementById("searchInput"),
+        searchDropdown: document.getElementById("searchDropdown"),
+        searchSuggestions: document.getElementById("searchSuggestions"),
+        searchPreviewProducts: document.getElementById("searchPreviewProducts"),
+        searchWrapper: document.querySelector(".search-wrapper"),
+        noSearchResult: document.getElementById("noSearchResult"),
+
+        productCards: [...document.querySelectorAll(".product-card")],
+        favButtons: [...document.querySelectorAll(".fav-btn")]
+    };
+
+    let recentSearches = [
+        "premium beef",
+        "beef steak",
+        "premium steak",
+        "meat",
+        "premium items",
+        "fresh meat"
+    ];
+
+    function showMessage(type, text) {
+        if (!els.messageBox) return;
+
+        els.messageBox.className = `message-box ${type}`;
+        els.messageBox.textContent = text;
+
+        setTimeout(() => {
+            els.messageBox.className = "message-box";
+            els.messageBox.textContent = "";
+        }, 2500);
+    }
+
+    function escapeHtml(text = "") {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function getCardData(card) {
+        return {
+            id: card.dataset.id || "",
+            name: (card.dataset.name || "").toLowerCase(),
+            displayName: card.dataset.displayName || card.querySelector(".product-title")?.textContent?.trim() || "No Name",
+            desc: (card.dataset.desc || "").toLowerCase(),
+            category: (card.dataset.category || "").toLowerCase(),
+            uom: (card.dataset.uom || "").toLowerCase(),
+            price: card.dataset.price || "0.00",
+            image: card.dataset.image || card.querySelector("img")?.src || ""
+        };
+    }
+
+    function matchCard(card, keyword) {
+        const text = keyword.trim().toLowerCase();
+        if (!text) return true;
+
+        const data = getCardData(card);
+
+        return [
+            data.name,
+            data.displayName.toLowerCase(),
+            data.desc,
+            data.category,
+            data.uom
+        ].some(value => value.includes(text));
+    }
+
+    function filterProducts(keyword = "") {
+        let visibleCount = 0;
+
+        els.productCards.forEach(card => {
+            const matched = matchCard(card, keyword);
+            card.style.display = matched ? "" : "none";
+            if (matched) visibleCount++;
         });
-    </script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const appShell = document.getElementById('appShell');
-            const collapseHandle = document.getElementById('collapseHandle');
-            const settingsBtn = document.getElementById('settingsBtn');
-            const settingsBox = document.getElementById('settingsBox');
-            const navButtons = document.querySelectorAll('.nav-btn');
 
-            if (collapseHandle && appShell) {
-                collapseHandle.addEventListener('click', () => {
-                    appShell.classList.toggle('collapsed');
-                    if (appShell.classList.contains('collapsed')) {
-                        settingsBox?.classList.remove('open');
-                    }
-                });
-            }
+        if (els.noSearchResult) {
+            els.noSearchResult.style.display = visibleCount ? "none" : "block";
+        }
+    }
 
-            if (settingsBtn) {
-                settingsBtn.addEventListener('click', () => {
-                    if (appShell?.classList.contains('collapsed')) return;
-                    settingsBox?.classList.toggle('open');
-                });
-            }
+    function getMatchedCards(keyword) {
+        if (!keyword.trim()) return [];
+        return els.productCards.filter(card => matchCard(card, keyword));
+    }
 
-            navButtons.forEach((btn) => {
-                btn.addEventListener('click', () => {
-                    navButtons.forEach((item) => item.classList.remove('active'));
-                    btn.classList.add('active');
-                });
+    function addRecentSearch(keyword) {
+        const value = keyword.trim().toLowerCase();
+        if (!value) return;
+
+        recentSearches = recentSearches.filter(item => item !== value);
+        recentSearches.unshift(value);
+        recentSearches = recentSearches.slice(0, 8);
+    }
+
+    function closeSearchDropdown() {
+        els.searchDropdown?.classList.remove("show");
+    }
+
+    function openSearchDropdown() {
+        els.searchDropdown?.classList.add("show");
+    }
+
+    function renderSuggestions(keyword) {
+        if (!els.searchSuggestions) return;
+
+        const text = keyword.trim().toLowerCase();
+
+        let suggestions = recentSearches.filter(item => item.includes(text));
+
+        if (text && !suggestions.includes(text)) {
+            suggestions.unshift(text);
+        }
+
+        suggestions = suggestions.slice(0, 6);
+
+        if (!suggestions.length) {
+            els.searchSuggestions.innerHTML = `<div class="search-empty">No search suggestion</div>`;
+            return;
+        }
+
+        els.searchSuggestions.innerHTML = suggestions.map(item => `
+            <div class="search-suggestion-item" data-value="${escapeHtml(item)}">
+                <div class="search-suggestion-left">
+                    <i class="bi bi-clock-history"></i>
+                    <span>${escapeHtml(item)}</span>
+                </div>
+                <i class="bi bi-arrow-up-left"></i>
+            </div>
+        `).join("");
+
+        els.searchSuggestions.querySelectorAll(".search-suggestion-item").forEach(item => {
+            item.addEventListener("click", () => {
+                const value = item.dataset.value || "";
+                if (els.searchInput) els.searchInput.value = value;
+                filterProducts(value);
+                renderSearchPanel(value);
             });
         });
-    </script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
+    }
 
-            const cartCount = document.getElementById("cartCount");
+    function renderPreviewProducts(keyword) {
+        if (!els.searchPreviewProducts) return;
 
-            document.querySelectorAll(".product-card").forEach(card => {
+        const matchedCards = getMatchedCards(keyword);
 
-                const plusBtn = card.querySelector(".plus");
-                const minusBtn = card.querySelector(".minus");
-                const qtySpan = card.querySelector(".qty");
+        if (!matchedCards.length) {
+            els.searchPreviewProducts.innerHTML = `<div class="search-empty">No product found</div>`;
+            return;
+        }
 
-                // ADD ITEM
-                plusBtn.addEventListener("click", function() {
+        els.searchPreviewProducts.innerHTML = matchedCards.slice(0, 3).map(card => {
+            const data = getCardData(card);
+            return `
+                <div class="search-preview-card" data-id="${escapeHtml(data.id)}">
+                    <img src="${escapeHtml(data.image)}" alt="${escapeHtml(data.displayName)}">
+                    <div class="search-preview-info">
+                        <div class="search-preview-name">${escapeHtml(data.displayName)}</div>
+                        <div class="search-preview-price">$${escapeHtml(data.price)}</div>
+                        <button type="button" class="search-preview-btn">View</button>
+                    </div>
+                </div>
+            `;
+        }).join("");
 
-                    let qty = parseInt(qtySpan.innerText);
-                    qty++;
+        els.searchPreviewProducts.querySelectorAll(".search-preview-card").forEach(preview => {
+            preview.querySelector(".search-preview-btn")?.addEventListener("click", () => {
+                const id = preview.dataset.id;
+                const card = els.productCards.find(item => item.dataset.id === id);
+                if (!card) return;
 
-                    // update number on item card
-                    qtySpan.innerText = qty;
+                filterProducts(keyword);
+                closeSearchDropdown();
 
-                    const itemId = this.dataset.id;
-
-                    fetch("{{ route('user.pos.cart.add') }}", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": document.querySelector(
-                                    'meta[name="csrf-token"]').content
-                            },
-                            body: JSON.stringify({
-                                item_id: itemId,
-                                qty: 1
-                            })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-
-                            if (data.success) {
-
-                                // update cart icon number
-                                cartCount.innerText = data.cartCount;
-
-                            }
-
-                        })
-                        .catch(error => console.error(error));
-
+                card.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
                 });
 
+                card.classList.add("highlight-product");
+                setTimeout(() => card.classList.remove("highlight-product"), 1500);
+            });
+        });
+    }
 
-                // REMOVE ITEM (only UI for now)
-                minusBtn.addEventListener("click", function() {
+    function renderSearchPanel(keyword) {
+        const value = keyword.trim();
 
-                    let qty = parseInt(qtySpan.innerText);
+        if (!value) {
+            filterProducts("");
+            closeSearchDropdown();
+            return;
+        }
 
-                    if (qty > 0) {
-                        qty--;
-                        qtySpan.innerText = qty;
+        renderSuggestions(value);
+        renderPreviewProducts(value);
+        filterProducts(value);
+        openSearchDropdown();
+    }
+
+    function bindSidebar() {
+        els.collapseHandle?.addEventListener("click", () => {
+            els.appShell?.classList.toggle("collapsed");
+
+            if (els.appShell?.classList.contains("collapsed")) {
+                els.settingsBox?.classList.remove("open");
+            }
+        });
+
+        els.settingsBtn?.addEventListener("click", () => {
+            if (els.appShell?.classList.contains("collapsed")) return;
+            els.settingsBox?.classList.toggle("open");
+        });
+
+        els.navButtons.forEach(button => {
+            button.addEventListener("click", () => {
+                els.navButtons.forEach(btn => btn.classList.remove("active"));
+                button.classList.add("active");
+            });
+        });
+    }
+
+    function bindQuantityButtons() {
+        els.productCards.forEach(card => {
+            const plusBtn = card.querySelector(".plus");
+            const minusBtn = card.querySelector(".minus");
+            const qtyEl = card.querySelector(".qty");
+
+            plusBtn?.addEventListener("click", () => {
+                const qty = parseInt(qtyEl?.textContent || "1", 10) + 1;
+                if (qtyEl) qtyEl.textContent = qty;
+            });
+
+            minusBtn?.addEventListener("click", () => {
+                const currentQty = parseInt(qtyEl?.textContent || "1", 10);
+                if (currentQty > 1 && qtyEl) {
+                    qtyEl.textContent = currentQty - 1;
+                }
+            });
+        });
+    }
+
+    function bindAddToCart() {
+        els.productCards.forEach(card => {
+            const addBtn = card.querySelector(".add-cart-btn");
+            const qtyEl = card.querySelector(".qty");
+
+            addBtn?.addEventListener("click", async function () {
+                const itemId = this.dataset.id || card.dataset.id;
+                const qty = parseInt(qtyEl?.textContent || "1", 10);
+
+                if (!itemId) {
+                    showMessage("error", "Item ID not found.");
+                    return;
+                }
+
+                this.disabled = true;
+                this.textContent = "Adding...";
+
+                try {
+                    const response = await fetch("{{ route('user.pos.cart.add') }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": csrfToken,
+                            "Accept": "application/json"
+                        },
+                        body: JSON.stringify({
+                            item_id: itemId,
+                            qty: qty
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        if (els.cartCount && data.cartCount !== undefined) {
+                            els.cartCount.textContent = data.cartCount;
+                        }
+
+                        if (qtyEl) qtyEl.textContent = "1";
+                        showMessage("success", data.message || "Added to cart successfully.");
+                    } else {
+                        showMessage("error", data.message || "Failed to add to cart.");
                     }
-
-                });
-
+                } catch (error) {
+                    console.error(error);
+                    showMessage("error", "Something went wrong.");
+                } finally {
+                    this.disabled = false;
+                    this.textContent = "Add to cart";
+                }
             });
-
         });
-    </script>
+    }
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
+    function bindFavoriteButtons() {
+        els.favButtons.forEach(button => {
+            button.addEventListener("click", async function () {
+                const itemId = this.dataset.itemId;
+                const icon = this.querySelector("i");
 
-            document.querySelectorAll(".fav-btn").forEach(button => {
+                if (!itemId) return;
 
-                button.addEventListener("click", function() {
+                try {
+                    const response = await fetch("{{ route('user.pos.favorite.toggle') }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": csrfToken,
+                            "Accept": "application/json"
+                        },
+                        body: JSON.stringify({ item_id: itemId })
+                    });
 
-                    const itemId = this.dataset.itemId;
-                    const icon = this.querySelector("i");
+                    const data = await response.json();
 
-                    fetch("{{ route('user.pos.favorite.toggle') }}", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": document.querySelector(
-                                    'meta[name="csrf-token"]').content
-                            },
-                            body: JSON.stringify({
-                                item_id: itemId
-                            })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
+                    if (!icon) return;
 
-                            if (data.favorited) {
-                                icon.classList.remove("bi-heart");
-                                icon.classList.add("bi-heart-fill", "text-danger");
-                            } else {
-                                icon.classList.remove("bi-heart-fill", "text-danger");
-                                icon.classList.add("bi-heart");
-                            }
-
-                        });
-
-                });
-
+                    if (data.favorited) {
+                        icon.classList.remove("bi-heart");
+                        icon.classList.add("bi-heart-fill", "text-danger");
+                    } else {
+                        icon.classList.remove("bi-heart-fill", "text-danger");
+                        icon.classList.add("bi-heart");
+                    }
+                } catch (error) {
+                    console.error(error);
+                    showMessage("error", "Favorite update failed.");
+                }
             });
-
         });
-    </script>
+    }
+
+    function bindSearch() {
+        if (!els.searchInput) return;
+
+        els.searchInput.addEventListener("input", e => {
+            renderSearchPanel(e.target.value);
+        });
+
+        els.searchInput.addEventListener("focus", e => {
+            if (e.target.value.trim()) {
+                renderSearchPanel(e.target.value);
+            }
+        });
+
+        els.searchInput.addEventListener("keydown", e => {
+            if (e.key !== "Enter") return;
+
+            const value = e.target.value.trim();
+            if (!value) return;
+
+            addRecentSearch(value);
+            renderSearchPanel(value);
+        });
+
+        document.addEventListener("click", e => {
+            if (!els.searchWrapper?.contains(e.target)) {
+                closeSearchDropdown();
+            }
+        });
+    }
+
+    bindSidebar();
+    bindQuantityButtons();
+    bindAddToCart();
+    bindFavoriteButtons();
+    bindSearch();
+});
+</script>
 
 </body>
 

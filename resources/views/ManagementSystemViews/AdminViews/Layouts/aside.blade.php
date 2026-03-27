@@ -45,19 +45,8 @@
         <span class="nav-label">Select Company</span>
     </button>
 </a>
-            {{-- <a href="/favorites">
-                <button class="nav-btn" type="button">
-                  <span class="nav-icon">☆</span>
-                  <span class="nav-label">Favorite</span>
-                </button>
-            </a> --}}
 
-            {{-- <button class="nav-btn" type="button">
-              <span class="nav-icon">📋</span>
-              <span class="nav-label">Order History</span>
-            </button> --}}
-
-            <a href="/admin/notification">
+    <a href="/admin/notification">
               <button class="nav-btn" type="button">
                 <span class="nav-icon">◔</span>
                 <span class="nav-label">Notification</span>

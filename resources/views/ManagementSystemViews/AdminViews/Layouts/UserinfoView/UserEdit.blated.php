@@ -11,6 +11,9 @@
 
 <style>
 body{background:#f4f6f8;font-family:Arial;}
+a{
+            text-decoration: none;
+        }
 .page-card{background:#fff;border-radius:12px;padding:15px;}
 .connect-avatar{width:70px;height:70px;border-radius:50%;background:#e2e8f0;
 display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:22px;margin:auto;}

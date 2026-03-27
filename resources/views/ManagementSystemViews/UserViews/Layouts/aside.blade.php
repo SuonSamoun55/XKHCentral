@@ -54,7 +54,7 @@
                             <span class="nav-label">Order History</span>
                         </button>
 
-                        <a href="/pos-system/notifications">
+                        <a href="/notifications">
                             <button class="nav-btn {{ request()->is('pos-system/notifications') ? 'active' : '' }}"
                                 type="button">
                                 <span class="nav-icon">
