@@ -119,4 +119,18 @@ Route::middleware('auth')->prefix('users')->name('users.')->group(function () {
 
     Route::delete('/destroy/{id}', [WebUserController::class, 'destroy'])->name('destroy');
     Route::post('/delete-selected', [WebUserController::class, 'deleteSelected'])->name('deleteSelected');
+
+});
+Route::middleware(['auth'])->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'getNotifications'])
+        ->name('notifications.index');
+
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])
+        ->name('notifications.read');
+
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])
+        ->name('notifications.read.all');
+
+    Route::delete('/notifications/delete-selected', [NotificationController::class, 'deleteSelected'])
+        ->name('notifications.delete.selected');
 });

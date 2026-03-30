@@ -17,6 +17,8 @@ class NotificationController extends Controller
             return redirect('/login')->with('error', 'Please login first.');
         }
 
+        $tab = $request->get('tab', 'inbox');
+
         $query = Notification::where('user_id', $user->id)->latest();
 
         if ($request->filled('search')) {
@@ -24,12 +26,10 @@ class NotificationController extends Controller
 
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', '%' . $search . '%')
-                  ->orWhere('message', 'like', '%' . $search . '%')
-                  ->orWhere('type', 'like', '%' . $search . '%');
+                    ->orWhere('message', 'like', '%' . $search . '%')
+                    ->orWhere('type', 'like', '%' . $search . '%');
             });
         }
-
-        $tab = $request->get('tab', 'inbox');
 
         if ($tab === 'unread') {
             $query->where('is_read', false);
@@ -65,9 +65,11 @@ class NotificationController extends Controller
 
         $notification = Notification::where('user_id', $user->id)->findOrFail($id);
 
-        $notification->update([
-            'is_read' => true,
-        ]);
+        if (!$notification->is_read) {
+            $notification->update([
+                'is_read' => true,
+            ]);
+        }
 
         return back()->with('success', 'Notification marked as read.');
     }
@@ -99,7 +101,7 @@ class NotificationController extends Controller
 
         $ids = $request->input('notification_ids', []);
 
-        if (empty($ids)) {
+        if (!is_array($ids) || count($ids) === 0) {
             return back()->with('error', 'No notifications selected.');
         }
 
