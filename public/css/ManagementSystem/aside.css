@@ -28,6 +28,7 @@
     
   /* Make handle vertically centered */
 .collapse-handle {
+  z-index: 9999 !important;
     position: absolute;
     top: 350px; /* adjust distance from top of sidebar */
     right: -10px;
@@ -84,12 +85,14 @@
 .app-shell.collapsed .sidebar-wrap {
     width: var(--sidebar-close);
 }
-.app-shell.collapsed .nav-label,
-.app-shell.collapsed .brand-text,
-.app-shell.collapsed .profile-text,
-.app-shell.collapsed .search-box input,
-.app-shell.collapsed .settings-arrow {
-    display: none;       /* hide text completely */
+.app-shell.collapsed .sidebar-wrap .nav-label,
+.app-shell.collapsed .sidebar-wrap .brand-text,
+.app-shell.collapsed .sidebar-wrap .profile-text,
+.app-shell.collapsed .sidebar-wrap .search-box input,
+.app-shell.collapsed .sidebar-wrap .settings-arrow {
+    display: none !important;       /* hide sidebar-specific text completely */
+    opacity: 0;
+    visibility: hidden;
 }
 
 .sidebar {
@@ -175,10 +178,29 @@
       flex-direction: column;
       gap: 7px;
     }
-
+/* .nav-btn1{
+background-color: #09bfd3;
+  margin-top: 32px;
+   border: none;
+      background: transparent;
+      width: 100%;
+      min-height: 40px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+       gap: 12px;
+      padding: 0 11px;
+      cursor: pointer;
+      text-align: left;
+      transition: 0.2s ease;
+      white-space: nowrap;
+      font-size: 14px;
+      color: #262626;
+} */
     .nav-btn,
     .settings-btn,
     .logout-btn {
+      
       border: none;
       background: transparent;
       width: 100%;
