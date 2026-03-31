@@ -6,10 +6,10 @@
                 <div class="brand-text">Orange</div>
             </div>
 
-            <div class="search-box">
+            {{-- <div class="search-box">
                 <span class="search-icon">⌕</span>
                 <input type="text" placeholder="Search products">
-            </div>
+            </div> --}}
 
             <nav class="nav-list">
                 <a href="/">
@@ -54,7 +54,7 @@
                             <span class="nav-label">Order History</span>
                         </button>
 
-                        <a href="/notifications">
+                        <a href="/pos-system/notifications">
                             <button class="nav-btn {{ request()->is('pos-system/notifications') ? 'active' : '' }}"
                                 type="button">
                                 <span class="nav-icon">
