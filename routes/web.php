@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\ManagementSystemController\AdminNotificationControl
 use App\Http\Controllers\Api\POSControllers\POSAdminController\AdminOrderController;
 use App\Http\Controllers\Api\POSControllers\POSUserController\FavoriteController;
 use App\Http\Controllers\Api\POSControllers\POSUserController\NotificationController;
+use App\Http\Controllers\Api\POSControllers\POSUserController\UserProfileController;
 
 // use
 // Use DashboardUserController;
@@ -67,6 +68,11 @@ Route::post('/pos-admin/items/{id}/update-location', [ItemPosController::class, 
         Route::delete('/delete-selected', [NotificationController::class, 'deleteSelected'])
         ->name('user.notifications.deleteSelected');
         Route::get('user/notifications',[NotificationController::class,'show'])->name('user.notifications.show');
+
+       Route::get('/profile', [UserProfileController::class, 'index'])
+    ->name('profile');
+    Route::put('/profile/update', [UserProfileController::class, 'update'])
+    ->name('profile.update');
         
     //  Route::get('/pos-system/notifications', [NotificationController::class, 'getNotifications'])->name('user.pos.notifications');
      
