@@ -106,8 +106,27 @@ Route::post('/pos-system/checkout', [OrderController::class, 'checkout'])->name(
 Route::get('/pos-system/order-history', [OrderController::class, 'history'])->name('user.pos.order.history');
 Route::get('/favorites', [FavoriteController::class, 'index']);
 });
-Route::middleware('auth')->prefix('users')->name('users.')->group(function () {
+// Route::middleware('auth')->prefix('users')->name('users.')->group(function () {
+//     Route::get('/', [WebUserController::class, 'index'])->name('index');
+//     Route::get('/sync', [WebUserController::class, 'syncBCCustomers'])->name('sync');
+
+//     Route::get('/create/{id}', [WebUserController::class, 'create'])->name('create');
+//     Route::post('/store/{id}', [WebUserController::class, 'store'])->name('store');
+
+//     Route::get('/show/{id}', [WebUserController::class, 'show'])->name('show');
+//     Route::get('/edit/{id}', [WebUserController::class, 'edit'])->name('edit');
+//     Route::put('/update/{id}', [WebUserController::class, 'update'])->name('update');
+
+//     Route::delete('/destroy/{id}', [WebUserController::class, 'destroy'])->name('destroy');
+//     Route::post('/delete-selected', [WebUserController::class, 'deleteSelected'])->name('deleteSelected');
+
+// });
+// 🔓 PUBLIC (no auth)
+Route::prefix('users')->name('users.')->group(function () {
+
     Route::get('/', [WebUserController::class, 'index'])->name('index');
+
+    // ✅ FIX: ADD THIS BACK
     Route::get('/sync', [WebUserController::class, 'syncBCCustomers'])->name('sync');
 
     Route::get('/create/{id}', [WebUserController::class, 'create'])->name('create');
@@ -133,4 +152,21 @@ Route::middleware(['auth'])->group(function () {
 
     Route::delete('/notifications/delete-selected', [NotificationController::class, 'deleteSelected'])
         ->name('notifications.delete.selected');
+});
+
+// Route::prefix('admin-notifications')->name('admin.notifications.')->group(function () {
+//     Route::get('/', [AdminNotificationController::class, 'index'])->name('index');
+//     Route::post('/store', [AdminNotificationController::class, 'store'])->name('store');
+//     Route::post('/read/{id}', [AdminNotificationController::class, 'markAsRead'])->name('read');
+//     Route::delete('/destroy/{id}', [AdminNotificationController::class, 'destroy'])->name('destroy');
+// });
+
+
+Route::prefix('admin/notification')->name('admin.notifications.')->group(function () {
+    Route::get('/', [AdminNotificationController::class, 'index'])->name('index');
+    Route::post('/store', [AdminNotificationController::class, 'store'])->name('store');
+    Route::post('/read/{id}', [AdminNotificationController::class, 'markAsRead'])->name('read');
+    Route::post('/read-all', [AdminNotificationController::class, 'markAllAsRead'])->name('read.all');
+    Route::delete('/delete-selected', [AdminNotificationController::class, 'deleteSelected'])->name('delete.selected');
+    Route::delete('/destroy/{id}', [AdminNotificationController::class, 'destroy'])->name('destroy');
 });

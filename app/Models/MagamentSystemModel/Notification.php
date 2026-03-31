@@ -2,12 +2,12 @@
 
 namespace App\Models\MagamentSystemModel;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\User;
 
 class Notification extends Model
 {
-    protected $table = 'notifications';
+    use HasFactory;
 
     protected $fillable = [
         'user_id',
@@ -19,18 +19,12 @@ class Notification extends Model
         'is_read',
     ];
 
+    protected $casts = [
+        'is_read' => 'boolean',
+    ];
+
     public function user()
     {
-        return $this->belongsTo(User::class);
-    }
-
-    public function order()
-    {
-        return $this->belongsTo(\App\Models\POSModel\Order::class);
-    }
-
-    public function item()
-    {
-        return $this->belongsTo(\App\Models\POSModel\Item::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
