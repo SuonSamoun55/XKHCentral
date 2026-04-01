@@ -201,35 +201,6 @@ class OrderController extends Controller
             ], 500);
         }
     }
-    public function history(Request $request)
-    {
-        $user = Auth::user();
-
-        if (!$user) {
-            return redirect()->route('login');
-        }
-
-        $orders = Order::where('user_id', $user->id)
-            ->when($request->search, function ($query, $search) {
-                return $query->where(function ($q) use ($search) {
-                    $q->where('order_no', 'like', "%{$search}%")
-                        ->orWhere('status', 'like', "%{$search}%")
-                        ->orWhere('customer_no', 'like', "%{$search}%");
-                });
-            })
-            ->when($request->status && strtolower($request->status) !== 'all', function ($query) use ($request) {
-                $status = strtolower(str_replace(' ', '-', $request->status));
-                return $query->where('status', $status);
-            })
-            ->when($request->date, function ($query) use ($request) {
-                return $query->whereDate('created_at', $request->date);
-            })
-            ->with('items')
-            ->latest()
-            ->paginate(15)
-            ->appends($request->query());
-
-        return view('POSViews.POSUserViews.POSHistoryView', compact('orders'));
-    }
+    
 }
 

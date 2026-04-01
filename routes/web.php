@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\POSControllers\POSAdminController\AdminOrderControl
 use App\Http\Controllers\Api\POSControllers\POSUserController\FavoriteController;
 use App\Http\Controllers\Api\POSControllers\POSUserController\NotificationController;
 use App\Http\Controllers\Api\POSControllers\POSUserController\UserProfileController;
+use App\Http\Controllers\Api\POSControllers\POSUserController\HistoryController;
 
 // use
 // Use DashboardUserController;
@@ -74,6 +75,8 @@ Route::post('/pos-admin/items/{id}/update-location', [ItemPosController::class, 
     ->name('profile');
     Route::put('/profile/update', [UserProfileController::class, 'update'])
     ->name('profile.update');
+    Route::get('/pos-system/order/download/{id}', [HistoryController::class, 'downloadInvoice'])
+    ->name('user.pos.order.download');
         
     //  Route::get('/pos-system/notifications', [NotificationController::class, 'getNotifications'])->name('user.pos.notifications');
      
@@ -86,7 +89,7 @@ Route::put('/pos-system/cart/update/{id}', [CartController::class, 'updateQty'])
 Route::delete('/pos-system/cart/remove/{id}', [CartController::class, 'removeItem'])->name('user.pos.cart.remove');
 Route::delete('/pos-system/cart/clear', [CartController::class, 'clearCart'])->name('user.pos.cart.clear');
 Route::post('/pos-system/checkout', [OrderController::class, 'checkout'])->name('user.pos.checkout');
-Route::get('/pos-system/order-history', [OrderController::class, 'history'])->name('user.pos.order.history');
+Route::get('/pos-system/order-history', [HistoryController::class, 'history'])->name('user.pos.order.history');
 
 Route::get('/favorites', [FavoriteController::class, 'index']);
 });
