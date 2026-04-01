@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Profile Information</title>
 
@@ -8,10 +9,11 @@
 
     <style>
         .profile-card {
-            background: #fff;
+            background: var(--card);
             border-radius: 20px;
             padding: 30px;
         }
+
         .mt-4 {
             margin-top: 0 !important;
         }
@@ -54,155 +56,141 @@
         .btn-cancel:hover {
             background: #e6f7f7;
         }
-        .form-label{
+
+        .form-label {
             font-size: 13px;
         }
-        .form-control{
+
+        .form-control {
             font-size: 13px;
         }
-        .border{
+
+        .border {
             font-size: 13px;
         }
-            .text-muted {
-                font-size: 11px;
-            }
+
+        .text-muted {
+            font-size: 11px;
+        }
     </style>
 </head>
 
 <body>
 
-<div class="app-shell" id="appShell">
+    <div class="app-shell" id="appShell">
 
-    {{-- Sidebar --}}
-    @include('ManagementSystemViews.UserViews.Layouts.aside')
+        {{-- Sidebar --}}
+        @include('ManagementSystemViews.UserViews.Layouts.aside')
 
-    <div class="page-wrap">
-        <div class="container mt-4">
+        <div class="page-wrap">
+            <div class="container mt-4">
 
-            <div class="profile-card">
+                <div class="profile-card">
 
-                {{-- Header --}}
-                <h4 class="profile-title">Profile Information</h4>
-                <p class="profile-subtitle">
-                    Update your personal information and contact details
-                </p>
+                    {{-- Header --}}
+                    <h4 class="profile-title">Profile Information</h4>
+                    <p class="profile-subtitle">
+                        Update your personal information and contact details
+                    </p>
 
-                {{-- Form --}}
-                <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    @method('PUT')
+                    {{-- Form --}}
+                    <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        @method('PUT')
 
-                    {{-- Avatar + Upload --}}
-                    <div class="d-flex align-items-center gap-4 mb-4">
+                        {{-- Avatar + Upload --}}
+                        <div class="d-flex align-items-center gap-4 mb-4">
 
-                        <img 
-                            src="{{ auth()->user()->avatar ?? 'https://via.placeholder.com/80' }}" 
-                            class="profile-avatar"
-                            id="previewImage"
-                        >
+                            @php
+                            $avatar = auth()->user()->avatar ?? null;
+                            $avatarUrl = $avatar
+                                ? (preg_match('/^https?:\/\//i', $avatar) ? $avatar : asset($avatar))
+                                : 'https://via.placeholder.com/80';
+                        @endphp
+                        <img src="{{ $avatarUrl }}" class="profile-avatar" id="previewImage">
 
-                        <div>
-                            <label class="btn btn-light border">
-                                Change Photo
-                                <input type="file" name="avatar" hidden onchange="previewFile(event)">
-                            </label>
+                            <div>
+                                <label class="btn btn-light border">
+                                    Change Photo
+                                    <input type="file" name="avatar" hidden onchange="previewFile(event)">
+                                </label>
 
-                            <div class="text-muted small mt-1">
-                                JPG, PNG or GIF. Max size 2MB
+                                <div class="text-muted small mt-1">
+                                    JPG, PNG or GIF. Max size 2MB
+                                </div>
+                            </div>
+
+                        </div>
+
+                        {{-- Name --}}
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="name" class="form-control"
+                                value="{{ old('name', auth()->user()->name) }}">
+                        </div>
+
+                        {{-- Email + Phone --}}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control"
+                                    value="{{ old('email', auth()->user()->email) }}">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="text" name="phone" class="form-control" placeholder="+855..."
+                                    value="{{ old('phone', auth()->user()->phone ?? '') }}">
                             </div>
                         </div>
 
-                    </div>
-
-                    {{-- Name --}}
-                    <div class="mb-3">
-                        <label class="form-label">Name</label>
-                        <input 
-                            type="text" 
-                            name="name" 
-                            class="form-control"
-                            value="{{ old('name', auth()->user()->name) }}"
-                        >
-                    </div>
-
-                    {{-- Email + Phone --}}
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Email</label>
-                            <input 
-                                type="email" 
-                                name="email" 
-                                class="form-control"
-                                value="{{ old('email', auth()->user()->email) }}"
-                            >
+                        {{-- Date of Birth --}}
+                        <div class="mb-3">
+                            <label class="form-label">Date of Birth</label>
+                            <input type="date" name="dob" class="form-control"
+                                value="{{ old('dob', auth()->user()->dob ?? '') }}">
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Phone</label>
-                            <input 
-                                type="text" 
-                                name="phone" 
-                                class="form-control"
-                                placeholder="+855..."
-                                value="{{ old('phone', auth()->user()->phone ?? '') }}"
-                            >
+                        {{-- Location --}}
+                        <div class="mb-4">
+                            <label class="form-label">Location</label>
+                            <input type="text" name="location" class="form-control"
+                                value="{{ old('location', auth()->user()->location ?? '') }}">
                         </div>
-                    </div>
 
-                    {{-- Date of Birth --}}
-                    <div class="mb-3">
-                        <label class="form-label">Date of Birth</label>
-                        <input 
-                            type="date" 
-                            name="dob" 
-                            class="form-control"
-                            value="{{ old('dob', auth()->user()->dob ?? '') }}"
-                        >
-                    </div>
+                        {{-- Buttons --}}
+                        <div class="d-flex justify-content-center gap-3">
 
-                    {{-- Location --}}
-                    <div class="mb-4">
-                        <label class="form-label">Location</label>
-                        <input 
-                            type="text" 
-                            name="location" 
-                            class="form-control"
-                            value="{{ old('location', auth()->user()->location ?? '') }}"
-                        >
-                    </div>
+                            <a href="{{ url()->previous() }}" class="btn btn-cancel btn-custom">
+                                Cancel
+                            </a>
 
-                    {{-- Buttons --}}
-                    <div class="d-flex justify-content-center gap-3">
+                            <button type="submit" class="btn btn-save btn-custom">
+                                Save
+                            </button>
 
-                        <a href="{{ url()->previous() }}" class="btn btn-cancel btn-custom">
-                            Cancel
-                        </a>
+                        </div>
 
-                        <button type="submit" class="btn btn-save btn-custom">
-                            Save
-                        </button>
+                    </form>
 
-                    </div>
-
-                </form>
+                </div>
 
             </div>
-
         </div>
+
     </div>
 
-</div>
-
-{{-- Preview Image Script --}}
-<script>
-function previewFile(event) {
-    const reader = new FileReader();
-    reader.onload = function(){
-        document.getElementById('previewImage').src = reader.result;
-    };
-    reader.readAsDataURL(event.target.files[0]);
-}
-</script>
+    {{-- Preview Image Script --}}
+    <script>
+        function previewFile(event) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                document.getElementById('previewImage').src = reader.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    </script>
 
 </body>
+
 </html>

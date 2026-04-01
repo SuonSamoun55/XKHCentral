@@ -10,13 +10,13 @@
 
         .page-wrap {
             padding: 0px 30px ;
-            background-color: #ffffff;
+            background: var(--card);
             min-height: 100vh;
             margin-left: 0;
             border-radius: 20px;
         }
         .header{
-            background-color: white;
+            background: var(--card);
             position: sticky;
             padding-top: 30px;
             margin: -3px;
@@ -126,7 +126,7 @@
 
         .tabs-list {
             display: flex;
-            gap: 30px;
+            gap: 100px;
         }
 
         .tab-item {
@@ -209,6 +209,7 @@
 
         .notification-card {
             border-bottom: 1px solid #f0f0f0;
+            background: var(--card);
             padding: 16px 20px;
             display: flex;
             justify-content: space-between;

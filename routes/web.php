@@ -61,13 +61,14 @@ Route::post('/pos-admin/items/{id}/update-location', [ItemPosController::class, 
      Route::post('/pos-system/favorite-toggle', [FavoriteController::class, 'toggle'])->name('user.pos.favorite.toggle');
 
      Route::get('/pos-system/notifications', [NotificationController::class, 'getNotifications'])->name('user.notifications');
-     Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])
+     Route::get('/pos-system/notifications/unread', [NotificationController::class, 'unreadNotifications'])->name('user.notifications.unread');
+     Route::get('/pos-system/notifications/{id}', [NotificationController::class, 'show'])->name('user.notifications.show');
+     Route::post('/pos-system/notifications/{id}/read', [NotificationController::class, 'markAsRead'])
         ->name('user.notifications.read');
-        Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])
+     Route::post('/pos-system/notifications/read-all', [NotificationController::class, 'markAllAsRead'])
         ->name('user.notifications.markAllRead');
-        Route::delete('/delete-selected', [NotificationController::class, 'deleteSelected'])
+     Route::delete('/pos-system/notifications/delete-selected', [NotificationController::class, 'deleteSelected'])
         ->name('user.notifications.deleteSelected');
-        Route::get('user/notifications',[NotificationController::class,'show'])->name('user.notifications.show');
 
        Route::get('/profile', [UserProfileController::class, 'index'])
     ->name('profile');

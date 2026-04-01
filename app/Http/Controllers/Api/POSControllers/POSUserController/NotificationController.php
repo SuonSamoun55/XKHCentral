@@ -84,6 +84,37 @@ class NotificationController extends Controller
         ));
     }
 
+    public function unreadNotifications(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $unreadToasts = Notification::where('user_id', $user->id)
+            ->where('is_read', false)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $unreadCount = Notification::where('user_id', $user->id)
+            ->where('is_read', false)
+            ->count();
+
+        return response()->json([
+            'unread_count' => $unreadCount,
+            'unread' => $unreadToasts->map(function ($notif) {
+                return [
+                    'id' => $notif->id,
+                    'title' => $notif->title,
+                    'message' => $notif->message,
+                    'created_at' => $notif->created_at->toDateTimeString(),
+                ];
+            }),
+        ]);
+    }
+
     public function markAsRead($id)
     {
         $user = Auth::user();

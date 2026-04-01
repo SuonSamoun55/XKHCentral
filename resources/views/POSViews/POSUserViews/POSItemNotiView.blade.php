@@ -172,7 +172,7 @@
             
             // Mark as read if not already read
             if (element.classList.contains('unread')) {
-                fetch(`{{ route('user.notifications.read', ':id') }}`.replace(':id', notificationId), {
+                fetch(`/pos-system/notifications/${notificationId}/read`, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',

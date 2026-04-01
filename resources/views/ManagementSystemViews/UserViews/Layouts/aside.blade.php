@@ -69,8 +69,14 @@
         <div class="sidebar-bottom">
             @php $authUser = Auth::user(); @endphp
             {{-- <a href="{{ route('profile') }}" class="user-link"> --}}
+            @php
+                $avatar = $authUser && $authUser->avatar ? $authUser->avatar : null;
+                $avatarUrl = $avatar
+                    ? (preg_match('/^https?:\/\//i', $avatar) ? $avatar : asset($avatar))
+                    : 'https://i.pravatar.cc/80?img=12';
+            @endphp
             <div class="profile">
-                <img src="https://i.pravatar.cc/80?img=12" alt="User">
+                <img src="{{ $avatarUrl }}" alt="User">
                 <div class="profile-text">
                     <div class="user-meta">
                         <div class="user-name">{{ $authUser ? $authUser->name : 'Guest' }}</div>
@@ -110,9 +116,108 @@
     <button class="collapse-handle" id="collapseHandle" type="button">
         <span>‹</span>
     </button>
+
+    <div id="globalToastContainer" class="global-toast-container"></div>
 </div>
 {{-- <link rel="stylesheet" href="{{ asset('css/ManagementSystem/dashboard.css') }}" /> --}}
 <link rel="stylesheet" href="{{ asset('css/ManagementSystem/aside.css') }}" />
+
+<style>
+  .global-toast-container {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.global-toast {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    min-width: 340px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Softer shadow like the image */
+    border: 1px solid #f0f0f0;
+    position: relative;
+    cursor: pointer;
+    animation: toast-slide-in 0.3s ease-out;
+}
+
+.toast-content-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.toast-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.toast-text-side {
+    display: flex;
+    flex-direction: column;
+}
+
+.toast-title {
+    font-size: 15px;
+    color: #1a1a1a;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.toast-date {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 12px;
+}
+
+/* Action Buttons */
+.toast-actions-mini {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-toast-view {
+    background: #5d2df5; /* Purple from your first image */
+    color: white;
+    border: none;
+    padding: 5px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.btn-toast-dismiss {
+    background: white;
+    color: #1a1a1a;
+    border: 1px solid #d1d5db;
+    padding: 5px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.global-toast-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    border: none;
+    background: none;
+    font-size: 20px;
+    color: #9ca3af;
+    cursor: pointer;
+}
+
+@keyframes toast-slide-in {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+</style>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -139,7 +244,100 @@
                 settingsBox?.classList.toggle('open');
             });
         }
+;
+        const toastContainer = document.getElementById('globalToastContainer');
+        let shownNotificationIds = new Set(JSON.parse(localStorage.getItem('shownNotificationIds') || '[]'));
 
+       function createToast(notification) {
+    if (shownNotificationIds.has(notification.id)) return;
+
+    const item = document.createElement('div');
+    item.className = 'global-toast';
+    
+    // Using a default avatar if notification doesn't have a sender image
+    const avatarUrl = notification.sender_image || '/images/default-avatar.png';
+
+    item.innerHTML = `
+        <button class="global-toast-close" aria-label="Close">&times;</button>
+        <div class="toast-content-wrapper">
+            <img src="${avatarUrl}" class="toast-avatar" alt="User">
+            <div class="toast-text-side">
+                <strong class="toast-title">${escapeHtml(notification.title)}</strong>
+                <small class="toast-date">${new Date(notification.created_at).toLocaleString()}</small>
+                <div class="toast-actions-mini">
+                    <button class="btn-toast-view">View</button>
+                    <button class="btn-toast-dismiss">Dismiss</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Handle Close Button
+    item.querySelector('.global-toast-close').addEventListener('click', (e) => {
+        e.stopPropagation();
+        item.remove();
+    });
+
+    // Handle Dismiss Button
+    item.querySelector('.btn-toast-dismiss').addEventListener('click', (e) => {
+        e.stopPropagation();
+        item.remove();
+    });
+
+    // Handle View/Click
+    item.addEventListener('click', () => {
+        window.location.href = '{{ route('user.notifications') }}';
+    });
+
+    toastContainer.appendChild(item);
+    shownNotificationIds.add(notification.id);
+    localStorage.setItem('shownNotificationIds', JSON.stringify(Array.from(shownNotificationIds)));
+
+    setTimeout(() => {
+        if(item.parentElement) item.remove();
+    }, 32000);
+}
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function fetchUnreadNotifications() {
+            fetch('{{ route('user.notifications.unread') }}', { headers: { 'Accept': 'application/json' } })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data || typeof data.unread_count === 'undefined') return;
+
+                    // Update nav badge if present
+                    // document.querySelectorAll('.nav-label').forEach(el => {
+                    //     if (el.textContent.trim().toLowerCase() === 'notification') {
+                    //         let badge = el.nextElementSibling;
+                    //         if (!badge || !badge.classList.contains('badge-noti-count')) {
+                    //             badge = document.createElement('span');
+                    //             badge.className = 'badge-noti-count';
+                    //             badge.style.cssText = 'background:#ff5252;color:#fff;border-radius:12px;font-size:9px; padding:2px 6px; position:relative;left:-100px; top:-10px; positoin:sticky;';
+                    //             el.parentElement.appendChild(badge);
+                    //         }
+                    //         badge.textContent = data.unread_count > 0 ? data.unread_count : '';
+                    //     }
+                    // });
+
+                    if (data.unread && Array.isArray(data.unread)) {
+                        data.unread.forEach(notification => createToast(notification));
+                    }
+                })
+                .catch(err => console.debug('Unread notification check failed', err));
+        }
+
+        fetchUnreadNotifications();
+        setInterval(fetchUnreadNotifications, 15000);
 
     });
 </script>
