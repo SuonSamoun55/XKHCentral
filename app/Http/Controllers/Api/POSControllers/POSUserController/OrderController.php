@@ -199,4 +199,17 @@ class OrderController extends Controller
             ], 500);
         }
     }
+    public function history()
+{
+    $user = Auth::user();
+
+    // Fetch orders for this user only
+    // Use 'with' to get items/products in one query (Performance)
+    $orders = Order::where('user_id', $user->id)
+        ->with('items') 
+        ->latest()
+        ->paginate(15);
+
+    return view('POSViews.POSUserViews.POSHistoryView', compact('orders'));
+}
 }

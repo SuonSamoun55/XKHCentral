@@ -44,6 +44,7 @@
                         </span>
                         <span class="nav-label">Favorite</span>
                     </button>
+                </a>
 
                     <a href="/pos-system/order-history">
                         <button class="nav-btn {{ request()->is('pos-system/order-history') ? 'active' : '' }}"
@@ -53,16 +54,17 @@
                             </span>
                             <span class="nav-label">Order History</span>
                         </button>
+                    </a>
 
-                        <a href="/pos-system/notifications">
-                            <button class="nav-btn {{ request()->is('pos-system/notifications') ? 'active' : '' }}"
-                                type="button">
-                                <span class="nav-icon">
-                                    <img src="{{ asset('images/aside/Notification.png') }}" alt="Notification Icon">
-                                </span>
-                                <span class="nav-label">Notification</span>
-                            </button>
-                        </a>
+                    <a href="/pos-system/notifications">
+                        <button class="nav-btn {{ request()->is('pos-system/notifications') ? 'active' : '' }}"
+                            type="button">
+                            <span class="nav-icon">
+                                <img src="{{ asset('images/aside/Notification.png') }}" alt="Notification Icon">
+                            </span>
+                            <span class="nav-label">Notification</span>
+                        </button>
+                    </a>
             </nav>
         </div>
 
@@ -72,7 +74,9 @@
             @php
                 $avatar = $authUser && $authUser->avatar ? $authUser->avatar : null;
                 $avatarUrl = $avatar
-                    ? (preg_match('/^https?:\/\//i', $avatar) ? $avatar : asset($avatar))
+                    ? (preg_match('/^https?:\/\//i', $avatar)
+                        ? $avatar
+                        : asset($avatar))
                     : 'https://i.pravatar.cc/80?img=12';
             @endphp
             <div class="profile">
@@ -123,100 +127,109 @@
 <link rel="stylesheet" href="{{ asset('css/ManagementSystem/aside.css') }}" />
 
 <style>
-  .global-toast-container {
-    position: fixed;
-    top: 1.5rem;
-    right: 1.5rem;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
+    .global-toast-container {
+        position: fixed;
+        top: 1.5rem;
+        right: 1.5rem;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
 
-.global-toast {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 16px;
-    min-width: 340px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Softer shadow like the image */
-    border: 1px solid #f0f0f0;
-    position: relative;
-    cursor: pointer;
-    animation: toast-slide-in 0.3s ease-out;
-}
+    .global-toast {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 16px;
+        min-width: 340px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        /* Softer shadow like the image */
+        border: 1px solid #f0f0f0;
+        position: relative;
+        cursor: pointer;
+        animation: toast-slide-in 0.3s ease-out;
+    }
 
-.toast-content-wrapper {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-}
+    .toast-content-wrapper {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
 
-.toast-avatar {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    object-fit: cover;
-}
+    .toast-avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
 
-.toast-text-side {
-    display: flex;
-    flex-direction: column;
-}
+    .toast-text-side {
+        display: flex;
+        flex-direction: column;
+    }
 
-.toast-title {
-    font-size: 15px;
-    color: #1a1a1a;
-    font-weight: 600;
-    margin-bottom: 2px;
-}
+    .toast-title {
+        font-size: 15px;
+        color: #1a1a1a;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
 
-.toast-date {
-    font-size: 13px;
-    color: #6b7280;
-    margin-bottom: 12px;
-}
+    .toast-date {
+        font-size: 13px;
+        color: #6b7280;
+        margin-bottom: 12px;
+    }
 
-/* Action Buttons */
-.toast-actions-mini {
-    display: flex;
-    gap: 8px;
-}
+    /* Action Buttons */
+    .toast-actions-mini {
+        display: flex;
+        gap: 8px;
+    }
 
-.btn-toast-view {
-    background: #5d2df5; /* Purple from your first image */
-    color: white;
-    border: none;
-    padding: 5px 18px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-}
+    .btn-toast-view {
+        background: #5d2df5;
+        /* Purple from your first image */
+        color: white;
+        border: none;
+        padding: 5px 18px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+    }
 
-.btn-toast-dismiss {
-    background: white;
-    color: #1a1a1a;
-    border: 1px solid #d1d5db;
-    padding: 5px 18px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-}
+    .btn-toast-dismiss {
+        background: white;
+        color: #1a1a1a;
+        border: 1px solid #d1d5db;
+        padding: 5px 18px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+    }
 
-.global-toast-close {
-    position: absolute;
-    top: 10px;
-    right: 12px;
-    border: none;
-    background: none;
-    font-size: 20px;
-    color: #9ca3af;
-    cursor: pointer;
-}
+    .global-toast-close {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        border: none;
+        background: none;
+        font-size: 20px;
+        color: #9ca3af;
+        cursor: pointer;
+    }
 
-@keyframes toast-slide-in {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
+    @keyframes toast-slide-in {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
 </style>
 
 <script>
@@ -243,21 +256,20 @@
                 if (appShell?.classList.contains('collapsed')) return;
                 settingsBox?.classList.toggle('open');
             });
-        }
-;
+        };
         const toastContainer = document.getElementById('globalToastContainer');
         let shownNotificationIds = new Set(JSON.parse(localStorage.getItem('shownNotificationIds') || '[]'));
 
-       function createToast(notification) {
-    if (shownNotificationIds.has(notification.id)) return;
+        function createToast(notification) {
+            if (shownNotificationIds.has(notification.id)) return;
 
-    const item = document.createElement('div');
-    item.className = 'global-toast';
-    
-    // Using a default avatar if notification doesn't have a sender image
-    const avatarUrl = notification.sender_image || '/images/default-avatar.png';
+            const item = document.createElement('div');
+            item.className = 'global-toast';
 
-    item.innerHTML = `
+            // Using a default avatar if notification doesn't have a sender image
+            const avatarUrl = notification.sender_image || '/images/default-avatar.png';
+
+            item.innerHTML = `
         <button class="global-toast-close" aria-label="Close">&times;</button>
         <div class="toast-content-wrapper">
             <img src="${avatarUrl}" class="toast-avatar" alt="User">
@@ -272,31 +284,31 @@
         </div>
     `;
 
-    // Handle Close Button
-    item.querySelector('.global-toast-close').addEventListener('click', (e) => {
-        e.stopPropagation();
-        item.remove();
-    });
+            // Handle Close Button
+            item.querySelector('.global-toast-close').addEventListener('click', (e) => {
+                e.stopPropagation();
+                item.remove();
+            });
 
-    // Handle Dismiss Button
-    item.querySelector('.btn-toast-dismiss').addEventListener('click', (e) => {
-        e.stopPropagation();
-        item.remove();
-    });
+            // Handle Dismiss Button
+            item.querySelector('.btn-toast-dismiss').addEventListener('click', (e) => {
+                e.stopPropagation();
+                item.remove();
+            });
 
-    // Handle View/Click
-    item.addEventListener('click', () => {
-        window.location.href = '{{ route('user.notifications') }}';
-    });
+            // Handle View/Click
+            item.addEventListener('click', () => {
+                window.location.href = '{{ route('user.notifications') }}';
+            });
 
-    toastContainer.appendChild(item);
-    shownNotificationIds.add(notification.id);
-    localStorage.setItem('shownNotificationIds', JSON.stringify(Array.from(shownNotificationIds)));
+            toastContainer.appendChild(item);
+            shownNotificationIds.add(notification.id);
+            localStorage.setItem('shownNotificationIds', JSON.stringify(Array.from(shownNotificationIds)));
 
-    setTimeout(() => {
-        if(item.parentElement) item.remove();
-    }, 32000);
-}
+            setTimeout(() => {
+                if (item.parentElement) item.remove();
+            }, 32000);
+        }
 
         function escapeHtml(text) {
             const map = {
@@ -310,7 +322,11 @@
         }
 
         function fetchUnreadNotifications() {
-            fetch('{{ route('user.notifications.unread') }}', { headers: { 'Accept': 'application/json' } })
+            fetch('{{ route('user.notifications.unread') }}', {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
                 .then(response => response.json())
                 .then(data => {
                     if (!data || typeof data.unread_count === 'undefined') return;
