@@ -65,7 +65,10 @@
             <div class="notification-list">
                 @forelse($notifications as $notification)
                     <div class="notification-card {{ !$notification->is_read ? 'unread' : '' }}"
-                        data-title="{{ $notification->title }}" data-message="{{ $notification->message }}">
+                        data-title="{{ $notification->title }}" data-message="{{ $notification->message }}"
+                        data-id="{{ $notification->id }}"
+                        style="cursor: pointer;"
+                        onclick="openNotificationDetail(this)">
 
                         <div class="notification-content">
                             <div class="avatar">
@@ -85,14 +88,14 @@
 
                                 @if (str_contains(strtolower($notification->message), 'attachment'))
                                     <a href="{{ route('user.notifications.show', $notification->id) }}"
-                                        class="notification-attachment">
+                                        class="notification-attachment" onclick="event.stopPropagation();">
                                         attachment
                                     </a>
                                 @endif
 
                                 @if (!$notification->is_read)
                                     <form action="{{ route('user.notifications.read', $notification->id) }}"
-                                        method="POST" style="display: inline;">
+                                        method="POST" style="display: inline;" onclick="event.stopPropagation();">
                                         @csrf
                                         <button type="submit" class="btn btn-link p-0"
                                             style="font-size: 12px; text-decoration: underline;">
@@ -122,11 +125,66 @@
         </div>
     </div>
 
+    {{-- Notification Detail Modal --}}
+    <div id="notificationModal" class="modal fade" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notificationTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="notificationMessage"></p>
+                    <small class="text-muted" id="notificationDate"></small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const searchInput = document.getElementById('searchInput');
         const searchSuggestions = document.getElementById('searchSuggestions');
         const dateInput = document.getElementById('dateInput');
         const notificationCards = document.querySelectorAll('.notification-card');
+
+        // Open notification detail modal
+        function openNotificationDetail(element) {
+            const title = element.dataset.title;
+            const message = element.dataset.message;
+            const notificationId = element.dataset.id;
+            
+            // Get the date from the element
+            const metaElement = element.querySelector('.notification-meta');
+            const dateText = metaElement ? metaElement.textContent.trim() : new Date().toLocaleDateString();
+            
+            // Populate modal
+            document.getElementById('notificationTitle').textContent = title;
+            document.getElementById('notificationMessage').textContent = message;
+            document.getElementById('notificationDate').textContent = 'Date: ' + dateText;
+            
+            // Open modal
+            const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
+            modal.show();
+            
+            // Mark as read if not already read
+            if (element.classList.contains('unread')) {
+                fetch(`{{ route('user.notifications.read', ':id') }}`.replace(':id', notificationId), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                    }
+                }).then(() => {
+                    element.classList.remove('unread');
+                    const badge = element.querySelector('.notification-badge');
+                    if (badge) badge.remove();
+                }).catch(err => console.error('Error marking as read:', err));
+            }
+        }
 
         // Get all notifications for autocomplete
         const allNotifications = Array.from(notificationCards).map(card => ({
