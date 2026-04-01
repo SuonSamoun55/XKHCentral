@@ -97,10 +97,6 @@
                                     <form action="{{ route('user.notifications.read', $notification->id) }}"
                                         method="POST" style="display: inline;" onclick="event.stopPropagation();">
                                         @csrf
-                                        <button type="submit" class="btn btn-link p-0"
-                                            style="font-size: 12px; text-decoration: underline;">
-                                            Mark as read
-                                        </button>
                                     </form>
                                 @endif
                             </div>

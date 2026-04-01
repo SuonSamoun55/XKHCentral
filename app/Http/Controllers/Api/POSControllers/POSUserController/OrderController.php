@@ -172,6 +172,8 @@ class OrderController extends Controller
             }
 
             $cart->items()->delete();
+            $cart->status = 'completed';
+            $cart->save();
 
             DB::commit();
 
@@ -199,17 +201,35 @@ class OrderController extends Controller
             ], 500);
         }
     }
-    public function history()
-{
-    $user = Auth::user();
+    public function history(Request $request)
+    {
+        $user = Auth::user();
 
-    // Fetch orders for this user only
-    // Use 'with' to get items/products in one query (Performance)
-    $orders = Order::where('user_id', $user->id)
-        ->with('items') 
-        ->latest()
-        ->paginate(15);
+        if (!$user) {
+            return redirect()->route('login');
+        }
 
-    return view('POSViews.POSUserViews.POSHistoryView', compact('orders'));
+        $orders = Order::where('user_id', $user->id)
+            ->when($request->search, function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('order_no', 'like', "%{$search}%")
+                        ->orWhere('status', 'like', "%{$search}%")
+                        ->orWhere('customer_no', 'like', "%{$search}%");
+                });
+            })
+            ->when($request->status && strtolower($request->status) !== 'all', function ($query) use ($request) {
+                $status = strtolower(str_replace(' ', '-', $request->status));
+                return $query->where('status', $status);
+            })
+            ->when($request->date, function ($query) use ($request) {
+                return $query->whereDate('created_at', $request->date);
+            })
+            ->with('items')
+            ->latest()
+            ->paginate(15)
+            ->appends($request->query());
+
+        return view('POSViews.POSUserViews.POSHistoryView', compact('orders'));
+    }
 }
-}
+

@@ -213,7 +213,7 @@
 
                 if (data.success) {
                     alert("Order created successfully");
-                    location.reload();
+                    window.location.href = "{{ route('user.pos.order.history') }}";
                 } else {
                     alert(data.message + (data.error ? "\n\n" + data.error : ""));
                     console.error(data);
