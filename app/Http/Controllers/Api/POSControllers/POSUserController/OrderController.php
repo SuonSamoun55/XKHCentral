@@ -33,6 +33,7 @@ class OrderController extends Controller
             'user_id' => $user->id,
             'company_id' => $companyId,
             'request' => $request->all(),
+            'all_user_carts' => Cart::where('user_id', $user->id)->with('items')->get()->toArray(),
         ]);
 
         if (!$companyId) {
@@ -48,7 +49,20 @@ class OrderController extends Controller
 
         $cart = Cart::with('items.item')
             ->where('user_id', $user->id)
+            ->where('status', 'active')
             ->first();
+
+        // Ensure items are loaded fresh
+        if ($cart) {
+            $cart->load('items.item');
+        }
+
+        Log::info('Cart found', [
+            'cart_id' => $cart ? $cart->id : null,
+            'cart_status' => $cart ? $cart->status : null,
+            'items_count' => $cart ? $cart->items->count() : 0,
+            'items_data' => $cart ? $cart->items->toArray() : null,
+        ]);
 
         if (!$cart) {
             Log::warning('Checkout stopped: cart not found', [
@@ -64,6 +78,9 @@ class OrderController extends Controller
         if ($cart->items->isEmpty()) {
             Log::warning('Checkout stopped: cart empty', [
                 'user_id' => $user->id,
+                'cart_id' => $cart->id,
+                'all_carts' => Cart::where('user_id', $user->id)->with('items')->get()->toArray(),
+                'cart_items_raw' => \DB::table('cart_items')->where('cart_id', $cart->id)->get(),
             ]);
 
             return response()->json([
