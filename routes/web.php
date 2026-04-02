@@ -15,7 +15,7 @@ use App\Http\Controllers\Api\POSControllers\POSUserController\FavoriteController
 use App\Http\Controllers\Api\POSControllers\POSUserController\NotificationController;
 use App\Http\Controllers\Api\POSControllers\POSUserController\UserProfileController;
 use App\Http\Controllers\Api\POSControllers\POSUserController\HistoryController;
-
+use App\Http\Controllers\Api\ManagementSystemController\CompanyController;
 // use
 // Use DashboardUserController;
 
@@ -80,10 +80,10 @@ Route::get('/admin/orders/{id}', [AdminOrderController::class, 'show'])->name('a
     ->name('profile.update');
     Route::get('/pos-system/order/download/{id}', [HistoryController::class, 'downloadInvoice'])
     ->name('user.pos.order.download');
-        
+
     //  Route::get('/pos-system/notifications', [NotificationController::class, 'getNotifications'])->name('user.pos.notifications');
-     
-     
+
+
      //----------------------------------------------------------------------
   Route::get('/pos-system/cart', [CartController::class, 'index'])->name('user.pos.cart');
 Route::get('/pos-system/cart/data', [CartController::class, 'getCart'])->name('user.pos.cart.data');
@@ -156,3 +156,9 @@ Route::prefix('admin/notification')->name('admin.notifications.')->group(functio
 
 
 });
+Route::get('/companies', [CompanyController::class, 'index'])->name('companies.index');
+Route::get('/companies/create', [CompanyController::class, 'create'])->name('companies.create');
+Route::post('/companies', [CompanyController::class, 'store'])->name('companies.store');
+Route::get('/companies/{id}/edit', [CompanyController::class, 'edit'])->name('companies.edit');
+Route::put('/companies/{id}', [CompanyController::class, 'update'])->name('companies.update');
+Route::delete('/companies/{id}', [CompanyController::class, 'destroy'])->name('companies.destroy');
