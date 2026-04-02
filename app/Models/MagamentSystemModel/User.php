@@ -29,6 +29,9 @@ class User extends Authenticatable
         'status',
         'linked_at',
         'last_seen_at',
+        'avatar',
+        'dob',
+        'location',
     ];
 
     protected $hidden = [

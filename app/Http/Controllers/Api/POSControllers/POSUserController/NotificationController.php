@@ -31,7 +31,20 @@ class NotificationController extends Controller
             });
         }
 
-        if ($tab === 'unread') {
+        // Filter based on tab (use category column, not type)
+        if ($tab === 'spam') {
+            $query->where('category', 'spam');
+        } elseif ($tab === 'archive') {
+            $query->where('category', 'archive');
+        } else { // inbox is default
+            $query->where(function ($q) {
+                $q->where('category', 'inbox')
+                    ->orWhereNull('category');
+            });
+        }
+
+        // Filter unread if requested
+        if ($request->get('unread') === 'true') {
             $query->where('is_read', false);
         }
 
@@ -41,7 +54,21 @@ class NotificationController extends Controller
 
         $notifications = $query->paginate(10)->withQueryString();
 
-        $allCount = Notification::where('user_id', $user->id)->count();
+        // Get counts for each tab
+        $inboxCount = Notification::where('user_id', $user->id)
+            ->where(function ($q) {
+                $q->where('category', 'inbox')
+                    ->orWhereNull('category');
+            })
+            ->count();
+
+        $spamCount = Notification::where('user_id', $user->id)
+            ->where('category', 'spam')
+            ->count();
+
+        $archiveCount = Notification::where('user_id', $user->id)
+            ->where('category', 'archive')
+            ->count();
 
         $unreadCount = Notification::where('user_id', $user->id)
             ->where('is_read', false)
@@ -49,10 +76,43 @@ class NotificationController extends Controller
 
         return view('POSViews.POSUserViews.POSItemNotiView', compact(
             'notifications',
-            'allCount',
+            'inboxCount',
+            'spamCount',
+            'archiveCount',
             'unreadCount',
             'tab'
         ));
+    }
+
+    public function unreadNotifications(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $unreadToasts = Notification::where('user_id', $user->id)
+            ->where('is_read', false)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $unreadCount = Notification::where('user_id', $user->id)
+            ->where('is_read', false)
+            ->count();
+
+        return response()->json([
+            'unread_count' => $unreadCount,
+            'unread' => $unreadToasts->map(function ($notif) {
+                return [
+                    'id' => $notif->id,
+                    'title' => $notif->title,
+                    'message' => $notif->message,
+                    'created_at' => $notif->created_at->toDateTimeString(),
+                ];
+            }),
+        ]);
     }
 
     public function markAsRead($id)
@@ -90,6 +150,18 @@ class NotificationController extends Controller
 
         return back()->with('success', 'All notifications marked as read.');
     }
+    public function show($id)
+{
+    $notification = Notification::findOrFail($id);
+
+    // mark as read automatically
+    if (!$notification->is_read) {
+        $notification->is_read = 1;
+        $notification->save();
+    }
+
+    return view('notifications.show', compact('notification'));
+}
 
     public function deleteSelected(Request $request)
     {

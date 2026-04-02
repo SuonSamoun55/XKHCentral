@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ asset('css/POSsystem/cart.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
 </head>
 
 <body>
@@ -123,8 +122,6 @@
 
         </div>
     </div>
-
-
     <script>
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
@@ -185,47 +182,47 @@
 
 
         document.getElementById('checkoutBtn').onclick = async function() {
-    let currency = prompt("Choose currency (USD or KHR)", "USD");
+            let currency = prompt("Choose currency (USD or KHR)", "USD");
 
-    if (!currency) return;
+            if (!currency) return;
 
-    currency = currency.toUpperCase();
+            currency = currency.toUpperCase();
 
-    let factor = 1;
+            let factor = 1;
 
-    if (currency === "KHR") {
-        factor = prompt("Enter KHR rate example 4100", "4100");
-        if (!factor) return;
-    }
+            if (currency === "KHR") {
+                factor = prompt("Enter KHR rate example 4100", "4100");
+                if (!factor) return;
+            }
 
-    try {
-        const response = await fetch("{{ route('user.pos.checkout') }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                currency_code: currency,
-                currency_factor: factor
-            })
-        });
+            try {
+                const response = await fetch("{{ route('user.pos.checkout') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        currency_code: currency,
+                        currency_factor: factor
+                    })
+                });
 
-        const data = await response.json();
+                const data = await response.json();
 
-        if (data.success) {
-            alert("Order created successfully");
-            location.reload();
-        } else {
-            alert(data.message + (data.error ? "\n\n" + data.error : ""));
-            console.error(data);
-        }
-    } catch (error) {
-        console.error(error);
-        alert("Checkout request failed.");
-    }
-};
+                if (data.success) {
+                    alert("Order created successfully");
+                    window.location.href = "{{ route('user.pos.order.history') }}";
+                } else {
+                    alert(data.message + (data.error ? "\n\n" + data.error : ""));
+                    console.error(data);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Checkout request failed.");
+            }
+        };
     </script>
 
 </body>

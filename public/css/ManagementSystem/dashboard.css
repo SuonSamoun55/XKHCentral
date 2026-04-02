@@ -38,79 +38,14 @@
       color: inherit;
     }
 
-    .app-shell {
-      height: 100vh;
-      display: flex;
-      gap: var(--gap);
-      padding: 10px;
-      overflow: hidden;
-    }
 
-    /* SIDEBAR */
-    .sidebar-wrap {
-      width: var(--sidebar-open);
-      min-width: var(--sidebar-open);
-      position: relative;
-      transition: 0.28s ease;
-    }
-
-    .app-shell.collapsed .sidebar-wrap {
+    /* .app-shell.collapsed .sidebar-wrap {
       width: var(--sidebar-close);
       min-width: var(--sidebar-close);
-    }
+    } */
 
-    .sidebar {
-      height: 100%;
-      background: var(--card);
-      border-radius: var(--radius);
-      border: 1px solid #efebe3;
-      box-shadow: var(--shadow);
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      overflow: hidden;
-    }
-
-    .sidebar-top {
-      min-height: 0;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 2px 14px;
-    }
-
-    .brand-logo {
-      width: 18px;
-      height: 18px;
-      min-width: 18px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, #ffd666 0 24%, #ff9200 25% 100%);
-      position: relative;
-    }
-
-    .brand-logo::after {
-      content: "";
-      position: absolute;
-      width: 5px;
-      height: 3px;
-      background: #48b94d;
-      border-radius: 10px;
-      top: 2px;
-      left: 4px;
-      transform: rotate(35deg);
-    }
-
-    .brand-text {
-      font-size: 14px;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .search-box {
+   
+    /* .search-box {
       height: 30px;
       border: 1px solid var(--line);
       border-radius: 999px;
@@ -121,8 +56,8 @@
       padding: 0 12px;
       margin-bottom: 14px;
       overflow: hidden;
-    }
-
+    } */
+/* 
     .search-box input {
       border: none;
       outline: none;
@@ -135,92 +70,13 @@
     .search-icon {
       color: #999;
       font-size: 13px;
-    }
+    } */
 
     .nav-list {
       display: flex;
       flex-direction: column;
       gap: 7px;
     }
-
-    .nav-btn,
-    .settings-btn,
-    .logout-btn {
-      border: none;
-      background: transparent;
-      width: 100%;
-      min-height: 40px;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 0 11px;
-      cursor: pointer;
-      text-align: left;
-      transition: 0.2s ease;
-      white-space: nowrap;
-      font-size: 14px;
-      color: #262626;
-    }
-
-    .nav-btn:hover,
-    .settings-btn:hover,
-    .logout-btn:hover {
-      background: #f2f0ea;
-    }
-
-    .nav-btn.active {
-      background: var(--primary-dark);
-      color: #fff;
-    }
-
-    .nav-btn.active .nav-icon {
-      color: #fff;
-    }
-
-    .nav-icon {
-      width: 16px;
-      min-width: 16px;
-      color: #777;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-    }
-
-    .nav-label,
-    .brand-text,
-    .profile-text,
-    .search-box input,
-    .settings-arrow {
-      transition: opacity 0.2s ease, width 0.2s ease, margin 0.2s ease;
-    }
-
-    .sidebar-bottom {
-      padding-top: 10px;
-    }
-
-    .profile {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      padding: 6px 2px 8px;
-    }
-
-    .profile img {
-      width: 28px;
-      height: 28px;
-      min-width: 28px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .profile-name {
-      font-size: 12px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
     .badge {
       display: inline-block;
       margin-top: 4px;
@@ -231,113 +87,8 @@
       color: #fff;
       line-height: 1;
     }
-
-    .settings-box {
-      margin-top: 4px;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .settings-btn {
-      color: #333;
-    }
-
-    .settings-arrow {
-      margin-left: auto;
-      font-size: 11px;
-      color: #777;
-    }
-
-    .settings-menu {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.25s ease;
-      background: #d6eff3;
-      border-radius: 12px;
-    }
-
-    .settings-box.open .settings-menu {
-      max-height: 140px;
-      margin-top: 6px;
-    }
-
-    .settings-link {
-      display: block;
-      text-decoration: none;
-      color: #222;
-      font-size: 12px;
-      padding: 12px 18px 12px 38px;
-      transition: 0.2s ease;
-    }
-
-    .settings-link:hover {
-      background: rgba(255, 255, 255, 0.4);
-    }
-
-    .logout-btn {
-      color: var(--danger);
-      margin-top: 6px;
-    }
-
-    .collapse-handle {
-      position: absolute;
-      top: 73%;
-      right: -10px;
-      width: 18px;
-      height: 24px;
-      border: 1px solid #e7e2d9;
-      border-radius: 10px;
-      background: #f7f5ef;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: #777;
-      box-shadow: var(--shadow);
-      z-index: 10;
-    }
-
-    .collapse-handle span {
-      font-size: 12px;
-      line-height: 1;
-      transition: transform 0.25s ease;
-    }
-
-    .app-shell.collapsed .collapse-handle span {
-      transform: rotate(180deg);
-    }
-
-    .app-shell.collapsed .brand-text,
-    .app-shell.collapsed .nav-label,
-    .app-shell.collapsed .profile-text,
-    .app-shell.collapsed .settings-arrow,
-    .app-shell.collapsed .search-box input {
-      opacity: 0;
-      width: 0;
-      margin: 0;
-      overflow: hidden;
-      pointer-events: none;
-    }
-
-    .app-shell.collapsed .brand,
-    .app-shell.collapsed .profile,
-    .app-shell.collapsed .nav-btn,
-    .app-shell.collapsed .settings-btn,
-    .app-shell.collapsed .logout-btn,
-    .app-shell.collapsed .search-box {
-      justify-content: center;
-    }
-
-    .app-shell.collapsed .nav-btn,
-    .app-shell.collapsed .settings-btn,
-    .app-shell.collapsed .logout-btn {
-      padding-left: 0;
-      padding-right: 0;
-    }
-
-    .app-shell.collapsed .settings-menu {
-      display: none;
-    }
+   
+   
 
     /* CONTENT */
     .content-scroll {

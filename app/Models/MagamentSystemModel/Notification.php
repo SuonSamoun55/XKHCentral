@@ -14,6 +14,7 @@ class Notification extends Model
         'order_id',
         'item_id',
         'type',
+        'category',
         'title',
         'message',
         'is_read',

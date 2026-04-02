@@ -27,25 +27,23 @@
 }
     
   /* Make handle vertically centered */
-.collapse-handle {
-    position: absolute;
-    top: 350px; /* adjust distance from top of sidebar */
-    right: -10px;
-    width: 18px;
-    height: 24px;
-    border: 1px solid #e7e2d9;
-    border-radius: 10px;
-    background: #f7f5ef;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: #777;
-    box-shadow: var(--shadow);
-    z-index: 10;
-    transition: transform 0.25s ease;
-}
-
+ .collapse-handle {
+      position: absolute;
+      top: 50%;
+      right: -10px;
+      width: 18px;
+      height: 24px;
+      border: 1px solid #e7e2d9;
+      border-radius: 10px;
+      background: #f7f5ef;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #777;
+      box-shadow: var(--shadow);
+      z-index: 10;
+    }
 
     .collapse-handle span {
       font-size: 12px;
@@ -53,8 +51,31 @@
       transition: transform 0.25s ease;
     }
 
-    .app-shell.collapsed .collapse-handle span {
+
+   .app-shell.collapsed .collapse-handle span {
       transform: rotate(180deg);
+    }
+
+   
+
+    .app-shell.collapsed .brand,
+    .app-shell.collapsed .profile,
+    .app-shell.collapsed .nav-btn,
+    .app-shell.collapsed .settings-btn,
+    .app-shell.collapsed .logout-btn,
+    .app-shell.collapsed .search-box {
+      justify-content: center;
+    }
+
+    .app-shell.collapsed .nav-btn,
+    .app-shell.collapsed .settings-btn,
+    .app-shell.collapsed .logout-btn {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .app-shell.collapsed .settings-menu {
+      display: none;
     }
     .app-shell{
     display:flex;
@@ -84,30 +105,35 @@
 .app-shell.collapsed .sidebar-wrap {
     width: var(--sidebar-close);
 }
-.app-shell.collapsed .nav-label,
-.app-shell.collapsed .brand-text,
-.app-shell.collapsed .profile-text,
-.app-shell.collapsed .search-box input,
-.app-shell.collapsed .settings-arrow {
-    display: none;       /* hide text completely */
+.app-shell.collapsed .sidebar-wrap .nav-label,
+.app-shell.collapsed .sidebar-wrap .brand-text,
+.app-shell.collapsed .sidebar-wrap .profile-text,
+.app-shell.collapsed .sidebar-wrap .search-box input,
+.app-shell.collapsed .sidebar-wrap .settings-arrow {
+    display: none !important;       /* hide sidebar-specific text completely */
+    opacity: 0;
+    visibility: hidden;
 }
 
-.sidebar {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100vh;
-    overflow: hidden;
-    padding: 12px;       /* optional, but keep small to avoid text peeking */
-}
-.sidebar-top {
-    flex: 1;
-    overflow-y: auto;   /* scroll if too many menu items */
-    padding-bottom: 12px; /* space before bottom section */
-}
-.sidebar-bottom {
-    flex-shrink: 0;
-}
+
+
+
+ .sidebar {
+      height: 100%;
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid #efebe3;
+      box-shadow: var(--shadow);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .sidebar-top {
+      min-height: 0;
+    }
 
     .brand {
       display: flex;
@@ -142,47 +168,57 @@
       font-weight: 800;
       white-space: nowrap;
     }
-
-    .search-box {
-      height: 30px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: #fff;
+    .app-shell {
+      height: 100vh;
       display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0 12px;
-      margin-bottom: 14px;
+      gap: var(--gap);
+      padding: 10px;
       overflow: hidden;
     }
 
-    .search-box input {
-      border: none;
-      outline: none;
-      background: transparent;
-      width: 100%;
-      font-size: 12px;
-      color: #444;
+    .brand-text {
+      font-size: 14px;
+      font-weight: 800;
+      white-space: nowrap;
     }
 
-    .search-icon {
-      color: #999;
-      font-size: 13px;
-    }
+
+
+
+
 
     .nav-list {
       display: flex;
       flex-direction: column;
       gap: 7px;
     }
-
-    .nav-btn,
-    .settings-btn,
-    .logout-btn {
-      border: none;
+/* .nav-btn1{
+background-color: #09bfd3;
+  margin-top: 32px;
+   border: none;
       background: transparent;
       width: 100%;
       min-height: 40px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+       gap: 12px;
+      padding: 0 11px;
+      cursor: pointer;
+      text-align: left;
+      transition: 0.2s ease;
+      white-space: nowrap;
+      font-size: 14px;
+      color: #262626;
+} */
+    .nav-btn,
+    .settings-btn,
+    .logout-btn {
+      
+      border: none;
+      background: transparent;
+      width: 100%;
+      min-height: 36px;
       border-radius: 14px;
       display: flex;
       align-items: center;
@@ -346,11 +382,7 @@ html, body {
 
 
  /* SIDEBAR */
-.sidebar-wrap {
-    width: var(--sidebar-open);
-    position: relative;
-    flex-shrink: 0;
-}
+
 
 /* ===== Layout ===== */
 

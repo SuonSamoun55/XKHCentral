@@ -102,6 +102,7 @@
       </button>
     </div>
   <link rel="stylesheet" href="{{ asset('css/ManagementSystem/dashboard.css') }}" />
+  <link rel="stylesheet" href="{{ asset('css/ManagementSystem/aside.css') }}" />
 </script>
   <script>
     const appShell = document.getElementById('appShell');

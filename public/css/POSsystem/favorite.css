@@ -3,13 +3,7 @@
 .app-content{
     flex:1;
 }
-.sidebar{
-      
-          height: 100vh;        /* full screen height */
-    position: sticky;     /* stay in place */
-    top: 0;               /* stick to top */
-    overflow: hidden;     /* prevent sidebar scrolling */
-}
+
 
 .danger {
     color:red;
