@@ -1,25 +1,25 @@
 <?php
 
 namespace App\Http\Controllers\Api\ManagementSystemController;
-// use App\Http\Controllers\Api\ManagementSystemController\AuthController;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Sanctum\HasApiTokens;
-// use tok
+use App\Models\MagamentSystemModel\User;
 
 class AuthController extends Controller
 {
-    // Show Login Page
     public function showLogin()
     {
         if (Auth::check()) {
+            /** @var User $user */
+            $user = Auth::user();
 
-            if (Auth::user()->role === 'admin') {
+            if ($user->role === 'admin') {
                 return redirect()->route('pos.index');
             }
 
-            if (Auth::user()->role === 'customer') {
+            if ($user->role === 'customer') {
                 return redirect()->route('user.index');
             }
         }
@@ -27,26 +27,31 @@ class AuthController extends Controller
         return view('AUTH.Login');
     }
 
-    // Handle Login
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => ['required','email'],
+            'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
         if (Auth::attempt($credentials)) {
-
             $request->session()->regenerate();
 
-            if (Auth::user()->role === 'admin') {
+            /** @var User $user */
+            $user = Auth::user();
+
+            if ($user) {
+                $user->last_seen_at = now();
+                $user->save();
+            }
+
+            if ($user->role === 'admin') {
                 return redirect()->route('pos.index');
             }
 
-            if (Auth::user()->role === 'customer') {
+            if ($user->role === 'customer') {
                 return redirect()->route('user.index');
             }
-
         }
 
         return back()->withErrors([
@@ -54,9 +59,15 @@ class AuthController extends Controller
         ])->onlyInput('email');
     }
 
-    // Logout
     public function logout(Request $request)
     {
+        if (Auth::check()) {
+            /** @var User $user */
+            $user = Auth::user();
+$user->last_seen_at = now();
+            $user->save();
+        }
+
         Auth::logout();
 
         $request->session()->invalidate();
@@ -64,30 +75,58 @@ class AuthController extends Controller
 
         return redirect()->route('login');
     }
-public function apiLogin(Request $request)
-{
-    $credentials = $request->validate([
-        'email' => ['required', 'email'],
-        'password' => ['required'],
-    ]);
 
-    if (!Auth::attempt($credentials)) {
+    public function apiLogin(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+
+        if (!Auth::attempt($credentials)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid email or password.',
+            ], 401);
+        }
+
+        /** @var User $user */
+        $user = Auth::user();
+
+        $user->last_seen_at = now();
+        $user->save();
+
+        $token = $user->createToken('pos-token')->plainTextToken;
+
         return response()->json([
-            'success' => false,
-            'message' => 'Invalid email or password.',
-        ], 401);
+            'success' => true,
+            'message' => 'Login successful.',
+            'token' => $token,
+            'user' => $user,
+        ]);
     }
 
-    /** @var \App\Models\MagamentSystemModel\User $user */
-    $user = Auth::user();
+   public function apiLogout(Request $request)
+{
+    /** @var \App\Models\MagamentSystemModel\User|null $user */
+    $user = $request->user();
 
-    $token = $user->createToken('pos-token')->plainTextToken;
+    if ($user) {
+        $user->last_seen_at = now();
+        $user->save();
+
+        if (method_exists($user, 'currentAccessToken') && $user->currentAccessToken()) {
+            $accessToken = $user->currentAccessToken();
+
+            if ($accessToken instanceof \Laravel\Sanctum\PersonalAccessToken) {
+                $accessToken->delete();
+            }
+        }
+    }
 
     return response()->json([
         'success' => true,
-        'message' => 'Login successful.',
-        'token' => $token,
-        'user' => $user,
+        'message' => 'Logout successful.',
     ]);
 }
 }

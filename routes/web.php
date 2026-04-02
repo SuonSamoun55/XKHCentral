@@ -79,12 +79,15 @@ Route::delete('/permissions/{id}', [PermissionController::class, 'destroy'])->na
     Route::post('/items/sync-from-al', [ItemPosController::class, 'syncFromAl']);
     Route::get('/pos-admin/locations/active', [ItemPosController::class, 'getActiveLocations']);
 Route::post('/pos-admin/items/{id}/update-location', [ItemPosController::class, 'updateLocalItemLocation']);
-
+Route::get('/pos/items/{id}', [ItemPosController::class, 'detail'])->name('pos.items.detail');
+Route::get('/pos/items/{id}/json', [ItemPosController::class, 'showItem'])->name('pos.items.json');
 
     Route::get('/admin/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
     Route::post('/admin/orders/{id}/confirm', [AdminOrderController::class, 'confirm'])->name('admin.orders.confirm');
     Route::post('/admin/orders/{id}/cancel', [AdminOrderController::class, 'cancel'])->name('admin.orders.cancel');
     Route::get('/admin/order-actions', [AdminOrderController::class, 'actionHistory'])->name('admin.orders.actions');
+// Route::get('/admin/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
+Route::get('/admin/orders/{id}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
 
 
     // Users Route
@@ -123,22 +126,16 @@ Route::get('/favorites', [FavoriteController::class, 'index']);
 // });
 // 🔓 PUBLIC (no auth)
 Route::prefix('users')->name('users.')->group(function () {
-
     Route::get('/', [WebUserController::class, 'index'])->name('index');
-
-    // ✅ FIX: ADD THIS BACK
+    Route::get('/bc-image/{bcId}', [WebUserController::class, 'getBCImage'])->name('bc-image');
     Route::get('/sync', [WebUserController::class, 'syncBCCustomers'])->name('sync');
-
     Route::get('/create/{id}', [WebUserController::class, 'create'])->name('create');
     Route::post('/store/{id}', [WebUserController::class, 'store'])->name('store');
-
     Route::get('/show/{id}', [WebUserController::class, 'show'])->name('show');
     Route::get('/edit/{id}', [WebUserController::class, 'edit'])->name('edit');
     Route::put('/update/{id}', [WebUserController::class, 'update'])->name('update');
-
     Route::delete('/destroy/{id}', [WebUserController::class, 'destroy'])->name('destroy');
     Route::post('/delete-selected', [WebUserController::class, 'deleteSelected'])->name('deleteSelected');
-
 });
 Route::middleware(['auth'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'getNotifications'])

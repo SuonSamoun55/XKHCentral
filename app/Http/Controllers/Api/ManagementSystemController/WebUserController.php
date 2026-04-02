@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use App\Models\BcCustomer;
 use App\Models\MagamentSystemModel\User;
 use App\Models\MagamentSystemModel\Company;
@@ -27,25 +29,55 @@ class WebUserController extends Controller
         foreach ($customers as $customer) {
             $linkedUser = $userMap->get($customer->bc_customer_no);
 
+            $bcName = $customer->display_name ?? $customer->name ?? '-';
+            $bcEmail = $customer->email ?? '-';
+            $bcPhone = $customer->phone_number ?? '-';
+            $bcImageUrl = $customer->profile_image_url ?? null;
+
             if ($linkedUser) {
                 $customer->connect_status = 'connected';
                 $customer->role = $linkedUser->role ?? 'user';
                 $customer->local_user_id = $linkedUser->id;
-                $customer->local_name = $linkedUser->name ?? ($customer->display_name ?? $customer->name ?? '-');
-                $customer->local_email = $linkedUser->email ?? ($customer->email ?? '-');
-                $customer->local_phone = $linkedUser->phone ?? ($customer->phone_number ?? '-');
+
+                $customer->local_name = !empty($linkedUser->name) ? $linkedUser->name : $bcName;
+                $customer->local_email = !empty($linkedUser->email) ? $linkedUser->email : $bcEmail;
+                $customer->local_phone = !empty($linkedUser->phone) ? $linkedUser->phone : $bcPhone;
+
+                $customer->profile_image = $linkedUser->profile_image ?? null;
+                $customer->profile_image_url = !empty($linkedUser->profile_image_url)
+                    ? $linkedUser->profile_image_url
+                    : $bcImageUrl;
+
+                $customer->profile_image_display = $linkedUser->profile_image_display;
+
+                $customer->last_seen_at = $linkedUser->last_seen_at;
+                $customer->is_online = $linkedUser->is_online;
+                $customer->offline_duration = $linkedUser->is_online
+                    ? 'Online now'
+                    : $linkedUser->offline_duration;
             } else {
                 $customer->connect_status = 'not_connected';
                 $customer->role = '-';
                 $customer->local_user_id = null;
-                $customer->local_name = $customer->display_name ?? $customer->name ?? '-';
-                $customer->local_email = $customer->email ?? '-';
-                $customer->local_phone = $customer->phone_number ?? '-';
+
+                $customer->local_name = $bcName;
+                $customer->local_email = $bcEmail;
+                $customer->local_phone = $bcPhone;
+
+                $customer->profile_image = null;
+                $customer->profile_image_url = $bcImageUrl;
+                $customer->profile_image_display = !empty($bcImageUrl)
+                    ? $bcImageUrl
+                    : $this->defaultImageUrl();
+
+                $customer->last_seen_at = null;
+                $customer->is_online = false;
+                $customer->offline_duration = 'Not connected';
             }
 
-            $customer->name = $customer->display_name ?? $customer->name ?? '-';
-            $customer->email = $customer->email ?? '-';
-            $customer->phone = $customer->phone_number ?? '-';
+            $customer->name = $bcName;
+            $customer->email = $bcEmail;
+            $customer->phone = $bcPhone;
         }
 
         return view(
@@ -77,42 +109,121 @@ class WebUserController extends Controller
                 ->with('error', 'Unable to build Business Central URL.');
         }
 
-        $response = Http::withoutVerifying()
-            ->withToken($token)
-            ->get($url);
+        try {
+            $response = Http::withoutVerifying()
+                ->withToken($token)
+                ->timeout(60)
+                ->get($url);
 
-        if (!$response->successful()) {
-            return redirect()->route('users.index')
-                ->with('error', 'Failed to fetch BC customers.');
-        }
+            if (!$response->successful()) {
+                Log::error('BC sync failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'url' => $url,
+                ]);
 
-        $data = $response->json('value', []);
-
-        foreach ($data as $row) {
-            $displayName = trim($row['displayName'] ?? '');
-            $customerNo = $row['number'] ?? null;
-
-            if (!$customerNo) {
-                continue;
+                return redirect()->route('users.index')
+                    ->with('error', 'Failed to fetch BC customers.');
             }
 
-            BcCustomer::updateOrCreate(
-                [
-                    'company_id' => $companyId,
-                    'bc_customer_no' => $customerNo,
-                ],
-                [
-                    'bc_id' => $row['id'] ?? null,
-                    'name' => $displayName !== '' ? $displayName : 'Unknown',
-                    'display_name' => $displayName !== '' ? $displayName : 'Unknown',
-                    'email' => $row['email'] ?? null,
-                    'phone_number' => $row['phoneNumber'] ?? null,
-                ]
-            );
+            $data = $response->json('value', []);
+
+            foreach ($data as $row) {
+                $displayName = trim($row['displayName'] ?? '');
+                $customerNo = $row['number'] ?? null;
+                $bcId = $row['id'] ?? null;
+
+                if (!$customerNo) {
+                    continue;
+                }
+
+                $phoneNumber = $row['phoneNumber'] ?? null;
+
+                $bcImageUrl = null;
+                if (!empty($bcId)) {
+                    $bcImageUrl = route('users.bc-image', ['bcId' => $bcId]);
+                }
+
+                BcCustomer::updateOrCreate(
+                    [
+                        'company_id' => $companyId,
+                        'bc_customer_no' => $customerNo,
+                    ],
+                    [
+                        'bc_id' => $bcId,
+                        'name' => $displayName !== '' ? $displayName : 'Unknown',
+                        'display_name' => $displayName !== '' ? $displayName : 'Unknown',
+                        'email' => $row['email'] ?? null,
+                        'phone_number' => $phoneNumber,
+                        'profile_image_url' => $bcImageUrl,
+                    ]
+                );
+
+                User::where('company_id', $companyId)
+                    ->where('bc_customer_no', $customerNo)
+                    ->update([
+                        'name' => $displayName !== '' ? $displayName : 'Unknown',
+                        'email' => $row['email'] ?? null,
+                        'phone' => $phoneNumber,
+                        'profile_image_url' => $bcImageUrl,
+                    ]);
+            }
+
+            return redirect()->route('users.index')
+                ->with('success', 'BC customers synced successfully.');
+        } catch (\Throwable $e) {
+            Log::error('BC sync exception', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('users.index')
+                ->with('error', 'Error while syncing BC customers: ' . $e->getMessage());
+        }
+    }
+
+    public function getBCImage($bcId)
+    {
+        $token = $this->getToken();
+
+        if (!$token) {
+            return response()->json(['error' => 'Auth failed'], 401);
         }
 
-        return redirect()->route('users.index')
-            ->with('success', 'BC customers synced successfully.');
+        $contentUrl = $this->bcUrl("customers({$bcId})/picture/pictureContent");
+
+        $imageResponse = Http::withoutVerifying()
+            ->withToken($token)
+            ->withHeaders([
+                'Accept' => 'image/jpeg, image/png, image/*',
+            ])
+            ->get($contentUrl);
+
+        if (!$imageResponse->successful()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch customer image',
+                'details' => $imageResponse->body(),
+                'url' => $contentUrl,
+            ], 500);
+        }
+
+        $contentType = $imageResponse->header('Content-Type') ?: 'image/jpeg';
+        $contentType = explode(';', $contentType)[0];
+
+        return response($imageResponse->body())
+            ->header('Content-Type', $contentType)
+            ->header('Cache-Control', 'public, max-age=86400');
+    }
+
+    protected function defaultImageUrl()
+    {
+        $fallbackPath = public_path('images/default-user.png');
+
+        if (file_exists($fallbackPath)) {
+            return asset('images/default-user.png');
+        }
+
+        return '';
     }
 
     public function create($id)
@@ -128,6 +239,8 @@ class WebUserController extends Controller
         $request->validate([
             'role' => 'required|string|max:50',
             'password' => 'required|min:6|confirmed',
+            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'profile_image_url' => 'nullable|string|max:1000',
         ]);
 
         $bcCustomerNo = $customer->bc_customer_no ?? null;
@@ -144,16 +257,33 @@ class WebUserController extends Controller
                 ->with('error', 'This customer is already connected.');
         }
 
+        $uploadedImagePath = null;
+
+        if ($request->hasFile('profile_image')) {
+            $uploadedImagePath = $request->file('profile_image')->store('users/profile_images', 'public');
+        }
+
+        $finalImageUrl = null;
+
+        if ($request->filled('profile_image_url')) {
+            $finalImageUrl = $request->profile_image_url;
+        } elseif (!empty($customer->profile_image_url)) {
+            $finalImageUrl = $customer->profile_image_url;
+        }
+
         User::create([
             'company_id' => $companyId,
             'bc_customer_no' => $bcCustomerNo,
             'name' => $customer->display_name ?? $customer->name ?? '-',
             'email' => $customer->email ?? null,
             'phone' => $customer->phone_number ?? null,
+            'profile_image' => $uploadedImagePath,
+            'profile_image_url' => $finalImageUrl,
             'password' => Hash::make($request->password),
             'role' => $request->role,
             'status' => true,
             'linked_at' => now(),
+            'last_seen_at' => null,
         ]);
 
         return redirect()->route('users.index')
@@ -163,8 +293,15 @@ class WebUserController extends Controller
     public function show($id)
     {
         $customer = BcCustomer::findOrFail($id);
-
         $user = User::where('bc_customer_no', $customer->bc_customer_no)->first();
+
+        if ($user) {
+            $user->profile_image_display = $user->profile_image_display;
+        }
+
+        $customer->profile_image_display = !empty($customer->profile_image_url)
+            ? $customer->profile_image_url
+            : $this->defaultImageUrl();
 
         return view(
             'ManagementSystemViews.AdminViews.Layouts.UserinfoView.UserShow',
@@ -180,13 +317,14 @@ class WebUserController extends Controller
     public function update(Request $request, $id)
     {
         $customer = BcCustomer::findOrFail($id);
-
         $user = User::where('bc_customer_no', $customer->bc_customer_no)->firstOrFail();
 
         $request->validate([
             'role' => 'required|string|max:50',
             'old_password' => 'required',
             'password' => 'nullable|min:6|confirmed',
+            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'profile_image_url' => 'nullable|string|max:1000',
         ]);
 
         if (!Hash::check($request->old_password, $user->password)) {
@@ -196,7 +334,28 @@ class WebUserController extends Controller
 
         $data = [
             'role' => $request->role,
+            'name' => $customer->display_name ?? $customer->name ?? $user->name,
+            'email' => $customer->email ?? $user->email,
+            'phone' => $customer->phone_number ?? $user->phone,
         ];
+
+        if ($request->hasFile('profile_image')) {
+            if (!empty($user->profile_image) && Storage::disk('public')->exists($user->profile_image)) {
+                Storage::disk('public')->delete($user->profile_image);
+            }
+
+            $data['profile_image'] = $request->file('profile_image')->store('users/profile_images', 'public');
+        }
+
+        if ($request->filled('profile_image_url')) {
+            $data['profile_image_url'] = $request->profile_image_url;
+        } elseif (!empty($user->profile_image_url)) {
+            $data['profile_image_url'] = $user->profile_image_url;
+        } elseif (!empty($customer->profile_image_url)) {
+            $data['profile_image_url'] = $customer->profile_image_url;
+        } else {
+            $data['profile_image_url'] = null;
+        }
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
@@ -211,8 +370,15 @@ class WebUserController extends Controller
     public function destroy($id)
     {
         $customer = BcCustomer::findOrFail($id);
+        $user = User::where('bc_customer_no', $customer->bc_customer_no)->first();
 
-        User::where('bc_customer_no', $customer->bc_customer_no)->delete();
+        if ($user) {
+            if (!empty($user->profile_image) && Storage::disk('public')->exists($user->profile_image)) {
+                Storage::disk('public')->delete($user->profile_image);
+            }
+
+            $user->delete();
+        }
 
         return redirect()->route('users.index')
             ->with('success', 'User deleted successfully.');
@@ -230,7 +396,15 @@ class WebUserController extends Controller
         $customers = BcCustomer::whereIn('id', $ids)->get();
 
         foreach ($customers as $customer) {
-            User::where('bc_customer_no', $customer->bc_customer_no)->delete();
+            $user = User::where('bc_customer_no', $customer->bc_customer_no)->first();
+
+            if ($user) {
+                if (!empty($user->profile_image) && Storage::disk('public')->exists($user->profile_image)) {
+                    Storage::disk('public')->delete($user->profile_image);
+                }
+
+                $user->delete();
+            }
         }
 
         return redirect()->route('users.index')

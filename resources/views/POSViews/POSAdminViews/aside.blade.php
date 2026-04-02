@@ -19,25 +19,31 @@
                 <span class="nav-label">Dashboard</span>
               </button>
             </a>
+            <a href="/admin/orders">
+              <button class="nav-btn" type="button">
+                <span class="nav-icon">◔</span>
+                <span class="nav-label">Approval order</span>
+              </button>
+            </a>
 
-            <a href="/users">
+            {{-- <a href="/users">
               <button class="nav-btn" type="button">
                 <span class="nav-icon">👤</span>
                 <span class="nav-label">Users</span>
               </button>
-            </a>
-            <a href="/pos/interface">
+            </a> --}}
+            {{-- <a href="/pos/interface">
                 <button class="nav-btn" type="button">
                   <span class="nav-icon">🛒</span>
                   <span class="nav-label">Pos System</span>
                 </button>
-            </a>
-            <a href="/favorites">
+            </a> --}}
+            {{-- <a href="/favorites">
                 <button class="nav-btn" type="button">
                   <span class="nav-icon">☆</span>
                   <span class="nav-label">Favorite</span>
                 </button>
-            </a>
+            </a> --}}
 
             {{-- <button class="nav-btn" type="button">
               <span class="nav-icon">📋</span>
@@ -52,12 +58,7 @@
             </a>
           </nav>
         </div>
-<a href="/admin/orders">
-              <button class="nav-btn" type="button">
-                <span class="nav-icon">◔</span>
-                <span class="nav-label">Approval order</span>
-              </button>
-            </a>
+
         <div class="sidebar-bottom">
                 @php $authUser = Auth::user(); @endphp
                  {{-- <a href="{{ route('profile') }}" class="user-link"> --}}

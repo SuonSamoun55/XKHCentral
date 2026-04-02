@@ -146,7 +146,7 @@
 
         .status-select{
             height:34px;
-            min-width:140px;
+            min-width:150px;
             border:1px solid #d6dde5;
             border-radius:5px;
             padding:0 8px;
@@ -178,11 +178,9 @@
         .table-scroll{
             width:100%;
             height:100%;
-            /* overflow:auto; */
+            overflow:auto;
         }
-        tbody{
-            overflow: scroll;
-        }
+
         .table-scroll::-webkit-scrollbar{
             width:8px;
             height:8px;
@@ -197,11 +195,9 @@
             width:100%;
             margin-bottom:0;
             table-layout:fixed;
-            min-width:980px;
+            min-width:1500px;
         }
-        .table thead{
-            overflow: hidden;
-        }
+
         .table thead th{
             background:#18bfd0;
             color:#fff;
@@ -213,7 +209,6 @@
             top:0;
             z-index:5;
             font-weight:600;
-         /* overflow: hidden; */
         }
 
         .table tbody td{
@@ -239,12 +234,12 @@
 
         .table th:nth-child(2),
         .table td:nth-child(2){
-            width:180px;
+            width:260px;
         }
 
         .table th:nth-child(3),
         .table td:nth-child(3){
-            width:220px;
+            width:200px;
         }
 
         .table th:nth-child(4),
@@ -259,17 +254,37 @@
 
         .table th:nth-child(6),
         .table td:nth-child(6){
-            width:100px;
+            width:90px;
         }
 
         .table th:nth-child(7),
         .table td:nth-child(7){
-            width:140px;
+            width:130px;
         }
 
         .table th:nth-child(8),
         .table td:nth-child(8){
-            width:90px;
+            width:150px;
+        }
+
+        .table th:nth-child(9),
+        .table td:nth-child(9){
+            width:150px;
+        }
+
+        .table th:nth-child(10),
+        .table td:nth-child(10){
+            width:150px;
+        }
+
+        .table th:nth-child(11),
+        .table td:nth-child(11){
+            width:190px;
+        }
+
+        .table th:nth-child(12),
+        .table td:nth-child(12){
+            width:100px;
         }
 
         .avatar-cell{
@@ -279,24 +294,57 @@
             min-width:0;
         }
 
-        .avatar-circle{
-            width:28px;
-            height:28px;
+        .avatar-wrap{
+            width:42px;
+            height:42px;
+            position:relative;
+            flex-shrink:0;
+        }
+
+        .avatar-image{
+            width:42px;
+            height:42px;
             border-radius:50%;
-            background:#e2e8f0;
-            color:#0f172a;
+            object-fit:cover;
+            border:1px solid #dbe4ee;
+            background:#f8fafc;
+            display:block;
+        }
+
+        .avatar-fallback{
+            width:42px;
+            height:42px;
+            border-radius:50%;
             display:flex;
             align-items:center;
             justify-content:center;
-            font-size:11px;
+            background:#e2e8f0;
+            color:#475569;
+            font-size:14px;
             font-weight:700;
-            flex-shrink:0;
+            border:1px solid #dbe4ee;
+        }
+
+        .name-block{
+            display:flex;
+            flex-direction:column;
+            min-width:0;
         }
 
         .name-text{
             overflow:hidden;
             text-overflow:ellipsis;
             white-space:nowrap;
+            font-weight:600;
+            color:#0f172a;
+        }
+
+        .sub-text{
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+            font-size:11px;
+            color:#64748b;
         }
 
         .status-badge{
@@ -319,6 +367,16 @@
         .status-disconnected{
             background:#fee2e2;
             color:#991b1b;
+        }
+
+        .status-online{
+            background:#dcfce7;
+            color:#166534;
+        }
+
+        .status-offline{
+            background:#e2e8f0;
+            color:#475569;
         }
 
         .role-text{
@@ -369,6 +427,17 @@
             color:#94a3b8 !important;
         }
 
+        .debug-url{
+            display:block;
+            max-width:180px;
+            font-size:10px;
+            color:#2563eb;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+            text-decoration:none;
+        }
+
         .bottom-bar{
             display:flex;
             justify-content:space-between;
@@ -398,7 +467,7 @@
             }
 
             .table{
-                min-width:980px;
+                min-width:1500px;
             }
 
             .table-container{
@@ -420,20 +489,21 @@
                 <div class="left-tools">
                     <div class="user-search-box">
                         <i class="bi bi-search"></i>
-                        <input
-                            type="text"
-                            id="userSearch"
-                            class="user-search-input"
-                            placeholder="Search by name, email, customer no, phone"
-                        >
+                        <input type="text" id="userSearch" class="user-search-input" placeholder="Search by name, email, customer no, phone">
                     </div>
                 </div>
 
                 <div class="right-tools-inline">
                     <select id="statusFilter" class="status-select">
-                        <option value="">All Status</option>
+                        <option value="">All Connect Status</option>
                         <option value="connected">Connected</option>
                         <option value="not_connected">Not Connected</option>
+                    </select>
+
+                    <select id="activeFilter" class="status-select">
+                        <option value="">All Activity</option>
+                        <option value="online">Online</option>
+                        <option value="offline">Offline</option>
                     </select>
 
                     <a href="{{ route('users.sync') }}" class="sync-btn">
@@ -487,9 +557,13 @@
                                     <th>Full Name</th>
                                     <th>Email</th>
                                     <th>Customer No</th>
-                                    <th>Status</th>
+                                    <th>Connect</th>
+                                    <th>Active</th>
                                     <th>Role</th>
                                     <th>Phone Number</th>
+                                    <th>Last Seen</th>
+                                    <th>Offline Time</th>
+                                    <th>Image URL</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -502,6 +576,20 @@
                                         $displayEmail = $customer->local_email ?? $customer->email ?? '-';
                                         $displayPhone = $customer->local_phone ?? $customer->phone ?? '-';
                                         $displayRole = $customer->role ?? '-';
+
+                                        $activityStatus = ($customer->connect_status === 'connected' && ($customer->is_online ?? false))
+                                            ? 'online'
+                                            : 'offline';
+
+                                        $lastSeenText = $customer->last_seen_at
+                                            ? \Carbon\Carbon::parse($customer->last_seen_at)->format('Y-m-d h:i A')
+                                            : '-';
+
+                                        $offlineDuration = $customer->offline_duration ?? '-';
+
+                                        $imageToShow = $customer->profile_image_display ?? null;
+                                        $imageUrl = $customer->profile_image_url ?? '';
+                                        $firstLetter = strtoupper(mb_substr(trim($displayName), 0, 1)) ?: 'U';
                                     @endphp
 
                                     <tr
@@ -511,32 +599,43 @@
                                         data-id="{{ strtolower($displayBcNo) }}"
                                         data-phone="{{ strtolower($displayPhone) }}"
                                         data-status="{{ $customer->connect_status ?? 'not_connected' }}"
+                                        data-active="{{ $activityStatus }}"
                                     >
                                         <td>
-                                            <input
-                                                type="checkbox"
-                                                class="row-check"
-                                                name="selected_ids[]"
-                                                value="{{ $customer->id }}"
-                                            >
+                                            <input type="checkbox" class="row-check" name="selected_ids[]" value="{{ $customer->id }}">
                                         </td>
 
                                         <td>
                                             <div class="avatar-cell">
-                                                <div class="avatar-circle">
-                                                    {{ strtoupper(substr($displayName ?: 'U', 0, 1)) }}
+                                                <div class="avatar-wrap">
+                                                    @if(!empty($imageToShow))
+                                                        <img
+                                                            src="{{ $imageToShow }}"
+                                                            alt="User"
+                                                            class="avatar-image"
+                                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                                        >
+                                                        <div class="avatar-fallback" style="display:none;">{{ $firstLetter }}</div>
+                                                    @else
+                                                        <div class="avatar-fallback">{{ $firstLetter }}</div>
+                                                    @endif
                                                 </div>
-                                                <span class="name-text">{{ $displayName }}</span>
+
+                                                <div class="name-block">
+                                                    <span class="name-text">{{ $displayName }}</span>
+                                                    <span class="sub-text">
+                                                        @if($activityStatus === 'online')
+                                                            Currently online
+                                                        @else
+                                                            {{ $offlineDuration }}
+                                                        @endif
+                                                    </span>
+                                                </div>
                                             </div>
                                         </td>
 
-                                        <td title="{{ $displayEmail }}">
-                                            {{ $displayEmail }}
-                                        </td>
-
-                                        <td title="{{ $displayBcNo }}">
-                                            {{ $displayBcNo }}
-                                        </td>
+                                        <td title="{{ $displayEmail }}">{{ $displayEmail }}</td>
+                                        <td title="{{ $displayBcNo }}">{{ $displayBcNo }}</td>
 
                                         <td>
                                             @if($customer->connect_status === 'connected')
@@ -546,12 +645,29 @@
                                             @endif
                                         </td>
 
-                                        <td class="role-text">
-                                            {{ $displayRole }}
+                                        <td>
+                                            @if($customer->connect_status === 'connected')
+                                                @if($customer->is_online ?? false)
+                                                    <span class="status-badge status-online">Online</span>
+                                                @else
+                                                    <span class="status-badge status-offline">Offline</span>
+                                                @endif
+                                            @else
+                                                <span class="status-badge status-offline">-</span>
+                                            @endif
                                         </td>
 
-                                        <td title="{{ $displayPhone }}">
-                                            {{ $displayPhone }}
+                                        <td class="role-text">{{ $displayRole }}</td>
+                                        <td title="{{ $displayPhone }}">{{ $displayPhone }}</td>
+                                        <td title="{{ $lastSeenText }}">{{ $lastSeenText }}</td>
+                                        <td title="{{ $offlineDuration }}">{{ $offlineDuration }}</td>
+
+                                        <td title="{{ $imageUrl }}">
+                                            @if(!empty($imageUrl))
+                                                <a href="{{ $imageUrl }}" target="_blank" class="debug-url">{{ $imageUrl }}</a>
+                                            @else
+                                                <span class="text-danger">No image URL</span>
+                                            @endif
                                         </td>
 
                                         <td>
@@ -570,6 +686,7 @@
                                                         data-email="{{ $displayEmail }}"
                                                         data-phone="{{ $displayPhone }}"
                                                         data-role=""
+                                                        data-image-url="{{ $imageUrl }}"
                                                     >
                                                         <i class="bi bi-link-45deg text-success"></i>
                                                     </button>
@@ -587,6 +704,7 @@
                                                         data-email="{{ $displayEmail }}"
                                                         data-phone="{{ $displayPhone }}"
                                                         data-role="{{ $displayRole }}"
+                                                        data-image-url="{{ $imageUrl }}"
                                                     >
                                                         <i class="bi bi-pencil text-warning"></i>
                                                     </button>
@@ -596,12 +714,7 @@
                                                     <i class="bi bi-eye text-primary"></i>
                                                 </a>
 
-                                                <form
-                                                    method="POST"
-                                                    action="{{ route('users.destroy', $customer->id) }}"
-                                                    onsubmit="return confirm('Are you sure you want to delete this user?')"
-                                                    style="display:inline-block;"
-                                                >
+                                                <form method="POST" action="{{ route('users.destroy', $customer->id) }}" onsubmit="return confirm('Are you sure you want to delete this user?')" style="display:inline-block;">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="delete-icon" title="Delete">
@@ -613,12 +726,12 @@
                                     </tr>
                                 @empty
                                     <tr id="noDataRow">
-                                        <td colspan="8" class="empty-text">No BC customers found.</td>
+                                        <td colspan="12" class="empty-text">No BC customers found.</td>
                                     </tr>
                                 @endforelse
 
                                 <tr id="noResultRow" style="display:none;">
-                                    <td colspan="8" class="empty-text">No matching users found.</td>
+                                    <td colspan="12" class="empty-text">No matching users found.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -642,106 +755,116 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const checkAll = document.getElementById('checkAll');
-        const rowChecks = document.querySelectorAll('.row-check');
-        const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
-        const bulkDeleteForm = document.getElementById('bulkDeleteForm');
-        const searchInput = document.getElementById('userSearch');
-        const statusFilter = document.getElementById('statusFilter');
-        const rows = document.querySelectorAll('.user-row');
-        const noResultRow = document.getElementById('noResultRow');
-        const visibleCount = document.getElementById('visibleCount');
+document.addEventListener('DOMContentLoaded', function () {
+    const checkAll = document.getElementById('checkAll');
+    const rowChecks = document.querySelectorAll('.row-check');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+    const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+    const searchInput = document.getElementById('userSearch');
+    const statusFilter = document.getElementById('statusFilter');
+    const activeFilter = document.getElementById('activeFilter');
+    const rows = document.querySelectorAll('.user-row');
+    const noResultRow = document.getElementById('noResultRow');
+    const visibleCount = document.getElementById('visibleCount');
 
-        function updateCheckAllState() {
-            const total = document.querySelectorAll('.row-check').length;
-            const checked = document.querySelectorAll('.row-check:checked').length;
-
-            if (checkAll) {
-                checkAll.checked = total > 0 && total === checked;
-            }
-        }
+    function updateCheckAllState() {
+        const total = document.querySelectorAll('.row-check').length;
+        const checked = document.querySelectorAll('.row-check:checked').length;
 
         if (checkAll) {
-            checkAll.addEventListener('change', function () {
-                rowChecks.forEach(function (checkbox) {
-                    if (checkbox.closest('tr').style.display !== 'none') {
-                        checkbox.checked = checkAll.checked;
-                    }
-                });
-            });
+            checkAll.checked = total > 0 && total === checked;
         }
+    }
 
-        rowChecks.forEach(function (checkbox) {
-            checkbox.addEventListener('change', updateCheckAllState);
+    if (checkAll) {
+        checkAll.addEventListener('change', function () {
+            rowChecks.forEach(function (checkbox) {
+                if (checkbox.closest('tr').style.display !== 'none') {
+                    checkbox.checked = checkAll.checked;
+                }
+            });
+        });
+    }
+
+    rowChecks.forEach(function (checkbox) {
+        checkbox.addEventListener('change', updateCheckAllState);
+    });
+
+    if (deleteSelectedBtn && bulkDeleteForm) {
+        deleteSelectedBtn.addEventListener('click', function () {
+            const checked = document.querySelectorAll('.row-check:checked').length;
+
+            if (checked === 0) {
+                alert('Please select at least one user.');
+                return;
+            }
+
+            if (confirm('Are you sure you want to delete selected users?')) {
+                bulkDeleteForm.submit();
+            }
+        });
+    }
+
+    function filterTable() {
+        const searchValue = (searchInput.value || '').toLowerCase().trim();
+        const selectedStatus = statusFilter.value;
+        const selectedActive = activeFilter.value;
+        let visibleRows = 0;
+
+        rows.forEach(function (row) {
+            const name = row.dataset.name || '';
+            const email = row.dataset.email || '';
+            const id = row.dataset.id || '';
+            const phone = row.dataset.phone || '';
+            const status = row.dataset.status || '';
+            const active = row.dataset.active || '';
+
+            const matchesSearch =
+                searchValue === '' ||
+                name.includes(searchValue) ||
+                email.includes(searchValue) ||
+                id.includes(searchValue) ||
+                phone.includes(searchValue);
+
+            const matchesStatus =
+                selectedStatus === '' || status === selectedStatus;
+
+            const matchesActive =
+                selectedActive === '' || active === selectedActive;
+
+            if (matchesSearch && matchesStatus && matchesActive) {
+                row.style.display = '';
+                visibleRows++;
+            } else {
+                row.style.display = 'none';
+                const checkbox = row.querySelector('.row-check');
+                if (checkbox) checkbox.checked = false;
+            }
         });
 
-        if (deleteSelectedBtn && bulkDeleteForm) {
-            deleteSelectedBtn.addEventListener('click', function () {
-                const checked = document.querySelectorAll('.row-check:checked').length;
-
-                if (checked === 0) {
-                    alert('Please select at least one user.');
-                    return;
-                }
-
-                if (confirm('Are you sure you want to delete selected users?')) {
-                    bulkDeleteForm.submit();
-                }
-            });
+        if (visibleCount) {
+            visibleCount.textContent = visibleRows;
         }
 
-        function filterTable() {
-            const searchValue = (searchInput.value || '').toLowerCase().trim();
-            const selectedStatus = statusFilter.value;
-            let visibleRows = 0;
-
-            rows.forEach(function (row) {
-                const name = row.dataset.name || '';
-                const email = row.dataset.email || '';
-                const id = row.dataset.id || '';
-                const phone = row.dataset.phone || '';
-                const status = row.dataset.status || '';
-
-                const matchesSearch =
-                    searchValue === '' ||
-                    name.includes(searchValue) ||
-                    email.includes(searchValue) ||
-                    id.includes(searchValue) ||
-                    phone.includes(searchValue);
-
-                const matchesStatus =
-                    selectedStatus === '' || status === selectedStatus;
-
-                if (matchesSearch && matchesStatus) {
-                    row.style.display = '';
-                    visibleRows++;
-                } else {
-                    row.style.display = 'none';
-                    const checkbox = row.querySelector('.row-check');
-                    if (checkbox) checkbox.checked = false;
-                }
-            });
-
-            if (visibleCount) {
-                visibleCount.textContent = visibleRows;
-            }
-
-            if (noResultRow) {
-                noResultRow.style.display = visibleRows === 0 ? '' : 'none';
-            }
-
-            updateCheckAllState();
+        if (noResultRow) {
+            noResultRow.style.display = visibleRows === 0 ? '' : 'none';
         }
 
-        if (searchInput) {
-            searchInput.addEventListener('input', filterTable);
-        }
+        updateCheckAllState();
+    }
 
-        if (statusFilter) {
-            statusFilter.addEventListener('change', filterTable);
-        }
-    });
+    if (searchInput) {
+        searchInput.addEventListener('input', filterTable);
+    }
+
+    if (statusFilter) {
+        statusFilter.addEventListener('change', filterTable);
+    }
+
+    if (activeFilter) {
+        activeFilter.addEventListener('change', filterTable);
+    }
+});
 </script>
 
 </body>

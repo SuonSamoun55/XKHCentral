@@ -173,4 +173,34 @@ class ItemPosController extends Controller
             'count' => count($validated['items']),
         ]);
     }
+    public function detail(string $id)
+{
+    $token = $this->getToken();
+
+    if (!$token) {
+        return redirect()->back()->with('error', 'Business Central authentication failed.');
+    }
+
+    $response = Http::withoutVerifying()
+        ->withToken($token)
+        ->get($this->bcUrl("items({$id})"));
+
+    if (!$response->successful()) {
+        return redirect()->back()->with('error', 'Failed to fetch item detail.');
+    }
+
+    $item = $response->json();
+
+    $localItem = Item::where('bc_id', $id)->first();
+
+    $item['defaultLocationCode'] = $item['defaultLocationCode']
+        ?? $item['locationCode']
+        ?? ($localItem->default_location_code ?? null);
+
+    $item['baseUnitOfMeasureCode'] = $item['baseUnitOfMeasureCode']
+        ?? ($localItem->base_unit_of_measure_code ?? null)
+        ?? 'PCS';
+
+    return view('POSViews.POSAdminViews.ItemDetail', compact('item'));
+}
 }

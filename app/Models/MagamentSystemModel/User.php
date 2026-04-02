@@ -9,6 +9,7 @@ use Laravel\Sanctum\HasApiTokens;
 use App\Models\BcCustomer;
 use App\Models\Role;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -18,6 +19,8 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
+        'profile_image',
+        'profile_image_url',
         'password',
         'role',
         'role_id',
@@ -25,6 +28,7 @@ class User extends Authenticatable
         'company_id',
         'status',
         'linked_at',
+        'last_seen_at',
     ];
 
     protected $hidden = [
@@ -32,10 +36,16 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $appends = [
+        'profile_image_display',
+        'is_online',
+        'offline_duration',
+    ];
+
     protected $casts = [
-        'password' => 'hashed',
         'status' => 'boolean',
         'linked_at' => 'datetime',
+        'last_seen_at' => 'datetime',
     ];
 
     public function company(): BelongsTo
@@ -69,5 +79,64 @@ class User extends Authenticatable
         }
 
         return $this->role === 'admin';
+    }
+
+    public function getProfileImageDisplayAttribute(): string
+    {
+        if (!empty($this->profile_image) && Storage::disk('public')->exists($this->profile_image)) {
+            return asset('storage/' . $this->profile_image);
+        }
+
+        if (!empty($this->profile_image_url)) {
+            return $this->profile_image_url;
+        }
+
+        $defaultPath = public_path('images/default-user.png');
+
+        if (file_exists($defaultPath)) {
+            return asset('images/default-user.png');
+        }
+
+        return '';
+    }
+
+    public function getIsOnlineAttribute(): bool
+    {
+        if (!$this->last_seen_at) {
+            return false;
+        }
+
+        return $this->last_seen_at->gte(now()->subMinutes(5));
+    }
+
+    public function getOfflineDurationAttribute(): string
+    {
+        if (!$this->last_seen_at) {
+            return 'Never online';
+        }
+
+        return $this->last_seen_at->diffForHumans();
+    }
+
+    public function scopeOnline($query)
+    {
+        return $query->whereNotNull('last_seen_at')
+            ->where('last_seen_at', '>=', now()->subMinutes(5));
+    }
+
+    public function scopeOffline($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('last_seen_at')
+              ->orWhere('last_seen_at', '<', now()->subMinutes(5));
+        });
+    }
+
+    public function scopeOfflineLongTime($query, $days = 7)
+    {
+        return $query->where(function ($q) use ($days) {
+            $q->whereNull('last_seen_at')
+              ->orWhere('last_seen_at', '<', now()->subDays($days));
+        });
     }
 }
