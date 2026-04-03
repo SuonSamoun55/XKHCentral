@@ -5,7 +5,9 @@
 
     /* Wrapper */
     .page-wrap {
-        padding: 30px;
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-top: 0px;
         background: var(--card);
         border-radius: 20px;
         ;
@@ -13,6 +15,7 @@
 
     /* Title */
     .history-title {
+        padding-top: 30px;
         color: #00a8a8;
         font-weight: 600;
         margin-bottom: 20px;
@@ -31,7 +34,16 @@
         align-items: flex-start;
         gap: 20px;
         flex-wrap: wrap;
+        position: sticky;
     }
+        .header{
+            background: var(--card);
+            position: sticky;
+            margin: -3px;
+         
+            top: 0;
+            z-index: 1000;
+        }
 
     /* LEFT SIDE */
     .left-section {

@@ -20,45 +20,45 @@
         {{-- Content --}}
         <div class="page-wrap">
             <div class="header">
-            <div class="notification-header">
-                <h2>Notification</h2>
-            </div>
-
-            {{-- Search and Date --}}
-            <div class="search-date-container">
-                <div class="search-box">
-                    <i class="bi bi-search"></i>
-                    <input type="text" id="searchInput" class="form-control" placeholder="Search..."
-                        value="{{ request('search') }}" autocomplete="off">
-                    <div class="search-suggestions" id="searchSuggestions"></div>
-                </div>
-                <input type="date" id="dateInput" class="date-input" value="{{ request('date') }}">
-            </div>
-
-            {{-- Tabs --}}
-            <div class="tabs-section">
-                <div class="tabs-list">
-                    <a href="{{ route('user.notifications', ['tab' => 'inbox']) }}"
-                        class="tab-item {{ $tab === 'inbox' ? 'active' : '' }}">
-                        Inbox <span class="tab-badge">{{ $inboxCount }}</span>
-                    </a>
-
-                    <a href="{{ route('user.notifications', ['tab' => 'spam']) }}"
-                        class="tab-item {{ $tab === 'spam' ? 'active' : '' }}">
-                        Spam <span class="tab-badge">{{ $spamCount }}</span>
-                    </a>
-
-                    <a href="{{ route('user.notifications', ['tab' => 'archive']) }}"
-                        class="tab-item {{ $tab === 'archive' ? 'active' : '' }}">
-                        Archive <span class="tab-badge">{{ $archiveCount }}</span>
-                    </a>
+                <div class="notification-header">
+                    <h2>Notification</h2>
                 </div>
 
-                <label class="unread-toggle">
-                    <span>Unreads</span>
-                    <input type="checkbox" id="unreadFilter" onchange="filterUnread()">
-                </label>
-            </div>
+                {{-- Search and Date --}}
+                <div class="search-date-container">
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search..."
+                            value="{{ request('search') }}" autocomplete="off">
+                        <div class="search-suggestions" id="searchSuggestions"></div>
+                    </div>
+                    <input type="date" id="dateInput" class="date-input" value="{{ request('date') }}">
+                </div>
+
+                {{-- Tabs --}}
+                <div class="tabs-section">
+                    <div class="tabs-list">
+                        <a href="{{ route('user.notifications', ['tab' => 'inbox']) }}"
+                            class="tab-item {{ $tab === 'inbox' ? 'active' : '' }}">
+                            Inbox <span class="tab-badge">{{ $inboxCount }}</span>
+                        </a>
+
+                        <a href="{{ route('user.notifications', ['tab' => 'spam']) }}"
+                            class="tab-item {{ $tab === 'spam' ? 'active' : '' }}">
+                            Spam <span class="tab-badge">{{ $spamCount }}</span>
+                        </a>
+
+                        <a href="{{ route('user.notifications', ['tab' => 'archive']) }}"
+                            class="tab-item {{ $tab === 'archive' ? 'active' : '' }}">
+                            Archive <span class="tab-badge">{{ $archiveCount }}</span>
+                        </a>
+                    </div>
+
+                    <label class="unread-toggle">
+                        <span>Unreads</span>
+                        <input type="checkbox" id="unreadFilter" onchange="filterUnread()">
+                    </label>
+                </div>
             </div>
 
             {{-- Notification List --}}
@@ -66,8 +66,7 @@
                 @forelse($notifications as $notification)
                     <div class="notification-card {{ !$notification->is_read ? 'unread' : '' }}"
                         data-title="{{ $notification->title }}" data-message="{{ $notification->message }}"
-                        data-id="{{ $notification->id }}"
-                        style="cursor: pointer;"
+                        data-id="{{ $notification->id }}" style="cursor: pointer;"
                         onclick="openNotificationDetail(this)">
 
                         <div class="notification-content">
@@ -115,14 +114,16 @@
             </div>
 
             {{-- Pagination --}}
-            <div class="mt-4">
-                {{ $notifications->links() }}
-            </div>
+            <div class="pagination-container">
+                @if ($notifications->hasPages())
+                    {{ $notifications->links('vendor.pagination.custom-pos') }}
+                @endif
         </div>
     </div>
 
     {{-- Notification Detail Modal --}}
-    <div id="notificationModal" class="modal fade" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+    <div id="notificationModal" class="modal fade" tabindex="-1" aria-labelledby="notificationModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -152,26 +153,27 @@
             const title = element.dataset.title;
             const message = element.dataset.message;
             const notificationId = element.dataset.id;
-            
+
             // Get the date from the element
             const metaElement = element.querySelector('.notification-meta');
             const dateText = metaElement ? metaElement.textContent.trim() : new Date().toLocaleDateString();
-            
+
             // Populate modal
             document.getElementById('notificationTitle').textContent = title;
             document.getElementById('notificationMessage').textContent = message;
             document.getElementById('notificationDate').textContent = 'Date: ' + dateText;
-            
+
             // Open modal
             const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
             modal.show();
-            
+
             // Mark as read if not already read
             if (element.classList.contains('unread')) {
                 fetch(`/pos-system/notifications/${notificationId}/read`, {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ||
+                            '{{ csrf_token() }}',
                         'Content-Type': 'application/json',
                     }
                 }).then(() => {

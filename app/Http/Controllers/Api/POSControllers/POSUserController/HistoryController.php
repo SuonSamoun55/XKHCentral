@@ -22,7 +22,7 @@ class HistoryController extends Controller
         if (!$user) {
             return redirect()->route('login');
         }
-
+$perPage = $request->get('limit', 10);
         $orders = Order::where('user_id', $user->id)
             ->when($request->search, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
@@ -40,7 +40,7 @@ class HistoryController extends Controller
             })
             ->with('items')
             ->latest()
-            ->paginate(15)
+            ->paginate($perPage)
             ->appends($request->query());
 
         return view('POSViews.POSUserViews.POSHistoryView', compact('orders'));
@@ -53,6 +53,7 @@ class HistoryController extends Controller
     if ($order->user_id !== auth()->id()) {
         abort(403, 'Unauthorized action.');
     }
+
 
     // Example using DomPDF (Standard Laravel way)
     // $pdf = Pdf::loadView('POSViews.Invoices.Template', compact('order'));
