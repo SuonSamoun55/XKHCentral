@@ -51,7 +51,7 @@
                          style="width: 100%; height: 100%; object-fit: cover;"
                          onerror="this.onerror=null;this.src='{{ asset('images/default-company.png') }}';">
                 </div>
-                <div class="brand-text">{{ $companyName }}</div>
+                {{-- <div class="brand-text">{{ $companyName }}</div> --}}
             </div>
             <nav class="nav-list">
                 <a href="/">
