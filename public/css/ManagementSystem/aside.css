@@ -25,7 +25,7 @@
     position: relative;
     flex-shrink: 0;
 }
-    
+
   /* Make handle vertically centered */
  .collapse-handle {
       position: absolute;
@@ -56,7 +56,7 @@
       transform: rotate(180deg);
     }
 
-   
+
 
     .app-shell.collapsed .brand,
     .app-shell.collapsed .profile,
@@ -83,7 +83,7 @@
 }
 .page-wrap{
     flex:1;
-     overflow-y: auto;  
+     overflow-y: auto;
 }
 .layout{
     display:flex;
@@ -214,7 +214,7 @@ background-color: #09bfd3;
     .nav-btn,
     .settings-btn,
     .logout-btn {
-      
+
       border: none;
       background: transparent;
       width: 100%;
@@ -269,7 +269,7 @@ background-color: #09bfd3;
       padding-top: 10px;
     }
 
-   
+
     .profile {
       display: flex;
       align-items: center;
@@ -392,7 +392,7 @@ html, body {
     flex:1;
 }
 .sidebar{
-      
+
           height: 100vh;        /* full screen height */
     position: sticky;     /* stay in place */
     top: 0;               /* stick to top */

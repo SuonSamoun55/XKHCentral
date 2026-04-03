@@ -4,17 +4,18 @@
 
 @push('styles')
 <style>
-    .company-page .page-title{
-        font-size:20px;
-        font-weight:700;
-        margin-bottom:2px;
-        color:#111827;
-    }
+    .main-wrapper{
+            display: flex;
+            gap: 10px;
+            height: 100%;
 
-    .company-page .page-subtitle{
-        font-size:12px;
-        color:#9ca3af;
-        margin-bottom:18px;
+        }
+        .content-area{
+width: 100%;
+    }
+    .company-page{
+        width: 100%;
+        margin: 0;
     }
 
     .company-card{
@@ -22,6 +23,7 @@
         border-radius:18px;
         padding:20px;
         border:1px solid #eef2f7;
+        width: 100%;
     }
 
     .company-grid{
@@ -495,8 +497,7 @@
             </form>
         </div>
     @else
-        <div class="page-title">Company &gt; Overview</div>
-        <div class="page-subtitle">Business Central</div>
+
 
         @if(session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>

@@ -4,6 +4,12 @@
 
 @push('styles')
 <style>
+    .company-setup-page{
+        width: 100%;
+    }
+    .content-area{
+width: 100%;
+    }
     .company-setup-page .page-title{
         font-size:20px;
         font-weight:700;
@@ -22,11 +28,14 @@
         border-radius:18px;
         padding:20px;
         border:1px solid #eef2f7;
+         width: 100%;
+         min-width: 100%;
     }
 
     .company-setup-grid{
         display:grid;
         grid-template-columns:260px 1fr;
+        width: 100%;
         gap:28px;
         align-items:start;
     }

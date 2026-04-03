@@ -25,27 +25,37 @@
         .main-wrapper{
             display:flex;
             gap:10px;
-            min-height:100vh;
-            padding:8px;
+            /* min-height:120vh; */
+            height: 100%;
+            width: 100%;
+            /* padding:8px; */
+                        /* height: 100; */
+
         }
 
         .content-area{
-            flex:1;
-            min-width:0;
+            /* flex:1; */
+            /* min-width:0; */
             overflow:hidden;
+            width: 100%;
+            /* height: 1000px; */
+            /* height: 100%; */
         }
 
         .page-card{
+            padding: 0px;
             background:#fff;
             border-radius:14px;
             padding:14px;
+            /* height: 1000vh; */
             box-shadow:0 8px 24px rgba(15, 23, 42, 0.05);
-            min-height:calc(100vh - 16px);
+            /* min-height:calc(100vh - 16px); */
+            height: 100%;
             overflow:hidden;
         }
 
         .page-title{
-            font-size:20px;
+            font-size:18px;
             font-weight:700;
             color:#18bfd0;
             margin-bottom:8px;
@@ -84,16 +94,16 @@
             top:50%;
             transform:translateY(-50%);
             color:#64748b;
-            font-size:13px;
+            font-size:12px;
             pointer-events:none;
         }
 
         .user-search-input{
             width:100%;
-            height:34px;
-            padding:0 10px 0 32px;
+            height:32px;
+            padding:0 10px 0 30px;
             outline:none;
-            font-size:12px;
+            font-size:11px;
             color:#334155;
             background:#fff;
             border:1px solid #d6dde5;
@@ -108,11 +118,11 @@
 
         .sync-btn,
         .delete-selected-btn{
-            height:34px;
-            padding:0 12px;
+            height:32px;
+            padding:0 11px;
             border:none;
             border-radius:5px;
-            font-size:12px;
+            font-size:11px;
             font-weight:600;
             text-decoration:none;
             display:inline-flex;
@@ -144,14 +154,15 @@
             color:#fff;
         }
 
-        .status-select{
-            height:34px;
-            min-width:150px;
+        .status-select,
+        .page-size-select{
+            height:32px;
+            min-width:120px;
             border:1px solid #d6dde5;
             border-radius:5px;
             padding:0 8px;
             background:#fff;
-            font-size:12px;
+            font-size:11px;
             color:#475569;
             outline:none;
         }
@@ -162,7 +173,7 @@
 
         .alert{
             padding:8px 12px;
-            font-size:12px;
+            font-size:11px;
             margin-bottom:8px;
         }
 
@@ -171,8 +182,8 @@
             border-radius:8px;
             background:#fff;
             overflow:hidden;
-            height:calc(100vh - 230px);
-            min-height:440px;
+            height:calc(100vh - 140px);
+            min-height:100%;
         }
 
         .table-scroll{
@@ -195,25 +206,25 @@
             width:100%;
             margin-bottom:0;
             table-layout:fixed;
-            min-width:1500px;
+            min-width:100%;
         }
 
         .table thead th{
             background:#18bfd0;
             color:#fff;
             border:none;
-            font-size:12px;
-            padding:10px 6px;
+            font-size:11px;
+            padding:9px 6px;
             white-space:nowrap;
             position:sticky;
             top:0;
             z-index:5;
-            font-weight:600;
+            font-weight:500;
         }
 
         .table tbody td{
-            padding:8px 6px;
-            font-size:12px;
+            padding:7px 6px;
+            font-size:11px;
             color:#475569;
             border-color:#e8eef4;
             vertical-align:middle;
@@ -228,28 +239,28 @@
 
         .table th:nth-child(1),
         .table td:nth-child(1){
-            width:40px;
+            width:30px;
             text-align:center;
         }
 
         .table th:nth-child(2),
         .table td:nth-child(2){
-            width:260px;
+            width:150px;
         }
 
         .table th:nth-child(3),
         .table td:nth-child(3){
-            width:200px;
+            width:150px;
         }
 
         .table th:nth-child(4),
         .table td:nth-child(4){
-            width:110px;
+            width:90px;
         }
 
         .table th:nth-child(5),
         .table td:nth-child(5){
-            width:120px;
+            width:90px;
         }
 
         .table th:nth-child(6),
@@ -264,27 +275,7 @@
 
         .table th:nth-child(8),
         .table td:nth-child(8){
-            width:150px;
-        }
-
-        .table th:nth-child(9),
-        .table td:nth-child(9){
-            width:150px;
-        }
-
-        .table th:nth-child(10),
-        .table td:nth-child(10){
-            width:150px;
-        }
-
-        .table th:nth-child(11),
-        .table td:nth-child(11){
-            width:190px;
-        }
-
-        .table th:nth-child(12),
-        .table td:nth-child(12){
-            width:100px;
+            width:90px;
         }
 
         .avatar-cell{
@@ -295,15 +286,15 @@
         }
 
         .avatar-wrap{
-            width:42px;
-            height:42px;
+            width:40px;
+            height:40px;
             position:relative;
             flex-shrink:0;
         }
 
         .avatar-image{
-            width:42px;
-            height:42px;
+            width:40px;
+            height:40px;
             border-radius:50%;
             object-fit:cover;
             border:1px solid #dbe4ee;
@@ -312,17 +303,36 @@
         }
 
         .avatar-fallback{
-            width:42px;
-            height:42px;
+            width:40px;
+            height:40px;
             border-radius:50%;
             display:flex;
             align-items:center;
             justify-content:center;
             background:#e2e8f0;
             color:#475569;
-            font-size:14px;
+            font-size:13px;
             font-weight:700;
             border:1px solid #dbe4ee;
+        }
+
+        .avatar-status-dot{
+            position:absolute;
+            right:-1px;
+            bottom:-1px;
+            width:11px;
+            height:11px;
+            border-radius:50%;
+            border:2px solid #fff;
+            box-shadow:0 0 0 1px rgba(148,163,184,0.15);
+        }
+
+        .avatar-status-online{
+            background:#2563eb;
+        }
+
+        .avatar-status-offline{
+            background:#94a3b8;
         }
 
         .name-block{
@@ -337,25 +347,29 @@
             white-space:nowrap;
             font-weight:600;
             color:#0f172a;
+            font-size:11px;
+            line-height:1.2;
         }
 
         .sub-text{
             overflow:hidden;
             text-overflow:ellipsis;
             white-space:nowrap;
-            font-size:11px;
+            font-size:10px;
             color:#64748b;
+            line-height:1.2;
+            margin-top:2px;
         }
 
         .status-badge{
             display:inline-flex;
             align-items:center;
             justify-content:center;
-            min-width:90px;
-            height:24px;
+            min-width:88px;
+            height:22px;
             padding:0 8px;
             border-radius:999px;
-            font-size:11px;
+            font-size:10px;
             font-weight:700;
         }
 
@@ -369,19 +383,10 @@
             color:#991b1b;
         }
 
-        .status-online{
-            background:#dcfce7;
-            color:#166534;
-        }
-
-        .status-offline{
-            background:#e2e8f0;
-            color:#475569;
-        }
-
         .role-text{
             text-transform:capitalize;
             font-weight:600;
+            font-size:11px;
         }
 
         .action-icons{
@@ -391,10 +396,9 @@
         }
 
         .action-icons a,
-        .action-icons span,
         .action-icons button{
-            width:28px;
-            height:28px;
+            width:26px;
+            height:26px;
             display:flex;
             align-items:center;
             justify-content:center;
@@ -413,7 +417,7 @@
         }
 
         .action-icons i{
-            font-size:15px;
+            font-size:14px;
             line-height:1;
         }
 
@@ -427,17 +431,6 @@
             color:#94a3b8 !important;
         }
 
-        .debug-url{
-            display:block;
-            max-width:180px;
-            font-size:10px;
-            color:#2563eb;
-            overflow:hidden;
-            text-overflow:ellipsis;
-            white-space:nowrap;
-            text-decoration:none;
-        }
-
         .bottom-bar{
             display:flex;
             justify-content:space-between;
@@ -446,7 +439,45 @@
             flex-wrap:wrap;
             padding:12px 2px 0;
             color:#64748b;
-            font-size:12px;
+            font-size:11px;
+        }
+
+        .pagination-tools{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            flex-wrap:wrap;
+        }
+
+        .page-btn{
+            height:30px;
+            min-width:70px;
+            padding:0 10px;
+            border:1px solid #d6dde5;
+            background:#fff;
+            color:#334155;
+            border-radius:5px;
+            font-size:11px;
+            font-weight:600;
+            cursor:pointer;
+        }
+
+        .page-btn:disabled{
+            opacity:0.5;
+            cursor:not-allowed;
+        }
+
+        .page-info{
+            font-size:11px;
+            color:#475569;
+            font-weight:600;
+        }
+
+        .row-check,
+        #checkAll{
+            width:13px;
+            height:13px;
+            cursor:pointer;
         }
 
         @media (max-width: 768px){
@@ -467,7 +498,7 @@
             }
 
             .table{
-                min-width:1500px;
+                min-width:1250px;
             }
 
             .table-container{
@@ -558,12 +589,8 @@
                                     <th>Email</th>
                                     <th>Customer No</th>
                                     <th>Connect</th>
-                                    <th>Active</th>
                                     <th>Role</th>
-                                    <th>Phone Number</th>
                                     <th>Last Seen</th>
-                                    <th>Offline Time</th>
-                                    <th>Image URL</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -586,14 +613,14 @@
                                             : '-';
 
                                         $offlineDuration = $customer->offline_duration ?? '-';
-
                                         $imageToShow = $customer->profile_image_display ?? null;
-                                        $imageUrl = $customer->profile_image_url ?? '';
+                                        $imageUrl = $customer->profile_image_display ?? '';
                                         $firstLetter = strtoupper(mb_substr(trim($displayName), 0, 1)) ?: 'U';
                                     @endphp
 
                                     <tr
                                         class="user-row"
+                                        data-row-id="{{ $customer->id }}"
                                         data-name="{{ strtolower($displayName) }}"
                                         data-email="{{ strtolower($displayEmail) }}"
                                         data-id="{{ strtolower($displayBcNo) }}"
@@ -619,13 +646,15 @@
                                                     @else
                                                         <div class="avatar-fallback">{{ $firstLetter }}</div>
                                                     @endif
+
+                                                    <span class="avatar-status-dot {{ $activityStatus === 'online' ? 'avatar-status-online' : 'avatar-status-offline' }}"></span>
                                                 </div>
 
                                                 <div class="name-block">
                                                     <span class="name-text">{{ $displayName }}</span>
                                                     <span class="sub-text">
                                                         @if($activityStatus === 'online')
-                                                            Currently online
+                                                            Online
                                                         @else
                                                             {{ $offlineDuration }}
                                                         @endif
@@ -645,30 +674,8 @@
                                             @endif
                                         </td>
 
-                                        <td>
-                                            @if($customer->connect_status === 'connected')
-                                                @if($customer->is_online ?? false)
-                                                    <span class="status-badge status-online">Online</span>
-                                                @else
-                                                    <span class="status-badge status-offline">Offline</span>
-                                                @endif
-                                            @else
-                                                <span class="status-badge status-offline">-</span>
-                                            @endif
-                                        </td>
-
                                         <td class="role-text">{{ $displayRole }}</td>
-                                        <td title="{{ $displayPhone }}">{{ $displayPhone }}</td>
                                         <td title="{{ $lastSeenText }}">{{ $lastSeenText }}</td>
-                                        <td title="{{ $offlineDuration }}">{{ $offlineDuration }}</td>
-
-                                        <td title="{{ $imageUrl }}">
-                                            @if(!empty($imageUrl))
-                                                <a href="{{ $imageUrl }}" target="_blank" class="debug-url">{{ $imageUrl }}</a>
-                                            @else
-                                                <span class="text-danger">No image URL</span>
-                                            @endif
-                                        </td>
 
                                         <td>
                                             <div class="action-icons">
@@ -726,12 +733,12 @@
                                     </tr>
                                 @empty
                                     <tr id="noDataRow">
-                                        <td colspan="12" class="empty-text">No BC customers found.</td>
+                                        <td colspan="8" class="empty-text">No BC customers found.</td>
                                     </tr>
                                 @endforelse
 
                                 <tr id="noResultRow" style="display:none;">
-                                    <td colspan="12" class="empty-text">No matching users found.</td>
+                                    <td colspan="8" class="empty-text">No matching users found.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -740,10 +747,23 @@
             </form>
 
             <div class="bottom-bar">
+                <div class="pagination-tools">
+                    <span>Show</span>
+                    <select id="pageSize" class="page-size-select">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span>users</span>
+
+                    <button type="button" class="page-btn" id="prevPageBtn">Previous</button>
+                    <span class="page-info" id="pageInfo">Page 1</span>
+                    <button type="button" class="page-btn" id="nextPageBtn">Next</button>
+                </div>
+
                 <div>
-                    Total users:
-                    <strong id="visibleCount">{{ count($customers) }}</strong>
-                    / {{ count($customers) }}
+                    Showing <strong id="visibleCount">0</strong> of <strong id="totalCount">{{ count($customers) }}</strong> users
                 </div>
             </div>
         </div>
@@ -757,44 +777,105 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const checkAll = document.getElementById('checkAll');
-    const rowChecks = document.querySelectorAll('.row-check');
     const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
     const bulkDeleteForm = document.getElementById('bulkDeleteForm');
     const searchInput = document.getElementById('userSearch');
     const statusFilter = document.getElementById('statusFilter');
     const activeFilter = document.getElementById('activeFilter');
-    const rows = document.querySelectorAll('.user-row');
-    const noResultRow = document.getElementById('noResultRow');
+    const pageSize = document.getElementById('pageSize');
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    const pageInfo = document.getElementById('pageInfo');
     const visibleCount = document.getElementById('visibleCount');
+    const totalCount = document.getElementById('totalCount');
+    const tableBody = document.getElementById('userTableBody');
+    const tableScroll = document.querySelector('.table-scroll');
 
-    function updateCheckAllState() {
-        const total = document.querySelectorAll('.row-check').length;
-        const checked = document.querySelectorAll('.row-check:checked').length;
+    let currentPage = 1;
+    let filteredRows = [];
 
-        if (checkAll) {
-            checkAll.checked = total > 0 && total === checked;
-        }
+    function getRows() {
+        return Array.from(document.querySelectorAll('.user-row'));
     }
 
-    if (checkAll) {
-        checkAll.addEventListener('change', function () {
-            rowChecks.forEach(function (checkbox) {
-                if (checkbox.closest('tr').style.display !== 'none') {
-                    checkbox.checked = checkAll.checked;
-                }
-            });
+    function getVisibleRows() {
+        return getRows().filter(function (row) {
+            return row.style.display !== 'none';
         });
     }
 
-    rowChecks.forEach(function (checkbox) {
-        checkbox.addEventListener('change', updateCheckAllState);
+    function escapeHtml(value) {
+        if (value === null || value === undefined) return '';
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function clearHiddenSelections() {
+        getRows().forEach(function (row) {
+            if (row.style.display === 'none') {
+                const checkbox = row.querySelector('.row-check');
+                if (checkbox) {
+                    checkbox.checked = false;
+                }
+            }
+        });
+    }
+
+    function updateCheckAllState() {
+        const visibleCheckboxes = getVisibleRows()
+            .map(row => row.querySelector('.row-check'))
+            .filter(Boolean);
+
+        const checkedVisible = visibleCheckboxes.filter(cb => cb.checked).length;
+
+        checkAll.indeterminate = false;
+        checkAll.checked = false;
+
+        if (visibleCheckboxes.length === 0) {
+            return;
+        }
+
+        if (checkedVisible === visibleCheckboxes.length) {
+            checkAll.checked = true;
+        } else if (checkedVisible > 0) {
+            checkAll.indeterminate = true;
+        }
+    }
+
+    document.addEventListener('change', function (e) {
+        if (e.target.classList.contains('row-check')) {
+            updateCheckAllState();
+        }
     });
+
+    if (checkAll) {
+        checkAll.addEventListener('change', function () {
+            const visibleRows = getVisibleRows();
+
+            visibleRows.forEach(function (row) {
+                const checkbox = row.querySelector('.row-check');
+                if (checkbox) {
+                    checkbox.checked = checkAll.checked;
+                }
+            });
+
+            updateCheckAllState();
+        });
+    }
 
     if (deleteSelectedBtn && bulkDeleteForm) {
         deleteSelectedBtn.addEventListener('click', function () {
-            const checked = document.querySelectorAll('.row-check:checked').length;
+            clearHiddenSelections();
 
-            if (checked === 0) {
+            const checkedBoxes = Array.from(
+                bulkDeleteForm.querySelectorAll('.row-check:checked')
+            );
+
+            if (checkedBoxes.length === 0) {
                 alert('Please select at least one user.');
                 return;
             }
@@ -805,13 +886,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function filterTable() {
+    function getMatchedRows() {
+        const rows = getRows();
         const searchValue = (searchInput.value || '').toLowerCase().trim();
         const selectedStatus = statusFilter.value;
         const selectedActive = activeFilter.value;
-        let visibleRows = 0;
 
-        rows.forEach(function (row) {
+        return rows.filter(function (row) {
             const name = row.dataset.name || '';
             const email = row.dataset.email || '';
             const id = row.dataset.id || '';
@@ -832,38 +913,326 @@ document.addEventListener('DOMContentLoaded', function () {
             const matchesActive =
                 selectedActive === '' || active === selectedActive;
 
-            if (matchesSearch && matchesStatus && matchesActive) {
-                row.style.display = '';
-                visibleRows++;
-            } else {
-                row.style.display = 'none';
-                const checkbox = row.querySelector('.row-check');
-                if (checkbox) checkbox.checked = false;
+            return matchesSearch && matchesStatus && matchesActive;
+        });
+    }
+
+    function renderTable() {
+        const rows = getRows();
+        const perPage = parseInt(pageSize.value || '20', 10);
+        filteredRows = getMatchedRows();
+        const totalFiltered = filteredRows.length;
+        const totalPages = Math.max(1, Math.ceil(totalFiltered / perPage));
+
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+
+        const start = (currentPage - 1) * perPage;
+        const end = start + perPage;
+
+        rows.forEach(function (row) {
+            row.style.display = 'none';
+            const checkbox = row.querySelector('.row-check');
+            if (checkbox) {
+                checkbox.checked = false;
             }
         });
 
-        if (visibleCount) {
-            visibleCount.textContent = visibleRows;
+        filteredRows.forEach(function (row, index) {
+            if (index >= start && index < end) {
+                row.style.display = '';
+            }
+        });
+
+        const noResultRow = document.getElementById('noResultRow');
+        if (noResultRow) {
+            noResultRow.style.display = totalFiltered === 0 ? '' : 'none';
         }
 
-        if (noResultRow) {
-            noResultRow.style.display = visibleRows === 0 ? '' : 'none';
+        if (visibleCount) {
+            visibleCount.textContent = totalFiltered;
+        }
+
+        if (pageInfo) {
+            pageInfo.textContent = 'Page ' + currentPage + ' of ' + totalPages;
+        }
+
+        if (prevPageBtn) {
+            prevPageBtn.disabled = currentPage <= 1;
+        }
+
+        if (nextPageBtn) {
+            nextPageBtn.disabled = currentPage >= totalPages;
         }
 
         updateCheckAllState();
     }
 
+    function buildRow(customer) {
+        const tr = document.createElement('tr');
+
+        const displayName = customer.name || '-';
+        const displayEmail = customer.email || '-';
+        const displayBcNo = customer.bc_customer_no || '-';
+        const displayPhone = customer.phone || '-';
+        const displayRole = customer.role || '-';
+        const activityStatus = customer.activity_status || 'offline';
+        const imageToShow = customer.profile_image_display || '';
+        const imageUrl = customer.profile_image_display || '';
+        const firstLetter = displayName.trim().charAt(0).toUpperCase() || 'U';
+        const subText = activityStatus === 'online' ? 'Online' : (customer.offline_duration || '-');
+
+        tr.className = 'user-row';
+        tr.setAttribute('data-row-id', customer.id);
+        tr.setAttribute('data-name', displayName.toLowerCase());
+        tr.setAttribute('data-email', displayEmail.toLowerCase());
+        tr.setAttribute('data-id', displayBcNo.toLowerCase());
+        tr.setAttribute('data-phone', displayPhone.toLowerCase());
+        tr.setAttribute('data-status', customer.connect_status || 'not_connected');
+        tr.setAttribute('data-active', activityStatus);
+
+        let imageHtml = '';
+        if (imageToShow) {
+            imageHtml = `
+                <img
+                    src="${escapeHtml(imageToShow)}"
+                    alt="User"
+                    class="avatar-image"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                >
+                <div class="avatar-fallback" style="display:none;">${escapeHtml(firstLetter)}</div>
+            `;
+        } else {
+            imageHtml = `<div class="avatar-fallback">${escapeHtml(firstLetter)}</div>`;
+        }
+
+        let actionHtml = '';
+        if (customer.connect_status !== 'connected') {
+            actionHtml += `
+                <button
+                    type="button"
+                    class="open-user-modal"
+                    title="Connect"
+                    data-bs-toggle="modal"
+                    data-bs-target="#userModal"
+                    data-mode="connect"
+                    data-id="${escapeHtml(customer.id)}"
+                    data-bcno="${escapeHtml(displayBcNo)}"
+                    data-name="${escapeHtml(displayName)}"
+                    data-email="${escapeHtml(displayEmail)}"
+                    data-phone="${escapeHtml(displayPhone)}"
+                    data-role=""
+                    data-image-url="${escapeHtml(imageUrl)}"
+                >
+                    <i class="bi bi-link-45deg text-success"></i>
+                </button>
+            `;
+        } else {
+            actionHtml += `
+                <button
+                    type="button"
+                    class="open-user-modal"
+                    title="Edit"
+                    data-bs-toggle="modal"
+                    data-bs-target="#userModal"
+                    data-mode="edit"
+                    data-id="${escapeHtml(customer.id)}"
+                    data-bcno="${escapeHtml(displayBcNo)}"
+                    data-name="${escapeHtml(displayName)}"
+                    data-email="${escapeHtml(displayEmail)}"
+                    data-phone="${escapeHtml(displayPhone)}"
+                    data-role="${escapeHtml(displayRole)}"
+                    data-image-url="${escapeHtml(imageUrl)}"
+                >
+                    <i class="bi bi-pencil text-warning"></i>
+                </button>
+            `;
+        }
+
+        actionHtml += `
+            <a href="${escapeHtml(customer.show_url)}" title="View">
+                <i class="bi bi-eye text-primary"></i>
+            </a>
+
+            <form method="POST" action="${escapeHtml(customer.destroy_url)}" onsubmit="return confirm('Are you sure you want to delete this user?')" style="display:inline-block;">
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="_method" value="DELETE">
+                <button type="submit" class="delete-icon" title="Delete">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </form>
+        `;
+
+        tr.innerHTML = `
+            <td>
+                <input type="checkbox" class="row-check" name="selected_ids[]" value="${escapeHtml(customer.id)}">
+            </td>
+
+            <td>
+                <div class="avatar-cell">
+                    <div class="avatar-wrap">
+                        ${imageHtml}
+                        <span class="avatar-status-dot ${activityStatus === 'online' ? 'avatar-status-online' : 'avatar-status-offline'}"></span>
+                    </div>
+
+                    <div class="name-block">
+                        <span class="name-text">${escapeHtml(displayName)}</span>
+                        <span class="sub-text">${escapeHtml(subText)}</span>
+                    </div>
+                </div>
+            </td>
+
+            <td title="${escapeHtml(displayEmail)}">${escapeHtml(displayEmail)}</td>
+            <td title="${escapeHtml(displayBcNo)}">${escapeHtml(displayBcNo)}</td>
+
+            <td>
+                ${
+                    customer.connect_status === 'connected'
+                    ? '<span class="status-badge status-connected">Connected</span>'
+                    : '<span class="status-badge status-disconnected">Not Connected</span>'
+                }
+            </td>
+
+            <td class="role-text">${escapeHtml(displayRole)}</td>
+            <td title="${escapeHtml(customer.last_seen_at || '-')}">${escapeHtml(customer.last_seen_at || '-')}</td>
+
+            <td>
+                <div class="action-icons">
+                    ${actionHtml}
+                </div>
+            </td>
+        `;
+
+        return tr;
+    }
+
+    function refreshTableBody(customers) {
+        const currentScrollTop = tableScroll ? tableScroll.scrollTop : 0;
+
+        const oldNoResultRow = document.getElementById('noResultRow');
+        if (oldNoResultRow) {
+            oldNoResultRow.remove();
+        }
+
+        tableBody.querySelectorAll('.user-row, #noDataRow').forEach(el => el.remove());
+
+        if (!customers.length) {
+            const emptyRow = document.createElement('tr');
+            emptyRow.id = 'noDataRow';
+            emptyRow.innerHTML = `<td colspan="8" class="empty-text">No BC customers found.</td>`;
+            tableBody.appendChild(emptyRow);
+        } else {
+            customers.forEach(customer => {
+                const row = buildRow(customer);
+                tableBody.appendChild(row);
+            });
+        }
+
+        const noResultTr = document.createElement('tr');
+        noResultTr.id = 'noResultRow';
+        noResultTr.style.display = 'none';
+        noResultTr.innerHTML = `<td colspan="8" class="empty-text">No matching users found.</td>`;
+        tableBody.appendChild(noResultTr);
+
+        if (totalCount) {
+            totalCount.textContent = customers.length;
+        }
+
+        renderTable();
+
+        if (tableScroll) {
+            tableScroll.scrollTop = currentScrollTop;
+        }
+    }
+
+    function loadUsersSilently() {
+        fetch("{{ route('users.data') }}", {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                refreshTableBody(result.data || []);
+            }
+        })
+        .catch(error => {
+            console.log('Load users failed:', error);
+        });
+    }
+
     if (searchInput) {
-        searchInput.addEventListener('input', filterTable);
+        searchInput.addEventListener('input', function () {
+            currentPage = 1;
+            renderTable();
+        });
     }
 
     if (statusFilter) {
-        statusFilter.addEventListener('change', filterTable);
+        statusFilter.addEventListener('change', function () {
+            currentPage = 1;
+            renderTable();
+        });
     }
 
     if (activeFilter) {
-        activeFilter.addEventListener('change', filterTable);
+        activeFilter.addEventListener('change', function () {
+            currentPage = 1;
+            renderTable();
+        });
     }
+
+    if (pageSize) {
+        pageSize.addEventListener('change', function () {
+            currentPage = 1;
+            renderTable();
+        });
+    }
+
+    if (prevPageBtn) {
+        prevPageBtn.addEventListener('click', function () {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        });
+    }
+
+    if (nextPageBtn) {
+        nextPageBtn.addEventListener('click', function () {
+            const perPage = parseInt(pageSize.value || '20', 10);
+            const totalPages = Math.max(1, Math.ceil(getMatchedRows().length / perPage));
+
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+            }
+        });
+    }
+
+    function sendHeartbeat() {
+        fetch("{{ route('heartbeat') }}", {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({})
+        }).catch(function (error) {
+            console.log('Heartbeat failed:', error);
+        });
+    }
+
+    renderTable();
+    sendHeartbeat();
+
+    setInterval(sendHeartbeat, 60000);
+    setInterval(loadUsersSilently, 15000);
 });
 </script>
 

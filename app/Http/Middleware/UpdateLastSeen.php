@@ -12,11 +12,10 @@ class UpdateLastSeen
     public function handle(Request $request, Closure $next)
     {
         if (Auth::check()) {
-
-            /** @var User $user */
+            /** @var User|null $user */
             $user = Auth::user();
 
-            if ($user) {
+            if ($user instanceof User) {
                 $user->last_seen_at = now();
                 $user->save();
             }

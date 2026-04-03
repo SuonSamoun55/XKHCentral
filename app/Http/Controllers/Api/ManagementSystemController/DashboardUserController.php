@@ -10,9 +10,6 @@ class DashboardUserController extends Controller
     public function index()
     {
         $user = Auth::user();
-
-        // ini_set('memory_limit', '512M');
-
         return view('ManagementSystemViews.UserViews.DashboardUser');
     }
 }

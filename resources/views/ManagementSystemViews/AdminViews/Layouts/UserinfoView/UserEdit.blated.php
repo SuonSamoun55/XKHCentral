@@ -1,246 +1,262 @@
-@include('ManagementSystemViews.AdminViews.Layouts.navbar')
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>User Management</title>
+<!-- <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content custom-user-modal">
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+            <form method="POST" id="userForm" enctype="multipart/form-data">
+                @csrf
+                <div id="methodBox"></div>
+
+                <div class="modal-header custom-modal-header">
+                    <h5 id="modalTitle" class="modal-title">Connect BC Customer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body custom-modal-body">
+
+                    <div class="profile-top-wrap">
+                        <div class="profile-image-box">
+                            <div class="profile-image-circle">
+                                <img id="avatarPreview" src="" alt="User" class="profile-preview-img" style="display:none;">
+                                <div id="avatarText" class="profile-fallback-text">U</div>
+                            </div>
+
+                            <label for="profileImage" class="upload-image-btn" title="Upload image">
+                                <i class="bi bi-camera-fill"></i>
+                            </label>
+
+                            <input type="file" name="profile_image" id="profileImage" accept="image/*" hidden>
+                        </div>
+                    </div>
+
+                    <div class="user-info-grid">
+                        <div class="info-row">
+                            <label class="info-label">Customer BC ID:</label>
+                            <div class="info-value" id="modalBcNo">-</div>
+                        </div>
+
+                        <div class="info-row">
+                            <label class="info-label">Full Name:</label>
+                            <div class="info-value" id="modalName">-</div>
+                        </div>
+
+                        <div class="info-row">
+                            <label class="info-label">Email:</label>
+                            <div class="info-value" id="modalEmail">-</div>
+                        </div>
+
+                        <div class="info-row">
+                            <label class="info-label">Phone:</label>
+                            <div class="info-value" id="modalPhone">-</div>
+                        </div>
+                    </div>
+
+                    <div class="form-section mt-3">
+                        <div class="mb-3">
+                            <label class="form-label custom-label">Role:</label>
+                            <select name="role" id="role" class="form-select custom-input" required>
+                                <option value="">Select Role</option>
+                                <option value="customer">Customer</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="oldPasswordGroup" style="display:none;">
+                            <label class="form-label custom-label">Old Password:</label>
+                            <input type="password" name="old_password" id="oldPassword" class="form-control custom-input">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label custom-label">Password:</label>
+                            <input type="password" name="password" id="password" class="form-control custom-input">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label custom-label">Confirm Password:</label>
+                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control custom-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer custom-modal-footer">
+                    <button type="button" class="btn modal-cancel-btn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn modal-save-btn" id="submitBtn">Connect</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
 
 <style>
-body{background:#f4f6f8;font-family:Arial;}
-a{text-decoration:none;}
-.page-card{background:#fff;border-radius:12px;padding:15px;}
-.connect-avatar{
-    width:70px;
-    height:70px;
-    border-radius:50%;
-    background:#e2e8f0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:bold;
-    font-size:22px;
-    margin:auto;
-    overflow:hidden;
-}
-.connect-avatar img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-}
-</style>
-</head>
-
-<body>
-
-<div class="container mt-4">
-<div class="page-card">
-
-<h4 class="mb-3">User Management</h4>
-
-<table class="table table-bordered">
-<thead>
-<tr>
-<th>Name</th>
-<th>Email</th>
-<th>Customer No</th>
-<th>Status</th>
-<th>Action</th>
-</tr>
-</thead>
-
-<tbody>
-@foreach($customers as $customer)
-<tr>
-<td>{{ $customer->name }}</td>
-<td>{{ $customer->email }}</td>
-<td>{{ $customer->bc_customer_no }}</td>
-<td>{{ $customer->connect_status }}</td>
-
-<td>
-@if($customer->connect_status !== 'connected')
-<button class="btn btn-success open-user-modal"
-data-bs-toggle="modal"
-data-bs-target="#userModal"
-data-mode="connect"
-data-id="{{ $customer->id }}"
-data-bcno="{{ $customer->bc_customer_no }}"
-data-name="{{ $customer->name }}"
-data-email="{{ $customer->email }}"
-data-phone="{{ $customer->phone }}"
-data-image-url="{{ $customer->profile_image_url ?? '' }}">
-Connect
-</button>
-@else
-<button class="btn btn-warning open-user-modal"
-data-bs-toggle="modal"
-data-bs-target="#userModal"
-data-mode="edit"
-data-id="{{ $customer->id }}"
-data-role="{{ $customer->role }}"
-data-bcno="{{ $customer->bc_customer_no }}"
-data-name="{{ $customer->name }}"
-data-email="{{ $customer->email }}"
-data-phone="{{ $customer->phone }}"
-data-image-url="{{ $customer->profile_image_url ?? '' }}">
-Edit
-</button>
-@endif
-</td>
-
-</tr>
-@endforeach
-</tbody>
-</table>
-
-</div>
-</div>
-
-<div class="modal fade" id="userModal">
-<div class="modal-dialog modal-dialog-centered">
-<div class="modal-content">
-
-<form method="POST" id="userForm" enctype="multipart/form-data">
-@csrf
-<div id="methodBox"></div>
-
-<div class="modal-header">
-<h5 id="modalTitle">Connect</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-</div>
-
-<div class="modal-body">
-
-<div class="text-center mb-3">
-    <div class="connect-avatar" id="avatarBox">
-        <span id="avatarText">U</span>
-        <img id="avatarPreview" src="" alt="Preview" style="display:none;">
-    </div>
-    <h5 id="modalName" class="mt-2"></h5>
-    <p id="modalEmail"></p>
-</div>
-
-<p><b>Customer No:</b> <span id="modalBcNo"></span></p>
-<p><b>Phone:</b> <span id="modalPhone"></span></p>
-
-<div id="oldPasswordGroup" style="display:none;">
-    <label class="form-label">Old Password</label>
-    <input type="password" name="old_password" id="oldPassword" class="form-control">
-</div>
-
-<div class="mt-2">
-    <label class="form-label">Role</label>
-    <select name="role" id="role" class="form-control" required>
-        <option value="">Select</option>
-        <option value="customer">Customer</option>
-        <option value="admin">Admin</option>
-    </select>
-</div>
-
-<div class="mt-3">
-    <label class="form-label">Profile Image Upload</label>
-    <input type="file" name="profile_image" id="profileImage" class="form-control" accept=".jpg,.jpeg,.png,.webp,image/*">
-    <small class="text-muted">Allowed: jpg, jpeg, png, webp. Max: 2MB</small>
-</div>
-
-<div class="mt-2">
-    <label class="form-label">Or Image URL</label>
-    <input type="text" name="profile_image_url" id="profileImageUrl" class="form-control" placeholder="Paste image URL if needed">
-</div>
-
-<div class="mt-2">
-    <label class="form-label">Password</label>
-    <input type="password" name="password" id="password" class="form-control">
-</div>
-
-<div class="mt-2">
-    <label class="form-label">Confirm Password</label>
-    <input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
-</div>
-
-</div>
-
-<div class="modal-footer">
-<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-<button type="submit" class="btn btn-primary" id="submitBtn">Save</button>
-</div>
-
-</form>
-
-</div>
-</div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-document.querySelectorAll('.open-user-modal').forEach(btn => {
-    btn.addEventListener('click', function () {
-        let mode = this.dataset.mode;
-        let id = this.dataset.id;
-        let name = this.dataset.name || 'User';
-        let imageUrl = this.dataset.imageUrl || '';
-
-        document.getElementById('modalName').innerText = name;
-        document.getElementById('modalEmail').innerText = this.dataset.email || '';
-        document.getElementById('modalBcNo').innerText = this.dataset.bcno || '';
-        document.getElementById('modalPhone').innerText = this.dataset.phone || '';
-        document.getElementById('avatarText').innerText = name.charAt(0).toUpperCase();
-
-        document.getElementById('password').value = '';
-        document.getElementById('password_confirmation').value = '';
-        document.getElementById('oldPassword').value = '';
-        document.getElementById('profileImage').value = '';
-        document.getElementById('profileImageUrl').value = imageUrl;
-        document.getElementById('methodBox').innerHTML = '';
-
-        const avatarPreview = document.getElementById('avatarPreview');
-        const avatarText = document.getElementById('avatarText');
-
-        if (imageUrl) {
-            avatarPreview.src = imageUrl;
-            avatarPreview.style.display = 'block';
-            avatarText.style.display = 'none';
-        } else {
-            avatarPreview.src = '';
-            avatarPreview.style.display = 'none';
-            avatarText.style.display = 'inline';
-        }
-
-        if (mode === 'edit') {
-            document.getElementById('modalTitle').innerText = 'Edit User';
-            document.getElementById('submitBtn').innerText = 'Update';
-            document.getElementById('userForm').action = '/users/update/' + id;
-            document.getElementById('methodBox').innerHTML = '<input type="hidden" name="_method" value="PUT">';
-            document.getElementById('role').value = this.dataset.role || '';
-            document.getElementById('oldPasswordGroup').style.display = 'block';
-            document.getElementById('oldPassword').setAttribute('required', 'required');
-        } else {
-            document.getElementById('modalTitle').innerText = 'Connect';
-            document.getElementById('submitBtn').innerText = 'Connect';
-            document.getElementById('userForm').action = '/users/store/' + id;
-            document.getElementById('role').value = '';
-            document.getElementById('oldPasswordGroup').style.display = 'none';
-            document.getElementById('oldPassword').removeAttribute('required');
-        }
-    });
-});
-
-document.getElementById('profileImage').addEventListener('change', function (event) {
-    const file = event.target.files[0];
-    const avatarPreview = document.getElementById('avatarPreview');
-    const avatarText = document.getElementById('avatarText');
-
-    if (file) {
-        avatarPreview.src = URL.createObjectURL(file);
-        avatarPreview.style.display = 'block';
-        avatarText.style.display = 'none';
+    .custom-user-modal{
+        border-radius:10px;
+        overflow:hidden;
+        border:1px solid #d9e2ec;
     }
-});
-</script>
 
-</body>
-</html>
+    .custom-modal-header{
+        border-bottom:none;
+        padding:14px 18px 8px;
+    }
+
+    .custom-modal-header .modal-title{
+        font-size:16px;
+        font-weight:700;
+        color:#10b8c7;
+    }
+
+    .custom-modal-body{
+        padding:8px 22px 18px;
+    }
+
+    .profile-top-wrap{
+        display:flex;
+        justify-content:flex-start;
+        margin-bottom:14px;
+    }
+
+    .profile-image-box{
+        position:relative;
+        width:78px;
+        height:78px;
+    }
+
+    .profile-image-circle{
+        width:78px;
+        height:78px;
+        border-radius:50%;
+        overflow:hidden;
+        border:1px solid #d6dde5;
+        background:#eef2f7;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+    }
+
+    .profile-preview-img{
+        width:100%;
+        height:100%;
+        object-fit:cover;
+        display:block;
+    }
+
+    .profile-fallback-text{
+        font-size:24px;
+        font-weight:700;
+        color:#475569;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        width:100%;
+        height:100%;
+    }
+
+    .upload-image-btn{
+        position:absolute;
+        right:-2px;
+        bottom:-2px;
+        width:28px;
+        height:28px;
+        border-radius:50%;
+        background:#10b8c7;
+        color:#fff;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        text-decoration:none;
+        cursor:pointer;
+        border:2px solid #fff;
+        box-shadow:0 2px 8px rgba(0,0,0,0.12);
+        transition:0.2s ease;
+    }
+
+    .upload-image-btn:hover{
+        background:#0aa2b0;
+        color:#fff;
+    }
+
+    .upload-image-btn i{
+        font-size:12px;
+    }
+
+    .user-info-grid{
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+    }
+
+    .info-row{
+        display:grid;
+        grid-template-columns:120px 1fr;
+        align-items:center;
+        gap:8px;
+    }
+
+    .info-label{
+        font-size:13px;
+        font-weight:500;
+        color:#1e293b;
+        margin:0;
+    }
+
+    .info-value{
+        font-size:13px;
+        color:#334155;
+        word-break:break-word;
+    }
+
+    .custom-label{
+        font-size:13px;
+        font-weight:500;
+        color:#1e293b;
+        margin-bottom:6px;
+    }
+
+    .custom-input{
+        height:36px;
+        font-size:13px;
+        border:1px solid #cfd8e3;
+        border-radius:4px;
+        box-shadow:none !important;
+    }
+
+    .custom-input:focus{
+        border-color:#10b8c7;
+    }
+
+    .custom-modal-footer{
+        border-top:none;
+        justify-content:center;
+        gap:28px;
+        padding:18px 22px 22px;
+    }
+
+    .modal-cancel-btn,
+    .modal-save-btn{
+        min-width:104px;
+        height:38px;
+        border:none;
+        border-radius:4px;
+        font-size:13px;
+        font-weight:700;
+        color:#fff;
+    }
+
+    .modal-cancel-btn{
+        background:#ff6464;
+    }
+
+    .modal-cancel-btn:hover{
+        background:#f05151;
+        color:#fff;
+    }
+
+    .modal-save-btn{
+        background:#10b8c7;
+    }
+
+    .modal-save-btn:hover{
+        background:#0aa7b6;
+        color:#fff;
+    }
+</style> -->

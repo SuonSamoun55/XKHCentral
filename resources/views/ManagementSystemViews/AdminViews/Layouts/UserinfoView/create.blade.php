@@ -1,165 +1,354 @@
-    @include('ManagementSystemViews.AdminViews.Layouts.navbar')
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Management</title>
+<div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content custom-user-modal">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+            <form method="POST" id="userForm" enctype="multipart/form-data">
+                @csrf
+                <div id="methodBox"></div>
 
-    <style>
-    body{background:#f4f6f8;font-family:Arial;}
-    .page-card{background:#fff;border-radius:12px;padding:15px;}
-    .connect-avatar{width:70px;height:70px;border-radius:50%;background:#e2e8f0;
-    display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:22px;margin:auto;}
-    </style>
-    </head>
+                <div class="modal-header custom-modal-header">
+                    <h5 id="modalTitle" class="modal-title">Connect BC Customer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
 
-    <body>
-        <div class="modal fade" id="userModal">
-<div class="modal-dialog modal-dialog-centered">
-<div class="modal-content">
+                <div class="modal-body custom-modal-body">
 
-<form method="POST" id="userForm" enctype="multipart/form-data">
-@csrf
-<div id="methodBox"></div>
+                    <div class="profile-top-wrap">
+                        <div class="profile-image-box">
+                            <div class="profile-image-circle">
+                                <img id="avatarPreview" src="" alt="User" class="profile-preview-img" style="display:none;">
+                                <div id="avatarText" class="profile-fallback-text">U</div>
+                            </div>
 
-<div class="modal-header">
-<h5 id="modalTitle">Connect</h5>
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-</div>
+                            <label for="profileImage" class="upload-image-btn" title="Upload image">
+                                <i class="bi bi-camera-fill"></i>
+                            </label>
 
-<div class="modal-body">
+                            <input type="file" name="profile_image" id="profileImage" accept="image/*" hidden>
+                        </div>
+                    </div>
 
-{{-- PROFILE --}}
-<div class="text-center mb-3">
-    <div style="width:80px;height:80px;border-radius:50%;overflow:hidden;margin:auto;border:1px solid #ddd;">
-        <img id="avatarPreview" src="" style="width:100%;height:100%;object-fit:cover;display:none;">
-        <div id="avatarText" style="line-height:80px;font-weight:bold;">U</div>
+                    <div class="user-info-grid">
+                        <div class="info-row">
+                            <label class="info-label">Customer BC ID:</label>
+                            <div class="info-value" id="modalBcNo">-</div>
+                        </div>
+
+                        <div class="info-row">
+                            <label class="info-label">Full Name:</label>
+                            <div class="info-value" id="modalName">-</div>
+                        </div>
+
+                        <div class="info-row">
+                            <label class="info-label">Email:</label>
+                            <div class="info-value" id="modalEmail">-</div>
+                        </div>
+
+                        <div class="info-row">
+                            <label class="info-label">Phone:</label>
+                            <div class="info-value" id="modalPhone">-</div>
+                        </div>
+                    </div>
+
+                    <div class="form-section mt-3">
+                        <div class="mb-3">
+                            <label class="form-label custom-label">Role:</label>
+                            <select name="role" id="role" class="form-select custom-input" required>
+                                <option value="">Select Role</option>
+                                <option value="customer">Customer</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="oldPasswordGroup" style="display:none;">
+                            <label class="form-label custom-label">Old Password:</label>
+                            <input type="password" name="old_password" id="oldPassword" class="form-control custom-input">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label custom-label">Password:</label>
+                            <input type="password" name="password" id="password" class="form-control custom-input">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label custom-label">Confirm Password:</label>
+                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control custom-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer custom-modal-footer">
+                    <button type="button" class="btn modal-cancel-btn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn modal-save-btn" id="submitBtn">Connect</button>
+                </div>
+            </form>
+
+        </div>
     </div>
-    <h5 id="modalName" class="mt-2"></h5>
-    <p id="modalEmail"></p>
 </div>
 
-<p><b>Customer No:</b> <span id="modalBcNo"></span></p>
-<p><b>Phone:</b> <span id="modalPhone"></span></p>
+<style>
+    .custom-user-modal{
+        border-radius:10px;
+        overflow:hidden;
+        border:1px solid #d9e2ec;
+    }
 
-{{-- OLD PASSWORD --}}
-<div id="oldPasswordGroup" style="display:none;">
-<label>Old Password</label>
-<input type="password" name="old_password" id="oldPassword" class="form-control">
-</div>
+    .custom-modal-header{
+        border-bottom:none;
+        padding:14px 18px 8px;
+    }
 
-{{-- ROLE --}}
-<label class="mt-2">Role</label>
-<select name="role" id="role" class="form-control" required>
-<option value="">Select</option>
-<option value="customer">Customer</option>
-<option value="admin">Admin</option>
-</select>
+    .custom-modal-header .modal-title{
+        font-size:16px;
+        font-weight:700;
+        color:#10b8c7;
+    }
 
-{{-- IMAGE UPLOAD --}}
-<label class="mt-3">Upload Profile Image</label>
-<input type="file" name="profile_image" id="profileImage" class="form-control">
+    .custom-modal-body{
+        padding:8px 22px 18px;
+    }
 
-<label class="mt-2">OR Image URL</label>
-<input type="text" name="profile_image_url" id="profileImageUrl" class="form-control" placeholder="https://...">
+    .profile-top-wrap{
+        display:flex;
+        justify-content:flex-start;
+        margin-bottom:14px;
+    }
 
-{{-- PASSWORD --}}
-<label class="mt-2">Password</label>
-<input type="password" name="password" id="password" class="form-control">
+    .profile-image-box{
+        position:relative;
+        width:78px;
+        height:78px;
+    }
 
-<label class="mt-2">Confirm Password</label>
-<input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
+    .profile-image-circle{
+        width:78px;
+        height:78px;
+        border-radius:50%;
+        overflow:hidden;
+        border:1px solid #d6dde5;
+        background:#eef2f7;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+    }
 
-</div>
+    .profile-preview-img{
+        width:100%;
+        height:100%;
+        object-fit:cover;
+        display:block;
+    }
 
-<div class="modal-footer">
-<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-<button type="submit" class="btn btn-primary" id="submitBtn">Save</button>
-</div>
+    .profile-fallback-text{
+        font-size:24px;
+        font-weight:700;
+        color:#475569;
+    }
 
-</form>
+    .upload-image-btn{
+        position:absolute;
+        right:-2px;
+        bottom:-2px;
+        width:28px;
+        height:28px;
+        border-radius:50%;
+        background:#10b8c7;
+        color:#fff;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        text-decoration:none;
+        cursor:pointer;
+        border:2px solid #fff;
+        box-shadow:0 2px 8px rgba(0,0,0,0.12);
+        transition:0.2s ease;
+    }
 
-</div>
-</div>
-</div>
+    .upload-image-btn:hover{
+        background:#0aa2b0;
+        color:#fff;
+    }
+
+    .upload-image-btn i{
+        font-size:12px;
+    }
+
+    .user-info-grid{
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+    }
+
+    .info-row{
+        display:grid;
+        grid-template-columns:120px 1fr;
+        align-items:center;
+        gap:8px;
+    }
+
+    .info-label{
+        font-size:13px;
+        font-weight:500;
+        color:#1e293b;
+        margin:0;
+    }
+
+    .info-value{
+        font-size:13px;
+        color:#334155;
+        word-break:break-word;
+    }
+
+    .custom-label{
+        font-size:13px;
+        font-weight:500;
+        color:#1e293b;
+        margin-bottom:6px;
+    }
+
+    .custom-input{
+        height:36px;
+        font-size:13px;
+        border:1px solid #cfd8e3;
+        border-radius:4px;
+        box-shadow:none !important;
+    }
+
+    .custom-input:focus{
+        border-color:#10b8c7;
+    }
+
+    .custom-modal-footer{
+        border-top:none;
+        justify-content:center;
+        gap:28px;
+        padding:18px 22px 22px;
+    }
+
+    .modal-cancel-btn,
+    .modal-save-btn{
+        min-width:104px;
+        height:38px;
+        border:none;
+        border-radius:4px;
+        font-size:13px;
+        font-weight:700;
+        color:#fff;
+    }
+
+    .modal-cancel-btn{
+        background:#ff6464;
+    }
+
+    .modal-cancel-btn:hover{
+        background:#f05151;
+        color:#fff;
+    }
+
+    .modal-save-btn{
+        background:#10b8c7;
+    }
+
+    .modal-save-btn:hover{
+        background:#0aa7b6;
+        color:#fff;
+    }
+</style>
 
 <script>
-document.querySelectorAll('.open-user-modal').forEach(btn => {
-btn.addEventListener('click', function(){
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.open-user-modal');
+    if (!btn) return;
 
-let mode = this.dataset.mode;
-let id = this.dataset.id;
-let name = this.dataset.name || 'User';
-let imageUrl = this.dataset.imageUrl || '';
+    const mode = btn.dataset.mode || 'connect';
+    const id = btn.dataset.id || '';
+    const name = btn.dataset.name || 'User';
+    const email = btn.dataset.email || '-';
+    const phone = btn.dataset.phone || '-';
+    const bcno = btn.dataset.bcno || '-';
+    const role = btn.dataset.role || '';
+    const imageUrl = btn.dataset.imageUrl || '';
 
-document.getElementById('modalName').innerText = name;
-document.getElementById('modalEmail').innerText = this.dataset.email || '';
-document.getElementById('modalBcNo').innerText = this.dataset.bcno || '';
-document.getElementById('modalPhone').innerText = this.dataset.phone || '';
+    const modalTitle = document.getElementById('modalTitle');
+    const submitBtn = document.getElementById('submitBtn');
+    const userForm = document.getElementById('userForm');
+    const methodBox = document.getElementById('methodBox');
+    const oldPasswordGroup = document.getElementById('oldPasswordGroup');
+    const oldPassword = document.getElementById('oldPassword');
 
-document.getElementById('avatarText').innerText = name.charAt(0).toUpperCase();
+    const modalName = document.getElementById('modalName');
+    const modalEmail = document.getElementById('modalEmail');
+    const modalPhone = document.getElementById('modalPhone');
+    const modalBcNo = document.getElementById('modalBcNo');
 
-document.getElementById('password').value='';
-document.getElementById('password_confirmation').value='';
-document.getElementById('oldPassword').value='';
-document.getElementById('profileImage').value='';
-document.getElementById('profileImageUrl').value=imageUrl;
-document.getElementById('methodBox').innerHTML='';
+    const avatarPreview = document.getElementById('avatarPreview');
+    const avatarText = document.getElementById('avatarText');
+    const profileImage = document.getElementById('profileImage');
 
-let avatarPreview = document.getElementById('avatarPreview');
-let avatarText = document.getElementById('avatarText');
+    const roleInput = document.getElementById('role');
+    const password = document.getElementById('password');
+    const passwordConfirmation = document.getElementById('password_confirmation');
 
-if(imageUrl){
-    avatarPreview.src = imageUrl;
-    avatarPreview.style.display='block';
-    avatarText.style.display='none';
-}else{
-    avatarPreview.style.display='none';
-    avatarText.style.display='block';
-}
+    modalName.textContent = name;
+    modalEmail.textContent = email;
+    modalPhone.textContent = phone;
+    modalBcNo.textContent = bcno;
 
-if(mode === 'edit'){
-document.getElementById('modalTitle').innerText='Edit User';
-document.getElementById('submitBtn').innerText='Update';
+    avatarText.textContent = (name.trim().charAt(0) || 'U').toUpperCase();
 
-document.getElementById('userForm').action='/users/update/'+id;
-document.getElementById('methodBox').innerHTML='<input type="hidden" name="_method" value="PUT">';
+    profileImage.value = '';
+    password.value = '';
+    passwordConfirmation.value = '';
+    oldPassword.value = '';
+    methodBox.innerHTML = '';
 
-document.getElementById('role').value=this.dataset.role;
+    if (imageUrl) {
+        avatarPreview.src = imageUrl;
+        avatarPreview.style.display = 'block';
+        avatarText.style.display = 'none';
+    } else {
+        avatarPreview.removeAttribute('src');
+        avatarPreview.style.display = 'none';
+        avatarText.style.display = 'flex';
+    }
 
-document.getElementById('oldPasswordGroup').style.display='block';
-document.getElementById('oldPassword').setAttribute('required','required');
+    avatarPreview.onerror = function () {
+        avatarPreview.style.display = 'none';
+        avatarText.style.display = 'flex';
+    };
 
-}else{
-
-document.getElementById('modalTitle').innerText='Connect';
-document.getElementById('submitBtn').innerText='Connect';
-
-document.getElementById('userForm').action='/users/store/'+id;
-
-document.getElementById('role').value='';
-
-document.getElementById('oldPasswordGroup').style.display='none';
-document.getElementById('oldPassword').removeAttribute('required');
-}
+    if (mode === 'edit') {
+        modalTitle.textContent = 'Edit User';
+        submitBtn.textContent = 'Update';
+        userForm.action = '/users/update/' + id;
+        methodBox.innerHTML = '<input type="hidden" name="_method" value="PUT">';
+        roleInput.value = role;
+        oldPasswordGroup.style.display = 'block';
+        oldPassword.setAttribute('required', 'required');
+        password.removeAttribute('required');
+        passwordConfirmation.removeAttribute('required');
+    } else {
+        modalTitle.textContent = 'Connect BC Customer';
+        submitBtn.textContent = 'Connect';
+        userForm.action = '/users/store/' + id;
+        roleInput.value = '';
+        oldPasswordGroup.style.display = 'none';
+        oldPassword.removeAttribute('required');
+        password.setAttribute('required', 'required');
+        passwordConfirmation.setAttribute('required', 'required');
+    }
 });
-});
 
-document.getElementById('profileImage').addEventListener('change', function(e){
-let file = e.target.files[0];
-let avatarPreview = document.getElementById('avatarPreview');
-let avatarText = document.getElementById('avatarText');
+document.getElementById('profileImage').addEventListener('change', function (e) {
+    const file = e.target.files[0];
+    const avatarPreview = document.getElementById('avatarPreview');
+    const avatarText = document.getElementById('avatarText');
 
-if(file){
-avatarPreview.src = URL.createObjectURL(file);
-avatarPreview.style.display='block';
-avatarText.style.display='none';
-}
+    if (file) {
+        avatarPreview.src = URL.createObjectURL(file);
+        avatarPreview.style.display = 'block';
+        avatarText.style.display = 'none';
+    }
 });
 </script>
-    </body>
-    </html>
