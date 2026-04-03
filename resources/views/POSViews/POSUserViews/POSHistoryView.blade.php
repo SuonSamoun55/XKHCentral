@@ -4,7 +4,7 @@
 </style>
 
 <body>
-    <div class="app-shell" id="appShell">
+    <div class="app-shell" id="appShell"style="overflow: visible;">
         @include('ManagementSystemViews.UserViews.Layouts.aside')
 
         <div class="page-wrap">
