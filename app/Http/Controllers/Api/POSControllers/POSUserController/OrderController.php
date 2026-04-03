@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\POSModel\Cart;
 use App\Models\POSModel\Order;
 use App\Models\POSModel\OrderItem;
+use App\Models\POSModel\OrderHistory;
 use App\Models\MagamentSystemModel\Notification;
 use App\Models\MagamentSystemModel\Company;
 use Illuminate\Http\Request;
@@ -153,6 +154,27 @@ class OrderController extends Controller
             Log::info('Order created', [
                 'order_id' => $order->id,
                 'order_no' => $order->order_no,
+            ]);
+
+            // Save order history
+            $itemsSummary = [];
+            foreach ($cart->items as $cartItem) {
+                $itemsSummary[] = [
+                    'item_no' => $cartItem->item_no,
+                    'item_name' => $cartItem->item_name,
+                    'qty' => $cartItem->qty,
+                    'unit_price' => $cartItem->unit_price,
+                    'line_total' => $cartItem->line_total,
+                ];
+            }
+
+            OrderHistory::create([
+                'user_id' => $user->id,
+                'order_no' => $order->order_no,
+                'customer_no' => $user->bc_customer_no ?? null,
+                'total_amount' => $totalAmount,
+                'status' => 'pending',
+                'items_summary' => json_encode($itemsSummary),
             ]);
 
             foreach ($cart->items as $cartItem) {
