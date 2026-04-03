@@ -1,16 +1,58 @@
+@php
+    use Illuminate\Support\Facades\Auth;
+    use Illuminate\Support\Facades\Storage;
+    use App\Models\MagamentSystemModel\Company;
+
+    $authUser = Auth::user();
+
+    // 1. Fetch Company Logic (Same as Admin)
+    $company = null;
+    if (session('selected_company_id')) {
+        $company = Company::find(session('selected_company_id'));
+    }
+
+    if (!$company) {
+        $company = Company::first();
+    }
+
+    // 2. Setup Company Logo and Name
+    $companyName = $company->display_name ?? $company->name ?? 'Orange';
+    $companyLogoUrl = asset('images/default-company.png');
+
+    if ($company && !empty($company->logo)) {
+        if (preg_match('/^https?:\/\//i', $company->logo)) {
+            $companyLogoUrl = $company->logo;
+        } else {
+            $companyLogoUrl = Storage::url($company->logo);
+        }
+    }
+
+    // 3. Setup User Avatar Logic
+    $userAvatar = asset('images/default-user.png');
+    if ($authUser) {
+        $img = $authUser->avatar ?? $authUser->profile_image ?? $authUser->image;
+        if ($img) {
+            if (preg_match('/^https?:\/\//i', $img)) {
+                $userAvatar = $img;
+            } else {
+                $userAvatar = asset($img);
+            }
+        }
+    }
+@endphp
+
 <div class="sidebar-wrap">
     <aside class="sidebar">
         <div class="sidebar-top">
-            <div class="brand">
-                <div class="brand-logo"></div>
-                <div class="brand-text">Orange</div>
+           <div class="brand">
+                <div class="brand-logo company-logo-box" style="width: 45px; height: 45px; overflow: hidden; border-radius: 8px;">
+                    <img src="{{ $companyLogoUrl }}" 
+                         alt="Company Logo" 
+                         style="width: 100%; height: 100%; object-fit: cover;"
+                         onerror="this.onerror=null;this.src='{{ asset('images/default-company.png') }}';">
+                </div>
+                <div class="brand-text">{{ $companyName }}</div>
             </div>
-
-            {{-- <div class="search-box">
-                <span class="search-icon">⌕</span>
-                <input type="text" placeholder="Search products">
-            </div> --}}
-
             <nav class="nav-list">
                 <a href="/">
                     <button class="nav-btn {{ request()->is('/') || request()->is('pos-system') ? 'active' : '' }}"

@@ -32,7 +32,7 @@
                     <div class="empty-cart">
 
                         <div class="empty-cart">
-                            <img src="{{ asset('images/pos/Frame.png') }}" class="empty-image">
+                            <img src="{{ asset('images/pos/Empty.png') }}" class="empty-image">
                         </div>
 
                         <div class="empty-title">
