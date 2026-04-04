@@ -53,12 +53,67 @@
     }
 
     /* RIGHT SIDE */
-    .right-section {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        font-size: 14px;
-    }
+   .right-section {
+    display: flex;
+    align-items: center;
+}
+
+.date-filter-wrapper {
+    position: relative;
+    width: 250px;
+    margin-top: 16px;
+}
+
+.date-filter-wrapper input[type="date"] {
+    width: 80%;
+    border: 2px solid #00b5cc; 
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 14px;
+    outline: none;
+    background-color: white;
+    cursor: pointer;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 2;
+}
+
+.floating-label {
+    position: absolute;
+    left: 12px;
+    top: -11px; 
+    background: white;
+    padding: 0 5px;
+    font-size: 12px;
+    color: #333;
+    font-weight: 500;
+    z-index: 10;
+}
+
+.calendar-custom-img {
+    position: absolute;
+    right: 63px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px; /* Adjust size to match your UI */
+    height: 16px;
+    pointer-events: none; /* VERY IMPORTANT: Allows clicking through to the input */
+    z-index: 5;
+}
+
+/* This makes sure the whole box is clickable to open the calendar */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: auto;
+    color: transparent;
+    background: transparent;
+    cursor: pointer;
+}
 
     /* Search */
     .search-box {
