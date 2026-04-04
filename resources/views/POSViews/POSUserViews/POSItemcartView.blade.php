@@ -80,7 +80,7 @@
                 
                 <div id="cartMainContent">
                     <div class="cart-header">
-                        <div class="cart-title">Cart</div>
+                        @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Cart'])
                     </div>
 
                     @if (!$cart || $cart->items->isEmpty())

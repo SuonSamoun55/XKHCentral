@@ -147,14 +147,14 @@
                 </div>
             </div>
 
-            <button class="logout-btn" type="button">
-                <span class="nav-icon">
-                    <img src="{{ asset('images/aside/logout.png') }}" alt="Logout Icon">
-                </span>
-                <a class="dd-item danger" href="/logout">
-                    <span class="nav-label">Log out</span>
-                </a>
-            </button>
+           <a href="/logout" class="logout-link">
+    <button class="logout-btn" type="button">
+        <span class="nav-icon">
+            <img src="{{ asset('images/aside/logout.png') }}" alt="Logout Icon">
+        </span>
+        <span class="nav-label">Log out</span>
+    </button>
+</a>
 
         </div>
     </aside>

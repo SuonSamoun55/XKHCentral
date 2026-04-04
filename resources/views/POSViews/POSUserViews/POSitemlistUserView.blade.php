@@ -15,7 +15,7 @@
 
 <body>
 
-     <div class="app-shell" id="appShell">
+    <div class="app-shell" id="appShell">
 
         {{-- Sidebar --}}
         @include('ManagementSystemViews.UserViews.Layouts.aside')
@@ -23,41 +23,46 @@
         {{-- Page Content --}}
         <div class="page-wrap">
             <main class="content-area">
+                <div class="header">
 
-                <div class="top-bar">
+                    <div class="top">
 
-                    <h1 class="page-title">Product</h1>
+                        <h1 class="title">
+                            @include('ManagementSystemViews.UserViews.Layouts.header', [
+                                'title' => 'Products',
+                            ])
+                        </h1>
 
-                    <a href="{{ route('user.pos.cart') }}" class="cart-box">
-                        <i class="bi bi-cart3"></i>
-                        <span class="cart-count" id="cartCount">0</span>
-                    </a>
-                </div>
-                <div class="search-area">
-                    <div class="search-wrapper">
-                        <div class="search-box">
-                            <i class="bi bi-search"></i>
-                            <input type="text" id="searchInput" placeholder="Search Product">
-                            <button type="button" id="searchSubmitBtn" class="search-submit-btn">
-                                <i class="bi bi-send"></i>
-                            </button>
-                        </div>
-
-                        <div class="search-dropdown" id="searchDropdown">
-                            <div class="search-dropdown-left">
-                                <div class="search-section-title">Your Searches</div>
-                                <div id="searchSuggestions"></div>
+                        <a href="{{ route('user.pos.cart') }}" class="cart-box">
+                            <i class="bi bi-cart3"></i>
+                            <span class="cart-count" id="cartCount">0</span>
+                        </a>
+                    </div>
+                    <div class="search-area">
+                        <div class="search-wrapper">
+                            <div class="search-box">
+                                <i class="bi bi-search"></i>
+                                <input type="text" id="searchInput" placeholder="Search Product">
+                                <button type="button" id="searchSubmitBtn" class="search-submit-btn">
+                                    <i class="bi bi-send"></i>
+                                </button>
                             </div>
 
-                            <div class="search-dropdown-right">
-                                <div class="search-section-title">Products</div>
-                                <div id="searchPreviewProducts" class="search-preview-products"></div>
+                            <div class="search-dropdown" id="searchDropdown">
+                                <div class="search-dropdown-left">
+                                    <div class="search-section-title">Your Searches</div>
+                                    <div id="searchSuggestions"></div>
+                                </div>
+
+                                <div class="search-dropdown-right">
+                                    <div class="search-section-title">Products</div>
+                                    <div id="searchPreviewProducts" class="search-preview-products"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <h2 class="page-title">All Products</h2>
+                </div>
 
                 <div id="messageBox" class="message-box"></div>
 
@@ -158,15 +163,15 @@
                 localStorage.setItem("pos_recent_searches", JSON.stringify(recentSearches));
             }
 
-           function showMessage(type, text) {
-    if (!els.messageBox) return;
+            function showMessage(type, text) {
+                if (!els.messageBox) return;
 
-    // Choose icon based on type
-    const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill';
-    const title = type === 'success' ? 'Success!' : 'Error!';
+                // Choose icon based on type
+                const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill';
+                const title = type === 'success' ? 'Success!' : 'Error!';
 
-    // Set the HTML structure
-    els.messageBox.innerHTML = `
+                // Set the HTML structure
+                els.messageBox.innerHTML = `
         <i class="bi ${iconClass} main-icon"></i>
         <div class="message-content">
             <strong>${title}</strong> ${text}
@@ -176,14 +181,15 @@
         </button>
     `;
 
-    // Apply classes and show
-    els.messageBox.className = `message-box ${type} show`;
+                // Apply classes and show
+                els.messageBox.className = `message-box ${type} show`;
 
-    // Auto-hide after 4 seconds
-    setTimeout(() => {
-        els.messageBox.classList.remove('show');
-    }, 4000);
-}
+                // Auto-hide after 4 seconds
+                setTimeout(() => {
+                    els.messageBox.classList.remove('show');
+                }, 4000);
+            }
+
             function escapeHtml(text = "") {
                 const div = document.createElement("div");
                 div.textContent = text;
@@ -389,35 +395,36 @@
                 openSearchDropdown(); // Keep it open to show history
             }
 
-          function bindSidebar() {
-    try {
-        // Note: The collapse button is already handled by aside.blade.php script
-        // We don't re-bind it here to avoid conflicts
-        
-        // Only bind the settings if needed
-        if (els.settingsBtn && els.settingsBox) {
-            els.settingsBtn.addEventListener("click", (e) => {
-                e.preventDefault();
-                if (els.appShell?.classList.contains("collapsed")) return;
-                els.settingsBox.classList.toggle("open");
-            });
-        }
+            function bindSidebar() {
+                try {
+                    // Note: The collapse button is already handled by aside.blade.php script
+                    // We don't re-bind it here to avoid conflicts
 
-        // Nav Buttons
-        if (els.navButtons && els.navButtons.length > 0) {
-            els.navButtons.forEach(button => {
-                button.addEventListener("click", () => {
-                    els.navButtons.forEach(btn => btn.classList.remove("active"));
-                    button.classList.add("active");
-                });
-            });
-        }
-        
-        console.log("Sidebar elements ready.");
-    } catch (error) {
-        console.error("Sidebar Error:", error);
-    }
-}
+                    // Only bind the settings if needed
+                    if (els.settingsBtn && els.settingsBox) {
+                        els.settingsBtn.addEventListener("click", (e) => {
+                            e.preventDefault();
+                            if (els.appShell?.classList.contains("collapsed")) return;
+                            els.settingsBox.classList.toggle("open");
+                        });
+                    }
+
+                    // Nav Buttons
+                    if (els.navButtons && els.navButtons.length > 0) {
+                        els.navButtons.forEach(button => {
+                            button.addEventListener("click", () => {
+                                els.navButtons.forEach(btn => btn.classList.remove("active"));
+                                button.classList.add("active");
+                            });
+                        });
+                    }
+
+                    console.log("Sidebar elements ready.");
+                } catch (error) {
+                    console.error("Sidebar Error:", error);
+                }
+            }
+
             function bindQuantityButtons() {
                 els.productCards.forEach(card => {
                     const plusBtn = card.querySelector(".plus");
@@ -572,7 +579,7 @@
                 document.addEventListener("click", e => {
                     // Don't interfere with sidebar collapse button or its children
                     if (els.collapseHandle?.contains(e.target)) return;
-                    
+
                     if (!els.searchWrapper?.contains(e.target)) {
                         closeSearchDropdown();
                     }
