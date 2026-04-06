@@ -17,7 +17,9 @@ use App\Http\Controllers\Api\POSControllers\POSUserController\NotificationContro
 use App\Http\Controllers\Api\POSControllers\POSUserController\UserProfileController;
 use App\Http\Controllers\Api\POSControllers\POSUserController\HistoryController;
 use App\Http\Controllers\Api\ManagementSystemController\CompanyController;
+use App\Http\Controllers\Api\POSControllers\POSAdminController\StoreManagementController;
 
+// Route::get('/store-management', [StoreManagementController::class, 'index'])->name('store.management.index');
 // ================= AUTH =================
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
@@ -45,7 +47,13 @@ Route::middleware(['auth'])->post('/heartbeat', function () {
 })->name('heartbeat');
 // ================= AUTHENTICATED ROUTES =================
 Route::middleware(['auth', 'last.seen'])->group(function () {
-
+Route::get('/store-management/data', [StoreManagementController::class, 'getData'])->name('store.management.data');
+Route::get('/store-management', [StoreManagementController::class, 'index'])->name('store.management.index');
+// Route::get('/store-management/data', [StoreManagementController::class, 'getData'])->name('store.management.data');
+Route::post('/store-management/products/{id}/toggle', [StoreManagementController::class, 'toggleProduct'])->name('store.management.products.toggle');
+Route::post('/store-management/categories/{code}/toggle', [StoreManagementController::class, 'toggleCategory'])->name('store.management.categories.toggle');
+Route::post('/store-management/products/bulk-update', [StoreManagementController::class, 'bulkUpdateProducts'])->name('store.management.products.bulkUpdate');
+Route::post('/store-management/categories/bulk-update', [StoreManagementController::class, 'bulkUpdateCategories'])->name('store.management.categories.bulkUpdate');
     // ---------- Dashboard ----------
     Route::get('/admin', [DashboardController::class, 'index'])->name('pos.index');
     Route::get('/', [DashboardUserController::class, 'index'])->name('user.index');
