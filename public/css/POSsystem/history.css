@@ -123,6 +123,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         position: relative;
         width: 350px;
     }
+    .search-box img {
+    position: absolute;
+    top: 56%;
+    left: 10px;
+    transform: translateY(-50%);
+    width: 16px;
+}
 
     .search-box i {
         position: absolute;

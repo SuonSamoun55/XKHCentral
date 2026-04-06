@@ -73,21 +73,13 @@
                 @forelse($notifications as $notification)
                     <div class="notification-card {{ !$notification->is_read ? 'unread' : '' }}"
                         data-title="{{ $notification->title }}" data-message="{{ $notification->message }}"
-                        data-id="{{ $notification->id }}" style="cursor: pointer;"
+                        data-id="{{ $notification->id }}" data-type="{{ $notification->type }}" style="cursor: pointer;"
                         onclick="openNotificationDetail(this)">
 
                         <div class="notification-content">
                             <div class="avatar">
-                                @if ($notification->sender_profile_url)
-                                    {{-- If the database has the filename, use it --}}
-                                    <img src="{{ asset('images/pos/' . $notification->sender_profile_url) }}"
-                                        alt="User"
-                                        style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                                @else
-                                    {{-- If you just want to force 'Rectangle 2.png' for everyone for now: --}}
-                                    <img src="{{ asset('images/pos/Rectangle 2.png') }}" alt="User"
-                                        style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                                @endif
+                                <img src="{{ asset('images/pos/Rectangle 2.png') }}" alt="Admin"
+                                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                             </div>
 
                             <div class="notification-text">

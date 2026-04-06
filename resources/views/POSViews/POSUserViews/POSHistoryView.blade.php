@@ -15,9 +15,11 @@
                     <form action="{{ route('user.pos.order.history') }}" method="GET" class="filter-form">
                         <div class="left-section">
                             <div class="search-box" style="position: relative;">
-<i class="bi bi-search search-icon-inside"></i>                                <input type="text" id="orderSearchInput" name="search"
+                               
+                              <input type="text" id="orderSearchInput" name="search"
                                     placeholder="Search Order No or Status..." value="{{ request('search') }}"
                                     autocomplete="off">
+                                     <img src="{{ asset('images/pos/search.png') }}" alt="Search">
                                 <div id="orderSuggestions" class="search-suggestions"></div>
                             </div>
 
