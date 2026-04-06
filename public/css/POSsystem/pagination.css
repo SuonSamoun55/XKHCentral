@@ -1,0 +1,75 @@
+ /* Container to push dropdown left and numbers right */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding: 0 10px;
+    padding-bottom: 15px;
+    
+}
+
+/* Style the "Show items" section */
+.show-items-wrapper {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #333;
+}
+
+.show-items-wrapper select {
+    margin: 0 10px;
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    outline: none;
+    cursor: pointer;
+}
+
+/* Style the Page Numbers Navigation */
+.pagination-nav {
+    position: relative;
+    left: 50%;
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 8px; /* Space between numbers */
+    align-items: center;
+}
+
+.pagination-nav a, 
+.pagination-nav span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 35px;
+    height: 35px;
+    text-decoration: none;
+    color: #555;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+/* THE TEAL ACTIVE STATE */
+.pagination-nav .active-page {
+    background-color: #00cad1 !important; /* Your Brand Teal */
+    color: white !important;
+    border-radius: 4px;
+}
+
+/* Hover effect for clickable numbers */
+.pagination-nav a:hover {
+    color: #00cad1;
+}
+
+/* Style for the < and > arrows */
+.pagination-nav .arrow-icon {
+    font-size: 18px;
+    color: #333;
+}
+
+.pagination-nav .disabled-arrow {
+    color: #ccc;
+    cursor: not-allowed;
+}

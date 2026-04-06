@@ -55,10 +55,41 @@
    .app-shell.collapsed .collapse-handle span {
       transform: rotate(180deg);
     }
+    /* Update your .brand-logo.company-logo-box styles */
+.app-shell.collapsed .company-logo-box {
+    width: 30px !important;   /* Smaller size for collapsed state */
+    height: 30px !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease;
+}
 
+/* Ensure the brand container centers everything when collapsed */
+.app-shell.collapsed .brand {
+    padding: 10px 0;          /* Remove side padding to center logo */
+    justify-content: center;
+    background: transparent;  /* Matches your image look better */
+}
+.app-shell.collapsed .logout-btn {
+    padding: 0;
+    justify-content: center;
+}
+.logout-btn a {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    color: inherit; /* Keeps the red color */
+}
+.app-shell.collapsed .logout-btn a {
+    justify-content: center;
+    width: auto;
+}
+.logout-btn .nav-icon img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
 
-
-    .app-shell.collapsed .brand,
+    /* .app-shell.collapsed .brand, */
     .app-shell.collapsed .profile,
     .app-shell.collapsed .nav-btn,
     .app-shell.collapsed .settings-btn,
@@ -81,6 +112,17 @@
     display:flex;
     gap:12px;
 }
+.user-name {
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.user-role {
+    font-size: 11px;
+    color: #666;
+    white-space: nowrap;
+}
 .page-wrap{
     flex:1;
      overflow-y: auto;
@@ -98,7 +140,7 @@
 
 .content-area{
     width:100%;
-    padding:20px;
+    padding: 0 20px 20px 0;
 }
 
 
@@ -138,15 +180,15 @@
     .brand {
       display: flex;
       align-items: center;
+      border-radius: 14px;
       gap: 8px;
       padding: 4px 2px 14px;
     }
 
     .brand-logo {
-      width: 18px;
-      height: 18px;
-      min-width: 18px;
-      border-radius: 50%;
+      width: 100%;
+      height: 100%;
+      border-radius: 50% !important;
       background: radial-gradient(circle at 35% 35%, #ffd666 0 24%, #ff9200 25% 100%);
       position: relative;
     }
@@ -172,7 +214,8 @@
       height: 100vh;
       display: flex;
       gap: var(--gap);
-      padding: 10px;
+      padding: 0px;
+      margin-top: 10px;
       overflow: hidden;
     }
 
@@ -245,11 +288,13 @@ background-color: #09bfd3;
 
     .nav-btn.active .nav-icon {
       color: #fff;
+      border-radius: 50px;
     }
 
     .nav-icon {
       width: 16px;
       min-width: 16px;
+      border-radius: 50px;
       color: #777;
       display: inline-flex;
       align-items: center;

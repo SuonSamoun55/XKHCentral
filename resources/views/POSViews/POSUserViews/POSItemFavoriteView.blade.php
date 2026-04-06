@@ -13,9 +13,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ asset('css/POSsystem/favorite.css') }}" />
 
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-</head>
-
 <body>
 
     <div class="app-shell" id="appShell">
@@ -26,9 +23,7 @@
         {{-- Page Content --}}
         <div class="page-wrap">
             <main class="content-area">
-                <div class="top-bar">
-                    <h1 class="page-title">Favorite Items</h1>
-                </div>
+                @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Favorite Items'])
 
                 <div id="messageBox" class="message-box"></div>
 

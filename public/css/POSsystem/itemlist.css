@@ -56,20 +56,30 @@ body {
 }
 
 /* top */
-.top-bar {
+.top {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 16px;
-    margin-bottom: 20px;
     flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+
 }
 
-.page-title {
+.title {
     margin: 0;
     font-size: 22px;
     font-weight: 700;
     color: var(--primary);
+}
+h2{
+    margin: 0;
+    font-size: 18px;
+    padding: 5px;
+    padding-left: 30px;
+    padding-bottom: 10px;
 }
 
 .cart-box {
@@ -102,7 +112,7 @@ body {
 .search-area {
  
     margin-bottom: 26px;
-    
+   
 }
 .search-wrapper {
     position: relative;
@@ -299,6 +309,13 @@ body {
     font-weight: 700;
     color: var(--primary);
     margin: 0 0 14px;
+}
+.header{
+    position: sticky;
+    top: 0;
+    background: var(--card);
+    z-index: 100;
+    border-radius: 20px;
 }
 
 /* messages */

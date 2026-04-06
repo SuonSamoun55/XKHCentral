@@ -16,6 +16,7 @@ class NotificationController extends Controller
         if (!$user) {
             return redirect('/login')->with('error', 'Please login first.');
         }
+        $perPage = $request->get('limit', 10);
 
         $tab = $request->get('tab', 'inbox');
 
@@ -52,7 +53,7 @@ class NotificationController extends Controller
             $query->whereDate('created_at', $request->date);
         }
 
-        $notifications = $query->paginate(10)->withQueryString();
+        $notifications = $query->paginate($perPage)->withQueryString();
 
         // Get counts for each tab
         $inboxCount = Notification::where('user_id', $user->id)

@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="{{ asset('css/ManagementSystem/dashboard.css') }}" />
 
 </head>
-
 <body>
     <div class="app-shell" id="appShell">
 
@@ -26,16 +25,16 @@
                     <div class="hero-title">Product</div>
                     <a href="/pos-system">
 
-                        <div class="hero-image">
-                            <img src="https://cdn-icons-png.flaticon.com/512/2620/2620988.png" alt="Product">
+                        <div class="pos-product">
+                            <img src="{{ asset('images/pos/product 1.png') }}" alt="Product">
                         </div>
                     </a>
                 </section>
 
                 <section class="card hero-card">
                     <div class="hero-title">Orders</div>
-                    <div class="hero-image">
-                        <img src="https://cdn-icons-png.flaticon.com/512/3081/3081822.png" alt="Orders">
+                    <div class="Orders">
+                        <img src="{{ asset('images/pos/product 2.png') }}" alt="Orders">
                     </div>
                 </section>
 
@@ -43,8 +42,8 @@
                     <div class="hero-title">POS System</div>
                     <div class="soft-card bg-pos" data-href="/pos/interface">
 
-                        <div class="hero-image">
-                            <img src="https://cdn-icons-png.flaticon.com/512/891/891462.png" alt="POS">
+                        <div class="pos-system">
+                            <img src="{{ asset('images/pos/product 3.png') }}" alt="POS">
                         </div>
                 </section>
 
