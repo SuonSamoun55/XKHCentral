@@ -33,12 +33,14 @@
                         <div class="search-suggestions" id="searchSuggestions"></div>
                     </div>
 
-  <div class="date-filter-wrapper">
-        <label for="dateInput" class="floating-label">Date</label>
-        <input type="date" name="date" id="dateInput" value="{{ request('date') }}" onchange="this.form.submit()">
-        
-        <img src="{{ asset('images/pos/icon.png') }}" class="calendar-custom-img" alt="calendar">
-    </div>                </div>
+                    <div class="date-filter-wrapper">
+                        <label for="dateInput" class="floating-label">Date</label>
+                        <input type="date" name="date" id="dateInput" value="{{ request('date') }}"
+                            onchange="this.form.submit()">
+
+                        <img src="{{ asset('images/pos/icon.png') }}" class="calendar-custom-img" alt="calendar">
+                    </div>
+                </div>
 
                 {{-- Tabs --}}
                 <div class="tabs-section">
@@ -89,6 +91,12 @@
                             </div>
 
                             <div class="notification-text">
+
+                                {{-- Show ADMIN badge only for admin-sent notifications --}}
+                                @if($notification->type === 'admin_message')
+                                    <span class="badge-admin">ADMIN</span>
+                                @endif
+
                                 <div class="notification-title">
                                     {{ $notification->title }}
                                 </div>

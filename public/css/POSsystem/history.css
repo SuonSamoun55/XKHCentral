@@ -62,6 +62,7 @@
     position: relative;
     width: 250px;
     margin-top: 16px;
+    margin-right: -50px;
 }
 
 .date-filter-wrapper input[type="date"] {
