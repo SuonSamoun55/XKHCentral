@@ -111,6 +111,13 @@
             'icon' => asset('images/aside/user.png'),
             'active' => ['admin/orders', 'admin/orders/*'],
         ],
+            [
+        'url' => '/store-management',
+        'name' => 'Store Management',
+        'icon' => asset('images/aside/company.png'),
+        'active' => ['store-management', 'store-management/*'],
+    ],
+
         [
             'url' => '/admin/notification',
             'name' => 'Notification',
@@ -133,7 +140,7 @@
                         onerror="this.onerror=null;this.src='{{ asset('images/default-company.png') }}';"
                     >
                 </div>
-                {{-- <div class="brand-text">{{ $companyName }}</div> --}}
+                {{--    --}}
             </div>
 
             <nav class="nav-list">

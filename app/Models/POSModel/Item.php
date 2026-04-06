@@ -17,11 +17,22 @@ class Item extends Model
         'unit_price',
         'inventory',
         'blocked',
+        'is_visible',
+        'category_visible',
         'item_category_code',
         'base_unit_of_measure_code',
         'price_includes_tax',
         'image_url',
         'default_location_code',
+        'type',
+    ];
+
+    protected $casts = [
+        'blocked' => 'boolean',
+        'is_visible' => 'boolean',
+        'category_visible' => 'boolean',
+        'price_includes_tax' => 'boolean',
+        'unit_price' => 'decimal:2',
     ];
 
     public function company()
