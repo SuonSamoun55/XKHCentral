@@ -44,6 +44,8 @@
 
         .page-card{
             padding: 0px;
+            margin-top: 10px;
+            margin-right: 10px;
             background:#fff;
             border-radius:14px;
             padding:14px;

@@ -35,14 +35,14 @@
             min-height:100vh;
         }
 
-        .sidebar-area{
-            width:250px;
+        /* .sidebar-area{
+
             flex-shrink:0;
             background:#fff;
             border-right:1px solid var(--border);
             height:100vh;
             overflow-y:auto;
-        }
+        } */
 
         .content-area{
             flex:1;
@@ -71,19 +71,22 @@
             align-items:start;
         }
 
-        .main-image{
-            width:100%;
-            height:430px;
-            border-radius:12px;
-            overflow:hidden;
-            background:#f1f5f9;
-        }
+    .main-image {
+    width: 100%;
+    height: 430px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f8fafc; /* soft gray */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-        .main-image img{
-            width:100%;
-            height:100%;
-            object-fit:cover;
-        }
+     .main-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* ✅ show full image */
+}
 
         .thumb-row{
             display:flex;
@@ -170,18 +173,18 @@
             .detail-grid{
                 grid-template-columns:1fr;
             }
-
+/* 
             .sidebar-area{
                 display:none;
-            }
+            } */
         }
     </style>
 </head>
 <body>
 <div class="page-layout">
-    <aside class="sidebar-area">
+    {{-- <aside class="sidebar-area"> --}}
         @include('POSViews.POSAdminViews.aside')
-    </aside>
+    {{-- </aside> --}}
 
     <main class="content-area">
         <div class="detail-card">
