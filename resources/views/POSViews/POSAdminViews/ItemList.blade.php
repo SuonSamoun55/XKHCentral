@@ -225,7 +225,7 @@
             padding:10px 10px 12px;
             display:flex;
             flex-direction:column;
-            min-height:145px;
+            min-height:165px;
         }
 
         .product-title{
@@ -249,6 +249,12 @@
             font-weight:700;
             color:#1f2937;
             margin-bottom:8px;
+        }
+
+        .product-tax{
+            font-size:11px;
+            color:#64748b;
+            margin-bottom:6px;
         }
 
         .stock-text{
@@ -325,6 +331,12 @@
         .list-sub{
             font-size:12px;
             color:#8b95a7;
+            margin-bottom:6px;
+        }
+
+        .list-tax{
+            font-size:11px;
+            color:#64748b;
             margin-bottom:6px;
         }
 
@@ -559,6 +571,8 @@
 
     function buildCategories() {
         const select = document.getElementById('categorySelect');
+        select.innerHTML = `<option value="">All Categories</option>`;
+
         const categories = [...new Set(PRODUCTS.map(item => item.itemCategoryCode || 'General'))].sort();
 
         categories.forEach(category => {
@@ -575,11 +589,12 @@
         const stock = document.getElementById('stockSelect').value;
 
         filteredProducts = PRODUCTS.filter(item => {
-            const name = String(item.displayName || '').toLowerCase();
-            const itemCategory = item.itemCategoryCode || 'General';
+            const name = String(item.displayName || item.display_name || '').toLowerCase();
+            const number = String(item.number || '').toLowerCase();
+            const itemCategory = item.itemCategoryCode || item.item_category_code || 'General';
             const inventory = Math.round(Number(item.inventory || 0));
 
-            const matchKeyword = !keyword || name.includes(keyword);
+            const matchKeyword = !keyword || name.includes(keyword) || number.includes(keyword);
             const matchCategory = !category || itemCategory === category;
             const matchStock =
                 !stock ||
@@ -609,76 +624,6 @@
         renderItems();
     }
 
-    function renderItems() {
-        const container = document.getElementById('itemContainer');
-
-        if (!filteredProducts.length) {
-            container.className = currentView === 'grid' ? 'item-grid' : 'item-list';
-            container.innerHTML = `<div class="empty-box">No products found.</div>`;
-            return;
-        }
-
-        if (currentView === 'grid') {
-            container.className = 'item-grid';
-            container.innerHTML = filteredProducts.map(item => {
-                const inventory = Math.round(Number(item.inventory || 0));
-                return `
-                    <div class="product-card">
-                        <div class="product-image">
-                            <img
-                                src="/item-image/${esc(item.id)}"
-                                alt="${esc(item.displayName)}"
-                                loading="lazy"
-                                onerror="this.src='https://placehold.co/500x320/e5e7eb/94a3b8?text=No+Photo'">
-                        </div>
-
-                        <div class="product-body">
-                            <div class="product-title">${esc(item.displayName || 'No Name')}</div>
-                            <div class="product-sub">${esc(item.description || item.itemCategoryCode || 'Fresh product')}</div>
-                            <div class="product-price">${money(item.unitPrice)}</div>
-                            ${stockText(inventory)}
-<a href="/pos/items/${item.id}" class="view-more-btn text-decoration-none d-flex align-items-center justify-content-center">
-    View More
-</a>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        } else {
-            container.className = 'item-list';
-            container.innerHTML = filteredProducts.map(item => {
-                const inventory = Math.round(Number(item.inventory || 0));
-                return `
-                    <div class="list-card">
-                        <div class="list-image">
-                            <img
-                                src="/item-image/${esc(item.id)}"
-                                alt="${esc(item.displayName)}"
-                                loading="lazy"
-                                onerror="this.src='https://placehold.co/500x320/e5e7eb/94a3b8?text=No+Photo'">
-                        </div>
-
-                        <div class="list-info">
-                            <div class="list-title">${esc(item.displayName || 'No Name')}</div>
-                            <div class="list-sub">${esc(item.description || item.itemCategoryCode || 'Fresh product')}</div>
-                            <div class="list-stock ${inventory <= 0 ? 'out' : ''}">
-                                ${inventory <= 0 ? 'Out of Stock' : inventory + ' items left'}
-                            </div>
-                        </div>
-
-                        <div class="list-price">${money(item.unitPrice)}</div>
-
-                        <div class="list-action">
-                            <a href="/pos/items/${item.id}" class="view-more-btn text-decoration-none d-flex align-items-center justify-content-center">
-    View More
-</a>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-    }
-
     function showToast(title, message) {
         const oldToast = document.querySelector('.toast-wrap');
         if (oldToast) oldToast.remove();
@@ -698,6 +643,84 @@
         setTimeout(() => {
             toast.remove();
         }, 3000);
+    }
+
+    function renderItems() {
+        const container = document.getElementById('itemContainer');
+
+        if (!filteredProducts.length) {
+            container.className = currentView === 'grid' ? 'item-grid' : 'item-list';
+            container.innerHTML = `<div class="empty-box">No products found.</div>`;
+            return;
+        }
+
+        if (currentView === 'grid') {
+            container.className = 'item-grid';
+            container.innerHTML = filteredProducts.map(item => {
+                const inventory = Math.round(Number(item.inventory || 0));
+                const vatPercent = Number(item.vatPercent ?? item.vat_percent ?? 0);
+                const taxAmount = Number(item.taxAmount ?? item.tax_amount ?? 0);
+
+                return `
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img
+                                src="/item-image/${esc(item.id)}"
+                                alt="${esc(item.displayName || item.display_name || 'No Name')}"
+                                loading="lazy"
+                                onerror="this.src='https://placehold.co/500x320/e5e7eb/94a3b8?text=No+Photo'">
+                        </div>
+
+                        <div class="product-body">
+                            <div class="product-title">${esc(item.displayName || item.display_name || 'No Name')}</div>
+                            <div class="product-sub">${esc(item.description || item.itemCategoryCode || item.item_category_code || 'Fresh product')}</div>
+                            <div class="product-price">${money(item.unitPrice ?? item.unit_price)}</div>
+                            <div class="product-tax">VAT: ${vatPercent}% | Tax: ${money(taxAmount)}</div>
+                            ${stockText(inventory)}
+                            <a href="/pos/items/${item.id}" class="view-more-btn text-decoration-none d-flex align-items-center justify-content-center">
+                                View More
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            container.className = 'item-list';
+            container.innerHTML = filteredProducts.map(item => {
+                const inventory = Math.round(Number(item.inventory || 0));
+                const vatPercent = Number(item.vatPercent ?? item.vat_percent ?? 0);
+                const taxAmount = Number(item.taxAmount ?? item.tax_amount ?? 0);
+
+                return `
+                    <div class="list-card">
+                        <div class="list-image">
+                            <img
+                                src="/item-image/${esc(item.id)}"
+                                alt="${esc(item.displayName || item.display_name || 'No Name')}"
+                                loading="lazy"
+                                onerror="this.src='https://placehold.co/500x320/e5e7eb/94a3b8?text=No+Photo'">
+                        </div>
+
+                        <div class="list-info">
+                            <div class="list-title">${esc(item.displayName || item.display_name || 'No Name')}</div>
+                            <div class="list-sub">${esc(item.description || item.itemCategoryCode || item.item_category_code || 'Fresh product')}</div>
+                            <div class="list-tax">VAT: ${vatPercent}% | Tax: ${money(taxAmount)}</div>
+                            <div class="list-stock ${inventory <= 0 ? 'out' : ''}">
+                                ${inventory <= 0 ? 'Out of Stock' : inventory + ' items left'}
+                            </div>
+                        </div>
+
+                        <div class="list-price">${money(item.unitPrice ?? item.unit_price)}</div>
+
+                        <div class="list-action">
+                            <a href="/pos/items/${item.id}" class="view-more-btn text-decoration-none d-flex align-items-center justify-content-center">
+                                View More
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
     }
 
     async function updateItems() {
@@ -721,6 +744,13 @@
                         number: item.number,
                         displayName: item.displayName,
                         unitPrice: item.unitPrice,
+
+                        vatPercent: item.vatPercent ?? item.vat_percentage ?? item.vatpercent ?? 0,
+                        taxAmount: item.taxAmount ?? item.tax_amount ?? item.taxamount ?? 0,
+                        discountAmount: item.discountAmount ?? item.discount_amount ?? item.discountamount ?? 0,
+                        discountStartDate: item.discountStartDate ?? item.discount_start_date ?? item.discountstartdate ?? null,
+                        discountEndDate: item.discountEndDate ?? item.discount_end_date ?? item.discountenddate ?? null,
+
                         inventory: item.inventory,
                         blocked: item.blocked,
                         itemCategoryCode: item.itemCategoryCode,
@@ -739,6 +769,7 @@
             }
 
             showToast('Success', `${data.count ?? PRODUCTS.length} item(s) synced successfully.`);
+            window.location.reload();
         } catch (error) {
             showToast('Failed', error.message || 'Could not sync items.');
         } finally {

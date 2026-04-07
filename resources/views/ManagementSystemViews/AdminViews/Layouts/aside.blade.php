@@ -81,7 +81,7 @@
 
         <div class="sidebar-top">
             <div class="brand">
-                <div class="brand-logo company-logo-box">
+                <div class="company-logo-box">
                     <img src="{{ $companyLogoUrl }}"
                          alt="Company Logo"
                          onerror="this.onerror=null;this.src='{{ asset('images/default-company.png') }}';">
