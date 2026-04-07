@@ -43,7 +43,7 @@ width: 100%;
     .logo-panel{
         background:#f1f5f9;
         border-radius:14px;
-        min-height:520px;
+        min-height:100%;
         padding:16px;
         display:flex;
         flex-direction:column;
@@ -154,13 +154,13 @@ width: 100%;
         outline:none;
         background:#eceff3;
         border-radius:8px;
-        padding:11px 14px;
+        padding:8px 11px;
         font-size:14px;
         color:#111827;
     }
 
     .custom-textarea{
-        min-height:56px;
+        height: 40px;
         resize:vertical;
     }
 
@@ -212,6 +212,12 @@ width: 100%;
     .btn-submit-company:hover{
         background:#0fb4cc;
     }
+    .container{
+        margin: 0 auto;
+        margin-top: 10px !important;
+        margin-right: 10px !important;
+     
+    }
 
     .btn-back-company{
         min-width:180px;
@@ -248,10 +254,10 @@ width: 100%;
 
 @section('content')
 <div class="company-setup-page">
-    <div class="page-title">Company &gt; Edit</div>
-    <div class="page-subtitle">Business Central</div>
+   
 
     @if(session('success'))
+    
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
@@ -268,13 +274,17 @@ width: 100%;
             </ul>
         </div>
     @endif
-
+<div class="container">
     <div class="company-setup-card">
         <form action="{{ route('companies.update', $company->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
-
+         <div class="header">
+                 <div class="page-title">Company &gt; Edit</div>
+    <div class="page-subtitle">Business Central</div>
+    </div>
             <div class="company-setup-grid">
+       
                 <div class="logo-panel">
                     <div class="logo-box">
                         @if(!empty($company->logo))
@@ -314,6 +324,7 @@ width: 100%;
                 </div>
 
                 <div>
+                    
                     <div class="form-section-title">Company Info</div>
 
                     <div class="form-grid">
@@ -398,13 +409,15 @@ width: 100%;
                     </div>
 
                     <div class="btn-submit-wrap">
-                        <button type="submit" class="btn-submit-company">Update</button>
                         <a href="{{ route('companies.index') }}" class="btn-back-company">Back</a>
+                        <button type="submit" class="btn-submit-company">Save</button>
+
                     </div>
                 </div>
             </div>
         </form>
     </div>
+</div>
 </div>
 @endsection
 
