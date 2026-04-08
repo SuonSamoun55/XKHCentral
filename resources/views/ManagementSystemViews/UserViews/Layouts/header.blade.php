@@ -27,7 +27,6 @@
     position: sticky;
     top: 0;                /* Sticks to very top */
     z-index: 100;          /* High number to stay on top of products */
-    background: var(--card); /* Must have a non-transparent color! */
 }
     .page-title {
         font-size: 24px;
