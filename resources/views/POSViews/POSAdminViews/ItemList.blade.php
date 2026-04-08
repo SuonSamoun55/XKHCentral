@@ -388,9 +388,10 @@
             font-weight: 700;
             color: #0f766e;
         }
-        .header{
+
+        .header {
             position: sticky;
-            top:0;
+            top: 0;
             background: white;
             padding: 28px 26px 1px;
 
@@ -508,10 +509,10 @@
                         </div>
                     </div>
                 </div>
-                 </div>
+            </div>
 
-                <div id="itemContainer" class="item-grid"></div>
-               
+            <div id="itemContainer" class="item-grid"></div>
+
         </main>
     </div>
 
