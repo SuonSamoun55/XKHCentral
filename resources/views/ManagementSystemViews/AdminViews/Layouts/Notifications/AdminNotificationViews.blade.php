@@ -7,6 +7,342 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <style>
+        /* Alert Container Styles */
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .custom-alert {
+            background: #ffffff !important;
+            color: #334155 !important;
+            border: none !important;
+            border-radius: 12px !important;
+            padding: 16px 24px !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 280px;
+            max-width: 400px;
+            width: fit-content;
+            animation: slideIn 0.3s ease-out forwards;
+            pointer-events: auto;
+        }
+
+        .custom-alert.alert-success {
+            border-left: 4px solid #10b981 !important;
+        }
+
+        .custom-alert.alert-danger {
+            border-left: 4px solid #ef4444 !important;
+        }
+
+        .custom-alert.fade-out {
+            animation: fadeOut 0.3s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100%); }
+        }
+
+        /* Page Layout Styles */
+        .page-wrap {
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .notification-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: #efefef;
+        }
+
+        /* Sticky Header Section */
+        .notification-page-header {
+            background: white;
+            padding: 20px 30px;
+            border-bottom: 1px solid #eee;
+            flex-shrink: 0;
+        }
+
+        .notification-page-header .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #19bcc5;
+            margin: 0;
+        }
+
+        /* Filter Form - Sticky */
+        .filter-form {
+            background: white;
+            padding: 15px 30px 20px 30px;
+            border-bottom: 1px solid #eee;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        /* Search Box Improvements */
+        .search-box-noti {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .search-box-noti i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 14px;
+            pointer-events: none;
+        }
+
+        .search-box-noti input {
+            width: 100%;
+            height: auto;
+            border: 2px solid #e0e0e0;
+            background: #fafafa;
+            border-radius: 8px;
+            outline: none;
+            padding: 10px 10px 10px 40px;
+            font-size: 14px;
+            color: #333;
+            transition: all 0.3s;
+        }
+
+        .search-box-noti input:focus {
+            border-color: #0066cc;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+
+        /* Date Filter Improvements */
+        .top-right-tools {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .date-filter-box {
+            width: 160px;
+            position: relative;
+        }
+
+        .date-filter-box label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+            line-height: 1;
+            font-weight: 500;
+        }
+
+        .date-filter-box input {
+            width: 100%;
+            height: auto;
+            border: 2px solid #0ec3d7;
+            background: #f8fefe;
+            border-radius: 6px;
+            outline: none;
+            padding: 8px 12px;
+            font-size: 13px;
+            color: #334155;
+            transition: all 0.3s;
+        }
+
+        .date-filter-box input:focus {
+            border-color: #0099aa;
+            box-shadow: 0 0 0 3px rgba(14, 195, 215, 0.1);
+        }
+
+        /* Tab Row Styling */
+        .tab-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 0;
+            flex-wrap: wrap;
+        }
+
+        .tabs {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .tab-link {
+            color: #666;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            padding-bottom: 10px;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab-link:hover {
+            color: #333;
+        }
+
+        .tab-link.active {
+            color: #000;
+            font-weight: 600;
+            border-bottom-color: #000;
+        }
+
+        .tab-badge {
+            min-width: 18px;
+            height: 20px;
+            border-radius: 999px;
+            padding: 0 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            background: #0066cc;
+            color: #fff;
+            line-height: 1;
+            font-weight: 600;
+        }
+
+        /* Right Actions */
+        .right-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-send-message {
+            height: auto;
+            border: none;
+            border-radius: 8px;
+            background: #19bcc5;
+            color: #fff;
+            padding: 8px 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-send-message:hover {
+            background: #1498a3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(25, 188, 197, 0.2);
+        }
+
+        .btn-send-message i {
+            font-size: 14px;
+        }
+
+        /* Utility Bar */
+        .utility-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 0 15px;
+        }
+
+        .selected-box {
+            min-width: 100px;
+            height: auto;
+            padding: 6px 12px;
+            background: #e4e8ef;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #67707b;
+            font-weight: 500;
+        }
+
+        .selected-box span {
+            color: #1f2937;
+            font-weight: 700;
+        }
+
+        .utility-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .utility-btn {
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 13px;
+            background: #f0f0f0;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .utility-btn:hover {
+            background: #e0e0e0;
+            border-color: #999;
+        }
+
+        .utility-btn.delete-btn {
+            background: #fff5f5;
+            color: #b42318;
+            border-color: #fca5a5;
+        }
+
+        .utility-btn.delete-btn:hover {
+            background: #fee2e2;
+            border-color: #f87171;
+        }
+
+        /* Scrollable Notification List */
+        .notification-list {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            background: transparent;
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+    </style>
 </head>
 <body>
 
@@ -21,22 +357,31 @@
                 <h2 class="page-title">Notification</h2>
             </div>
 
+            <!-- Alert Container -->
+            <div class="alert-container" id="alertContainer"></div>
+
             @if(session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        showAlert('{{ session('success') }}', 'success');
+                    });
+                </script>
             @endif
 
             @if(session('error'))
-                <div class="alert alert-danger">{{ session('error') }}</div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        showAlert('{{ session('error') }}', 'danger');
+                    });
+                </script>
             @endif
 
             @if ($errors->any())
-                <div class="alert alert-danger">
-                    <ul class="mb-0 ps-3">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        showAlert('Please fix the errors below', 'danger');
+                    });
+                </script>
             @endif
 
             <form method="GET" action="{{ route('admin.notifications.index') }}" class="filter-form">
@@ -121,7 +466,7 @@
                                 } elseif (!empty($user->profile_image_url)) {
                                     $avatarSrc = $user->profile_image_url;
                                 } elseif (!empty($user->bc_customer_no)) {
-                                    $avatarSrc = route('users.bc.image', $user->bc_customer_no);
+                                    $avatarSrc = route('users.bc-image', $user->bc_customer_no);
                                 }
                             }
 
@@ -290,6 +635,27 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+    // Alert functionality
+    const alertContainer = document.getElementById('alertContainer');
+
+    function showAlert(message, type = 'success') {
+        const alertEl = document.createElement('div');
+        alertEl.className = `custom-alert alert-${type}`;
+        const iconClass = type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill';
+        alertEl.innerHTML = `
+            <i class="bi bi-${iconClass}"></i>
+            <span>${message}</span>
+        `;
+
+        alertContainer.appendChild(alertEl);
+
+        // Auto-close after 4 seconds
+        setTimeout(() => {
+            alertEl.classList.add('fade-out');
+            setTimeout(() => alertEl.remove(), 300);
+        }, 4000);
+    }
+
     const checkboxes = document.querySelectorAll('.notification-checkbox');
     const selectedCount = document.getElementById('selectedCount');
     const defaultAvatar = @json(asset('images/default-avatar.png'));
@@ -746,9 +1112,7 @@ body {
     color: #1f2937;
 }
 
-.page-wrap {
-    padding: 22px 22px 28px;
-}
+
 
 .notification-wrapper {
     min-height: calc(100vh - 44px);
@@ -758,7 +1122,11 @@ body {
 }
 
 .notification-page-header {
-    margin-bottom: 18px;
+
+position: sticky;
+top: 0;
+
+z-index: 20;
 }
 
 .page-title {
@@ -771,6 +1139,9 @@ body {
 
 .filter-form {
     margin-bottom: 10px;
+    position: sticky;
+    top: 60px;
+    z-index: 10;
 }
 
 .top-filter-row {

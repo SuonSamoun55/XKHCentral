@@ -34,7 +34,7 @@
                     } elseif (!empty($user->profile_image_url)) {
                         $avatarSrc = $user->profile_image_url;
                     } elseif (!empty($user->bc_customer_no)) {
-                        $avatarSrc = route('users.bc.image', $user->bc_customer_no);
+                        $avatarSrc = route('users.bc-image', $user->bc_customer_no);
                     }
                 }
             @endphp

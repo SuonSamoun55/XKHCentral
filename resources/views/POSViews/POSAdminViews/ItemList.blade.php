@@ -567,6 +567,7 @@
         const PRODUCTS = @json($items ?? []);
         let currentView = 'grid';
         let filteredProducts = [...PRODUCTS];
+        const DEFAULT_VAT_PERCENT = 10; // Default VAT percentage
 
         const money = (n) => '$' + Number(n || 0).toFixed(2);
 
@@ -576,6 +577,14 @@
             .replaceAll('>', '&gt;')
             .replaceAll('"', '&quot;')
             .replaceAll("'", '&#039;');
+
+        // Calculate VAT and tax for an item
+        function calculateTax(item) {
+            const unitPrice = Number(item.unitPrice ?? item.unit_price ?? 0);
+            const vatPercent = item.vat_percent || DEFAULT_VAT_PERCENT;
+            const taxAmount = unitPrice * (vatPercent / 100);
+            return { vatPercent, taxAmount };
+        }
 
         function stockText(qty) {
             qty = Math.round(Number(qty || 0));
@@ -650,6 +659,7 @@
             container.className = 'item-grid';
             container.innerHTML = filteredProducts.map(item => {
                 const inventory = Math.round(Number(item.inventory || 0));
+                const { vatPercent, taxAmount } = calculateTax(item);
                 return `
                     <div class="product-card">
                         <div class="product-image">
@@ -677,6 +687,7 @@
             container.className = 'item-list';
             container.innerHTML = filteredProducts.map(item => {
                 const inventory = Math.round(Number(item.inventory || 0));
+                const { vatPercent, taxAmount } = calculateTax(item);
                 return `
                     <div class="list-card">
                         <div class="list-image">
