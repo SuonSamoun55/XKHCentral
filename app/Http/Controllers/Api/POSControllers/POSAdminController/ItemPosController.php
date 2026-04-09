@@ -41,14 +41,54 @@ class ItemPosController extends Controller
 
         $items = $response->json()['value'] ?? [];
 
-        $localItems = Item::select('bc_id', 'default_location_code')
+        $localItems = Item::select(
+                'bc_id',
+                'default_location_code',
+                'base_unit_of_measure_code',
+                'vat_percent',
+                'tax_amount',
+                'discount_amount',
+                'discount_start_date',
+                'discount_end_date'
+            )
             ->get()
             ->keyBy('bc_id');
 
         foreach ($items as &$item) {
+            $localItem = $localItems[$item['id']] ?? null;
+
             $item['defaultLocationCode'] = $item['defaultLocationCode']
                 ?? $item['locationCode']
-                ?? ($localItems[$item['id']]->default_location_code ?? null);
+                ?? ($localItem->default_location_code ?? null);
+
+            $item['baseUnitOfMeasureCode'] = $item['baseUnitOfMeasureCode']
+                ?? ($localItem->base_unit_of_measure_code ?? null)
+                ?? 'PCS';
+
+            $item['vatPercent'] = $item['vatPercent']
+                ?? $item['vat_percentage']
+                ?? $item['vatpercent']
+                ?? ($localItem->vat_percent ?? 0);
+
+            $item['taxAmount'] = $item['taxAmount']
+                ?? $item['tax_amount']
+                ?? $item['taxamount']
+                ?? ($localItem->tax_amount ?? 0);
+
+            $item['discountAmount'] = $item['discountAmount']
+                ?? $item['discount_amount']
+                ?? $item['discountamount']
+                ?? ($localItem->discount_amount ?? 0);
+
+            $item['discountStartDate'] = $item['discountStartDate']
+                ?? $item['discount_start_date']
+                ?? $item['discountstartdate']
+                ?? optional($localItem->discount_start_date)->format('Y-m-d H:i:s');
+
+            $item['discountEndDate'] = $item['discountEndDate']
+                ?? $item['discount_end_date']
+                ?? $item['discountenddate']
+                ?? optional($localItem->discount_end_date)->format('Y-m-d H:i:s');
         }
 
         return view('POSViews.POSAdminViews.ItemList', compact('items'));
@@ -81,6 +121,35 @@ class ItemPosController extends Controller
         $item['defaultLocationCode'] = $item['defaultLocationCode']
             ?? $item['locationCode']
             ?? ($localItem->default_location_code ?? null);
+
+        $item['baseUnitOfMeasureCode'] = $item['baseUnitOfMeasureCode']
+            ?? ($localItem->base_unit_of_measure_code ?? null)
+            ?? 'PCS';
+
+        $item['vatPercent'] = $item['vatPercent']
+            ?? $item['vat_percentage']
+            ?? $item['vatpercent']
+            ?? ($localItem->vat_percent ?? 0);
+
+        $item['taxAmount'] = $item['taxAmount']
+            ?? $item['tax_amount']
+            ?? $item['taxamount']
+            ?? ($localItem->tax_amount ?? 0);
+
+        $item['discountAmount'] = $item['discountAmount']
+            ?? $item['discount_amount']
+            ?? $item['discountamount']
+            ?? ($localItem->discount_amount ?? 0);
+
+        $item['discountStartDate'] = $item['discountStartDate']
+            ?? $item['discount_start_date']
+            ?? $item['discountstartdate']
+            ?? optional($localItem->discount_start_date)->format('Y-m-d H:i:s');
+
+        $item['discountEndDate'] = $item['discountEndDate']
+            ?? $item['discount_end_date']
+            ?? $item['discountenddate']
+            ?? optional($localItem->discount_end_date)->format('Y-m-d H:i:s');
 
         return response()->json($item);
     }
@@ -135,6 +204,13 @@ class ItemPosController extends Controller
             'items.*.number' => ['required', 'string'],
             'items.*.displayName' => ['nullable', 'string'],
             'items.*.unitPrice' => ['nullable', 'numeric'],
+
+            'items.*.vatPercent' => ['nullable', 'numeric'],
+            'items.*.taxAmount' => ['nullable', 'numeric'],
+            'items.*.discountAmount' => ['nullable', 'numeric'],
+            'items.*.discountStartDate' => ['nullable', 'date'],
+            'items.*.discountEndDate' => ['nullable', 'date'],
+
             'items.*.inventory' => ['nullable', 'numeric'],
             'items.*.blocked' => ['nullable'],
             'items.*.itemCategoryCode' => ['nullable', 'string'],
@@ -145,8 +221,6 @@ class ItemPosController extends Controller
         ]);
 
         foreach ($validated['items'] as $item) {
-            $imageUrl = !empty($item['imageUrl']) ? $item['imageUrl'] : null;
-
             Item::updateOrCreate(
                 [
                     'company_id' => $companyId,
@@ -156,12 +230,19 @@ class ItemPosController extends Controller
                     'number' => $item['number'],
                     'display_name' => $item['displayName'] ?? null,
                     'unit_price' => $item['unitPrice'] ?? 0,
+
+                    'vat_percent' => $item['vatPercent'] ?? 0,
+                    'tax_amount' => $item['taxAmount'] ?? 0,
+                    'discount_amount' => $item['discountAmount'] ?? 0,
+                    'discount_start_date' => $item['discountStartDate'] ?? null,
+                    'discount_end_date' => $item['discountEndDate'] ?? null,
+
                     'inventory' => (int) ($item['inventory'] ?? 0),
                     'blocked' => filter_var($item['blocked'] ?? false, FILTER_VALIDATE_BOOLEAN),
                     'item_category_code' => $item['itemCategoryCode'] ?? null,
                     'base_unit_of_measure_code' => $item['baseUnitOfMeasureCode'] ?? null,
                     'price_includes_tax' => filter_var($item['priceIncludesTax'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                    'image_url' => $imageUrl,
+                    'image_url' => $item['imageUrl'] ?? null,
                     'default_location_code' => $item['defaultLocationCode'] ?? null,
                 ]
             );
@@ -173,34 +254,61 @@ class ItemPosController extends Controller
             'count' => count($validated['items']),
         ]);
     }
+
     public function detail(string $id)
-{
-    $token = $this->getToken();
+    {
+        $token = $this->getToken();
 
-    if (!$token) {
-        return redirect()->back()->with('error', 'Business Central authentication failed.');
+        if (!$token) {
+            return redirect()->back()->with('error', 'Business Central authentication failed.');
+        }
+
+        $response = Http::withoutVerifying()
+            ->withToken($token)
+            ->get($this->bcUrl("items({$id})"));
+
+        if (!$response->successful()) {
+            return redirect()->back()->with('error', 'Failed to fetch item detail.');
+        }
+
+        $item = $response->json();
+
+        $localItem = Item::where('bc_id', $id)->first();
+
+        $item['defaultLocationCode'] = $item['defaultLocationCode']
+            ?? $item['locationCode']
+            ?? ($localItem->default_location_code ?? null);
+
+        $item['baseUnitOfMeasureCode'] = $item['baseUnitOfMeasureCode']
+            ?? ($localItem->base_unit_of_measure_code ?? null)
+            ?? 'PCS';
+
+        $item['vatPercent'] = $item['vatPercent']
+            ?? $item['vat_percentage']
+            ?? $item['vatpercent']
+            ?? ($localItem->vat_percent ?? 0);
+
+        $item['taxAmount'] = $item['taxAmount']
+            ?? $item['tax_amount']
+            ?? $item['taxamount']
+            ?? ($localItem->tax_amount ?? 0);
+
+        $item['discountAmount'] = $item['discountAmount']
+            ?? $item['discount_amount']
+            ?? $item['discountamount']
+            ?? ($localItem->discount_amount ?? 0);
+
+        $item['discountStartDate'] = $item['discountStartDate']
+            ?? $item['discount_start_date']
+            ?? $item['discountstartdate']
+            ?? optional($localItem->discount_start_date)->format('Y-m-d H:i:s');
+
+        $item['discountEndDate'] = $item['discountEndDate']
+            ?? $item['discount_end_date']
+            ?? $item['discountenddate']
+            ?? optional($localItem->discount_end_date)->format('Y-m-d H:i:s');
+
+        return view('POSViews.POSAdminViews.ItemDetail', compact('item'));
     }
-
-    $response = Http::withoutVerifying()
-        ->withToken($token)
-        ->get($this->bcUrl("items({$id})"));
-
-    if (!$response->successful()) {
-        return redirect()->back()->with('error', 'Failed to fetch item detail.');
-    }
-
-    $item = $response->json();
-
-    $localItem = Item::where('bc_id', $id)->first();
-
-    $item['defaultLocationCode'] = $item['defaultLocationCode']
-        ?? $item['locationCode']
-        ?? ($localItem->default_location_code ?? null);
-
-    $item['baseUnitOfMeasureCode'] = $item['baseUnitOfMeasureCode']
-        ?? ($localItem->base_unit_of_measure_code ?? null)
-        ?? 'PCS';
-
-    return view('POSViews.POSAdminViews.ItemDetail', compact('item'));
 }
-}
+    

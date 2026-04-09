@@ -18,6 +18,8 @@ use App\Http\Controllers\Api\POSControllers\POSUserController\UserProfileControl
 use App\Http\Controllers\Api\POSControllers\POSUserController\HistoryController;
 use App\Http\Controllers\Api\ManagementSystemController\CompanyController;
 use App\Http\Controllers\Api\POSControllers\POSAdminController\StoreManagementController;
+use App\Http\Controllers\Api\POSControllers\POSAdminController\DiscountController;
+
 
 // Route::get('/store-management', [StoreManagementController::class, 'index'])->name('store.management.index');
 // ================= AUTH =================
@@ -108,11 +110,18 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::get('/favorites', [FavoriteController::class, 'index']);
 
     // ---------- Notifications ----------
-    Route::get('/notifications', [NotificationController::class, 'getNotifications'])->name('notifications.index');
-    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
-    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read.all');
-    Route::delete('/notifications/delete-selected', [NotificationController::class, 'deleteSelected'])->name('notifications.delete.selected');
+    // use App\Http\Controllers\Api\ManagementSystemController\AdminNotificationController;
 
+Route::prefix('admin/notifications')->name('admin.notifications.')->group(function () {
+    Route::get('/', [AdminNotificationController::class, 'index'])->name('index');
+    Route::get('/{id}', [AdminNotificationController::class, 'show'])->name('show');
+    Route::post('/store', [AdminNotificationController::class, 'store'])->name('store');
+    Route::post('/read-all', [AdminNotificationController::class, 'markAllAsRead'])->name('read.all');
+    Route::delete('/delete-selected', [AdminNotificationController::class, 'deleteSelected'])->name('delete.selected');
+
+    Route::get('/ajax/search-customers', [AdminNotificationController::class, 'searchCustomers'])->name('ajax.search.customers');
+    Route::get('/ajax/latest', [AdminNotificationController::class, 'latestNotifications'])->name('ajax.latest');
+});
     // ---------- Admin Notifications ----------
     Route::prefix('admin/notification')->name('admin.notifications.')->group(function () {
         Route::get('/', [AdminNotificationController::class, 'index'])->name('index');
@@ -130,6 +139,7 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::get('/companies/{id}/edit', [CompanyController::class, 'edit'])->name('companies.edit');
     Route::put('/companies/{id}', [CompanyController::class, 'update'])->name('companies.update');
     Route::delete('/companies/{id}', [CompanyController::class, 'destroy'])->name('companies.destroy');
+
 });
  Route::prefix('users')->name('users.')->group(function () {
         Route::get('/', [WebUserController::class, 'index'])->name('index');
@@ -144,3 +154,11 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
         Route::post('/delete-selected', [WebUserController::class, 'deleteSelected'])->name('deleteSelected');
         Route::get('/data', [WebUserController::class, 'getUsers'])->name('data');
     });
+Route::middleware(['auth'])->group(function () {
+    Route::get('/discounts', [DiscountController::class, 'index'])->name('discounts.index');
+    Route::get('/discounts/create', [DiscountController::class, 'create'])->name('discounts.create');
+    Route::post('/discounts', [DiscountController::class, 'store'])->name('discounts.store');
+    Route::get('/discounts/{id}/edit', [DiscountController::class, 'edit'])->name('discounts.edit');
+    Route::put('/discounts/{id}', [DiscountController::class, 'update'])->name('discounts.update');
+    Route::delete('/discounts/{id}', [DiscountController::class, 'destroy'])->name('discounts.destroy');
+});

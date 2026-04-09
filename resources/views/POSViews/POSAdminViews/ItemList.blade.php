@@ -224,11 +224,11 @@
             display: block;
         }
 
-        .product-body {
-            padding: 10px 10px 12px;
-            display: flex;
-            flex-direction: column;
-            min-height: 145px;
+        .product-body{
+            padding:10px 10px 12px;
+            display:flex;
+            flex-direction:column;
+            min-height:145px;
         }
 
         .product-title {
@@ -252,6 +252,12 @@
             font-weight: 700;
             color: #1f2937;
             margin-bottom: 8px;
+        }
+
+        .product-tax{
+            font-size:11px;
+            color:#64748b;
+            margin-bottom:6px;
         }
 
         .stock-text {
@@ -329,6 +335,12 @@
             font-size: 12px;
             color: #8b95a7;
             margin-bottom: 6px;
+        }
+
+        .list-tax{
+            font-size:11px;
+            color:#64748b;
+            margin-bottom:6px;
         }
 
         .list-stock {
@@ -573,9 +585,9 @@
             return `<div class="stock-text">${qty} items left</div>`;
         }
 
-        function buildCategories() {
-            const select = document.getElementById('categorySelect');
-            const categories = [...new Set(PRODUCTS.map(item => item.itemCategoryCode || 'General'))].sort();
+    function buildCategories() {
+        const select = document.getElementById('categorySelect');
+        const categories = [...new Set(PRODUCTS.map(item => item.itemCategoryCode || 'General'))].sort();
 
             categories.forEach(category => {
                 const option = document.createElement('option');
@@ -590,16 +602,17 @@
             const category = document.getElementById('categorySelect').value;
             const stock = document.getElementById('stockSelect').value;
 
-            filteredProducts = PRODUCTS.filter(item => {
-                const name = String(item.displayName || '').toLowerCase();
-                const itemCategory = item.itemCategoryCode || 'General';
-                const inventory = Math.round(Number(item.inventory || 0));
+        filteredProducts = PRODUCTS.filter(item => {
+            const name = String(item.displayName || '').toLowerCase();
+            const itemCategory = item.itemCategoryCode || 'General';
+            const inventory = Math.round(Number(item.inventory || 0));
 
-                const matchKeyword = !keyword || name.includes(keyword);
-                const matchCategory = !category || itemCategory === category;
-                const matchStock = !stock ||
-                    (stock === 'in' && inventory > 0) ||
-                    (stock === 'out' && inventory <= 0);
+            const matchKeyword = !keyword || name.includes(keyword);
+            const matchCategory = !category || itemCategory === category;
+            const matchStock =
+                !stock ||
+                (stock === 'in' && inventory > 0) ||
+                (stock === 'out' && inventory <= 0);
 
                 return matchKeyword && matchCategory && matchStock;
             });
@@ -621,8 +634,8 @@
             document.getElementById('gridBtn').classList.toggle('active', view === 'grid');
             document.getElementById('listBtn').classList.toggle('active', view === 'list');
 
-            renderItems();
-        }
+        renderItems();
+    }
 
         function renderItems() {
             const container = document.getElementById('itemContainer');
@@ -633,74 +646,76 @@
                 return;
             }
 
-            if (currentView === 'grid') {
-                container.className = 'item-grid';
-                container.innerHTML = filteredProducts.map(item => {
-                    const inventory = Math.round(Number(item.inventory || 0));
-                    return `
+        if (currentView === 'grid') {
+            container.className = 'item-grid';
+            container.innerHTML = filteredProducts.map(item => {
+                const inventory = Math.round(Number(item.inventory || 0));
+                return `
                     <div class="product-card">
                         <div class="product-image">
                             <img
                                 src="/item-image/${esc(item.id)}"
-                                alt="${esc(item.displayName)}"
+                                alt="${esc(item.displayName || item.display_name || 'No Name')}"
                                 loading="lazy"
                                 onerror="this.src='https://placehold.co/500x320/e5e7eb/94a3b8?text=No+Photo'">
                         </div>
 
                         <div class="product-body">
-                            <div class="product-title">${esc(item.displayName || 'No Name')}</div>
-                            <div class="product-sub">${esc(item.description || item.itemCategoryCode || 'Fresh product')}</div>
-                            <div class="product-price">${money(item.unitPrice)}</div>
+                            <div class="product-title">${esc(item.displayName || item.display_name || 'No Name')}</div>
+                            <div class="product-sub">${esc(item.description || item.itemCategoryCode || item.item_category_code || 'Fresh product')}</div>
+                            <div class="product-price">${money(item.unitPrice ?? item.unit_price)}</div>
+                            <div class="product-tax">VAT: ${vatPercent}% | Tax: ${money(taxAmount)}</div>
                             ${stockText(inventory)}
-<a href="/pos/items/${item.id}" class="view-more-btn text-decoration-none d-flex align-items-center justify-content-center">
-    View More
-</a>
+                            <a href="/pos/items/${item.id}" class="view-more-btn text-decoration-none d-flex align-items-center justify-content-center">
+                                View More
+                            </a>
                         </div>
                     </div>
                 `;
-                }).join('');
-            } else {
-                container.className = 'item-list';
-                container.innerHTML = filteredProducts.map(item => {
-                    const inventory = Math.round(Number(item.inventory || 0));
-                    return `
+            }).join('');
+        } else {
+            container.className = 'item-list';
+            container.innerHTML = filteredProducts.map(item => {
+                const inventory = Math.round(Number(item.inventory || 0));
+                return `
                     <div class="list-card">
                         <div class="list-image">
                             <img
                                 src="/item-image/${esc(item.id)}"
-                                alt="${esc(item.displayName)}"
+                                alt="${esc(item.displayName || item.display_name || 'No Name')}"
                                 loading="lazy"
                                 onerror="this.src='https://placehold.co/500x320/e5e7eb/94a3b8?text=No+Photo'">
                         </div>
 
                         <div class="list-info">
-                            <div class="list-title">${esc(item.displayName || 'No Name')}</div>
-                            <div class="list-sub">${esc(item.description || item.itemCategoryCode || 'Fresh product')}</div>
+                            <div class="list-title">${esc(item.displayName || item.display_name || 'No Name')}</div>
+                            <div class="list-sub">${esc(item.description || item.itemCategoryCode || item.item_category_code || 'Fresh product')}</div>
+                            <div class="list-tax">VAT: ${vatPercent}% | Tax: ${money(taxAmount)}</div>
                             <div class="list-stock ${inventory <= 0 ? 'out' : ''}">
                                 ${inventory <= 0 ? 'Out of Stock' : inventory + ' items left'}
                             </div>
                         </div>
 
-                        <div class="list-price">${money(item.unitPrice)}</div>
+                        <div class="list-price">${money(item.unitPrice ?? item.unit_price)}</div>
 
                         <div class="list-action">
                             <a href="/pos/items/${item.id}" class="view-more-btn text-decoration-none d-flex align-items-center justify-content-center">
-    View More
-</a>
+                                View More
+                            </a>
                         </div>
                     </div>
                 `;
-                }).join('');
-            }
+            }).join('');
         }
+    }
 
-        function showToast(title, message) {
-            const oldToast = document.querySelector('.toast-wrap');
-            if (oldToast) oldToast.remove();
+    function showToast(title, message) {
+        const oldToast = document.querySelector('.toast-wrap');
+        if (oldToast) oldToast.remove();
 
-            const toast = document.createElement('div');
-            toast.className = 'toast-wrap';
-            toast.innerHTML = `
+        const toast = document.createElement('div');
+        toast.className = 'toast-wrap';
+        toast.innerHTML = `
             <div class="toast-head">
                 <h6>${esc(title)}</h6>
                 <button class="toast-close" onclick="this.closest('.toast-wrap').remove()">&times;</button>
@@ -708,12 +723,12 @@
             <div class="toast-body">${esc(message)}</div>
         `;
 
-            document.body.appendChild(toast);
+        document.body.appendChild(toast);
 
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
-        }
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
 
         async function updateItems() {
             const btn = document.getElementById('syncBtn');
@@ -722,31 +737,30 @@
             btn.disabled = true;
             btn.innerHTML = `<i class="bi bi-arrow-repeat"></i> Syncing...`;
 
-            try {
-                const res = await fetch('/items/sync-from-al', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        items: PRODUCTS.map(item => ({
-                            id: item.id,
-                            number: item.number,
-                            displayName: item.displayName,
-                            unitPrice: item.unitPrice,
-                            inventory: item.inventory,
-                            blocked: item.blocked,
-                            itemCategoryCode: item.itemCategoryCode,
-                            baseUnitOfMeasureCode: item.baseUnitOfMeasureCode,
-                            priceIncludesTax: item.priceIncludesTax,
-                            imageUrl: `/item-image/${item.id}`,
-                            defaultLocationCode: item.defaultLocationCode || item
-                                .locationCode || null
-                        }))
-                    })
-                });
+        try {
+            const res = await fetch('/items/sync-from-al', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    items: PRODUCTS.map(item => ({
+                        id: item.id,
+                        number: item.number,
+                        displayName: item.displayName,
+                        unitPrice: item.unitPrice,
+                        inventory: item.inventory,
+                        blocked: item.blocked,
+                        itemCategoryCode: item.itemCategoryCode,
+                        baseUnitOfMeasureCode: item.baseUnitOfMeasureCode,
+                        priceIncludesTax: item.priceIncludesTax,
+                        imageUrl: `/item-image/${item.id}`,
+                        defaultLocationCode: item.defaultLocationCode || item.locationCode || null
+                    }))
+                })
+            });
 
                 const data = await res.json();
 
@@ -754,14 +768,14 @@
                     throw new Error(data.message || 'Sync failed');
                 }
 
-                showToast('Success', `${data.count ?? PRODUCTS.length} item(s) synced successfully.`);
-            } catch (error) {
-                showToast('Failed', error.message || 'Could not sync items.');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = oldHtml;
-            }
+            showToast('Success', `${data.count ?? PRODUCTS.length} item(s) synced successfully.`);
+        } catch (error) {
+            showToast('Failed', error.message || 'Could not sync items.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = oldHtml;
         }
+    }
 
         window.addEventListener('DOMContentLoaded', function() {
             buildCategories();
