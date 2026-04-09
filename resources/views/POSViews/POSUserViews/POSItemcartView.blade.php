@@ -242,5 +242,32 @@
             };
         }
     </script>
+     <div class="mobile-bottom-nav">
+
+        <!-- Dashboard -->
+        <a href="/" class="nav-item {{ request()->is('/') || request()->is('pos-system') ? 'active' : '' }}">
+            <i class="bi bi-house"></i>
+            <span>Home</span>
+        </a>
+
+        <!-- Cart -->
+        <a href="/pos-system/cart" class="nav-item {{ request()->is('pos-system/cart') ? 'active' : '' }}">
+            <i class="bi bi-cart"></i>
+            <span>Cart</span>
+        </a>
+
+        <!-- Favorite -->
+        <a href="/pos-system/favorites" class="nav-item {{ request()->is('pos-system/favorites') ? 'active' : '' }}">
+            <i class="bi bi-heart"></i>
+            <span>Favorite</span>
+        </a>
+
+        <!-- Settings -->
+        <a href="{{ route('profile') }}" class="nav-item {{ request()->is('profile') ? 'active' : '' }}">
+            <i class="bi bi-gear"></i>
+            <span>Settings</span>
+        </a>
+
+    </div>
 </body>
 </html>

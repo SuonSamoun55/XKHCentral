@@ -24,8 +24,8 @@
     border-radius: 20px;
 
     /* REQUIRED Sticky Fixes */
-    position: sticky;
-    top: 0;                /* Sticks to very top */
+    position: relative;
+    top: 0px;                /* Sticks to very top */
     z-index: 100;          /* High number to stay on top of products */
 }
     .page-title {

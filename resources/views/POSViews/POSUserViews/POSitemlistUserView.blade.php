@@ -71,13 +71,7 @@
                 @else
                     <div class="products-grid" id="productsGrid">
                         @foreach ($items as $item)
-                            <div class="product-card product-item" data-id="{{ $item->id }}"
-                                data-name="{{ strtolower($item->display_name ?? '') }}"
-                                data-display-name="{{ $item->display_name ?? '' }}"
-                                data-uom="{{ strtolower($item->base_unit_of_measure_code ?? '') }}"
-                                data-category="{{ strtolower($item->item_category_code ?? '') }}"
-                                data-price="{{ number_format($item->unit_price ?? 0, 2, '.', '') }}"
-                                data-image="{{ $item->image_url ?: asset('images/no-image.png') }}">
+                            <div class="product-card product-item mobile-product" data-id="{{ $item->id }}">
 
                                 <div class="product-img-box">
                                     <button class="fav-btn" data-item-id="{{ $item->id }}">
@@ -85,9 +79,7 @@
                                             class="bi {{ in_array($item->id, $favoriteIds) ? 'bi-heart-fill text-danger' : 'bi-heart' }}"></i>
                                     </button>
 
-                                    <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
-                                        alt="{{ $item->display_name ?? 'No Name' }}" loading="lazy"
-                                        onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
+                                    <img src="{{ $item->image_url ?: asset('images/no-image.png') }}">
                                 </div>
 
                                 <div class="product-info">
@@ -95,16 +87,12 @@
                                         {{ $item->display_name ?: 'No Name' }}
                                     </div>
 
-                                    {{-- <div class="product-desc">
-                    {{ $item->descriptio    n ?: ($item->base_unit_of_measure_code ?: 'No description') }}
-                </div> --}}
-
                                     <div class="price">
                                         ${{ number_format($item->unit_price ?? 0, 2) }}
                                     </div>
 
-                                    <div class="qty-section">
-                                        <span>Quantity:</span>
+                                    <!-- MOBILE ONLY -->
+                                    <div class="qty-section mobile-action">
                                         <div class="qty-box">
                                             <button type="button" class="qty-btn minus">−</button>
                                             <span class="qty">1</span>
@@ -112,7 +100,8 @@
                                         </div>
                                     </div>
 
-                                    <button type="button" class="add-cart-btn" data-id="{{ $item->id }}">
+                                    <button type="button" class="add-cart-btn mobile-action"
+                                        data-id="{{ $item->id }}">
                                         Add to cart
                                     </button>
                                 </div>
@@ -593,7 +582,55 @@
             bindSearch();
         });
     </script>
+    <script>
+if (window.innerWidth <= 768) {
+    document.querySelectorAll('.mobile-product').forEach(card => {
+        card.addEventListener('click', function(e) {
 
+            if (e.target.closest('button')) return;
+
+            const isActive = card.classList.contains('active');
+
+            // close all
+            document.querySelectorAll('.mobile-product').forEach(c => {
+                c.classList.remove('active');
+            });
+
+            // open only this one
+            if (!isActive) {
+                card.classList.add('active');
+            }
+        });
+    });
+}
+</script>
+    <div class="mobile-bottom-nav">
+
+        <!-- Dashboard -->
+        <a href="/" class="nav-item {{ request()->is('/') || request()->is('pos-system') ? 'active' : '' }}">
+            <i class="bi bi-house"></i>
+            <span>Home</span>
+        </a>
+
+        <!-- Cart -->
+        <a href="/pos-system/cart" class="nav-item {{ request()->is('pos-system/cart') ? 'active' : '' }}">
+            <i class="bi bi-cart"></i>
+            <span>Cart</span>
+        </a>
+
+        <!-- Favorite -->
+        <a href="/pos-system/favorites" class="nav-item {{ request()->is('pos-system/favorites') ? 'active' : '' }}">
+            <i class="bi bi-heart"></i>
+            <span>Favorite</span>
+        </a>
+
+        <!-- Settings -->
+        <a href="{{ route('profile') }}" class="nav-item {{ request()->is('profile') ? 'active' : '' }}">
+            <i class="bi bi-gear"></i>
+            <span>Settings</span>
+        </a>
+
+    </div>
 </body>
 
 </html>
