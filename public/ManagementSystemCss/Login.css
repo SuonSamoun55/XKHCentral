@@ -183,3 +183,90 @@
             padding: 24px 18px;
         } */
     /* } */
+/* --- NEW RESPONSIVE ADDITIONS --- */
+@media (max-width: 768px) {
+    body{
+        display: block;
+    }
+    /* 1. Reset container to allow the card to float */
+    .login-page {
+        background-color: #fdf2ef; /* The soft peach/white background in your image */
+        align-items: flex-start;
+        padding: 0;
+    }
+
+    .login-shell {
+        width: 100%;
+        height: 100vh;
+        flex-direction: column;
+        background: transparent;
+        box-shadow: none;
+        border-radius: 0;
+    }
+
+    /* 2. Top Teal Section (The Wave) */
+    .login-left {
+        width: 100%;
+        height: 35%; 
+        background: #4fd1d9; /* The teal color from image */
+        /* These radius settings create the organic curve in your image */
+        border-bottom-left-radius: 60% 20%;
+        border-bottom-right-radius: 30% 80%;
+        z-index: 1;
+    }
+
+    /* Hide the video on mobile to match the image exactly */
+    .login-left video {
+        display: none;
+    }
+
+    /* 3. The White Floating Card */
+    .login-right {
+        display: block;
+        width: 100%;
+        margin-top: -150px; /* Pulls the card up into the teal area */
+        z-index: 2;
+        background: transparent;
+        padding: 20px;
+    }
+
+    .login-form-box {
+        background: #ffffff;
+        padding: 45px 35px;
+        border-radius: 40px; /* Large rounded corners from image */
+        box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+        max-width: 90%;
+        height: 100%;
+        margin: 0 auto;
+    }
+
+    /* 4. Form Elements (Minimalist lines) */
+    .login-title {
+        text-align: center;
+        font-weight: 800;
+        margin-bottom: 40px;
+    }
+
+    .login-input {
+        border: none !important;
+        border-bottom: 1px solid #e0e0e0 !important; /* The thin line style */
+        border-radius: 0 !important;
+        padding: 10px 0 !important;
+        background: transparent !important;
+    }
+
+    /* 5. Pill-shaped Button */
+    .login-btn {
+        height: 52px;
+        border-radius: 26px; /* Pill shape from image */
+        background: #25d3d1;
+        font-size: 16px;
+        box-shadow: 0 8px 20px rgba(37, 211, 209, 0.2);
+        margin-top: 20px;
+    }
+
+    /* Hide extra desktop text to keep it clean like the screenshot */
+    .login-subtitle, .login-label, .login-check-row {
+        display: none;
+    }
+}

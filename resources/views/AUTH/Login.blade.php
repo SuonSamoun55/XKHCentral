@@ -6,18 +6,14 @@
 
 <div class="login-page">
     <div class="login-shell">
+        {{-- 1. Left Side (Top on Mobile) --}}
         <div class="login-left">
-            {{-- Image version --}}
-            {{-- <img src="{{ asset('images/login-banner.png') }}" alt="Login Banner"> --}}
-
-            {{-- Video version: use this instead if you want video --}}
-
             <video autoplay muted loop playsinline>
-                    <source src="{{ asset('/videos/grokvideo.mp4') }}" type="video/mp4">
+                <source src="{{ asset('/videos/grokvideo.mp4') }}" type="video/mp4">
             </video>
-
         </div>
 
+        {{-- 2. Right Side (Bottom on Mobile) --}}
         <div class="login-right">
             <div class="login-form-box">
                 <h1 class="login-title">Account Login</h1>
@@ -25,6 +21,7 @@
                     If you are already a member you can login with your email address and password.
                 </p>
 
+                {{-- Alerts --}}
                 @if(session('error'))
                     <div class="alert alert-danger">{{ session('error') }}</div>
                 @endif
@@ -75,4 +72,3 @@
     </div>
 </div>
 @endsection
-{{-- <script src="resources/js/Login.js"></script> --}}
