@@ -334,8 +334,50 @@
             background: #fef2f2;
             color: #dc2626;
         }
+        /* Floating Top-Right Alert Styles */
+.alert-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 
+.custom-alert {
+    background: #ffffff !important;
+    color: #334155 !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 16px 24px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 280px;
+    max-width: 400px;
+    width: fit-content; /* Makes width fit content instead of full width */
+    animation: slideIn 0.3s ease-out forwards;
+}
 
+.custom-alert.alert-success {
+    border-left: 4px solid #10b981 !important;
+}
+
+.custom-alert.alert-danger {
+    border-left: 4px solid #ef4444 !important;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(100%); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(100%); }
+}
         @media (max-width: 992px) {
 
             .company-grid,
@@ -358,32 +400,83 @@
                 grid-column: span 1;
             }
         }
+
+        /* Floating Top-Right Alert Styles */
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .custom-alert {
+            background: #ffffff !important;
+            color: #334155 !important;
+            border: none !important;
+            border-radius: 12px !important;
+            padding: 16px 24px !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 280px;
+            max-width: 400px;
+            width: fit-content;
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        .custom-alert.alert-success {
+            border-left: 4px solid #10b981 !important;
+        }
+
+        .custom-alert.alert-danger {
+            border-left: 4px solid #ef4444 !important;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100%); }
+        }
     </style>
 @endpush
 
 @section('content')
     <div class="company-page">
-        @if (!$company)
-            <div class="page-title">Company &gt; Set Up</div>
-            <div class="page-subtitle">Business Central</div>
-
+        <!-- Alert Container -->
+        <div class="alert-container">
             @if (session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
+                <div class="custom-alert alert-success">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
             @endif
 
             @if (session('error'))
-                <div class="alert alert-danger">{{ session('error') }}</div>
+                <div class="custom-alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>{{ session('error') }}</span>
+                </div>
             @endif
 
             @if ($errors->any())
-                <div class="alert alert-danger">
-                    <ul class="mb-0 ps-3">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+                <div class="custom-alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>Please fix the errors below.</span>
                 </div>
             @endif
+        </div>
+
+        @if (!$company)
+            <div class="page-title">Company &gt; Set Up</div>
+            <div class="page-subtitle">Business Central</div>
             <div class="container">
                 <div class="company-card">
                     <form action="{{ route('companies.store') }}" method="POST" enctype="multipart/form-data">
@@ -512,14 +605,6 @@
                     </form>
                 </div>
             @else
-                @if (session('success'))
-                    <div class="alert alert-success">{{ session('success') }}</div>
-                @endif
-
-                @if (session('error'))
-                    <div class="alert alert-danger">{{ session('error') }}</div>
-                @endif
-
                 <div class="company-card">
                     <div class="company-overview-grid">
                         <div class="company-left-panel">
@@ -666,5 +751,20 @@
                 updateLogoPreview(file);
             });
         }
+        document.addEventListener('DOMContentLoaded', function() {
+    const alerts = document.querySelectorAll('.custom-alert');
+    
+    alerts.forEach(function(alert) {
+        // Auto-close after 4 seconds
+        setTimeout(function() {
+            alert.style.animation = 'fadeOut 0.5s ease-in forwards';
+            
+            // Remove from DOM after animation finishes
+            alert.addEventListener('animationend', function() {
+                alert.remove();
+            });
+        }, 4000);
+    });
+});
     </script>
 @endpush
