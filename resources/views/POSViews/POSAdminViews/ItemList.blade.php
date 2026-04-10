@@ -56,6 +56,11 @@
         }
 
         .page-title {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            
+            padding: 26px;
             font-size: 24px;
             font-weight: 700;
             color: #34a6b5;
@@ -63,6 +68,9 @@
         }
 
         .toolbar-row {
+            position: sticky;
+            top: 72px;
+            background: #fff;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -75,6 +83,7 @@
             flex: 1;
             min-width: 280px;
             max-width: 520px;
+            padding-left: 26px;
         }
 
         .search-box {

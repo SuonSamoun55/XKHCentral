@@ -30,17 +30,23 @@ width: 100%;
         border:1px solid #eef2f7;
          width: 100%;
          min-width: 100%;
+         height: 100vh !important;
     }
 
     .company-setup-grid{
         display:grid;
+        grid-template-columns: 300px 1fr; /* Adjust 300px to match your logo panel width */
         grid-template-columns:260px 1fr;
         width: 100%;
+        gap: 2rem;
         gap:28px;
         align-items:start;
+        max-height: 80vh; /* Limits the height of the entire section */
     }
 
     .logo-panel{
+        position: sticky;
+        top: 0;
         background:#f1f5f9;
         border-radius:14px;
         min-height:100%;
@@ -48,6 +54,13 @@ width: 100%;
         display:flex;
         flex-direction:column;
         align-items:center;
+    }
+    .scrollable-info-panel {
+        width: 100%;
+        max-height: 70vh; /* Adjust this value based on your header size */
+        overflow-y: auto;
+        padding-right: 15px; /* Space for the scrollbar */
+        scrollbar-width: thin; /* For Firefox */
     }
 
     .logo-box{
@@ -119,6 +132,11 @@ width: 100%;
     }
 
     .form-section-title{
+        position: sticky;
+        top: 0;
+        background:#f8fafc;
+        display:inline-flex;
+        
         display:flex;
         align-items:center;
         gap:10px;
@@ -198,7 +216,7 @@ width: 100%;
     }
 
     .btn-submit-company{
-        min-width:180px;
+        min-width:130px;
         border:none;
         border-radius:8px;
         background:#11c5df;
@@ -220,7 +238,7 @@ width: 100%;
     }
 
     .btn-back-company{
-        min-width:180px;
+        min-width:130px;
         border:1px solid #cbd5e1;
         border-radius:8px;
         background:#fff;
@@ -373,7 +391,7 @@ width: 100%;
                 </div>
 
                 <div>
-                    
+                    <div class="scrollable-info-panel">
                     <div class="form-section-title">Company Info</div>
 
                     <div class="form-grid">
@@ -457,14 +475,16 @@ width: 100%;
                         </div>
                     </div>
 
-                    <div class="btn-submit-wrap">
-                        <button type="submit" class="btn-submit-company">Update</button>
-                        <a href="{{ route('companies.api.setup', $company->id) }}" class="btn-back-company">API Setup</a>
+                  
+                    </div>
+                      <div class="btn-submit-wrap">
                         <a href="{{ route('companies.index') }}" class="btn-back-company">Back</a>
+                        <a href="{{ route('companies.api.setup', $company->id) }}" class="btn-back-company">API Setup</a>
                         <button type="submit" class="btn-submit-company">Save</button>
 
                     </div>
                 </div>
+                
             </div>
         </form>
     </div>

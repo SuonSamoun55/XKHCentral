@@ -5,7 +5,7 @@
 @push('styles')
 <style>
     .api-setup-wrap{
-        padding:20px;
+        padding:10px;
         width:100%;
     }
     .api-card{
@@ -15,12 +15,21 @@
         padding:20px;
     }
     .api-title{
+        position: sticky;
+        top: 0;
+        padding:  20px 10px;
+        margin-top: -20px;
+        background: #f8fafc;
         font-size:22px;
         font-weight:700;
         color:#0f172a;
         margin-bottom:4px;
     }
     .api-subtitle{
+        position: sticky;
+        top: 68px;
+        background: #f8fafc;
+    
         color:#6b7280;
         margin-bottom:18px;
         font-size:13px;
@@ -178,9 +187,9 @@
             </div>
 
             <div class="action-row">
-                <button type="submit" class="btn-main">Save API Setup</button>
                 <a href="{{ route('companies.index') }}" class="btn-light">Back to Company</a>
                 <a href="{{ route('companies.edit', $company->id) }}" class="btn-light">Edit Company</a>
+                <button type="submit" class="btn-main">Save API Setup</button>
             </div>
         </form>
 
