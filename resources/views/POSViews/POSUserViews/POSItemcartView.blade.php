@@ -124,6 +124,14 @@
                                 <span>Subtotal</span>
                                 <strong>${{ number_format($subtotal, 2) }}</strong>
                             </div>
+                            <div class="summary-row">
+                                <span>Discount</span>
+                                <strong>- ${{ number_format($discountAmount ?? 0, 2) }}</strong>
+                            </div>
+                            <div class="summary-row">
+                                <span>Tax</span>
+                                <strong>${{ number_format($taxAmount ?? 0, 2) }}</strong>
+                            </div>
                             <div class="summary-row summary-total">
                                 <span>Total</span>
                                 <strong>${{ number_format($total, 2) }}</strong>

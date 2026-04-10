@@ -138,6 +138,8 @@ Route::prefix('admin/notifications')->name('admin.notifications.')->group(functi
     Route::post('/companies', [CompanyController::class, 'store'])->name('companies.store');
     Route::get('/companies/{id}/edit', [CompanyController::class, 'edit'])->name('companies.edit');
     Route::put('/companies/{id}', [CompanyController::class, 'update'])->name('companies.update');
+    Route::get('/companies/{id}/api-setup', [CompanyController::class, 'apiSetup'])->name('companies.api.setup');
+    Route::put('/companies/{id}/api-setup', [CompanyController::class, 'updateApiSetup'])->name('companies.api.setup.update');
     Route::delete('/companies/{id}', [CompanyController::class, 'destroy'])->name('companies.destroy');
 
 });

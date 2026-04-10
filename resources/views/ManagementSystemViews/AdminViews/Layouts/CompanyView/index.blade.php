@@ -576,6 +576,11 @@ width: 100%;
                             Edit Company
                         </a>
 
+                        <a href="{{ route('companies.api.setup', $company->id) }}" class="btn-company-outline-info">
+                            <i class="bi bi-sliders"></i>
+                            API Setup
+                        </a>
+
                         <form action="{{ route('companies.destroy', $company->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this company?')">
                             @csrf
                             @method('DELETE')

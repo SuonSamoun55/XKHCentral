@@ -19,6 +19,13 @@ class CompanyConnection extends Model
         'environment',
         'base_url',
         'token_url',
+        'api_scope',
+        'customers_endpoint',
+        'items_endpoint',
+        'sales_orders_endpoint',
+        'sales_order_lines_endpoint',
+        'sales_orders_by_number_endpoint',
+        'sales_order_pdf_endpoint',
         'is_default',
         'status',
     ];

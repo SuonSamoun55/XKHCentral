@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class OrderController extends Controller
 {
@@ -93,8 +94,9 @@ class OrderController extends Controller
         DB::beginTransaction();
 
         try {
-            $subtotal = 0;
-            $discountAmount = 0;
+            $subtotal = 0.0;
+            $discountAmount = 0.0;
+            $taxAmount = 0.0;
 
             foreach ($cart->items as $cartItem) {
                 $item = $cartItem->item;
@@ -127,10 +129,13 @@ class OrderController extends Controller
                     throw new \Exception("Invalid unit price for cart item ID {$cartItem->id}.");
                 }
 
-                $subtotal += ($unitPrice * $qty);
+                $linePricing = $this->calculateLinePricing($item, (int) $qty);
+                $subtotal += $linePricing['subtotal'];
+                $discountAmount += $linePricing['discount_amount'];
+                $taxAmount += $linePricing['tax_amount'];
             }
 
-            $totalAmount = $subtotal - $discountAmount;
+            $totalAmount = ($subtotal - $discountAmount) + $taxAmount;
             $firstCartItem = $cart->items->first();
             $locationCode = optional($firstCartItem->item)->default_location_code;
             $orderNo = 'ORD-' . now()->format('YmdHis') . '-' . strtoupper(Str::random(4));
@@ -164,6 +169,7 @@ class OrderController extends Controller
                     'item_name' => $cartItem->item_name,
                     'qty' => $cartItem->qty,
                     'unit_price' => $cartItem->unit_price,
+                    'discount_percent' => $this->resolveDiscountPercent($cartItem->item),
                     'line_total' => $cartItem->line_total,
                 ];
             }
@@ -181,7 +187,8 @@ class OrderController extends Controller
                 $item = $cartItem->item;
                 $qty = (float) ($cartItem->qty ?? $cartItem->quantity ?? 0);
                 $unitPrice = (float) ($cartItem->unit_price ?? $cartItem->price ?? 0);
-                $lineTotal = $unitPrice * $qty;
+                $linePricing = $this->calculateLinePricing($item, (int) $qty);
+                $lineTotal = $linePricing['line_total'];
 
                 OrderItem::create([
                     'order_id'      => $order->id,
@@ -240,6 +247,55 @@ class OrderController extends Controller
             ], 500);
         }
     }
-    
-}
 
+    private function calculateLinePricing($item, int $qty): array
+    {
+        $unitPrice = (float) ($item->unit_price ?? 0);
+        $subtotal = max(0, $unitPrice * $qty);
+
+        $discountPercent = $this->resolveDiscountPercent($item);
+        $discountAmount = $subtotal * ($discountPercent / 100);
+
+        $taxableAmount = max(0, $subtotal - $discountAmount);
+        $taxAmount = 0;
+
+        if (!$item->price_includes_tax) {
+            $vatPercent = max(0, (float) ($item->vat_percent ?? 0));
+            $fixedTaxPerUnit = max(0, (float) ($item->tax_amount ?? 0));
+
+            $percentTaxAmount = $taxableAmount * ($vatPercent / 100);
+            $fixedTaxAmount = $fixedTaxPerUnit * $qty;
+            $taxAmount = $percentTaxAmount + $fixedTaxAmount;
+        }
+
+        return [
+            'subtotal' => round($subtotal, 2),
+            'discount_percent' => round($discountPercent, 2),
+            'discount_amount' => round($discountAmount, 2),
+            'tax_amount' => round($taxAmount, 2),
+            'line_total' => round($taxableAmount + $taxAmount, 2),
+        ];
+    }
+
+    private function resolveDiscountPercent($item): float
+    {
+        $discount = max(0, (float) ($item->discount_amount ?? 0));
+        if ($discount <= 0) {
+            return 0.0;
+        }
+
+        $today = Carbon::today();
+        $start = $item->discount_start_date ? Carbon::parse($item->discount_start_date)->startOfDay() : null;
+        $end = $item->discount_end_date ? Carbon::parse($item->discount_end_date)->endOfDay() : null;
+
+        if ($start && $today->lt($start)) {
+            return 0.0;
+        }
+
+        if ($end && $today->gt($end)) {
+            return 0.0;
+        }
+
+        return min(100, $discount);
+    }
+}

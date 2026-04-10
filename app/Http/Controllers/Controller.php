@@ -6,6 +6,7 @@ use Illuminate\Routing\Controller as BaseController;
 use App\Models\MagamentSystemModel\Company;
 use App\Models\MagamentSystemModel\CompanyConnection;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class Controller extends BaseController
 {
@@ -19,7 +20,16 @@ class Controller extends BaseController
             return;
         }
 
-        $company = Company::with('companyConnection')->first();
+        $selectedCompanyId = session('selected_company_id');
+        $company = null;
+
+        if ($selectedCompanyId) {
+            $company = Company::with('companyConnection')->find($selectedCompanyId);
+        }
+
+        if (!$company) {
+            $company = Company::with('companyConnection')->first();
+        }
 
         /** @var CompanyConnection|null $connection */
         $connection = $company?->companyConnection;
@@ -44,6 +54,36 @@ class Controller extends BaseController
         return rtrim($this->baseUrl, '/') . '/companies(' . $this->companyId . ')/' . ltrim($path, '/');
     }
 
+    protected function bcEndpoint(string $field, string $defaultTemplate, array $replacements = []): ?string
+    {
+        $this->loadCompanyConnection();
+
+        if (!$this->connection) {
+            return null;
+        }
+
+        $template = (string) ($this->connection->{$field} ?? '');
+        if ($template === '') {
+            $template = $defaultTemplate;
+        }
+
+        $pairs = [
+            '{companyId}' => $this->companyId ?? '',
+        ];
+
+        foreach ($replacements as $key => $value) {
+            $pairs['{' . $key . '}'] = (string) $value;
+        }
+
+        $resolved = strtr($template, $pairs);
+
+        if (Str::startsWith($resolved, ['http://', 'https://'])) {
+            return $resolved;
+        }
+
+        return $this->bcUrl($resolved);
+    }
+
     protected function getToken(): ?string
     {
         $this->loadCompanyConnection();
@@ -56,7 +96,7 @@ class Controller extends BaseController
             'grant_type' => 'client_credentials',
             'client_id' => trim($this->connection->client_id),
             'client_secret' => trim($this->connection->client_secret),
-            'scope' => 'https://api.businesscentral.dynamics.com/.default',
+            'scope' => trim($this->connection->api_scope ?: 'https://api.businesscentral.dynamics.com/.default'),
         ]);
 
         if (!$response->successful()) {
