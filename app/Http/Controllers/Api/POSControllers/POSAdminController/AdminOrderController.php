@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Carbon\Carbon;
 
 class AdminOrderController extends Controller
 {
@@ -73,7 +74,7 @@ class AdminOrderController extends Controller
             return back()->with('error', 'Unauthorized.');
         }
 
-        $order = Order::with(['user', 'items'])->find($id);
+        $order = Order::with(['user', 'items.item'])->find($id);
 
         if (!$order) {
             return back()->with('error', 'Order not found.');
@@ -107,7 +108,7 @@ class AdminOrderController extends Controller
             $orderResponse = Http::withoutVerifying()
                 ->withToken($token)
                 ->acceptJson()
-                ->post($this->bcUrl('salesOrders'), [
+                ->post($this->bcEndpoint('sales_orders_endpoint', 'salesOrders'), [
                     'customerNumber' => $order->user->bc_customer_no,
                 ]);
 
@@ -124,14 +125,47 @@ class AdminOrderController extends Controller
             }
 
             foreach ($order->items as $item) {
+                $discountPercent = $this->resolveDiscountPercent($item->item);
+                $linePayload = [
+                    'lineType'         => 'Item',
+                    'lineObjectNumber' => $item->item_no,
+                    'quantity'         => (int) $item->qty,
+                ];
+
+                if ($discountPercent > 0) {
+                    $linePayload['discountPercent'] = round($discountPercent, 2);
+                }
+
                 $lineResponse = Http::withoutVerifying()
                     ->withToken($token)
                     ->acceptJson()
-                    ->post($this->bcUrl("salesOrders({$salesOrderId})/salesOrderLines"), [
-                        'lineType'         => 'Item',
-                        'lineObjectNumber' => $item->item_no,
-                        'quantity'         => (int) $item->qty,
-                    ]);
+                    ->post(
+                        $this->bcEndpoint(
+                            'sales_order_lines_endpoint',
+                            'salesOrders({salesOrderId})/salesOrderLines',
+                            ['salesOrderId' => $salesOrderId]
+                        ),
+                        $linePayload
+                    );
+
+                if (
+                    !$lineResponse->successful()
+                    && array_key_exists('discountPercent', $linePayload)
+                    && $this->isUnknownFieldError($lineResponse->body(), 'discountPercent')
+                ) {
+                    unset($linePayload['discountPercent']);
+                    $lineResponse = Http::withoutVerifying()
+                        ->withToken($token)
+                        ->acceptJson()
+                        ->post(
+                            $this->bcEndpoint(
+                                'sales_order_lines_endpoint',
+                                'salesOrders({salesOrderId})/salesOrderLines',
+                                ['salesOrderId' => $salesOrderId]
+                            ),
+                            $linePayload
+                        );
+                }
 
                 if (!$lineResponse->successful()) {
                     throw new \Exception(
@@ -143,7 +177,7 @@ class AdminOrderController extends Controller
             $order->update([
                 'status'         => 'confirmed',
                 'sync_status'    => 'synced',
-                'bc_document_no' => $salesOrderNo ?: $salesOrderId,
+                'bc_document_no' => $salesOrderNo ?: null,
             ]);
 
             OrderAction::create([
@@ -238,4 +272,38 @@ class AdminOrderController extends Controller
         return back()->with('error', 'Cancel failed: ' . $e->getMessage());
     }
 }
+
+    private function isUnknownFieldError(string $responseBody, string $field): bool
+    {
+        return str_contains($responseBody, "property '{$field}' does not exist")
+            || str_contains($responseBody, "property `{$field}` does not exist")
+            || str_contains($responseBody, '"' . $field . '"')
+                && str_contains(strtolower($responseBody), 'does not exist');
+    }
+
+    private function resolveDiscountPercent($item): float
+    {
+        if (!$item) {
+            return 0.0;
+        }
+
+        $discount = max(0, (float) ($item->discount_amount ?? 0));
+        if ($discount <= 0) {
+            return 0.0;
+        }
+
+        $today = Carbon::today();
+        $start = $item->discount_start_date ? Carbon::parse($item->discount_start_date)->startOfDay() : null;
+        $end = $item->discount_end_date ? Carbon::parse($item->discount_end_date)->endOfDay() : null;
+
+        if ($start && $today->lt($start)) {
+            return 0.0;
+        }
+
+        if ($end && $today->gt($end)) {
+            return 0.0;
+        }
+
+        return min(100, $discount);
+    }
 }

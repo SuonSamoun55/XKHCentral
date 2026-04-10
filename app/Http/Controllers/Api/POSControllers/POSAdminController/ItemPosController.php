@@ -13,7 +13,7 @@ class ItemPosController extends Controller
     public function index()
     {
         $token = $this->getToken();
-        $url = $this->bcUrl("items?\$filter=blocked eq false");
+        $url = $this->bcEndpoint('items_endpoint', "items?\$filter=blocked eq false");
 
         if (!$token) {
             return response()->json([

@@ -1,26 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('POSViews.POSAdminViews.app')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS System</title>
+@section('title', 'POS System')
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-
-    <style>
-        :root {
-            --primary: #1bb8c9;
-            --primary-dark: #12a5b5;
-            --bg: #f5f6f8;
-            --white: #ffffff;
-            --text: #202938;
-            --muted: #8b95a7;
-            --border: #eceef2;
-            --danger: #ef4444;
-            --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-            --radius: 18px;
+@push('styles')
+<style>
+:root{
+            --primary:#1bb8c9;
+            --primary-dark:#12a5b5;
+            --bg:#f5f6f8;
+            --white:#ffffff;
+            --text:#202938;
+            --muted:#8b95a7;
+            --border:#eceef2;
+            --danger:#ef4444;
+            --shadow:0 8px 24px rgba(15, 23, 42, 0.06);
+            --radius:18px;
         }
 
         * {
@@ -479,18 +473,11 @@
             }
         }
     </style>
-</head>
+@endpush
 
-<body>
-
-    <div class="page-wrap">
-        {{-- <aside class="sidebar-wrap"> --}}
-        @include('POSViews.POSAdminViews.aside')
-        {{-- </aside> --}}
-
-        <main class="main-wrap">
-            <div class="header">
-                <h1 class="page-title">POS System</h1>
+@section('content')
+<main class="main-wrap">
+        <h1 class="page-title">POS System</h1>
 
                 <div class="toolbar-row">
                     <div class="toolbar-left">
@@ -511,15 +498,43 @@
                             Sync BC Product
                         </button>
 
-                        <div class="view-switch">
-                            <button type="button" class="view-btn active" id="gridBtn" onclick="setView('grid')">
-                                <i class="bi bi-grid-3x3-gap-fill"></i> Grid
-                            </button>
-                            <button type="button" class="view-btn" id="listBtn" onclick="setView('list')">
-                                <i class="bi bi-list-ul"></i> List
-                            </button>
-                        </div>
-                    </div>
+                <div class="view-switch">
+                    <button type="button" class="view-btn active" id="gridBtn" onclick="setView('grid')">
+                        <i class="bi bi-grid-3x3-gap-fill"></i> Grid
+                    </button>
+                    <button type="button" class="view-btn" id="listBtn" onclick="setView('list')">
+                        <i class="bi bi-list-ul"></i> List
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="itemContainer" class="item-grid"></div>
+    </main>
+
+<div class="modal fade" id="filterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Filter Products</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body pt-0">
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Category</label>
+                    <select id="categorySelect" class="form-select">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Stock Status</label>
+                    <select id="stockSelect" class="form-select">
+                        <option value="">All</option>
+                        <option value="in">In Stock</option>
+                        <option value="out">Out of Stock</option>
+                    </select>
                 </div>
             </div>
 
@@ -792,13 +807,10 @@
             buildCategories();
             renderItems();
 
-            document.getElementById('searchInput').addEventListener('input', applyFilters);
-            document.getElementById('categorySelect').addEventListener('change', applyFilters);
-            document.getElementById('stockSelect').addEventListener('change', applyFilters);
-        });
-    </script>
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('categorySelect').addEventListener('change', applyFilters);
+        document.getElementById('stockSelect').addEventListener('change', applyFilters);
+    });
+</script>
+@endsection
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-
-</html>

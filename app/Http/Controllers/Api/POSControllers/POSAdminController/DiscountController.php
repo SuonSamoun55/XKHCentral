@@ -76,13 +76,12 @@ public function store(Request $request)
         'discount_type'        => ['required', 'in:item,category'],
         'item_id'              => ['nullable', 'exists:items,id'],
         'category_code'        => ['nullable', 'string'],
-        'discount_amount'      => ['required', 'numeric', 'min:0'],
+        'discount_amount'      => ['required', 'numeric', 'min:0', 'max:100'],
         'discount_start_date'  => ['nullable', 'date'],
         'discount_end_date'    => ['nullable', 'date', 'after_or_equal:discount_start_date'],
     ]);
 
     $companyId = session('selected_company_id') ?: Company::value('id');
-
     if ($validated['discount_type'] === 'item') {
         if (empty($validated['item_id'])) {
             return back()->withErrors([
@@ -91,12 +90,9 @@ public function store(Request $request)
         }
 
         $item = Item::where('company_id', $companyId)->findOrFail($validated['item_id']);
-        $item->discount_amount = $validated['discount_amount'];
-        $item->discount_start_date = $validated['discount_start_date'] ?? null;
-        $item->discount_end_date = $validated['discount_end_date'] ?? null;
-        $item->save();
+        $this->applyDiscountToItem($item, $validated);
 
-        return redirect()->route('discounts.index')->with('success', 'Item discount added successfully.');
+        return redirect()->route('discounts.index')->with('success', 'Item discount percentage added successfully.');
     }
 
     if (empty($validated['category_code'])) {
@@ -105,16 +101,17 @@ public function store(Request $request)
         ])->withInput();
     }
 
-    $updatedCount = Item::where('company_id', $companyId)
+    $items = Item::where('company_id', $companyId)
         ->where('item_category_code', $validated['category_code'])
-        ->update([
-            'discount_amount' => $validated['discount_amount'],
-            'discount_start_date' => $validated['discount_start_date'] ?? null,
-            'discount_end_date' => $validated['discount_end_date'] ?? null,
-            'updated_at' => now(),
-        ]);
+        ->get();
 
-    return redirect()->route('discounts.index')->with('success', "Category discount added successfully to {$updatedCount} item(s).");
+    foreach ($items as $item) {
+        $this->applyDiscountToItem($item, $validated);
+    }
+
+    $updatedCount = $items->count();
+
+    return redirect()->route('discounts.index')->with('success', "Category discount percentage added successfully to {$updatedCount} item(s).");
 }
     public function edit($id)
     {
@@ -142,17 +139,14 @@ public function store(Request $request)
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'discount_amount'      => ['required', 'numeric', 'min:0'],
+            'discount_amount'      => ['required', 'numeric', 'min:0', 'max:100'],
             'discount_start_date'  => ['nullable', 'date'],
             'discount_end_date'    => ['nullable', 'date', 'after_or_equal:discount_start_date'],
         ]);
 
-        $item = Item::findOrFail($id);
-
-        $item->discount_amount = $validated['discount_amount'];
-        $item->discount_start_date = $validated['discount_start_date'] ?? null;
-        $item->discount_end_date = $validated['discount_end_date'] ?? null;
-        $item->save();
+        $companyId = session('selected_company_id') ?: Company::value('id');
+        $item = Item::where('company_id', $companyId)->findOrFail($id);
+        $this->applyDiscountToItem($item, $validated);
 
         return redirect()
             ->route('discounts.index')
@@ -161,15 +155,28 @@ public function store(Request $request)
 
     public function destroy($id)
     {
-        $item = Item::findOrFail($id);
-
-        $item->discount_amount = 0;
-        $item->discount_start_date = null;
-        $item->discount_end_date = null;
-        $item->save();
+        $companyId = session('selected_company_id') ?: Company::value('id');
+        $item = Item::where('company_id', $companyId)->findOrFail($id);
+        $this->applyDiscountToItem($item, [
+            'discount_amount' => 0,
+            'discount_start_date' => null,
+            'discount_end_date' => null,
+        ]);
 
         return redirect()
             ->route('discounts.index')
             ->with('success', 'Discount removed successfully.');
+    }
+
+    private function applyDiscountToItem(Item $item, array $payload): void
+    {
+        $discountPercent = round((float) ($payload['discount_amount'] ?? 0), 2);
+        $startDate = $payload['discount_start_date'] ?? null;
+        $endDate = $payload['discount_end_date'] ?? null;
+
+        $item->discount_amount = $discountPercent;
+        $item->discount_start_date = $startDate;
+        $item->discount_end_date = $endDate;
+        $item->save();
     }
 }

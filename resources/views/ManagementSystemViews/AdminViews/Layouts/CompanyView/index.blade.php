@@ -713,9 +713,81 @@
                         </div>
                     </div>
                 </div>
-        @endif
-    </div>
-    </div>
+
+                <div>
+                    <div class="form-section-title">Company Details</div>
+
+                    <div class="company-details-grid">
+                        <div class="company-field full-width">
+                            <div class="field-label">Company Name</div>
+                            <div class="company-value">{{ $company->name ?? '-' }}</div>
+                        </div>
+
+                        <div class="company-field">
+                            <div class="field-label">Client ID</div>
+                            <div class="company-value">{{ $company->companyConnection->client_id ?? '-' }}</div>
+                        </div>
+
+                        <div class="company-field">
+                            <div class="field-label">BC Company ID</div>
+                            <div class="company-value">{{ $company->companyConnection->company_bc_id ?? '-' }}</div>
+                        </div>
+
+                        <div class="company-field">
+                            <div class="field-label">Email</div>
+                            <div class="company-value">{{ $company->email ?? '-' }}</div>
+                        </div>
+
+                        <div class="company-field">
+                            <div class="field-label">Contact</div>
+                            <div class="company-value">{{ $company->phone ?? '-' }}</div>
+                        </div>
+
+                        <div class="company-field full-width">
+                            <div class="field-label">Address</div>
+                            <div class="company-value">{{ $company->address ?? '-' }}</div>
+                        </div>
+
+                        <div class="company-field full-width">
+                            <div class="field-label">Connection Status</div>
+                            <div class="company-value">
+                                {{ ($company->companyConnection && $company->companyConnection->status) ? 'Active' : 'Inactive' }}
+                            </div>
+                        </div>
+
+                        <div class="company-field full-width">
+                            <div class="field-label">Company Status</div>
+                            <div class="company-value">
+                                {{ $company->is_active ? 'Active' : 'Inactive' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="company-actions">
+                        <a href="{{ route('companies.edit', $company->id) }}" class="btn-company-outline-info">
+                            <i class="bi bi-pencil-square"></i>
+                            Edit Company
+                        </a>
+
+                        <a href="{{ route('companies.api.setup', $company->id) }}" class="btn-company-outline-info">
+                            <i class="bi bi-sliders"></i>
+                            API Setup
+                        </a>
+
+                        <form action="{{ route('companies.destroy', $company->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this company?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn-company-outline-danger">
+                                <i class="bi bi-trash"></i>
+                                Delete Company
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+</div>
 @endsection
 
 @push('scripts')

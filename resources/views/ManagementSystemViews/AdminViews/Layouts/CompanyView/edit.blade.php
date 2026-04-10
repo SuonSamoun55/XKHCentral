@@ -458,6 +458,8 @@ width: 100%;
                     </div>
 
                     <div class="btn-submit-wrap">
+                        <button type="submit" class="btn-submit-company">Update</button>
+                        <a href="{{ route('companies.api.setup', $company->id) }}" class="btn-back-company">API Setup</a>
                         <a href="{{ route('companies.index') }}" class="btn-back-company">Back</a>
                         <button type="submit" class="btn-submit-company">Save</button>
 
