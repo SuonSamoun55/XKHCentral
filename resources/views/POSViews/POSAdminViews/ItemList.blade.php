@@ -56,6 +56,7 @@
         }
 
         .page-title {
+        padding: 26px;
             font-size: 24px;
             font-weight: 700;
             color: #34a6b5;
