@@ -1111,9 +1111,6 @@ body {
     font-family: Arial, Helvetica, sans-serif;
     color: #1f2937;
 }
-
-
-
 .notification-wrapper {
     min-height: calc(100vh - 44px);
     background: #efefef;
@@ -1127,6 +1124,7 @@ position: sticky;
 top: 0;
 
 z-index: 20;
+border-radius: 20px 20px 0 0;
 }
 
 .page-title {
