@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\ManagementSystemController;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use App\Models\MagamentSystemModel\Company;
 use App\Models\MagamentSystemModel\CompanyConnection;
@@ -83,7 +84,7 @@ class CompanyController extends Controller
             'is_active' => true,
         ]);
 
-        CompanyConnection::create([
+        $connectionData = [
             'company_id' => $company->id,
             'tenant_id' => $validated['tenant_id'],
             'client_id' => $validated['client_id'],
@@ -101,7 +102,9 @@ class CompanyController extends Controller
             'sales_order_pdf_endpoint' => $validated['sales_order_pdf_endpoint'] ?? null,
             'is_default' => true,
             'status' => true,
-        ]);
+        ];
+
+        CompanyConnection::create($this->filterConnectionDataByExistingColumns($connectionData));
 
         session(['selected_company_id' => $company->id]);
 
@@ -193,6 +196,8 @@ class CompanyController extends Controller
             $connectionData['client_secret'] = $validated['client_secret'];
         }
 
+        $connectionData = $this->filterConnectionDataByExistingColumns($connectionData);
+
         if ($company->companyConnection) {
             $company->companyConnection->update($connectionData);
         } else {
@@ -247,6 +252,8 @@ class CompanyController extends Controller
             'is_default' => true,
         ];
 
+        $connectionData = $this->filterConnectionDataByExistingColumns($connectionData);
+
         if ($company->companyConnection) {
             $company->companyConnection->update($connectionData);
         } else {
@@ -282,5 +289,14 @@ class CompanyController extends Controller
 
         return redirect()->route('companies.index')
             ->with('success', 'Company deleted successfully.');
+    }
+
+    private function filterConnectionDataByExistingColumns(array $data): array
+    {
+        return collect($data)
+            ->filter(function ($value, $key) {
+                return Schema::hasColumn('company_connections', $key);
+            })
+            ->all();
     }
 }
