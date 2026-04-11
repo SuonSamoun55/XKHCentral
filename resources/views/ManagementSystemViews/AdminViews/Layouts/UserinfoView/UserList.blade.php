@@ -719,7 +719,9 @@
                                                     </button>
                                                 @endif
 
-                                                <a href="{{ route('users.show', $customer->id) }}" title="View">
+                                                <a href="javascript:void(0)"
+                                                   onclick="showUser('{{ route('admin.users.show', $customer->id) }}')"
+                                                   title="View">
                                                     <i class="bi bi-eye text-primary"></i>
                                                 </a>
 
@@ -775,7 +777,28 @@
 @include('ManagementSystemViews.AdminViews.Layouts.UserinfoView.create')
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+<script>
+    function showUser(url) {
+    fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.text();
+        })
+        .then(html => {
+            document.getElementById('modalContent').innerHTML = html;
+            var myModal = new bootstrap.Modal(document.getElementById('userViewModal'));
+            myModal.show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("Could not load user details.");
+        });
+}
+</script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const checkAll = document.getElementById('checkAll');

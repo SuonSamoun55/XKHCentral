@@ -20,5 +20,15 @@ class POSUserControllerItemList extends Controller
 
     return view('POSViews.POSUserViews.POSitemlistUserView', compact('items','favoriteIds'));
 }
+public function show($id)
+{
+    $customer = Customer::findOrFail($id);
+    $user = $customer->user; // or however your relationship is defined
+
+    // Return a partial view
+    return view('ManagementSystemViews.AdminViews.Layouts.UserinfoView.UserShow', 
+        compact('customer', 'user')
+    )->render(); 
+}
 }
     

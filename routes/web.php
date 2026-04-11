@@ -19,6 +19,8 @@ use App\Http\Controllers\Api\POSControllers\POSUserController\HistoryController;
 use App\Http\Controllers\Api\ManagementSystemController\CompanyController;
 use App\Http\Controllers\Api\POSControllers\POSAdminController\StoreManagementController;
 use App\Http\Controllers\Api\POSControllers\POSAdminController\DiscountController;
+use App\Http\Controllers\Api\POSControllers\POSAdminController\UserController;
+
 
 
 // Route::get('/store-management', [StoreManagementController::class, 'index'])->name('store.management.index');
@@ -81,6 +83,10 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::get('/admin/order-actions', [AdminOrderController::class, 'actionHistory'])->name('admin.orders.actions');
     Route::get('/admin/orders/{id}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
 
+    ////////USER CONTROLLER
+    Route::prefix('admin')->group(function () {
+    Route::get('/users/{id}', [App\Http\Controllers\Api\POSControllers\POSAdminController\UserController::class, 'show'])->name('admin.users.show');
+});
     // ---------- POS User ----------
     Route::get('/pos-system', [POSUserControllerItemList::class, 'getItems'])->name('user.posinterface');
     Route::get('/pos-system/favorites', [FavoriteController::class, 'getFavorites'])->name('user.pos.favorites');
