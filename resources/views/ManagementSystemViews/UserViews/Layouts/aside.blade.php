@@ -114,15 +114,10 @@
             @php $authUser = Auth::user(); @endphp
             {{-- <a href="{{ route('profile') }}" class="user-link"> --}}
             @php
-                $avatar = $authUser && $authUser->avatar ? $authUser->avatar : null;
-                $avatarUrl = $avatar
-                    ? (preg_match('/^https?:\/\//i', $avatar)
-                        ? $avatar
-                        : asset($avatar))
-                    : 'https://i.pravatar.cc/80?img=12';
+                $avatarUrl = $authUser ? ($authUser->profile_image_display ?? 'https://i.pravatar.cc/80?img=12') : 'https://i.pravatar.cc/80?img=12';
             @endphp
             <div class="profile">
-                <img src="{{ $avatarUrl }}" alt="User">
+                <img src="{{ $avatarUrl }}" alt="User" id="sidebarProfileImage">
                 <div class="profile-text">
                     <div class="user-meta">
                         <div class="user-name">{{ $authUser ? $authUser->name : 'Guest' }}</div>

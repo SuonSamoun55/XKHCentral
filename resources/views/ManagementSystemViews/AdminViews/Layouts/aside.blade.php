@@ -169,7 +169,7 @@
                 </button>
 
                 <div class="settings-menu">
-                    <a href="{{ route('profile') }}" class="settings-link">Edit Profile</a>
+                    <a href="{{ route('admin.profile') }}" class="settings-link">Edit Profile</a>
                     <a href="#" class="settings-link">Change Password</a>
                     <a href="#" class="settings-link">Policy</a>
                 </div>

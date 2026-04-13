@@ -1,15 +1,15 @@
 <?php
-namespace App\Http\Controllers\Api\POSControllers\POSUserController;
+namespace App\Http\Controllers\Api\POSControllers\POSAdminController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class UserProfileController extends Controller
+class AdminProfileController extends Controller
 {
     public function index()
     {
         $user = Auth::user();
-        return view('POSViews.POSUserViews.POSUserProfile', compact('user'));
+        return view('ManagementSystemViews.AdminViews.Layouts.setting.profile.adminprofile', compact('user'));
     }
     public function update(Request $request)
 {

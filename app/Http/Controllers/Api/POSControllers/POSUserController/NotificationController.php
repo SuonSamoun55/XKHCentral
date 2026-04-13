@@ -59,6 +59,7 @@ class NotificationController extends Controller
         $notifications->getCollection()->transform(function ($notification) {
             // For POS user notifications, sender is typically admin/system
             $notification->sender_profile_image_display = $this->getSenderImageDisplay($notification);
+            $notification->sender_name = $this->getSenderName($notification);
             return $notification;
         });
 
@@ -188,13 +189,14 @@ class NotificationController extends Controller
     protected function getSenderImageDisplay($notification)
     {
         // For POS user notifications, sender is typically admin/system
-        // You can customize this based on notification type or add sender info to notification model
-        if ($notification->type === 'admin_message') {
-            // Return admin avatar or system icon
-            return asset('images/pos/admin-avatar.png'); // You can create this image
-        }
-
-        // Default system/admin avatar
-        return asset('images/pos/Rectangle 2.png'); // Use existing system avatar
+        // Use the existing avatar asset instead of a missing file.
+        return asset('images/pos/Rectangle 2.png');
     }
+
+    protected function getSenderName($notification)
+    {
+        // All user notifications are sent by admin/system in this context.
+        return 'Admin';
+    }
+
 }

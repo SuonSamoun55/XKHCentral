@@ -81,7 +81,8 @@
                         <div class="notification-content">
                             <div class="avatar">
                                 <img src="{{ $notification->sender_profile_image_display ?? asset('images/pos/Rectangle 2.png') }}" alt="Sender"
-                                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
+                                    onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'">
                             </div>
 
                             <div class="notification-text">

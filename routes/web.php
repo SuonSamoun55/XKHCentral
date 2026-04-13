@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\ManagementSystemController\CompanyController;
 use App\Http\Controllers\Api\POSControllers\POSAdminController\StoreManagementController;
 use App\Http\Controllers\Api\POSControllers\POSAdminController\DiscountController;
 use App\Http\Controllers\Api\POSControllers\POSAdminController\UserController;
+use App\Http\Controllers\Api\POSControllers\POSAdminController\AdminProfileController;
 
 
 
@@ -136,6 +137,12 @@ Route::prefix('admin/notifications')->name('admin.notifications.')->group(functi
         Route::post('/read-all', [AdminNotificationController::class, 'markAllAsRead'])->name('read.all');
         Route::delete('/delete-selected', [AdminNotificationController::class, 'deleteSelected'])->name('delete.selected');
         Route::delete('/destroy/{id}', [AdminNotificationController::class, 'destroy'])->name('destroy');
+
+    });
+    ///-----------admin settings----------
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('/profile', [AdminProfileController::class, 'index'])->name('profile');
+        Route::put('/profile/update', [AdminProfileController::class, 'update'])->name('profile.update');
     });
 
     // ---------- Companies ----------
