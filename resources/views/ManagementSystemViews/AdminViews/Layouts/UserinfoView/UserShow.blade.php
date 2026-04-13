@@ -103,12 +103,10 @@
             @endphp
             
             @if($profileImage)
-                <img src="{{ $profileImage }}" alt="User Avatar" onerror="this.style.display='none';">
+                <img src="{{ $profileImage }}" alt="User Avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             @endif
             
-            @if(!$profileImage || true)
-                <span class="user-avatar-fallback" id="avatarFallback">{{ $firstLetter }}</span>
-            @endif
+            <span class="user-avatar-fallback" id="avatarFallback" style="display: {{ $profileImage ? 'none' : 'flex' }};">{{ $firstLetter }}</span>
         </div>
 
         <div style="flex: 1;">
@@ -168,6 +166,10 @@
                     <div class="user-label">Role</div>
                     <div class="user-value" style="text-transform: capitalize;">{{ $user->role ?? '-' }}</div>
                 </div>
+                {{-- <div>
+                    <div class="user-label">Password</div>
+                    <div class="user-value">{{ $user->password ?? '-' }}</div>
+                </div> --}}
             </div>
         </div>
     @else
