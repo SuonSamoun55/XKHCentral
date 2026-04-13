@@ -88,14 +88,18 @@
 </div>
 
 <!-- View User Modal -->
+<!-- View User Modal -->
 <div class="modal fade" id="userViewModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">User Details</h5>
+        <div class="modal-content view-user-modal-content">
+            <div class="modal-header view-user-modal-header">
+                <h5 class="modal-title view-user-modal-title">
+                    <i class="bi bi-person-circle" style="margin-right: 8px; color: #18bfd0;"></i>
+                    User Details
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="modalContent">
+            <div class="modal-body view-user-modal-body" id="modalContent">
                 <!-- Content will be loaded here -->
             </div>
         </div>
@@ -103,11 +107,30 @@
 </div>
 
 <style>
-    .custom-user-modal{
-        border-radius:10px;
-        overflow:hidden;
-        border:1px solid #d9e2ec;
+    .view-user-modal-content {
+        border-radius: 12px;
+        border: 1px solid #d6dde5;
+        box-shadow: 0 10px 40px rgba(15, 23, 42, 0.1);
     }
+
+    .view-user-modal-header {
+        background: linear-gradient(135deg, #18bfd0 0%, #1397a6 100%);
+        border: none;
+        padding: 18px 24px;
+    }
+
+    .view-user-modal-title {
+        color: #ffffff;
+        font-size: 16px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .view-user-modal-body {
+        padding: 24px;
+        background: #ffffff;
+    }
+
 
     .custom-modal-header{
         border-bottom:none;

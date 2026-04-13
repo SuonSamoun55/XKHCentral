@@ -18,13 +18,13 @@ class UserController extends Controller
         return view('POSViews.POSAdminViews.POSAdminUserList', compact('items','company'));
     }
     public function show($id)
-{
-    $customer = BcCustomer::findOrFail($id);
-    $user = $customer->user; // or however your relationship is defined
+    {
+        $customer = BcCustomer::findOrFail($id);
+        $user = $customer->user; // Get the connected user through relationship
 
-    // Return a partial view
-    return view('ManagementSystemViews.AdminViews.Layouts.UserinfoView.UserShow', 
-        compact('customer', 'user')
-    )->render(); 
-}
+        // Return a partial view
+        return view('ManagementSystemViews.AdminViews.Layouts.UserinfoView.UserShow', 
+            compact('customer', 'user')
+        )->render(); 
+    }
 }
