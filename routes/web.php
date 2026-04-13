@@ -102,6 +102,8 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
 
     Route::get('/profile', [UserProfileController::class, 'index'])->name('profile');
     Route::put('/profile/update', [UserProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/change-password', [UserProfileController::class, 'showChangePasswordForm'])->name('user.password.change');
+    Route::put('/profile/change-password', [UserProfileController::class, 'updatePassword'])->name('user.password.update');
 
     Route::get('/pos-system/order/download/{id}', [HistoryController::class, 'downloadInvoice'])->name('user.pos.order.download');
     Route::get('/pos-system/order-history', [HistoryController::class, 'history'])->name('user.pos.order.history');

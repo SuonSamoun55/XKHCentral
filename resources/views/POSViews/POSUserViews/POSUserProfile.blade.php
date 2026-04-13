@@ -133,9 +133,19 @@
 
                     {{-- Header --}}
                     <h4 class="profile-title">Profile Information</h4>
-                    <p class="profile-subtitle">
-                        Update your personal information and contact details
-                    </p>
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div>
+                            <h4 class="profile-title">Profile Information</h4>
+                            <p class="profile-subtitle">
+                                Update your personal information and contact details
+                            </p>
+                        </div>
+                        <div>
+                            <a href="{{ route('user.password.change') }}" class="btn btn-outline-secondary btn-sm">
+                                Change Password
+                            </a>
+                        </div>
+                    </div>
 
                     {{-- Form --}}
                     <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">

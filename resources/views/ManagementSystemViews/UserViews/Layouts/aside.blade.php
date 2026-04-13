@@ -137,7 +137,7 @@
 
                 <div class="settings-menu">
                     <a href="{{ route('profile') }}" class="settings-link">Edit Profile</a>
-                    <a href="#" class="settings-link">Change new password</a>
+                    <a href="{{ route('user.password.change') }}" class="settings-link">Change new password</a>
                     <a href="#" class="settings-link">Policy</a>
                 </div>
             </div>
