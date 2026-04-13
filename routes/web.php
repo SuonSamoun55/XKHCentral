@@ -143,6 +143,8 @@ Route::prefix('admin/notifications')->name('admin.notifications.')->group(functi
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/profile', [AdminProfileController::class, 'index'])->name('profile');
         Route::put('/profile/update', [AdminProfileController::class, 'update'])->name('profile.update');
+        Route::get('/change-password', [AdminProfileController::class, 'showChangePasswordForm'])->name('password.change');
+        Route::put('/change-password', [AdminProfileController::class, 'updatePassword'])->name('password.update');
     });
 
     // ---------- Companies ----------
