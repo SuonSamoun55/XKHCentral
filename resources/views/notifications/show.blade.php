@@ -26,9 +26,20 @@
 
         <main class="content-scroll" style="padding:1.5rem;">
             <div class="notification-detail-card">
-                <h2>{{ $notification->title }}</h2>
-                <div class="meta">{{ optional($notification->created_at)->format('d M Y h:i A') }}</div>
-                <p>{{ $notification->message }}</p>
+                <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem;">
+                    <div style="width: 60px; height: 60px; border-radius: 50%; overflow: hidden; flex-shrink: 0;">
+                        <img src="{{ $notification->sender_profile_image_display ?? asset('images/pos/Rectangle 2.png') }}" 
+                             alt="Sender" 
+                             style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <div style="flex: 1;">
+                        <h2 style="margin: 0 0 0.5rem 0;">{{ $notification->title }}</h2>
+                        <div class="meta">{{ optional($notification->created_at)->format('d M Y h:i A') }}</div>
+                    </div>
+                </div>
+                <div style="border-top: 1px solid #e5e7eb; padding-top: 1rem;">
+                    <p style="margin: 0; line-height: 1.6;">{{ $notification->message }}</p>
+                </div>
                 <a href="{{ route('user.notifications') }}" class="btn-back">← Back to notifications</a>
             </div>
         </main>

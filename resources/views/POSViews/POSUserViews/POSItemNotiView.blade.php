@@ -80,7 +80,7 @@
                             
                         <div class="notification-content">
                             <div class="avatar">
-                                <img src="{{ asset('images/pos/Rectangle 2.png') }}" alt="Admin"
+                                <img src="{{ $notification->sender_profile_image_display ?? asset('images/pos/Rectangle 2.png') }}" alt="Sender"
                                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                             </div>
 
