@@ -29,7 +29,7 @@
     <div class="main-wrapper">
         @include('POSViews.POSAdminViews.aside')
 
-        <div class="content-area">
+        <div class="containter">
             @yield('content')
         </div>
     </div>

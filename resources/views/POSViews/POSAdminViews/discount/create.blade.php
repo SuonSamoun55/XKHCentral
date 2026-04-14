@@ -4,6 +4,14 @@
 
 @push('styles')
 <style>
+        .containter{
+            flex:1;
+            min-width:0;
+            width:100%;
+            height:100vh;
+            display:flex;
+        }
+
 :root{
             --primary:#1bb8c9;
             --primary-dark:#12a5b5;
@@ -17,39 +25,22 @@
             --shadow:0 8px 24px rgba(15, 23, 42, 0.06);
         }
 
-        *{
-            margin:0;
-            padding:0;
+        .main-wrap,
+        .main-wrap *{
             box-sizing:border-box;
-        }
-
-        body{
-            background:var(--bg);
-            font-family:Arial, Helvetica, sans-serif;
-            color:var(--text);
-            overflow:hidden;
-        }
-
-        .page-wrap{
-            display:flex;
-            min-height:100vh;
-            width:100%;
-        }
-
-        .sidebar-wrap{
-            width:250px;
-            flex-shrink:0;
-            background:#fff;
-            border-right:1px solid var(--border);
-            height:100vh;
-            overflow-y:auto;
+            background: white;
+            border-radius:15px;
         }
 
         .main-wrap{
             flex:1;
+            width:100%;
+            max-width:100%;
             min-width:0;
+            min-height:100vh;
             height:100vh;
             overflow-y:auto;
+            overflow-x:hidden;
             padding:28px 26px 30px;
         }
 
@@ -67,6 +58,7 @@
         }
 
         .form-card{
+            width:100%;
             background:#fff;
             border:1px solid var(--border);
             border-radius:18px;
@@ -313,8 +305,8 @@
         }
 
         @media (max-width: 1100px){
-            .sidebar-wrap{
-                width:220px;
+            .main-wrap{
+                padding:24px 22px 26px;
             }
         }
 
@@ -325,23 +317,10 @@
         }
 
         @media (max-width: 768px){
-            body{
-                overflow:auto;
-            }
-
-            .page-wrap{
-                flex-direction:column;
-            }
-
-            .sidebar-wrap{
-                width:100%;
-                height:auto;
-                overflow:visible;
-            }
-
             .main-wrap{
                 height:auto;
-                overflow:visible;
+                min-height:100vh;
+                overflow-y:auto;
                 padding:18px;
             }
         }
@@ -351,7 +330,7 @@
 @section('content')
 <main class="main-wrap">
         <h1 class="page-title">Create Discount</h1>
-        <div class="page-subtitle">Add discount by item or category</div>
+        {{-- <div class="page-subtitle">Add discount by item or category</div> --}}
 
         @if ($errors->any())
             <div class="alert alert-danger rounded-4 border-0 shadow-sm mb-3">
@@ -360,9 +339,9 @@
         @endif
 
         <div class="form-card">
-            <div class="form-card-head">
+            {{-- <div class="form-card-head">
                 <h2>Discount Form</h2>
-            </div>
+            </div> --}}
 
             <div class="form-card-body">
                 <form action="{{ route('discounts.store') }}" method="POST">
@@ -447,6 +426,17 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="schedule_type" class="form-label">Duration</label>
+                            <select name="schedule_type" id="schedule_type" class="form-select-custom" required>
+                                <option value="forever" {{ old('schedule_type', 'forever') === 'forever' ? 'selected' : '' }}>Forever</option>
+                                <option value="scheduled" {{ old('schedule_type') === 'scheduled' ? 'selected' : '' }}>Scheduled</option>
+                            </select>
+                            @error('schedule_type')
+                                <div class="error-text">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
                             <label for="discount_start_date" class="form-label">Start Date</label>
                             <input
                                 type="date"
@@ -507,6 +497,9 @@
         const previewThumb = document.getElementById('previewThumb');
         const previewName = document.getElementById('previewName');
         const previewSub = document.getElementById('previewSub');
+        const scheduleType = document.getElementById('schedule_type');
+        const startDateInput = document.getElementById('discount_start_date');
+        const endDateInput = document.getElementById('discount_end_date');
 
         const items = {!! $discountItemsJson !!};
 
@@ -656,11 +649,25 @@
             updatePreview(selected);
         }
 
+        function toggleScheduleDates() {
+            const isScheduled = scheduleType.value === 'scheduled';
+            startDateInput.required = isScheduled;
+            endDateInput.required = isScheduled;
+            startDateInput.disabled = !isScheduled;
+            endDateInput.disabled = !isScheduled;
+
+            if (!isScheduled) {
+                startDateInput.value = '';
+                endDateInput.value = '';
+            }
+        }
+
         discountType.addEventListener('change', toggleTarget);
+        scheduleType.addEventListener('change', toggleScheduleDates);
 
         toggleTarget();
+        toggleScheduleDates();
         setOldItem();
     });
 </script>
 @endpush
-
