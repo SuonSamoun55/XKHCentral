@@ -26,17 +26,9 @@
                 use Illuminate\Support\Str;
 
                 $user = $notification->user;
-                $avatarSrc = asset('images/default-avatar.png');
-
-                if ($user) {
-                    if (!empty($user->profile_image)) {
-                        $avatarSrc = asset('storage/' . ltrim($user->profile_image, '/'));
-                    } elseif (!empty($user->profile_image_url)) {
-                        $avatarSrc = $user->profile_image_url;
-                    } elseif (!empty($user->bc_customer_no)) {
-                        $avatarSrc = route('users.bc.image', $user->bc_customer_no);
-                    }
-                }
+                $avatarSrc = ($user && !empty($user->profile_image_display))
+                    ? $user->profile_image_display
+                    : asset('images/pos/Rectangle 2.png');
             @endphp
 
             <div class="detail-card">

@@ -20,6 +20,7 @@
 
 .top-bar {
     display: flex;
+    background: white;
     justify-content: space-between;
     align-items: center;
     gap: 16px;

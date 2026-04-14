@@ -73,19 +73,22 @@
                 @forelse($notifications as $notification)
                     <div class="notification-card {{ !$notification->is_read ? 'unread' : '' }}"
                         data-title="{{ $notification->title }}" data-message="{{ $notification->message }}"
-                        data-id="{{ $notification->id }}" data-type="{{ $notification->type }}" style="cursor: pointer;"
-                        onclick="openNotificationDetail(this)">
-
+                        data-message="{{ $notification->message }}"
+                        data-id="{{ $notification->id }}" 
+                        data-type="{{ $notification->type }}"
+                        style="cursor: pointer;" onclick="openNotificationDetail(this)">
+                            
                         <div class="notification-content">
                             <div class="avatar">
-                                <img src="{{ asset('images/pos/Rectangle 2.png') }}" alt="Admin"
-                                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                <img src="{{ $notification->sender_profile_image_display ?? asset('images/pos/Rectangle 2.png') }}" alt="Sender"
+                                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
+                                    onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'">
                             </div>
 
                             <div class="notification-text">
 
                                 {{-- Show ADMIN badge only for admin-sent notifications --}}
-                                @if($notification->type === 'admin_message')
+                                @if ($notification->type === 'admin_message')
                                     <span class="badge-admin">ADMIN</span>
                                 @endif
 
@@ -139,17 +142,44 @@
         <div id="notificationModal" class="modal fade" tabindex="-1" aria-labelledby="notificationModalLabel"
             aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="notificationTitle"></h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="notification-detail-card">
+                    <div class="detail-header">
+                        <div class="avatar-circle">
+                            <i class="bi bi-person-fill" style="font-size: 30px; color: #94a3b8;"></i>
+                        </div>
+                        <div class="company-info">
+                            <div class="name" id="notificationCompanyName">Trey Research</div>
+                            <div class="email" id="notificationUserEmail">mary.kumm@contoso.com</div>
+                            <div class="status-badge">Read</div>
+                        </div>
                     </div>
-                    <div class="modal-body">
-                        <p id="notificationMessage"></p>
-                        <small class="text-muted" id="notificationDate"></small>
+
+                    <div class="info-grid">
+                        <div>
+                            <div class="info-label">Type</div>
+                            <div class="info-value" id="notificationType">order</div>
+                        </div>
+                        <div>
+                            <div class="info-label">Date</div>
+                            <div class="info-value" id="notificationDateDisplay">Fri 10/04/2026 02:03 PM</div>
+                        </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+                    <div class="mb-4">
+                        <div class="info-label">Title</div>
+                        <div class="info-value" id="notificationTitleText">Order Confirmed</div>
+                    </div>
+
+                    <div>
+                        <div class="info-label">Message</div>
+                        <div class="message-box" id="notificationMessageBody">
+                            Your order ORD-20260404092306-0XVQ has been confirmed and stored in Sales Order.
+                        </div>
+                    </div>
+
+                    <div class="detail-footer">
+                        <button type="button" class="btn-back" data-bs-dismiss="modal">Back to List</button>
+                        <button type="button" class="btn-delete" id="deleteNotificationBtn">Delete</button>
                     </div>
                 </div>
             </div>
@@ -167,16 +197,22 @@
                 const title = element.dataset.title;
                 const message = element.dataset.message;
                 const notificationId = element.dataset.id;
+                // Extracting new data attributes (make sure these are in your HTML)
+                const type = element.dataset.type || 'order';
+                const email = element.dataset.email || '';
+                const company = element.dataset.company || '';
 
                 // Get the date from the element
                 const metaElement = element.querySelector('.notification-meta');
                 const dateText = metaElement ? metaElement.textContent.trim() : new Date().toLocaleDateString();
 
-                // Populate modal
-                document.getElementById('notificationTitle').textContent = title;
-                document.getElementById('notificationMessage').textContent = message;
-                document.getElementById('notificationDate').textContent = 'Date: ' + dateText;
-
+                // 3. Populate the NEW Modern UI IDs
+                document.getElementById('notificationCompanyName').textContent = company;
+                document.getElementById('notificationUserEmail').textContent = email;
+                document.getElementById('notificationType').textContent = type;
+                document.getElementById('notificationDateDisplay').textContent = dateText;
+                document.getElementById('notificationTitleText').textContent = title;
+                document.getElementById('notificationMessageBody').textContent = message;
                 // Open modal
                 const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
                 modal.show();
@@ -355,7 +391,6 @@
                 }
             });
         </script>
-
 </body>
 
 </html>

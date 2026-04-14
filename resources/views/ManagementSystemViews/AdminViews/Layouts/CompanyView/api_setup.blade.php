@@ -5,7 +5,7 @@
 @push('styles')
 <style>
     .api-setup-wrap{
-        padding:20px;
+        padding:10px;
         width:100%;
     }
     .api-card{
@@ -15,12 +15,21 @@
         padding:20px;
     }
     .api-title{
+        position: sticky;
+        top: 0;
+        padding:  20px 10px;
+        margin-top: -20px;
+        background: #f8fafc;
         font-size:22px;
         font-weight:700;
         color:#0f172a;
         margin-bottom:4px;
     }
     .api-subtitle{
+        position: sticky;
+        top: 68px;
+        background: #f8fafc;
+    
         color:#6b7280;
         margin-bottom:18px;
         font-size:13px;
@@ -89,6 +98,46 @@
     .example-box code{
         color:#1d4ed8;
     }
+    .custom-alert {
+        position: fixed; /* Or absolute, depending on your container */
+        top: 20px;
+        right: 20px;
+        min-width: 300px;
+        padding: 16px 24px;
+        background-color: #ffffff;
+        color: #334155; /* Dark text color */
+        border-radius: 12px;
+        /* The thick green bar on the left */
+        border-left: 6px solid #10b981; 
+        /* Soft shadow for the floating effect */
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 9999;
+        font-family: sans-serif;
+        animation: slideIn 0.4s ease-out;
+    }
+
+    /* Change color if it's a danger alert */
+    .alert-danger {
+        border-left-color: #ef4444;
+    }
+
+    .alert-text {
+        font-size: 15px;
+        font-weight: 500;
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translateX(0); }
+        to { opacity: 0; transform: translateX(20px); }
+    }
     @media (max-width: 900px){
         .api-grid{
             grid-template-columns:1fr;
@@ -106,14 +155,17 @@
         <div class="api-title">Company API Setup</div>
         <div class="api-subtitle">Configure API endpoints per company. No code change needed when company/API changes.</div>
 
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
+     @if(session('success'))
+    <div class="custom-alert alert-success">
+        <span class="alert-text">{{ session('success') }}</span>
+    </div>
+@endif
 
-        @if($errors->any())
-            <div class="alert alert-danger">Please check the setup form values.</div>
-        @endif
-
+@if(session('error'))
+    <div class="custom-alert alert-danger">
+        <span class="alert-text">{{ session('error') }}</span>
+    </div>
+@endif
         <form method="POST" action="{{ route('companies.api.setup.update', $company->id) }}">
             @csrf
             @method('PUT')
@@ -178,9 +230,9 @@
             </div>
 
             <div class="action-row">
-                <button type="submit" class="btn-main">Save API Setup</button>
                 <a href="{{ route('companies.index') }}" class="btn-light">Back to Company</a>
                 <a href="{{ route('companies.edit', $company->id) }}" class="btn-light">Edit Company</a>
+                <button type="submit" class="btn-main">Save API Setup</button>
             </div>
         </form>
 
@@ -190,4 +242,22 @@
         </div>
     </div>
 </div>
+
 @endsection
+<script>
+     document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.custom-alert');
+
+        alerts.forEach(function(alert) {
+            // Auto-close after 4 seconds
+            setTimeout(function() {
+                alert.style.animation = 'fadeOut 0.5s ease-in forwards';
+
+                // Remove from DOM after animation finishes
+                alert.addEventListener('animationend', function() {
+                    alert.remove();
+                });
+            }, 4000);
+        });
+    });
+</script>

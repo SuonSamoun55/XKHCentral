@@ -19,6 +19,9 @@ use App\Http\Controllers\Api\POSControllers\POSUserController\HistoryController;
 use App\Http\Controllers\Api\ManagementSystemController\CompanyController;
 use App\Http\Controllers\Api\POSControllers\POSAdminController\StoreManagementController;
 use App\Http\Controllers\Api\POSControllers\POSAdminController\DiscountController;
+use App\Http\Controllers\Api\POSControllers\POSAdminController\UserController;
+use App\Http\Controllers\Api\POSControllers\POSAdminController\AdminProfileController;
+
 
 
 // Route::get('/store-management', [StoreManagementController::class, 'index'])->name('store.management.index');
@@ -81,6 +84,10 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::get('/admin/order-actions', [AdminOrderController::class, 'actionHistory'])->name('admin.orders.actions');
     Route::get('/admin/orders/{id}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
 
+    ////////USER CONTROLLER
+    Route::prefix('admin')->group(function () {
+    Route::get('/users/{id}', [App\Http\Controllers\Api\POSControllers\POSAdminController\UserController::class, 'show'])->name('admin.users.show');
+});
     // ---------- POS User ----------
     Route::get('/pos-system', [POSUserControllerItemList::class, 'getItems'])->name('user.posinterface');
     Route::get('/pos-system/favorites', [FavoriteController::class, 'getFavorites'])->name('user.pos.favorites');
@@ -95,6 +102,8 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
 
     Route::get('/profile', [UserProfileController::class, 'index'])->name('profile');
     Route::put('/profile/update', [UserProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/change-password', [UserProfileController::class, 'showChangePasswordForm'])->name('user.password.change');
+    Route::put('/profile/change-password', [UserProfileController::class, 'updatePassword'])->name('user.password.update');
 
     Route::get('/pos-system/order/download/{id}', [HistoryController::class, 'downloadInvoice'])->name('user.pos.order.download');
     Route::get('/pos-system/order-history', [HistoryController::class, 'history'])->name('user.pos.order.history');
@@ -130,6 +139,14 @@ Route::prefix('admin/notifications')->name('admin.notifications.')->group(functi
         Route::post('/read-all', [AdminNotificationController::class, 'markAllAsRead'])->name('read.all');
         Route::delete('/delete-selected', [AdminNotificationController::class, 'deleteSelected'])->name('delete.selected');
         Route::delete('/destroy/{id}', [AdminNotificationController::class, 'destroy'])->name('destroy');
+
+    });
+    ///-----------admin settings----------
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('/profile', [AdminProfileController::class, 'index'])->name('profile');
+        Route::put('/profile/update', [AdminProfileController::class, 'update'])->name('profile.update');
+        Route::get('/change-password', [AdminProfileController::class, 'showChangePasswordForm'])->name('password.change');
+        Route::put('/change-password', [AdminProfileController::class, 'updatePassword'])->name('password.update');
     });
 
     // ---------- Companies ----------

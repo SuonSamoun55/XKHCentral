@@ -4,19 +4,19 @@
 <head>
     <title>Profile Information</title>
 
-    <link rel="stylesheet" href="{{ asset('css/ManagementSystem/aside.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/ManagementSystem/adminSidbar.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
-        .app-shell {
+        .main-wrapper {
             display: flex;
+            gap: 10px;
             min-height: 100vh;
         }
 
-        .page-wrap {
+        .content-area {
             flex: 1;
             width: 100%;
-            overflow-y: auto;
         }
 
         .profile-card {
@@ -113,12 +113,12 @@
 
 <body>
 
-    <div class="app-shell" id="appShell">
+<div class="main-wrapper">
 
         {{-- Sidebar --}}
-        @include('ManagementSystemViews.UserViews.Layouts.aside')
+        @include('ManagementSystemViews.AdminViews.Layouts.aside')
 
-        <div class="page-wrap">
+    <div class="content-area">
             <div class="container mt-4">
 
                 <div class="profile-card">
@@ -132,23 +132,13 @@
                     @endif
 
                     {{-- Header --}}
-                    <h4 class="profile-title">Profile Information</h4>
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div>
-                            <h4 class="profile-title">Profile Information</h4>
-                            <p class="profile-subtitle">
-                                Update your personal information and contact details
-                            </p>
-                        </div>
-                        <div>
-                            <a href="{{ route('user.password.change') }}" class="btn btn-outline-secondary btn-sm">
-                                Change Password
-                            </a>
-                        </div>
-                    </div>
+                    <h4 class="profile-title">Admin Profile Info</h4>
+                    <p class="profile-subtitle">
+                        Update your personal information and contact details
+                    </p>
 
                     {{-- Form --}}
-                    <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('admin.profile.update') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
 
@@ -158,7 +148,7 @@
                             @php
                             $avatarUrl = auth()->user()->profile_image_display ?? 'https://via.placeholder.com/80';
                             @endphp
-                        <img src="{{ $avatarUrl }}" class="profile-avatar" id="previewImage">
+                            <img src="{{ $avatarUrl }}" class="profile-avatar" id="previewImage">
 
                             <div>
                                 <label class="btn btn-light border">
@@ -230,7 +220,7 @@
                         {{-- Buttons --}}
                         <div class="d-flex justify-content-center gap-3">
 
-                            <a href="{{ url()->previous() }}" class="btn btn-cancel btn-custom">
+                            <a href="{{ route('admin.profile') }}" class="btn btn-cancel btn-custom">
                                 Cancel
                             </a>
 
@@ -249,61 +239,15 @@
 
     </div>
 
-    {{-- Preview Image Script + Auto-close Alert + Sidebar Update --}}
+    {{-- Preview Image Script --}}
     <script>
-        // Preview image on file select
         function previewFile(event) {
             const reader = new FileReader();
             reader.onload = function() {
                 document.getElementById('previewImage').src = reader.result;
-                updateSidebarImage(reader.result);
             };
             reader.readAsDataURL(event.target.files[0]);
         }
-
-        // Update sidebar profile image
-        function updateSidebarImage(newImageUrl) {
-            const sidebarImage = document.getElementById('sidebarProfileImage');
-            if (sidebarImage) {
-                sidebarImage.src = newImageUrl;
-            }
-        }
-
-        // Auto-close alert after 4 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            const alertElement = document.querySelector('.alert-success');
-            if (alertElement) {
-                setTimeout(function() {
-                    alertElement.style.transition = 'opacity 0.35s ease';
-                    alertElement.style.opacity = '0';
-                    setTimeout(function() {
-                        if (alertElement.parentNode) {
-                            alertElement.parentNode.removeChild(alertElement);
-                        }
-                    }, 350);
-                }, 4000);
-            }
-        });
-
-        // Store image on form submission for persistence
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.querySelector('form');
-            if (form) {
-                form.addEventListener('submit', function() {
-                    const previewImage = document.getElementById('previewImage').src;
-                    sessionStorage.setItem('updatedProfileImage', previewImage);
-                });
-            }
-        });
-
-        // Apply stored image on page load
-        window.addEventListener('load', function() {
-            const storedImage = sessionStorage.getItem('updatedProfileImage');
-            if (storedImage && storedImage !== 'https://via.placeholder.com/80') {
-                updateSidebarImage(storedImage);
-                sessionStorage.removeItem('updatedProfileImage');
-            }
-        });
     </script>
 
 </body>

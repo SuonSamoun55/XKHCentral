@@ -1,17 +1,17 @@
 <?php
-namespace App\Http\Controllers\Api\POSControllers\POSUserController;
+namespace App\Http\Controllers\Api\POSControllers\POSAdminController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
-class UserProfileController extends Controller
+class AdminProfileController extends Controller
 {
     public function index()
     {
         $user = Auth::user();
-        return view('POSViews.POSUserViews.POSUserProfile', compact('user'));
+        return view('ManagementSystemViews.AdminViews.Layouts.setting.profile.adminprofile', compact('user'));
     }
 
     public function update(Request $request)
@@ -39,7 +39,7 @@ class UserProfileController extends Controller
 
     public function showChangePasswordForm()
     {
-        return view('POSViews.POSUserViews.POSUserChangePW');
+        return view('ManagementSystemViews.AdminViews.Layouts.setting.profile.adminchangepassword');
     }
 
     public function updatePassword(Request $request)
@@ -51,10 +51,12 @@ class UserProfileController extends Controller
 
         $user = auth()->user();
 
+        // Check if current password is correct
         if (!Hash::check($request->current_password, $user->password)) {
             return back()->withErrors(['current_password' => 'The current password is incorrect.']);
         }
 
+        // Update password
         $user->update([
             'password' => Hash::make($request->password),
         ]);

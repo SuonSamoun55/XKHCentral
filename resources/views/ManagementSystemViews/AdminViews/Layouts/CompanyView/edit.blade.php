@@ -30,24 +30,37 @@ width: 100%;
         border:1px solid #eef2f7;
          width: 100%;
          min-width: 100%;
+         height: 100vh !important;
     }
 
     .company-setup-grid{
         display:grid;
+        grid-template-columns: 300px 1fr; /* Adjust 300px to match your logo panel width */
         grid-template-columns:260px 1fr;
         width: 100%;
+        gap: 2rem;
         gap:28px;
         align-items:start;
+        max-height: 80vh; /* Limits the height of the entire section */
     }
 
     .logo-panel{
+        position: sticky;
+        top: 0;
         background:#f1f5f9;
         border-radius:14px;
-        min-height:520px;
+        min-height:100%;
         padding:16px;
         display:flex;
         flex-direction:column;
         align-items:center;
+    }
+    .scrollable-info-panel {
+        width: 100%;
+        max-height: 70vh; /* Adjust this value based on your header size */
+        overflow-y: auto;
+        padding-right: 15px; /* Space for the scrollbar */
+        scrollbar-width: thin; /* For Firefox */
     }
 
     .logo-box{
@@ -119,6 +132,11 @@ width: 100%;
     }
 
     .form-section-title{
+        position: sticky;
+        top: 0;
+        background:#f8fafc;
+        display:inline-flex;
+        
         display:flex;
         align-items:center;
         gap:10px;
@@ -154,13 +172,13 @@ width: 100%;
         outline:none;
         background:#eceff3;
         border-radius:8px;
-        padding:11px 14px;
+        padding:8px 11px;
         font-size:14px;
         color:#111827;
     }
 
     .custom-textarea{
-        min-height:56px;
+        height: 40px;
         resize:vertical;
     }
 
@@ -198,7 +216,7 @@ width: 100%;
     }
 
     .btn-submit-company{
-        min-width:180px;
+        min-width:130px;
         border:none;
         border-radius:8px;
         background:#11c5df;
@@ -212,9 +230,15 @@ width: 100%;
     .btn-submit-company:hover{
         background:#0fb4cc;
     }
+    .container{
+        margin: 0 auto;
+        margin-top: 10px !important;
+        margin-right: 10px !important;
+     
+    }
 
     .btn-back-company{
-        min-width:180px;
+        min-width:130px;
         border:1px solid #cbd5e1;
         border-radius:8px;
         background:#fff;
@@ -243,38 +267,91 @@ width: 100%;
             grid-column:span 1;
         }
     }
+
+    /* Floating Top-Right Alert Styles */
+    .alert-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .custom-alert {
+        background: #ffffff !important;
+        color: #334155 !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 16px 24px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 280px;
+        max-width: 400px;
+        width: fit-content;
+        animation: slideIn 0.3s ease-out forwards;
+    }
+
+    .custom-alert.alert-success {
+        border-left: 4px solid #10b981 !important;
+    }
+
+    .custom-alert.alert-danger {
+        border-left: 4px solid #ef4444 !important;
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(100%); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translateX(0); }
+        to { opacity: 0; transform: translateX(100%); }
+    }
 </style>
 @endpush
 
 @section('content')
 <div class="company-setup-page">
-    <div class="page-title">Company &gt; Edit</div>
-    <div class="page-subtitle">Business Central</div>
+    <!-- Alert Container -->
+    <div class="alert-container">
+        @if(session('success'))
+            <div class="custom-alert alert-success">
+                <i class="bi bi-check-circle-fill"></i>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+        @if(session('error'))
+            <div class="custom-alert alert-danger">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
 
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
+        @if ($errors->any())
+            <div class="custom-alert alert-danger">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>Please fix the errors below.</span>
+            </div>
+        @endif
+    </div>
 
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0 ps-3">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
+    <div class="container">
     <div class="company-setup-card">
         <form action="{{ route('companies.update', $company->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
-
+         <div class="header">
+                 <div class="page-title">Company &gt; Edit</div>
+    <div class="page-subtitle">Business Central</div>
+    </div>
             <div class="company-setup-grid">
+       
                 <div class="logo-panel">
                     <div class="logo-box">
                         @if(!empty($company->logo))
@@ -314,6 +391,7 @@ width: 100%;
                 </div>
 
                 <div>
+                    <div class="scrollable-info-panel">
                     <div class="form-section-title">Company Info</div>
 
                     <div class="form-grid">
@@ -397,15 +475,20 @@ width: 100%;
                         </div>
                     </div>
 
-                    <div class="btn-submit-wrap">
-                        <button type="submit" class="btn-submit-company">Update</button>
-                        <a href="{{ route('companies.api.setup', $company->id) }}" class="btn-back-company">API Setup</a>
+                  
+                    </div>
+                      <div class="btn-submit-wrap">
                         <a href="{{ route('companies.index') }}" class="btn-back-company">Back</a>
+                        <a href="{{ route('companies.api.setup', $company->id) }}" class="btn-back-company">API Setup</a>
+                        <button type="submit" class="btn-submit-company">Save</button>
+
                     </div>
                 </div>
+                
             </div>
         </form>
     </div>
+</div>
 </div>
 @endsection
 
@@ -442,5 +525,22 @@ width: 100%;
             updateLogoPreview(file);
         });
     }
+
+    // Auto-close alerts
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.custom-alert');
+
+        alerts.forEach(function(alert) {
+            // Auto-close after 4 seconds
+            setTimeout(function() {
+                alert.style.animation = 'fadeOut 0.5s ease-in forwards';
+
+                // Remove from DOM after animation finishes
+                alert.addEventListener('animationend', function() {
+                    alert.remove();
+                });
+            }, 4000);
+        });
+    });
 </script>
 @endpush

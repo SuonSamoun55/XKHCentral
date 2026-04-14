@@ -55,6 +55,14 @@ class NotificationController extends Controller
 
         $notifications = $query->paginate($perPage)->withQueryString();
 
+        // Set profile image display for notifications (sender avatar)
+        $notifications->getCollection()->transform(function ($notification) {
+            // For POS user notifications, sender is typically admin/system
+            $notification->sender_profile_image_display = $this->getSenderImageDisplay($notification);
+            $notification->sender_name = $this->getSenderName($notification);
+            return $notification;
+        });
+
         // Get counts for each tab
         $inboxCount = Notification::where('user_id', $user->id)
             ->where(function ($q) {
@@ -161,16 +169,9 @@ class NotificationController extends Controller
         $notification->save();
     }
 
-    return view('notifications.show', compact('notification'));
-}
+        // Set sender profile image display
+        $notification->sender_profile_image_display = $this->getSenderImageDisplay($notification);
 
-    public function deleteSelected(Request $request)
-    {
-        $user = Auth::user();
-
-        if (!$user) {
-            return redirect('/login')->with('error', 'Please login first.');
-        }
 
         $ids = $request->input('notification_ids', []);
 
@@ -184,4 +185,18 @@ class NotificationController extends Controller
 
         return back()->with('success', 'Selected notifications deleted.');
     }
+
+    protected function getSenderImageDisplay($notification)
+    {
+        // For POS user notifications, sender is typically admin/system
+        // Use the existing avatar asset instead of a missing file.
+        return asset('images/pos/Rectangle 2.png');
+    }
+
+    protected function getSenderName($notification)
+    {
+        // All user notifications are sent by admin/system in this context.
+        return 'Admin';
+    }
+
 }

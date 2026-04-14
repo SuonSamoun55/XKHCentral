@@ -61,6 +61,14 @@ class AdminNotificationController extends Controller
             ->paginate(10)
             ->appends($request->query());
 
+        // Set profile_image_display for users in notifications
+        $notifications->getCollection()->transform(function ($notification) {
+            if ($notification->user) {
+                $notification->user->profile_image_display = $this->getCustomerImageDisplay($notification->user);
+            }
+            return $notification;
+        });
+
         $allCount = Notification::query()
             ->when($selectedCompanyId, function ($query) use ($selectedCompanyId) {
                 $query->whereHas('user', function ($q) use ($selectedCompanyId) {
@@ -138,6 +146,11 @@ class AdminNotificationController extends Controller
                 });
             })
             ->findOrFail($id);
+
+        // Set profile_image_display for the user
+        if ($notification->user) {
+            $notification->user->profile_image_display = $this->getCustomerImageDisplay($notification->user);
+        }
 
         if (!$notification->is_read) {
             $notification->update([
@@ -423,5 +436,22 @@ public function latestNotifications(Request $request)
         $notification->delete();
 
         return back()->with('success', 'Notification deleted successfully.');
+    }
+
+    protected function getCustomerImageDisplay($user)
+    {
+        if (!empty($user->profile_image)) {
+            return asset('storage/' . $user->profile_image);
+        }
+
+        if (!empty($user->profile_image_url)) {
+            return $user->profile_image_url;
+        }
+
+        if (!empty($user->bc_id)) {
+            return route('users.bc-image', ['bcId' => $user->bc_id]);
+        }
+
+        return 'https://ui-avatars.com/api/?name=' . urlencode($user->name ?? 'User') . '&background=17bfd0&color=fff&size=128';
     }
 }

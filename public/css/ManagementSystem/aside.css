@@ -447,3 +447,11 @@ html, body {
 .danger {
     color:red;
 }
+.sidebar-area {
+    width: none !important;
+    flex-shrink: 0;
+    background: #fff;
+    border-right: 1px solid var(--border);
+    height: 100vh;
+    overflow-y: auto;
+}
