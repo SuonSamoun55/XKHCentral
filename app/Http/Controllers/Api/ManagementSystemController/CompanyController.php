@@ -15,7 +15,7 @@ class CompanyController extends Controller
     {
         $selectedCompanyId = session('selected_company_id');
         $company = null;
-
+    
         if ($selectedCompanyId) {
             $company = Company::with('companyConnection')->find($selectedCompanyId);
         }
