@@ -54,6 +54,7 @@ Route::middleware(['auth'])->post('/heartbeat', function () {
 Route::middleware(['auth', 'last.seen'])->group(function () {
 Route::get('/store-management/data', [StoreManagementController::class, 'getData'])->name('store.management.data');
 Route::get('/store-management', [StoreManagementController::class, 'index'])->name('store.management.index');
+Route::get('/store-management/tracking', [StoreManagementController::class, 'tracking'])->name('store.management.tracking');
 // Route::get('/store-management/data', [StoreManagementController::class, 'getData'])->name('store.management.data');
 Route::post('/store-management/products/{id}/toggle', [StoreManagementController::class, 'toggleProduct'])->name('store.management.products.toggle');
 Route::post('/store-management/categories/{code}/toggle', [StoreManagementController::class, 'toggleCategory'])->name('store.management.categories.toggle');

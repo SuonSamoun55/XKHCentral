@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\POSControllers\POSAdminController;
 
 use App\Http\Controllers\Controller;
 use App\Models\POSModel\Item;
+use App\Models\POSModel\InventoryMovement;
 use App\Models\MagamentSystemModel\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -158,6 +159,102 @@ class StoreManagementController extends Controller
             'message' => $status
                 ? 'Selected categories activated successfully.'
                 : 'Selected categories deactivated successfully.'
+        ]);
+    }
+
+    public function tracking(Request $request)
+    {
+        $companyId = Company::value('id');
+
+        $search = trim((string) $request->get('search', ''));
+        $source = $request->get('source', 'all');
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+        $perPage = (int) $request->get('per_page', 20);
+        $perPage = $perPage > 0 ? min($perPage, 200) : 20;
+
+        $summaryQuery = InventoryMovement::query()
+            ->with('item:id,display_name,number')
+            ->where('company_id', $companyId);
+
+        if ($search !== '') {
+            $summaryQuery->whereHas('item', function ($q) use ($search) {
+                $q->where('display_name', 'like', "%{$search}%")
+                    ->orWhere('number', 'like', "%{$search}%");
+            });
+        }
+
+        if ($dateFrom) {
+            $summaryQuery->whereDate('happened_at', '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $summaryQuery->whereDate('happened_at', '<=', $dateTo);
+        }
+
+        $rawSummary = $summaryQuery->get()
+            ->groupBy('item_id')
+            ->map(function ($rows) {
+                $item = optional($rows->first())->item;
+
+                return [
+                    'item' => $item,
+                    'added_qty' => (int) $rows->where('source', 'sync')->where('quantity_change', '>', 0)->sum('quantity_change'),
+                    'reduced_qty' => (int) abs($rows->where('source', 'sync')->where('quantity_change', '<', 0)->sum('quantity_change')),
+                    'sold_qty' => (int) abs($rows->where('source', 'sale')->sum('quantity_change')),
+                    'last_activity' => optional($rows->sortByDesc('happened_at')->first())->happened_at,
+                ];
+            })
+            ->sortByDesc(function ($row) {
+                return ($row['sold_qty'] ?? 0) + ($row['added_qty'] ?? 0) + ($row['reduced_qty'] ?? 0);
+            })
+            ->values();
+
+        $movements = InventoryMovement::query()
+            ->with([
+                'item:id,display_name,number',
+                'buyer:id,name,role',
+                'actor:id,name',
+                'order:id,order_no',
+            ])
+            ->where('company_id', $companyId)
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($inner) use ($search) {
+                    $inner->whereHas('item', function ($itemQuery) use ($search) {
+                        $itemQuery->where('display_name', 'like', "%{$search}%")
+                            ->orWhere('number', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('buyer', function ($buyerQuery) use ($search) {
+                        $buyerQuery->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('order', function ($orderQuery) use ($search) {
+                        $orderQuery->where('order_no', 'like', "%{$search}%");
+                    })
+                    ->orWhere('reference_no', 'like', "%{$search}%");
+                });
+            })
+            ->when(in_array($source, ['sync', 'sale'], true), function ($q) use ($source) {
+                $q->where('source', $source);
+            })
+            ->when($dateFrom, function ($q) use ($dateFrom) {
+                $q->whereDate('happened_at', '>=', $dateFrom);
+            })
+            ->when($dateTo, function ($q) use ($dateTo) {
+                $q->whereDate('happened_at', '<=', $dateTo);
+            })
+            ->orderByDesc('happened_at')
+            ->orderByDesc('id')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return view('POSViews.POSAdminViews.StoreManagement.tracking', [
+            'movements' => $movements,
+            'summaryRows' => $rawSummary,
+            'search' => $search,
+            'source' => $source,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+            'perPage' => $perPage,
         ]);
     }
 }

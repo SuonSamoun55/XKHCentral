@@ -50,6 +50,15 @@
                     </select>
                 </div>
 
+                <a
+                    href="{{ route('store.management.tracking') }}"
+                    class="store-action-btn btn-active-custom"
+                    style="text-decoration:none;"
+                >
+                    <i class="bi bi-activity"></i>
+                    Track Stock
+                </a>
+
                 <button
                     type="button"
                     id="bulkProductActivate"

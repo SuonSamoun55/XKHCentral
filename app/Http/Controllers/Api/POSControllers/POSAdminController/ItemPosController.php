@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Api\POSControllers\POSAdminController;
 
 use App\Http\Controllers\Controller;
 use App\Models\POSModel\Item;
+use App\Models\POSModel\InventoryMovement;
 use App\Models\MagamentSystemModel\Company;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class ItemPosController extends Controller
@@ -190,6 +193,7 @@ class ItemPosController extends Controller
     public function syncFromAl(Request $request)
     {
         $companyId = Company::value('id');
+        $actorId = Auth::id();
 
         if (!$companyId) {
             return response()->json([
@@ -220,32 +224,73 @@ class ItemPosController extends Controller
             'items.*.defaultLocationCode' => ['nullable', 'string'],
         ]);
 
-        foreach ($validated['items'] as $item) {
-            Item::updateOrCreate(
-                [
-                    'company_id' => $companyId,
-                    'bc_id' => $item['id'],
-                ],
-                [
-                    'number' => $item['number'],
-                    'display_name' => $item['displayName'] ?? null,
-                    'unit_price' => $item['unitPrice'] ?? 0,
+        DB::beginTransaction();
 
-                    'vat_percent' => $item['vatPercent'] ?? 0,
-                    'tax_amount' => $item['taxAmount'] ?? 0,
-                    'discount_amount' => $item['discountAmount'] ?? 0,
-                    'discount_start_date' => $item['discountStartDate'] ?? null,
-                    'discount_end_date' => $item['discountEndDate'] ?? null,
+        try {
+            foreach ($validated['items'] as $item) {
+                $incomingInventory = (int) ($item['inventory'] ?? 0);
 
-                    'inventory' => (int) ($item['inventory'] ?? 0),
-                    'blocked' => filter_var($item['blocked'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                    'item_category_code' => $item['itemCategoryCode'] ?? null,
-                    'base_unit_of_measure_code' => $item['baseUnitOfMeasureCode'] ?? null,
-                    'price_includes_tax' => filter_var($item['priceIncludesTax'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                    'image_url' => $item['imageUrl'] ?? null,
-                    'default_location_code' => $item['defaultLocationCode'] ?? null,
-                ]
-            );
+                $existing = Item::where('company_id', $companyId)
+                    ->where('bc_id', $item['id'])
+                    ->first();
+
+                $oldInventory = (int) ($existing->inventory ?? 0);
+
+                $saved = Item::updateOrCreate(
+                    [
+                        'company_id' => $companyId,
+                        'bc_id' => $item['id'],
+                    ],
+                    [
+                        'number' => $item['number'],
+                        'display_name' => $item['displayName'] ?? null,
+                        'unit_price' => $item['unitPrice'] ?? 0,
+
+                        'vat_percent' => $item['vatPercent'] ?? 0,
+                        'tax_amount' => $item['taxAmount'] ?? 0,
+                        'discount_amount' => $item['discountAmount'] ?? 0,
+                        'discount_start_date' => $item['discountStartDate'] ?? null,
+                        'discount_end_date' => $item['discountEndDate'] ?? null,
+
+                        'inventory' => $incomingInventory,
+                        'blocked' => filter_var($item['blocked'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                        'item_category_code' => $item['itemCategoryCode'] ?? null,
+                        'base_unit_of_measure_code' => $item['baseUnitOfMeasureCode'] ?? null,
+                        'price_includes_tax' => filter_var($item['priceIncludesTax'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                        'image_url' => $item['imageUrl'] ?? null,
+                        'default_location_code' => $item['defaultLocationCode'] ?? null,
+                    ]
+                );
+
+                $change = $incomingInventory - $oldInventory;
+                if ($change !== 0 || !$existing) {
+                    InventoryMovement::create([
+                        'company_id' => $companyId,
+                        'item_id' => $saved->id,
+                        'order_id' => null,
+                        'actor_user_id' => $actorId,
+                        'buyer_user_id' => null,
+                        'source' => 'sync',
+                        'quantity_change' => $change !== 0 ? $change : $incomingInventory,
+                        'old_inventory' => $oldInventory,
+                        'new_inventory' => $incomingInventory,
+                        'happened_at' => now(),
+                        'reference_no' => $saved->number,
+                        'note' => $existing
+                            ? 'Inventory updated from BC sync.'
+                            : 'New item created from BC sync.',
+                    ]);
+                }
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Sync failed: ' . $e->getMessage(),
+            ], 500);
         }
 
         return response()->json([
