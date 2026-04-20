@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\POSControllers\POSAdminController;
 
 use App\Http\Controllers\Controller;
 use App\Models\POSModel\Order;
+use App\Models\POSModel\Item;
 use App\Models\MagamentSystemModel\OrderAction;
 use App\Models\MagamentSystemModel\Notification;
 use Illuminate\Http\Request;
@@ -171,6 +172,44 @@ class AdminOrderController extends Controller
                     throw new \Exception(
                         'Create BC sales order line failed for item [' . $item->item_no . ']: ' . $lineResponse->body()
                     );
+                }
+            }
+
+            foreach ($order->items as $orderItem) {
+                if (empty($orderItem->item_id)) {
+                    throw new \Exception("Order item {$orderItem->id} is missing item reference.");
+                }
+            }
+
+            $requestedQtyByItemId = $order->items
+                ->groupBy('item_id')
+                ->map(fn ($rows) => (int) $rows->sum('qty'))
+                ->filter(fn ($qty) => $qty > 0);
+
+            if ($requestedQtyByItemId->isNotEmpty()) {
+                $lockedItems = Item::query()
+                    ->whereIn('id', $requestedQtyByItemId->keys()->all())
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('id');
+
+                foreach ($requestedQtyByItemId as $itemId => $requestedQty) {
+                    $product = $lockedItems->get($itemId);
+
+                    if (!$product) {
+                        throw new \Exception("Item not found for stock update. Item ID: {$itemId}");
+                    }
+
+                    $availableQty = (int) ($product->inventory ?? 0);
+                    if ($availableQty < $requestedQty) {
+                        throw new \Exception(
+                            "Insufficient stock for item {$product->number}. Requested {$requestedQty}, available {$availableQty}."
+                        );
+                    }
+                }
+
+                foreach ($requestedQtyByItemId as $itemId => $requestedQty) {
+                    $lockedItems->get($itemId)?->decrement('inventory', $requestedQty);
                 }
             }
 
