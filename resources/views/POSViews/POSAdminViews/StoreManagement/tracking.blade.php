@@ -165,6 +165,11 @@
                 <option value="sale" {{ $source === 'sale' ? 'selected' : '' }}>Sale Only</option>
             </select>
 
+            <select name="table_view" class="tracking-select">
+                <option value="summary" {{ ($tableView ?? 'summary') === 'summary' ? 'selected' : '' }}>Product Summary</option>
+                <option value="details" {{ ($tableView ?? 'summary') === 'details' ? 'selected' : '' }}>Movement Details</option>
+            </select>
+
             <input type="date" name="date_from" value="{{ $dateFrom }}" class="tracking-select">
             <input type="date" name="date_to" value="{{ $dateTo }}" class="tracking-select">
 
@@ -179,104 +184,105 @@
         </form>
     </div>
 
-    <div class="tracking-card">
-        <div class="tracking-head">
-            <h2 class="tracking-title" style="font-size:20px;">Product Summary</h2>
-        </div>
+    @if(($tableView ?? 'summary') === 'summary')
+        <div class="tracking-card">
+            <div class="tracking-head">
+                <h2 class="tracking-title" style="font-size:20px;">Product Summary</h2>
+            </div>
 
-        <div class="table-wrap">
-            <table class="tracking-table">
-                <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th>Item No</th>
-                        <th>Added From Sync</th>
-                        <th>Reduced From Sync</th>
-                        <th>Sold Qty</th>
-                        <th>Last Activity</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($summaryRows as $row)
+            <div class="table-wrap">
+                <table class="tracking-table">
+                    <thead>
                         <tr>
-                            <td>{{ $row['item']->display_name ?? 'N/A' }}</td>
-                            <td>{{ $row['item']->number ?? '-' }}</td>
-                            <td class="qty-in">+{{ (int) ($row['added_qty'] ?? 0) }}</td>
-                            <td class="qty-out">-{{ (int) ($row['reduced_qty'] ?? 0) }}</td>
-                            <td class="qty-out">-{{ (int) ($row['sold_qty'] ?? 0) }}</td>
-                            <td>{{ optional($row['last_activity'])->format('m/d/Y h:i A') ?? '-' }}</td>
+                            <th>Product</th>
+                            <th>Item No</th>
+                            <th>Added From Sync</th>
+                            <th>Reduced From Sync</th>
+                            <th>Sold Qty</th>
+                            <th>Last Activity</th>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="muted">No summary data found.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @forelse($summaryRows as $row)
+                            <tr>
+                                <td>{{ $row['item']->display_name ?? 'N/A' }}</td>
+                                <td>{{ $row['item']->number ?? '-' }}</td>
+                                <td class="qty-in">+{{ (int) ($row['added_qty'] ?? 0) }}</td>
+                                <td class="qty-out">-{{ (int) ($row['reduced_qty'] ?? 0) }}</td>
+                                <td class="qty-out">-{{ (int) ($row['sold_qty'] ?? 0) }}</td>
+                                <td>{{ optional($row['last_activity'])->format('m/d/Y h:i A') ?? '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="muted">No summary data found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
+    @else
+        <div class="tracking-card">
+            <div class="tracking-head">
+                <h2 class="tracking-title" style="font-size:20px;">Movement Details</h2>
+                <span class="muted">{{ $movements->total() }} record(s)</span>
+            </div>
 
-    <div class="tracking-card">
-        <div class="tracking-head">
-            <h2 class="tracking-title" style="font-size:20px;">Movement Details</h2>
-            <span class="muted">{{ $movements->total() }} record(s)</span>
-        </div>
-
-        <div class="table-wrap">
-            <table class="tracking-table">
-                <thead>
-                    <tr>
-                        <th>Date/Time</th>
-                        <th>Type</th>
-                        <th>Product</th>
-                        <th>Qty Change</th>
-                        <th>Stock (Old -> New)</th>
-                        <th>Order</th>
-                        <th>Buyer</th>
-                        <th>Updated By</th>
-                        <th>Note</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($movements as $move)
+            <div class="table-wrap">
+                <table class="tracking-table">
+                    <thead>
                         <tr>
-                            <td>{{ optional($move->happened_at)->format('m/d/Y h:i A') ?? optional($move->created_at)->format('m/d/Y h:i A') }}</td>
-                            <td>
-                                <span class="chip {{ $move->source === 'sale' ? 'chip-sale' : 'chip-sync' }}">
-                                    {{ strtoupper($move->source) }}
-                                </span>
-                            </td>
-                            <td>
-                                <div>{{ $move->item->display_name ?? 'N/A' }}</div>
-                                <div class="muted">{{ $move->item->number ?? '-' }}</div>
-                            </td>
-                            <td class="{{ (int) $move->quantity_change >= 0 ? 'qty-in' : 'qty-out' }}">
-                                {{ (int) $move->quantity_change > 0 ? '+' : '' }}{{ (int) $move->quantity_change }}
-                            </td>
-                            <td>{{ (int) $move->old_inventory }} -> {{ (int) $move->new_inventory }}</td>
-                            <td>
-                                <div>{{ $move->order->order_no ?? ($move->reference_no ?? '-') }}</div>
-                            </td>
-                            <td>
-                                <div>{{ $move->buyer->name ?? '-' }}</div>
-                                <div class="muted">{{ ucfirst($move->buyer->role ?? '') }}</div>
-                            </td>
-                            <td>{{ $move->actor->name ?? '-' }}</td>
-                            <td>{{ $move->note ?? '-' }}</td>
+                            <th>Date/Time</th>
+                            <th>Type</th>
+                            <th>Product</th>
+                            <th>Qty Change</th>
+                            <th>Stock (Old -> New)</th>
+                            <th>Order</th>
+                            <th>Buyer</th>
+                            <th>Updated By</th>
+                            <th>Note</th>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="9" class="muted">No movement data found.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody>
+                        @forelse($movements as $move)
+                            <tr>
+                                <td>{{ optional($move->happened_at)->format('m/d/Y h:i A') ?? optional($move->created_at)->format('m/d/Y h:i A') }}</td>
+                                <td>
+                                    <span class="chip {{ $move->source === 'sale' ? 'chip-sale' : 'chip-sync' }}">
+                                        {{ strtoupper($move->source) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div>{{ $move->item->display_name ?? 'N/A' }}</div>
+                                    <div class="muted">{{ $move->item->number ?? '-' }}</div>
+                                </td>
+                                <td class="{{ (int) $move->quantity_change >= 0 ? 'qty-in' : 'qty-out' }}">
+                                    {{ (int) $move->quantity_change > 0 ? '+' : '' }}{{ (int) $move->quantity_change }}
+                                </td>
+                                <td>{{ (int) $move->old_inventory }} -> {{ (int) $move->new_inventory }}</td>
+                                <td>
+                                    <div>{{ $move->order->order_no ?? ($move->reference_no ?? '-') }}</div>
+                                </td>
+                                <td>
+                                    <div>{{ $move->buyer->name ?? '-' }}</div>
+                                    <div class="muted">{{ ucfirst($move->buyer->role ?? '') }}</div>
+                                </td>
+                                <td>{{ $move->actor->name ?? '-' }}</td>
+                                <td>{{ $move->note ?? '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="9" class="muted">No movement data found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
 
-        <div style="margin-top:12px;">
-            {{ $movements->links() }}
+            <div style="margin-top:12px;">
+                {{ $movements->links() }}
+            </div>
         </div>
-    </div>
+    @endif
 </div>
 @endsection
-

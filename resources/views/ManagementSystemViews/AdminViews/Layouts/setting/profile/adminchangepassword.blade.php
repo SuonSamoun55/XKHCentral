@@ -1,13 +1,9 @@
-<!DOCTYPE html>
-<html>
+@extends('ManagementSystemViews.AdminViews.Layouts.app')
 
-<head>
-    <title>Change Password</title>
+@section('title', 'Change Password')
 
-    <link rel="stylesheet" href="{{ asset('css/ManagementSystem/adminSidbar.css') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <style>
+@push('styles')
+<style>
         .main-wrapper {
             display: flex;
             gap: 10px;
@@ -144,14 +140,13 @@
             color: #10b981;
         }
     </style>
-</head>
+@endpush
 
-<body>
-
+@section('content')
 <div class="main-wrapper">
 
         {{-- Sidebar --}}
-        @include('ManagementSystemViews.AdminViews.Layouts.aside')
+        
 
     <div class="content-area">
             <div class="container mt-4">
@@ -240,7 +235,10 @@
     </div>
 
     {{-- Password Strength Script --}}
-    <script>
+@endsection
+
+@push('scripts')
+<script>
         document.getElementById('password').addEventListener('input', function() {
             const password = this.value;
             const strengthIndicator = document.getElementById('password-strength');
@@ -314,7 +312,4 @@
             }
         });
     </script>
-
-</body>
-
-</html>
+@endpush

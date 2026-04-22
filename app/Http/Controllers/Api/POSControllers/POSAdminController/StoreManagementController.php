@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\POSControllers\POSAdminController;
 use App\Http\Controllers\Controller;
 use App\Models\POSModel\Item;
 use App\Models\POSModel\InventoryMovement;
+use App\Models\POSModel\OrderItem;
 use App\Models\MagamentSystemModel\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -170,6 +171,10 @@ class StoreManagementController extends Controller
         $source = $request->get('source', 'all');
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
+        $tableView = $request->get('table_view', 'summary');
+        if (!in_array($tableView, ['summary', 'details'], true)) {
+            $tableView = 'summary';
+        }
         $perPage = (int) $request->get('per_page', 20);
         $perPage = $perPage > 0 ? min($perPage, 200) : 20;
 
@@ -255,6 +260,77 @@ class StoreManagementController extends Controller
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'perPage' => $perPage,
+            'tableView' => $tableView,
+        ]);
+    }
+
+    public function productDetail(Request $request, int $id)
+    {
+        $companyId = Company::value('id');
+
+        $item = Item::query()
+            ->where('company_id', $companyId)
+            ->findOrFail($id);
+
+        $buyerSearch = trim((string) $request->get('buyer_search', ''));
+        $buyerFilter = $request->get('buyer_filter', 'all');
+        $topLimit = match ($buyerFilter) {
+            'top5' => 5,
+            'top10' => 10,
+            default => null,
+        };
+
+        $buyersQuery = OrderItem::query()
+            ->from('order_items as oi')
+            ->join('orders as o', 'o.id', '=', 'oi.order_id')
+            ->leftJoin('users as u', 'u.id', '=', 'o.user_id')
+            ->where('oi.company_id', $companyId)
+            ->where('oi.item_id', $item->id)
+            ->when($buyerSearch !== '', function ($q) use ($buyerSearch) {
+                $q->where('u.name', 'like', "%{$buyerSearch}%");
+            })
+            ->groupBy('u.id', 'u.name')
+            ->orderByDesc(DB::raw('SUM(oi.qty)'))
+            ->orderByDesc(DB::raw('SUM(oi.line_total)'))
+            ->selectRaw('
+                u.id as buyer_id,
+                COALESCE(u.name, \'Unknown Buyer\') as buyer_name,
+                COUNT(DISTINCT o.id) as total_orders,
+                COALESCE(SUM(oi.qty), 0) as total_qty,
+                COALESCE(SUM(oi.line_total), 0) as total_spent,
+                MAX(o.checked_out_at) as last_bought_at
+            ');
+
+        if ($topLimit) {
+            $buyersQuery->limit($topLimit);
+        }
+
+        $buyerRows = $buyersQuery->get();
+
+        $buyerStats = [
+            'unique_buyers' => (int) OrderItem::query()
+                ->from('order_items as oi')
+                ->join('orders as o', 'o.id', '=', 'oi.order_id')
+                ->where('oi.company_id', $companyId)
+                ->where('oi.item_id', $item->id)
+                ->distinct('o.user_id')
+                ->count('o.user_id'),
+            'total_sold_qty' => (int) OrderItem::query()
+                ->where('company_id', $companyId)
+                ->where('item_id', $item->id)
+                ->sum('qty'),
+            'total_revenue' => (float) OrderItem::query()
+                ->where('company_id', $companyId)
+                ->where('item_id', $item->id)
+                ->sum('line_total'),
+        ];
+
+        return view('POSViews.POSAdminViews.StoreManagement.product-detail', [
+            'item' => $item,
+            'buyerRows' => $buyerRows,
+            'buyerStats' => $buyerStats,
+            'buyerSearch' => $buyerSearch,
+            'buyerFilter' => $buyerFilter,
         ]);
     }
 }

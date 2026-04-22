@@ -98,6 +98,8 @@ class AdminOrderController extends Controller
             return back()->with('error', 'Order has no items.');
         }
 
+        $orderItems = $order->items()->get();
+
         DB::beginTransaction();
 
         try {
@@ -126,7 +128,7 @@ class AdminOrderController extends Controller
                 throw new \Exception('BC sales order ID not returned.');
             }
 
-            foreach ($order->items as $item) {
+            foreach ($orderItems as $item) {
                 $discountPercent = $this->resolveDiscountPercent($item->item);
                 $linePayload = [
                     'lineType'         => 'Item',
@@ -176,13 +178,13 @@ class AdminOrderController extends Controller
                 }
             }
 
-            foreach ($order->items as $orderItem) {
+            foreach ($orderItems as $orderItem) {
                 if (empty($orderItem->item_id)) {
                     throw new \Exception("Order item {$orderItem->id} is missing item reference.");
                 }
             }
 
-            $requestedQtyByItemId = $order->items
+            $requestedQtyByItemId = $orderItems
                 ->groupBy('item_id')
                 ->map(fn ($rows) => (int) $rows->sum('qty'))
                 ->filter(fn ($qty) => $qty > 0);

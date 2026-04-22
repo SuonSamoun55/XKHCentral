@@ -52,13 +52,20 @@ class ItemPosController extends Controller
                 'tax_amount',
                 'discount_amount',
                 'discount_start_date',
-                'discount_end_date'
+                'discount_end_date',
+                'is_visible'
             )
             ->get()
             ->keyBy('bc_id');
 
-        foreach ($items as &$item) {
+        foreach ($items as $index => &$item) {
             $localItem = $localItems[$item['id']] ?? null;
+
+            // Hide products marked inactive from Store Management.
+            if ($localItem && !$localItem->is_visible) {
+                unset($items[$index]);
+                continue;
+            }
 
             $item['defaultLocationCode'] = $item['defaultLocationCode']
                 ?? $item['locationCode']
@@ -93,6 +100,8 @@ class ItemPosController extends Controller
                 ?? $item['discountenddate']
                 ?? optional($localItem->discount_end_date)->format('Y-m-d H:i:s');
         }
+
+        $items = array_values($items);
 
         return view('POSViews.POSAdminViews.ItemList', compact('items'));
     }
@@ -264,22 +273,46 @@ class ItemPosController extends Controller
 
                 $change = $incomingInventory - $oldInventory;
                 if ($change !== 0 || !$existing) {
-                    InventoryMovement::create([
-                        'company_id' => $companyId,
-                        'item_id' => $saved->id,
-                        'order_id' => null,
-                        'actor_user_id' => $actorId,
-                        'buyer_user_id' => null,
-                        'source' => 'sync',
-                        'quantity_change' => $change !== 0 ? $change : $incomingInventory,
-                        'old_inventory' => $oldInventory,
-                        'new_inventory' => $incomingInventory,
-                        'happened_at' => now(),
-                        'reference_no' => $saved->number,
-                        'note' => $existing
-                            ? 'Inventory updated from BC sync.'
-                            : 'New item created from BC sync.',
-                    ]);
+                    $delta = $change !== 0 ? $change : $incomingInventory;
+                    $today = now()->toDateString();
+
+                    // Merge same-day sync logs per item so tracking is cleaner:
+                    // one row per item per day, while still keeping pull date visibility.
+                    $sameDaySync = InventoryMovement::query()
+                        ->where('company_id', $companyId)
+                        ->where('item_id', $saved->id)
+                        ->where('source', 'sync')
+                        ->whereNull('order_id')
+                        ->whereDate('happened_at', $today)
+                        ->latest('id')
+                        ->first();
+
+                    if ($sameDaySync) {
+                        $sameDaySync->quantity_change = (int) $sameDaySync->quantity_change + (int) $delta;
+                        $sameDaySync->new_inventory = $incomingInventory;
+                        $sameDaySync->happened_at = now();
+                        $sameDaySync->actor_user_id = $actorId;
+                        $sameDaySync->reference_no = $saved->number;
+                        $sameDaySync->note = 'Inventory synced from BC (merged same-day pull).';
+                        $sameDaySync->save();
+                    } else {
+                        InventoryMovement::create([
+                            'company_id' => $companyId,
+                            'item_id' => $saved->id,
+                            'order_id' => null,
+                            'actor_user_id' => $actorId,
+                            'buyer_user_id' => null,
+                            'source' => 'sync',
+                            'quantity_change' => $delta,
+                            'old_inventory' => $oldInventory,
+                            'new_inventory' => $incomingInventory,
+                            'happened_at' => now(),
+                            'reference_no' => $saved->number,
+                            'note' => $existing
+                                ? 'Inventory updated from BC sync.'
+                                : 'New item created from BC sync.',
+                        ]);
+                    }
                 }
             }
 

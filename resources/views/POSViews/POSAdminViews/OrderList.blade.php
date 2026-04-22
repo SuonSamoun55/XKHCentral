@@ -183,7 +183,8 @@
 
     .table-wrap{
         width: 100%;
-        overflow-x: auto;
+        max-height: 68vh;
+        overflow: auto;
     }
 
     .approval-table{

@@ -114,6 +114,13 @@ public function index()
 
         $item = Item::findOrFail($validated['item_id']);
 
+        if (!$item->is_visible) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This product is inactive and cannot be added to cart.',
+            ], 422);
+        }
+
         $cartItem = CartItem::where('cart_id', $cart->id)
             ->where('item_id', $item->id)
             ->first();

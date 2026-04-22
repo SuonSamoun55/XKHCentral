@@ -44,7 +44,9 @@ class FavoriteController extends Controller
             $query->select('item_id')
                   ->from('favorites')
                   ->where('user_id', $user->id);
-        })->get();
+        })
+        ->where('is_visible', true)
+        ->get();
 
         return view('POSViews.POSUserViews.POSItemFavoriteView', compact('favorites'));
     }

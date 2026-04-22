@@ -36,68 +36,80 @@
                     >
                 </div>
 
-                <select id="storeStatusFilter" class="store-select-control">
-                    <option value="all">All Status</option>
-                    <option value="active">Active Only</option>
-                    <option value="inactive">Inactive Only</option>
-                </select>
+                <div class="store-menu-wrap" id="storeMenuWrap">
+                    <button type="button" class="store-menu-trigger" id="storeMenuTrigger" title="Open menu">
+                        <i class="bi bi-grid-3x3-gap-fill"></i>
+                    </button>
 
-                <div class="stock-filter-wrap">
-                    <select id="storeStockFilter" class="store-select-control">
-                        <option value="all">All Stock</option>
-                        <option value="in">In Stock</option>
-                        <option value="out">Out of Stock</option>
-                    </select>
+                    <div class="store-menu-panel d-none" id="storeMenuPanel">
+                        <div class="store-menu-item">
+                            <label for="storeStatusFilter" class="store-menu-label">All Status</label>
+                            <select id="storeStatusFilter" class="store-select-control">
+                                <option value="all">All Status</option>
+                                <option value="active">Active Only</option>
+                                <option value="inactive">Inactive Only</option>
+                            </select>
+                        </div>
+
+                        <div class="store-menu-item stock-filter-wrap">
+                            <label for="storeStockFilter" class="store-menu-label">All Stock</label>
+                            <select id="storeStockFilter" class="store-select-control">
+                                <option value="all">All Stock</option>
+                                <option value="in">In Stock</option>
+                                <option value="out">Out of Stock</option>
+                            </select>
+                        </div>
+
+                        <a
+                            href="{{ route('store.management.tracking') }}"
+                            class="store-action-btn btn-active-custom store-menu-btn"
+                            style="text-decoration:none;"
+                        >
+                            <i class="bi bi-activity"></i>
+                            Track Stock
+                        </a>
+
+                        <button
+                            type="button"
+                            id="bulkProductActivate"
+                            class="store-action-btn btn-active-custom products-only-btn store-menu-btn"
+                            data-url="{{ route('store.management.products.bulkUpdate') }}"
+                        >
+                            <i class="bi bi-check2-circle"></i>
+                            Activate
+                        </button>
+
+                        <button
+                            type="button"
+                            id="bulkProductDeactivate"
+                            class="store-action-btn btn-inactive-custom products-only-btn store-menu-btn"
+                            data-url="{{ route('store.management.products.bulkUpdate') }}"
+                        >
+                            <i class="bi bi-x-circle"></i>
+                            Deactivate
+                        </button>
+
+                        <button
+                            type="button"
+                            id="bulkCategoryActivate"
+                            class="store-action-btn btn-active-custom categories-only-btn store-menu-btn d-none"
+                            data-url="{{ route('store.management.categories.bulkUpdate') }}"
+                        >
+                            <i class="bi bi-check2-circle"></i>
+                            Activate
+                        </button>
+
+                        <button
+                            type="button"
+                            id="bulkCategoryDeactivate"
+                            class="store-action-btn btn-inactive-custom categories-only-btn store-menu-btn d-none"
+                            data-url="{{ route('store.management.categories.bulkUpdate') }}"
+                        >
+                            <i class="bi bi-x-circle"></i>
+                            Deactivate
+                        </button>
+                    </div>
                 </div>
-
-                <a
-                    href="{{ route('store.management.tracking') }}"
-                    class="store-action-btn btn-active-custom"
-                    style="text-decoration:none;"
-                >
-                    <i class="bi bi-activity"></i>
-                    Track Stock
-                </a>
-
-                <button
-                    type="button"
-                    id="bulkProductActivate"
-                    class="store-action-btn btn-active-custom products-only-btn"
-                    data-url="{{ route('store.management.products.bulkUpdate') }}"
-                >
-                    <i class="bi bi-check2-circle"></i>
-                    Activate
-                </button>
-
-                <button
-                    type="button"
-                    id="bulkProductDeactivate"
-                    class="store-action-btn btn-inactive-custom products-only-btn"
-                    data-url="{{ route('store.management.products.bulkUpdate') }}"
-                >
-                    <i class="bi bi-x-circle"></i>
-                    Deactivate
-                </button>
-
-                <button
-                    type="button"
-                    id="bulkCategoryActivate"
-                    class="store-action-btn btn-active-custom categories-only-btn d-none"
-                    data-url="{{ route('store.management.categories.bulkUpdate') }}"
-                >
-                    <i class="bi bi-check2-circle"></i>
-                    Activate
-                </button>
-
-                <button
-                    type="button"
-                    id="bulkCategoryDeactivate"
-                    class="store-action-btn btn-inactive-custom categories-only-btn d-none"
-                    data-url="{{ route('store.management.categories.bulkUpdate') }}"
-                >
-                    <i class="bi bi-x-circle"></i>
-                    Deactivate
-                </button>
             </div>
         </div>
     </div>
@@ -115,7 +127,7 @@
                         <th>Category</th>
                         <th>Price</th>
                         <th>Stock</th>
-                        <th>Status</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="productTableBody">
@@ -162,10 +174,6 @@
 
                             <td>
                                 <div class="status-action-wrap">
-                                    <span class="status-chip {{ $item->is_visible ? 'active' : 'inactive' }}">
-                                        {{ $item->is_visible ? 'ACTIVE' : 'INACTIVE' }}
-                                    </span>
-
                                     <button
                                         type="button"
                                         class="toggle-switch js-toggle-product {{ $item->is_visible ? 'on' : 'off' }}"
@@ -174,6 +182,14 @@
                                     >
                                         <span class="toggle-dot"></span>
                                     </button>
+
+                                    <a
+                                        href="{{ route('store.management.products.detail', $item->id) }}"
+                                        class="store-action-btn btn-active-custom"
+                                        style="height:30px; padding:0 10px; font-size:12px; text-decoration:none;"
+                                    >
+                                        View Detail
+                                    </a>
                                 </div>
                             </td>
                         </tr>
@@ -240,10 +256,6 @@
                     </div>
 
                     <div class="category-right-wrap">
-                        <span class="status-chip {{ $category->category_visible ? 'active' : 'inactive' }}">
-                            {{ $category->category_visible ? 'ACTIVE' : 'INACTIVE' }}
-                        </span>
-
                         <button
                             type="button"
                             class="toggle-switch js-toggle-category {{ $category->category_visible ? 'on' : 'off' }}"
