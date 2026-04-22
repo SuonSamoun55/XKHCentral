@@ -347,6 +347,13 @@
         cursor:pointer;
     }
 
+    .sync-btn.sync-btn-alt{
+        background:#fff;
+        color:#1f7f8b;
+        border:1px solid #cfe7ea;
+        text-decoration:none;
+    }
+
     .view-switch{
         display:flex;
         gap:8px;
@@ -761,6 +768,11 @@
         </div>
 
         <div class="toolbar-right">
+            <a href="{{ route('store.management.tracking') }}" class="sync-btn sync-btn-alt">
+                <i class="bi bi-activity"></i>
+                Stock Tracking
+            </a>
+
             <button id="syncBtn" type="button" class="sync-btn" onclick="updateItems()">
                 <i class="bi bi-arrow-repeat"></i>
                 Sync BC Product

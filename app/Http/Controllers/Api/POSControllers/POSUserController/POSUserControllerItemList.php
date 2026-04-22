@@ -12,7 +12,9 @@ class POSUserControllerItemList extends Controller
 {
     $user = Auth::user();
 
-    $items = Item::where('blocked', false)->get();
+    $items = Item::where('blocked', false)
+        ->where('is_visible', true)
+        ->get();
 
     $favoriteIds = Favorite::where('user_id', $user->id)
                     ->pluck('item_id')

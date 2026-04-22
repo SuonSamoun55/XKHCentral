@@ -1,15 +1,10 @@
-@include('ManagementSystemViews.AdminViews.Layouts.navbar')
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Management</title>
+@extends('ManagementSystemViews.AdminViews.Layouts.app')
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+@section('title', 'User Management')
 
-    <style>
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
         *{
             margin:0;
             padding:0;
@@ -508,11 +503,11 @@
             }
         }
     </style>
-</head>
-<body>
+@endpush
 
+@section('content')
 <div class="main-wrapper">
-    @include('ManagementSystemViews.AdminViews.Layouts.aside')
+    
 
     <div class="content-area">
         <div class="page-card">
@@ -775,7 +770,9 @@
 </div>
 
 @include('ManagementSystemViews.AdminViews.Layouts.UserinfoView.create')
+@endsection
 
+@push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     function showUser(url) {
@@ -1260,6 +1257,4 @@ document.addEventListener('DOMContentLoaded', function () {
     setInterval(loadUsersSilently, 15000);
 });
 </script>
-
-</body>
-</html>
+@endpush

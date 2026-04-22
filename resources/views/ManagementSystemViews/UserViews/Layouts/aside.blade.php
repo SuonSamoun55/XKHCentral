@@ -44,8 +44,8 @@
 <div class="sidebar-wrap">
     <aside class="sidebar">
         <div class="sidebar-top">
-           <div class="brand">
-                <div class="brand-logo company-logo-box" style="width: 45px; height: 45px; overflow: hidden; border-radius: 8px;">
+            <div class="brand">
+                <div class="company-logo-box" style="width: 45px; height: 45px; overflow: hidden; border-radius: 8px;">
                     <img src="{{ $companyLogoUrl }}" 
                          alt="Company Logo" 
                          style="width: 100%; height: 100%; object-fit: cover;"
@@ -75,7 +75,7 @@
                         <span class="nav-icon">
                             <img src="{{ asset('images/aside/Cart.png') }}" alt="Cart Icon">
                         </span>
-                        <span class="nav-label">Card</span>
+                        <span class="nav-label">Cart</span>
                     </button>
                 </a>
 
@@ -114,7 +114,7 @@
             @php $authUser = Auth::user(); @endphp
             {{-- <a href="{{ route('profile') }}" class="user-link"> --}}
             @php
-                $avatarUrl = $authUser ? ($authUser->profile_image_display ?? 'https://i.pravatar.cc/80?img=12') : 'https://i.pravatar.cc/80?img=12';
+                $avatarUrl = $userAvatar;
             @endphp
             <div class="profile">
                 <img src="{{ $avatarUrl }}" alt="User" id="sidebarProfileImage">

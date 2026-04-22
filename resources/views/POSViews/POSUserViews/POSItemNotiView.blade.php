@@ -22,6 +22,7 @@
             <div class="header">
                 <div class="notification-header">
                     <h2>Notification</h2>
+                    <a href="{{ route('user.chat.index') }}" class="btn btn-sm btn-info text-white ms-2">Message Admin</a>
                 </div>
 
                 {{-- Search and Date --}}
@@ -59,6 +60,11 @@
                             class="tab-item {{ $tab === 'archive' ? 'active' : '' }}">
                             Archive <span class="tab-badge">{{ $archiveCount }}</span>
                         </a>
+
+                        <a href="{{ route('user.notifications', ['tab' => 'global_message']) }}"
+                            class="tab-item {{ $tab === 'global_message' ? 'active' : '' }}">
+                            Global Message <span class="tab-badge">{{ $globalMessageCount }}</span>
+                        </a>
                     </div>
 
                     <label class="unread-toggle">
@@ -88,8 +94,8 @@
                             <div class="notification-text">
 
                                 {{-- Show ADMIN badge only for admin-sent notifications --}}
-                                @if ($notification->type === 'admin_message')
-                                    <span class="badge-admin">ADMIN</span>
+                                @if ($notification->type === 'admin_message' || $notification->type === 'global_message')
+                                    <span class="badge-admin">{{ $notification->type === 'global_message' ? 'GLOBAL' : 'ADMIN' }}</span>
                                 @endif
 
                                 <div class="notification-title">
@@ -119,7 +125,7 @@
                         </div>
 
                         @if (!$notification->is_read)
-                            <div class="notification-badge">1</div>
+                            <div class="notification-badge">{{ max(1, (int) ($notification->unread_count ?? 1)) }}</div>
                         @endif
                     </div>
                 @empty

@@ -1,13 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Role</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
+@extends('ManagementSystemViews.AdminViews.Layouts.app')
 
+@section('title', 'Create Role')
+
+@section('content')
 <div class="container mt-4">
     <h2>Create Role</h2>
 
@@ -68,6 +63,4 @@
 
     </form>
 </div>
-
-</body>
-</html>
+@endsection

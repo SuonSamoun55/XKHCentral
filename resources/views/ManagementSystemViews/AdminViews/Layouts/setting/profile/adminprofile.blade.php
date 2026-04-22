@@ -1,13 +1,9 @@
-<!DOCTYPE html>
-<html>
+@extends('ManagementSystemViews.AdminViews.Layouts.app')
 
-<head>
-    <title>Profile Information</title>
+@section('title', 'Profile Information')
 
-    <link rel="stylesheet" href="{{ asset('css/ManagementSystem/adminSidbar.css') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <style>
+@push('styles')
+<style>
         .main-wrapper {
             display: flex;
             gap: 10px;
@@ -109,14 +105,13 @@
             color: #334155;
         }
     </style>
-</head>
+@endpush
 
-<body>
-
+@section('content')
 <div class="main-wrapper">
 
         {{-- Sidebar --}}
-        @include('ManagementSystemViews.AdminViews.Layouts.aside')
+        
 
     <div class="content-area">
             <div class="container mt-4">
@@ -240,7 +235,10 @@
     </div>
 
     {{-- Preview Image Script --}}
-    <script>
+@endsection
+
+@push('scripts')
+<script>
         function previewFile(event) {
             const reader = new FileReader();
             reader.onload = function() {
@@ -249,7 +247,4 @@
             reader.readAsDataURL(event.target.files[0]);
         }
     </script>
-
-</body>
-
-</html>
+@endpush
