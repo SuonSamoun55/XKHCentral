@@ -3,9 +3,7 @@
 @section('title', 'Company')
 
 @push('styles')
-    <style>
-      
-    </style>
+
 @endpush
 
 @section('content')
