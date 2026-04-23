@@ -10,10 +10,11 @@
 
 @section('content')
     <div class="page-wrap">
+        
         <main class="content-area">
-            @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Favorite Items'])
 
             <div id="messageBox" class="message-box"></div>
+            @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Favorite Items'])
 
             @if ($favorites->isEmpty())
                 <div class="empty-box">No favorite items found.</div>
