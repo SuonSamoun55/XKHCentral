@@ -222,7 +222,7 @@
                         {{-- Buttons --}}
                         <div class="d-flex justify-content-centers gap-3">
 
-                            <a href="{{ route('admin.profile') }}" class="btn btn-cancel btn-custom">
+                            <a href="{{ route('profile') }}" class="btn btn-cancel btn-custom">
                                 Cancel
                             </a>
 
