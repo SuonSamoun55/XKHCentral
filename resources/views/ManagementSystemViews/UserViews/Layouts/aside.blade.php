@@ -28,17 +28,7 @@
     }
 
     // 3. Setup User Avatar Logic
-    $userAvatar = asset('images/default-user.png');
-    if ($authUser) {
-        $img = $authUser->avatar ?? $authUser->profile_image ?? $authUser->image;
-        if ($img) {
-            if (preg_match('/^https?:\/\//i', $img)) {
-                $userAvatar = $img;
-            } else {
-                $userAvatar = asset($img);
-            }
-        }
-    }
+    $userAvatar = $authUser->profile_image_display ?? asset('images/default-user.png');
 @endphp
 
 <div class="sidebar-wrap">
