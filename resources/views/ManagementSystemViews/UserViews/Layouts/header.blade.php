@@ -17,7 +17,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 25px;
+    /* padding: 15px 25px; */
     margin-bottom: 12px;
     width: 100%;
     box-sizing: border-box;
