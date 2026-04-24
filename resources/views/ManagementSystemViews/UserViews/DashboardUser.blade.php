@@ -52,7 +52,6 @@
                         <h3>Recent Order</h3>
                         <div class="small-text">Sort by Newest ⌄</div>
                     </div>
-
                     <div class="order-list">
                         <div class="order-item">
                             <div class="order-left">
@@ -164,6 +163,7 @@
                         <img src="https://i.pravatar.cc/80?img=15" alt="">
                         <img src="https://i.pravatar.cc/80?img=59" alt="">
                         <img src="https://i.pravatar.cc/80?img=47" alt="">
+                        
                     </div>
 
                     <a href="#" class="gold-link">All messages →</a>

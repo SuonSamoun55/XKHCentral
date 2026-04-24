@@ -8,14 +8,18 @@
 
 @section('content')
     <div class="page-wrap">
+
         <main class="content-area">
+
+            <div id="messageBox" class="message-box"></div>
             <div class="top">
-                <h1 class="title">Favorite</h1>
-                <a href="/pos-system/cart" class="cart-box" aria-label="Go to cart">
-                    <i class="bi bi-cart3"></i>
-                    <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
-                </a>
-            </div>
+    @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Favorite Items'])
+
+    <div class="cart-box">
+        <i class="bi bi-cart3"></i>
+        <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
+    </div>
+</div>
 
             <div id="messageBox" class="message-box"></div>
 
@@ -30,8 +34,7 @@
                             $salePrice = (float) ($item->final_price ?? $normalPrice);
                             $oldPrice = $discountPercent > 0 ? $normalPrice : 0;
                         @endphp
-                        <div class="product-card product-item"
-                            data-name="{{ strtolower($item->display_name ?? '') }}"
+                        <div class="product-card product-item" data-name="{{ strtolower($item->display_name ?? '') }}"
                             data-uom="{{ strtolower($item->base_unit_of_measure_code ?? '') }}">
 
                             <div class="product-img-box">
@@ -52,7 +55,11 @@
                                 </div> --}}
 
                                 <div class="price-row {{ $oldPrice > $salePrice ? 'has-discount' : 'no-discount' }}">
-                                    <div class="old-price">@if($oldPrice > $salePrice)${{ number_format($oldPrice, 2) }}@endif</div>
+                                    <div class="old-price">
+                                        @if ($oldPrice > $salePrice)
+                                            ${{ number_format($oldPrice, 2) }}
+                                        @endif
+                                    </div>
                                     <div class="new-price">${{ number_format($salePrice, 2) }}</div>
                                 </div>
 

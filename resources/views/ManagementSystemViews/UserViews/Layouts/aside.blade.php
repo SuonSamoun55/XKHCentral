@@ -71,6 +71,9 @@
             $companyLogoUrl = Storage::url($company->logo);
         }
     }
+
+    // 3. Setup User Avatar Logic
+    $userAvatar = $authUser->profile_image_display ?? asset('images/default-user.png');
 @endphp
 
 <div class="sidebar-wrap">

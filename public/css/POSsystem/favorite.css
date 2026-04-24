@@ -20,11 +20,14 @@
 
 .top {
     display: flex;
+    background: white;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    padding: 0 10px;
-    /* margin-bottom: 8px; */
+   
+}
+.top .cart-box {
+    margin-left: auto;
+   
 }
 
 .title {
@@ -63,7 +66,7 @@
 
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 0px));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 0px));
     gap: 14px;
     justify-content: start;
     align-content: start;

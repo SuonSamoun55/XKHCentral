@@ -54,8 +54,11 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    padding: 0 10px;
-    background:white;
+    padding: 15px 24px;
+}
+.topbar{
+    height: 110px;
+    background: white;
 }
 
 .title {
@@ -121,10 +124,13 @@ h2 {
     gap: 10px;
     background: #EEEEEE;
     min-height: 30px;
-    padding: 0 14px;
+    padding: 6px 14px;
     border-radius: 5px;
     border: 1px solid #dfe3ea;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    position: relative;
+    top: -10px;
+  
 }
 
 .search-box > i {
@@ -399,6 +405,7 @@ h2 {
     gap: 18px;
     align-items: start;
     padding: 0px 10px;
+    
 }
 
 .product-card {
