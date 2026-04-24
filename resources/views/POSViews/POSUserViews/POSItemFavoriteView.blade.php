@@ -13,7 +13,6 @@
 
             <div id="messageBox" class="message-box"></div>
             <div class="top">
-                <div class="topbar">
                     @include('ManagementSystemViews.UserViews.Layouts.header', [
                         'title' => 'Favorite Items',
                     ])
@@ -25,7 +24,6 @@
                 </div>
 
                 <div id="messageBox" class="message-box"></div>
-                </div>
 
                 @if ($favorites->isEmpty())
                     <div class="empty-box">No favorite items found.</div>
