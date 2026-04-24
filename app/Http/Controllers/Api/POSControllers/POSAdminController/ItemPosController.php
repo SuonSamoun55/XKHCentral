@@ -90,17 +90,15 @@ class ItemPosController extends Controller
                 ?? $item['discountamount']
                 ?? ($localItem->discount_amount ?? 0);
 
-          $item['discountStartDate'] =
-    $item['discountStartDate']
-    ?? $item['discount_start_date']
-    ?? $item['discountstartdate']
-    ?? ($localItem?->discount_start_date?->format('Y-m-d H:i:s'));
+            $item['discountStartDate'] = $item['discountStartDate']
+                ?? $item['discount_start_date']
+                ?? $item['discountstartdate']
+                ?? optional($localItem->discount_start_date)->format('Y-m-d H:i:s');
 
-$item['discountEndDate'] =
-    $item['discountEndDate']
-    ?? $item['discount_end_date']
-    ?? $item['discountenddate']
-    ?? ($localItem?->discount_end_date?->format('Y-m-d H:i:s'));
+            $item['discountEndDate'] = $item['discountEndDate']
+                ?? $item['discount_end_date']
+                ?? $item['discountenddate']
+                ?? optional($localItem->discount_end_date)->format('Y-m-d H:i:s');
         }
 
         $items = array_values($items);
@@ -158,12 +156,12 @@ $item['discountEndDate'] =
         $item['discountStartDate'] = $item['discountStartDate']
             ?? $item['discount_start_date']
             ?? $item['discountstartdate']
-            ?? optional($localItem->discount_start_date)->format('Y-m-d H:i:s');
+            ?? optional(optional($localItem)->discount_start_date)->format('Y-m-d H:i:s');
 
         $item['discountEndDate'] = $item['discountEndDate']
             ?? $item['discount_end_date']
             ?? $item['discountenddate']
-            ?? optional($localItem->discount_end_date)->format('Y-m-d H:i:s');
+            ?? optional(optional($localItem)->discount_end_date)->format('Y-m-d H:i:s');
 
         return response()->json($item);
     }

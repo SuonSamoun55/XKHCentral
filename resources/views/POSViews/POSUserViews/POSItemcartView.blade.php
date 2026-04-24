@@ -5,226 +5,508 @@
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/POSsystem/cart.css') }}">
     <style>
-        .icon-wrapper {
-            position: relative;
-            width: 140px;
-            height: 140px;
-            margin: 0 auto 30px;
+        :root {
+            --primary-teal: #00cad1;
+            --text-gray: #777;
+            --text-dark: #333;
+            --bg-light: white;
         }
 
-        .check-circle {
-            background: #00cad1;
+        body {
+            background-color: #fff;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+        }
+
+        .cart-container {
             width: 100%;
-            height: 100%;
+            margin: 0 auto;
+            padding: 1% 2%;
+            background-color: var(--bg-light);
+            border-radius: 12px;
+            /* height:%; */
+        }
+
+        #cartMainContent {
+            width: 100%;
+            height: auto;
+            padding:0 20% 1% 10%;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        /* Header */
+        .cart-nav {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1%;
+        }
+        .back-btn {
+            background: #f5f5f5;
+            border-radius: 50%;
+            width: 3.5%;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #333;
+            margin-right: 1.5%;
+            min-width: 2.1rem;
+            max-width: 2.6rem;
+        }
+        .nav-title { font-size: 20px; font-weight: 600; color: var(--primary-teal); }
+
+        /* --- Scroll Logic Classes --- */
+        .cart-list-wrapper {
+            padding: 0 4% 0 4%;
+            width: 100%;
+            height: auto;
+            min-height: 0;
+        }
+
+        /* If items > 5 */
+        .scroll-limit-5 {
+            max-height: min(60vh, 24rem);
+            overflow-y: auto;
+            padding-right: 1%;  
+        }
+
+        /* If items > 10 */
+        .scroll-limit-10 {
+            max-height: min(56vh, 32rem);
+            overflow-y: auto;
+            padding-right: 1%;
+        }
+
+        /* Custom Scrollbar for better UI */
+        .scroll-limit-5::-webkit-scrollbar, .scroll-limit-10::-webkit-scrollbar {
+            width: 0px;
+        }
+        .scroll-limit-5::-webkit-scrollbar-thumb, .scroll-limit-10::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 10px;
+        }
+
+        /* Compact Item Row */
+        .item-card {
+            display: flex;
+            align-items: center;
+            gap: 2%;
+            padding: 1.6% 0;
+            border-bottom: 1px solid #f0f0f0;
+            position: relative;
+        }
+        .item-image {
+            width: 5%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 10%;
+            flex-shrink: 0;
+            max-width: 6rem;
+        }
+        .item-details {
+            flex: 1;
+        }
+        .item-details h3 {
+            font-size: 12px;
+            /* margin: 0 0 8px 0;  */
+            font-weight: 600;
+        }
+
+        /* Compact Quantity Controls */
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 6%;
+            background: #f5f5f5;
+            /* padding: 1% 3%; */
+            border-radius: 8px;
+            width: 10%;
+
+            justify-content: space-between;
+        }
+        .qty-btn {
+            border: none; background: none; font-size: 16px; cursor: pointer; color: #555; padding: 0;
+        }
+        .qty-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .qty-val { font-size: 13px; font-weight: 600; }
+
+        .remove-icon {
+            position: absolute;
+            right: 0%;
+            top: 15%;
+            color: #ff5b5b;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* Summary Section */
+        .summary-box {
+            background-color:#FAFEFF;
+            /* margin-top: 2%; */
+            padding:2% 4% 0.5%  4%;
+            border-top: 1px solid #eee;
+        }
+        .summary-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--text-gray);
+        }
+        .summary-line.total-usd {
+            color: var(--text-dark);
+            font-weight: 600;
+            font-size: 12px;
+            /* margin-top: 10px; */
+        }
+        .summary-line.total-riel {
+            font-weight: 600;
+            color: #000;
+            font-size: 12px;
+        }
+
+        /* Place Order Button */
+        .place-order-btn {
+            background: var(--primary-teal);
+            color: white;
+            border: none;
+            width: 30%;
+            padding: 1% 2% ;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 14px;
+            display: block;
+            margin: 0% auto 0;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 12px rgba(0, 202, 209, 0.2);
+            transition: transform 0.2s;
+            margin-top:1%;
+        }
+        .place-order-btn:active { transform: scale(0.98); }
+
+        .empty-state {
+            text-align: center;
+            padding: 5% 0;
+        }
+
+        .empty-state-image {
+            width: 25%;
+            margin-bottom: 2%;
+            max-width: 10rem;
+        }
+
+        .empty-state-link {
+            color: var(--primary-teal);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        #orderSuccessContent {
+            text-align: center;
+            padding-top: 4%;
+        }
+
+        .success-icon-circle {
+            background: var(--primary-teal);
+            width: 14%;
+            aspect-ratio: 1 / 1;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 0 auto 2%;
             color: white;
-            font-size: 70px;
+            font-size: 2.2rem;
+            max-width: 5rem;
+            min-width: 4rem;
         }
 
-        .text-confirmed {
-            color: #4DB37E;
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 10px;
+        .success-desc {
+            color: #666;
+            font-size: 14px;
         }
 
-        .text-main, .text-sub {
-            color: #555;
-            font-size: 16px;
-            margin: 5px 0;
-        }
-
-        .btn-track {
-            background: #00cad1;
-            color: white !important;
-            padding: 14px 80px;
-            border-radius: 10px;
+        .back-home-btn {
             text-decoration: none;
-            font-weight: bold;
-            display: inline-block;
-            width: 250px;
+            margin-top: 2%;
         }
 
-        .btn-home {
-            color: #00cad1;
-            text-decoration: none;
-            font-weight: bold;
-            margin-top: 15px;
-        }
+        @media (max-width: 768px) {
+            .cart-container {
+                padding: 3% 3.5%;
+            }
 
-        .dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; }
-        .d1 { background: #FFD700; top: 10px; left: 0; }
-        .d2 { background: #FF69B4; bottom: 20px; right: -10px; }
-        .d3 { background: #7B68EE; top: 40px; right: 0; }
+            .cart-list-wrapper {
+                padding: 0;
+            }
+
+            .item-image {
+                width: 22%;
+            }
+
+            .qty-controls {
+                width: 45%;
+                min-width: 7rem;
+            }
+
+            .place-order-btn {
+                width: 100%;
+            }
+        }
     </style>
 @endpush
 
 @section('content')
-    <div class="page-wrap">
-        <main class="content-area">
-            <div id="cartMainContent">
-                <div class="cart-header">
-                    @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Cart'])
-                </div>
-
-                @if (!$cart || $cart->items->isEmpty())
-                    <div class="empty-cart">
-                        <div class="empty-cart">
-                            <img src="{{ asset('images/pos/Empty.png') }}" class="empty-image">
-                        </div>
-                        <div class="empty-title">Your cart is Empty</div>
-                        <div class="empty-text">Add something to make me happy..!!</div>
-                        <a href="/pos-system" class="continue-btn">Continue Shopping</a>
-                    </div>
-                @else
-                    <div class="cart-list">
-                        @foreach ($cart->items as $cartItem)
-                            <div class="cart-row">
-                                <div class="cart-image">
-                                    <img src="{{ optional($cartItem->item)->image_url ?? asset('images/no-image.png') }}">
-                                </div>
-                                <div>
-                                    <div class="cart-name">{{ $cartItem->item_name }}</div>
-                                    <div class="cart-uom">{{ optional($cartItem->item)->base_unit_of_measure_code ?? 'PCS' }}</div>
-                                    <div class="cart-price">${{ number_format($cartItem->unit_price, 2) }}</div>
-                                </div>
-                                <div class="cart-actions">
-                                    <button class="remove-btn remove-item" data-id="{{ $cartItem->id }}">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                    <div class="qty-box">
-                                        <button class="qty-btn minus qty-update" data-id="{{ $cartItem->id }}" data-action="minus">-</button>
-                                        <div class="qty-number">{{ $cartItem->qty }}</div>
-                                        <button class="qty-btn plus qty-update" data-id="{{ $cartItem->id }}" data-action="plus">+</button>
-                                    </div>
-                                </div>
-                                <div class="line-total">${{ number_format($cartItem->line_total, 2) }}</div>
-                            </div>
-                        @endforeach
-                    </div>
-
-                    <div class="summary">
-                        <div class="summary-row">
-                            <span>Subtotal</span>
-                            <strong>${{ number_format($subtotal, 2) }}</strong>
-                        </div>
-                        <div class="summary-row">
-                            <span>Discount</span>
-                            <strong>- ${{ number_format($discountAmount ?? 0, 2) }}</strong>
-                        </div>
-                        <div class="summary-row">
-                            <span>Tax</span>
-                            <strong>${{ number_format($taxAmount ?? 0, 2) }}</strong>
-                        </div>
-                        <div class="summary-row summary-total">
-                            <span>Total</span>
-                            <strong>${{ number_format($total, 2) }}</strong>
-                        </div>
-                        <button id="checkoutBtn" class="checkout-btn">Go to Checkout</button>
-                    </div>
-                @endif
-            </div>
-
-            <div id="orderSuccessContent" style="display: none; padding-top: 50px; text-align: center;">
-                <div class="icon-wrapper">
-                    <div class="check-circle">
-                        <i class="bi bi-check-lg"></i>
-                    </div>
-                    <span class="dot d1"></span>
-                    <span class="dot d2"></span>
-                    <span class="dot d3"></span>
-                </div>
-
-                <h1 class="text-confirmed">Your Order is Confirmed !</h1>
-                <p class="text-main">Your order is being packed and will arrive soon.</p>
-                <p class="text-sub">Fruits and veggies coming right up!</p>
-
-                <div style="margin-top: 40px; display: flex; flex-direction: column; align-items: center;">
-                    <a href="{{ route('user.pos.order.history') }}" class="btn-track">Track Order</a>
-                    <a href="/pos-system" class="btn-home">Back to home</a>
-                </div>
-            </div>
-        </main>
+<div class="cart-container">
+    <div class="cart-nav">
+        <a href="/pos-system" class="back-btn"><i class="bi bi-arrow-left"></i></a>
+        <span class="nav-title">My Cart</span>
     </div>
+
+    <div id="cartMainContent">
+        @if (!$cart || $cart->items->isEmpty())
+            <div class="empty-state">
+                <img src="{{ asset('images/pos/Empty.png') }}" class="empty-state-image">
+                <h3 style="color: #ccc;">Your cart is Empty</h3>
+                <a href="/pos-system" class="empty-state-link">Continue Shopping</a>
+            </div>
+        @else
+            @php
+                $count = $cart->items->count();
+                $scrollClass = '';
+                if($count > 10) $scrollClass = 'scroll-limit-10';
+                elseif($count > 5) $scrollClass = 'scroll-limit-5';
+            @endphp
+
+            <div class="cart-list-wrapper {{ $scrollClass }}">
+                @foreach ($cart->items as $cartItem)
+                <div class="item-card" data-cart-item-id="{{ $cartItem->id }}" data-qty="{{ $cartItem->qty }}">
+                    <img src="{{ optional($cartItem->item)->image_url ?? asset('images/no-image.png') }}" class="item-image">
+
+                    <div class="item-details">
+                        <h3>{{ $cartItem->item_name }} (L)</h3>
+                        <div class="qty-controls">
+                            <button class="qty-btn qty-update" data-id="{{ $cartItem->id }}" data-action="minus">−</button>
+                            <span class="qty-val">{{ $cartItem->qty }}</span>
+                            <button class="qty-btn qty-update" data-id="{{ $cartItem->id }}" data-action="plus">+</button>
+                        </div>
+                    </div>
+
+                    <i class="bi bi-x-circle remove-icon remove-item" data-id="{{ $cartItem->id }}"></i>
+                </div>
+                @endforeach
+            </div>
+
+            <div class="summary-box">
+                <div class="summary-line">
+                    <span>Subtotal</span>
+                    <span id="subtotalAmount">${{ number_format($subtotal, 2) }}</span>
+                </div>
+                <div class="summary-line">
+                    <span>Delivery</span>
+                    <span id="deliveryAmount">$0.00</span>
+                </div>
+                <div class="summary-line">
+                    <span>Estimated Tax <i class="bi bi-question-circle"></i></span>
+                    <span id="taxAmount">${{ number_format($taxAmount ?? 0, 2) }}</span>
+                </div>
+
+                <div class="summary-line total-usd">
+                    <span>Total in USD</span>
+                    <span id="totalUsd">${{ number_format($total, 2) }}</span>
+                </div>
+                <div class="summary-line total-riel">
+                    <span>Total in Khmer Riel</span>
+                    <span id="totalRiel">riel {{ number_format($total * 4100, 0) }}</span>
+                </div>
+            </div>
+
+            <button id="checkoutBtn" class="place-order-btn">Place Order</button>
+        @endif
+    </div>
+
+    <div id="orderSuccessContent" style="display: none;">
+        <div class="success-icon-circle">
+            <i class="bi bi-check-lg"></i>
+        </div>
+        <h2 style="color: #4DB37E;">Confirmed!</h2>
+        <p class="success-desc">Your order is being prepared.</p>
+        <a href="/pos-system" class="place-order-btn back-home-btn">Back Home</a>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
-    <script>
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+<script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const cartMainContent = document.getElementById('cartMainContent');
+    const cartListWrapper = document.querySelector('.cart-list-wrapper');
+    const pendingQtyByItem = new Map();
+    const syncingItems = new Set();
+    const debounceTimerByItem = new Map();
+    const rielRate = 4100;
 
-        async function updateQty(id, qty) {
-            await fetch(`/pos-system/cart/update/${id}`, {
+    const formatUsd = (value) => `$${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const formatRiel = (value) => `riel ${Math.round(Number(value || 0)).toLocaleString('en-US')}`;
+
+    const updateSummary = (summary) => {
+        const subtotalEl = document.getElementById('subtotalAmount');
+        const taxEl = document.getElementById('taxAmount');
+        const totalUsdEl = document.getElementById('totalUsd');
+        const totalRielEl = document.getElementById('totalRiel');
+
+        if (!subtotalEl || !taxEl || !totalUsdEl || !totalRielEl || !summary) return;
+
+        subtotalEl.textContent = formatUsd(summary.subtotal);
+        taxEl.textContent = formatUsd(summary.tax_amount);
+        totalUsdEl.textContent = formatUsd(summary.total);
+        totalRielEl.textContent = formatRiel(summary.total * rielRate);
+    };
+
+    const applyScrollClass = () => {
+        if (!cartListWrapper) return;
+        const itemCount = document.querySelectorAll('.item-card').length;
+        cartListWrapper.classList.remove('scroll-limit-5', 'scroll-limit-10');
+        if (itemCount > 10) cartListWrapper.classList.add('scroll-limit-10');
+        else if (itemCount > 5) cartListWrapper.classList.add('scroll-limit-5');
+    };
+
+    const renderEmptyState = () => {
+        cartMainContent.innerHTML = `
+            <div class="empty-state">
+                <img src="{{ asset('images/pos/Empty.png') }}" class="empty-state-image">
+                <h3 style="color: #ccc;">Your cart is Empty</h3>
+                <a href="/pos-system" class="empty-state-link">Continue Shopping</a>
+            </div>
+        `;
+    };
+
+    const refreshCartSummary = async () => {
+        const res = await fetch('/pos-system/cart/data', {
+            method: 'GET',
+            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.success) return;
+        updateSummary(data);
+    };
+
+    const setItemButtonsDisabled = (row, disabled) => {
+        row.querySelectorAll('.qty-update').forEach(btn => {
+            btn.disabled = disabled;
+        });
+    };
+
+    const syncQty = async (id, row) => {
+        if (syncingItems.has(id)) return;
+        syncingItems.add(id);
+        setItemButtonsDisabled(row, true);
+
+        try {
+            const qty = pendingQtyByItem.get(id);
+            const res = await fetch(`/pos-system/cart/update/${id}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
                 body: JSON.stringify({ qty })
             });
-            location.reload();
+
+            if (!res.ok) {
+                throw new Error('Update failed');
+            }
+
+            await refreshCartSummary();
+
+            const latestQty = parseInt(row.dataset.qty, 10);
+            if (pendingQtyByItem.get(id) !== latestQty) {
+                syncingItems.delete(id);
+                setItemButtonsDisabled(row, false);
+                return syncQty(id, row);
+            }
+        } catch (error) {
+            alert('Failed to update quantity. Please try again.');
+        } finally {
+            syncingItems.delete(id);
+            setItemButtonsDisabled(row, false);
         }
+    };
 
-        document.querySelectorAll('.qty-update').forEach(btn => {
-            btn.onclick = function() {
-                let row = this.closest('.cart-row');
-                let qty = parseInt(row.querySelector('.qty-number').innerText);
-                if (this.dataset.action === 'minus') {
-                    if (qty > 1) qty--;
-                } else {
-                    qty++;
-                }
-                updateQty(this.dataset.id, qty);
+    // Update Quantity
+    document.querySelectorAll('.qty-update').forEach(btn => {
+        btn.onclick = async function() {
+            const id = this.dataset.id;
+            const row = this.closest('.item-card');
+            const qtyLabel = row.querySelector('.qty-val');
+            const currentQty = parseInt(qtyLabel.innerText, 10);
+            const newQty = this.dataset.action === 'plus' ? currentQty + 1 : currentQty - 1;
+
+            if (newQty < 1) return;
+
+            qtyLabel.innerText = newQty;
+            row.dataset.qty = newQty;
+            pendingQtyByItem.set(id, newQty);
+
+            const oldTimer = debounceTimerByItem.get(id);
+            if (oldTimer) clearTimeout(oldTimer);
+
+            const timer = setTimeout(() => {
+                syncQty(id, row);
+            }, 180);
+            debounceTimerByItem.set(id, timer);
+        }
+    });
+
+    // Remove Item
+    document.querySelectorAll('.remove-item').forEach(btn => {
+        btn.onclick = async function() {
+            if(!confirm('Remove this item?')) return;
+            const row = this.closest('.item-card');
+            const res = await fetch(`/pos-system/cart/remove/${this.dataset.id}`, {
+                method: 'DELETE',
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken }
+            });
+
+            if (!res.ok) {
+                alert('Failed to remove item. Please try again.');
+                return;
             }
-        });
 
-        document.querySelectorAll('.remove-item').forEach(btn => {
-            btn.onclick = async function() {
-                await fetch(`/pos-system/cart/remove/${this.dataset.id}`, {
-                    method: 'DELETE',
-                    headers: { 'X-CSRF-TOKEN': csrfToken }
-                });
-                location.reload();
-            }
-        });
+            row.remove();
+            applyScrollClass();
+            await refreshCartSummary();
 
-        const checkoutBtn = document.getElementById('checkoutBtn');
-        if(checkoutBtn) {
-            checkoutBtn.onclick = async function() {
-                let currency = prompt("Choose currency (USD or KHR)", "USD");
-                if (!currency) return;
-                currency = currency.toUpperCase();
-
-                let factor = 1;
-                if (currency === "KHR") {
-                    factor = prompt("Enter KHR rate example 4100", "4100");
-                    if (!factor) return;
-                }
-
-                let res = await fetch('/pos-system/checkout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: JSON.stringify({
-                        currency: currency,
-                        factor: factor
-                    })
-                });
-
-                let data = await res.json();
-
-                if (data.success) {
-                    document.getElementById('cartMainContent').style.display = 'none';
-                    document.getElementById('orderSuccessContent').style.display = 'block';
-                } else {
-                    alert(data.message || 'Checkout failed');
-                }
+            if (document.querySelectorAll('.item-card').length === 0) {
+                renderEmptyState();
             }
         }
-    </script>
-</body>
-</html>
+    });
+
+    // Checkout
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    if(checkoutBtn) {
+        checkoutBtn.onclick = async function() {
+            // Simplified checkout call
+            let res = await fetch('/pos-system/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                body: JSON.stringify({ currency: 'USD', factor: 1 })
+            });
+
+            let data = await res.json();
+            if (data.success) {
+                document.getElementById('cartMainContent').style.display = 'none';
+                document.getElementById('orderSuccessContent').style.display = 'block';
+            } else {
+                alert('Checkout failed');
+            }
+        }
+    }
+</script>
+@endpush
