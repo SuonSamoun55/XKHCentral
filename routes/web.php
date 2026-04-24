@@ -93,6 +93,7 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
 });
     // ---------- POS User ----------
     Route::get('/pos-system', [POSUserControllerItemList::class, 'getItems'])->name('user.posinterface');
+    Route::get('/pos-system/items/{id}', [POSUserControllerItemList::class, 'detail'])->name('user.pos.items.detail');
     Route::get('/pos-system/favorites', [FavoriteController::class, 'getFavorites'])->name('user.pos.favorites');
     Route::post('/pos-system/favorite-toggle', [FavoriteController::class, 'toggle'])->name('user.pos.favorite.toggle');
 

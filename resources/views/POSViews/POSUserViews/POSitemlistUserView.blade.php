@@ -10,7 +10,7 @@
     <div class="page-wrap">
         <main class="content-area">
             <div class="header">
-
+                <div class="topbar">
                     <div class="top">
                         <h1 class="title">
                            Products
@@ -18,7 +18,7 @@
 
                         <a href="{{ route('user.pos.cart') }}" class="cart-box">
                             <i class="bi bi-cart3"></i>
-                            <span class="cart-count" id="cartCount">0</span>
+                            <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
                         </a>
                     </div>
 
@@ -46,6 +46,7 @@
                         </div>
                     </div>
                 </div>
+                </div>
 
                 <div id="messageBox" class="message-box"></div>
 
@@ -55,20 +56,24 @@
                     <div class="products-grid" id="productsGrid">
                         @foreach ($items as $item)
                             @php
-                                $salePrice = (float) ($item->unit_price ?? 0);
-                                $discountPercent = (float) ($item->discount_percent ?? 40);
-                                $oldPrice = (float) ($item->original_price ?? ($salePrice > 0 ? $salePrice * 2.4 : 0));
+                                $normalPrice = (float) ($item->unit_price ?? 0);
+                                $discountPercent = (float) ($item->effective_discount_percent ?? 0);
+                                $salePrice = (float) ($item->final_price ?? $normalPrice);
+                                $oldPrice = $discountPercent > 0 ? $normalPrice : 0;
                                 // $descText = $item->short_description ?? '';
                             @endphp
 
                             <div class="product-card product-item" data-id="{{ $item->id }}"
                                 data-name="{{ strtolower($item->display_name ?? '') }}"
                                 data-display-name="{{ $item->display_name ?? '' }}"
+                                data-detail-url="{{ route('user.pos.items.detail', ['id' => $item->id]) }}"
                                 {{-- data-desc="{{ strtolower($descText ?? '') }}" --}}
                                 data-uom="{{ strtolower($item->base_unit_of_measure_code ?? '') }}"
                                 data-category="{{ strtolower($item->item_category_code ?? '') }}"
                                 data-price="{{ number_format($salePrice, 2, '.', '') }}"
-                                data-image="{{ $item->image_url ?: asset('images/no-image.png') }}">
+                                data-image="{{ $item->image_url ?: asset('images/no-image.png') }}"
+                                role="button"
+                                tabindex="0">
 
                                 <div class="product-img-box">
                                     @if($discountPercent > 0)
@@ -77,7 +82,7 @@
                                         </div>
                                     @endif
 
-                                    <button class="fav-btn" data-item-id="{{ $item->id }}">
+                                    <button type="button" class="fav-btn" data-item-id="{{ $item->id }}">
                                         <i class="bi {{ in_array($item->id, $favoriteIds) ? 'bi-heart-fill text-danger' : 'bi-heart' }}"></i>
                                     </button>
 
@@ -96,12 +101,8 @@
                                         {{ $descText }}
                                     </div> --}}
 
-                                    <div class="price-row">
-                                        <div class="old-price">
-                                            @if($oldPrice > $salePrice)
-                                                ${{ number_format($oldPrice, 2) }}
-                                            @endif
-                                        </div>
+                                    <div class="price-row {{ $oldPrice > $salePrice ? 'has-discount' : 'no-discount' }}">
+                                        <div class="old-price">@if($oldPrice > $salePrice)${{ number_format($oldPrice, 2) }}@endif</div>
 
                                         <div class="new-price">
                                             ${{ number_format($salePrice, 2) }}
@@ -169,6 +170,11 @@
             }
 
             function showMessage(type, text) {
+                if (typeof window.showAppToast === "function") {
+                    window.showAppToast(text, type === "success" ? "success" : "error");
+                    return;
+                }
+
                 if (!els.messageBox) return;
 
                 const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill';
@@ -429,7 +435,7 @@
 
                     addBtn?.addEventListener("click", async function() {
                         const itemId = this.dataset.id || card.dataset.id;
-                        const qty = parseInt(qtyEl?.textContent || "0", 10);
+                        const qty = Math.max(1, parseInt(qtyEl?.textContent || "0", 10) || 1);
 
                         if (!itemId) {
                             showMessage("error", "Item ID not found.");
@@ -478,11 +484,17 @@
 
             function bindFavoriteButtons() {
                 els.favButtons.forEach(button => {
-                    button.addEventListener("click", async function() {
+                    button.addEventListener("click", async function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
                         const itemId = this.dataset.itemId;
                         const icon = this.querySelector("i");
 
-                        if (!itemId) return;
+                        if (!itemId || !csrfToken) return;
+                        if (this.disabled) return;
+
+                        this.disabled = true;
 
                         try {
                             const response = await fetch("{{ route('user.pos.favorite.toggle') }}", {
@@ -497,20 +509,29 @@
                                 })
                             });
 
-                            const data = await response.json();
+                            const data = await response.json().catch(() => ({}));
+
+                            if (!response.ok || data.success === false) {
+                                showMessage("error", data.message || "Favorite update failed.");
+                                return;
+                            }
 
                             if (!icon) return;
 
                             if (data.favorited) {
                                 icon.classList.remove("bi-heart");
                                 icon.classList.add("bi-heart-fill", "text-danger");
+                                showMessage("success", data.message || "Added to favorites.");
                             } else {
                                 icon.classList.remove("bi-heart-fill", "text-danger");
                                 icon.classList.add("bi-heart");
+                                showMessage("success", data.message || "Removed from favorites.");
                             }
                         } catch (error) {
                             console.error(error);
                             showMessage("error", "Favorite update failed.");
+                        } finally {
+                            this.disabled = false;
                         }
                     });
                 });
@@ -555,11 +576,39 @@
                 });
             }
 
+            function bindCardNavigation() {
+                const ignoreSelector = "button, a, input, textarea, select, .fav-btn, .add-cart-btn, .qty-btn";
+
+                els.productCards.forEach(card => {
+                    const goToDetail = () => {
+                        const url = card.dataset.detailUrl;
+                        if (url) {
+                            window.location.href = url;
+                        }
+                    };
+
+                    card.addEventListener("click", (e) => {
+                        if (e.target.closest(ignoreSelector)) {
+                            return;
+                        }
+                        goToDetail();
+                    });
+
+                    card.addEventListener("keydown", (e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            goToDetail();
+                        }
+                    });
+                });
+            }
+
             bindSidebar();
             bindQuantityButtons();
             bindAddToCart();
             bindFavoriteButtons();
             bindSearch();
+            bindCardNavigation();
         });
     </script>
 @endpush

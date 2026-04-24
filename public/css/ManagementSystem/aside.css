@@ -410,7 +410,7 @@
     }
     :root {
         --bg:#F6F6F3;
-        --card: #fbfbf8;
+        --card: white;
         --line: #ece8df;
         --text: #1f1f1f;
         --muted: #7f7f7f;
@@ -425,7 +425,7 @@
         --sidebar-open: 190px;
         --sidebar-close: 56px;
         --gap: 12px;
-        --radius: 18px;
+        --radius: 12px;
         }
 
 

@@ -42,7 +42,6 @@ class AdminOrderController extends Controller
                     });
             });
         }
-
         if ($tab === 'approved') {
             $query->where('status', 'confirmed');
         } else {
