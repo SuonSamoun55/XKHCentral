@@ -81,8 +81,8 @@
 
                     <div class="right-actions">
                         <a href="{{ route('admin.chat.index') }}" class="btn-send-message" style="text-decoration:none;">
-                            <i class="bi bi-telegram"></i>
-                            <span>open chat</span>
+                            <i class="bi bi-chat"></i>
+                            <span>Open Chat</span>
                         </a>
                         <button type="button" class="btn-send-message" data-bs-toggle="modal" data-bs-target="#sendModal">
                             <i class="bi bi-chat-dots"></i>
@@ -306,32 +306,33 @@
         </div>
     </div>
 </div>
-
-
-
-
-
 <style>
 
 </style>
 @endsection
 
 @push('scripts')
+@if(session('success'))
 <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        showAlert('{{ session('success') }}', 'success');
-                    });
-                </script>
+    document.addEventListener('DOMContentLoaded', function() {
+        showAlert('{{ session('success') }}', 'success');
+    });
+</script>
+@endif
+@if(session('error'))
 <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        showAlert('{{ session('error') }}', 'danger');
-                    });
-                </script>
+    document.addEventListener('DOMContentLoaded', function() {
+        showAlert('{{ session('error') }}', 'danger');
+    });
+</script>
+@endif
+@if ($errors->any())
 <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        showAlert('Please fix the errors below', 'danger');
-                    });
-                </script>
+    document.addEventListener('DOMContentLoaded', function() {
+        showAlert('Please fix the errors below', 'danger');
+    });
+</script>
+@endif
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // Alert functionality
