@@ -703,3 +703,138 @@ h2 {
         align-items: flex-start;
     }
 }
+/* =========================================================
+   MOBILE OVERRIDES – POS PRODUCT LIST
+   This OVERRIDES your desktop CSS safely
+   ========================================================= */
+@media (max-width: 576px) {
+
+    /* ---------- GLOBAL RESET ---------- */
+    .page-wrap,
+    .content-area {
+        padding: 0 !important;
+        background: #f6f8fc !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        min-height: 100vh !important;
+    }
+
+    /* ---------- TOP HEADER ---------- */
+    .top {
+        padding: 12px 14px !important;
+        background: #fff;
+        border-bottom: 1px solid #e8edf2;
+    }
+
+    .title {
+        font-size: 20px !important;
+    }
+
+    /* ---------- SEARCH ---------- */
+    .search-wrapper {
+        min-width: unset !important;
+        padding: 0 14px !important;
+    }
+
+    .search-box {
+        top: 0 !important;
+        min-height: 40px !important;
+        border-radius: 12px !important;
+    }
+
+    /* ---------- GRID (2 columns like image) ---------- */
+    .products-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+        padding: 12px !important;
+    }
+
+    /* ---------- PRODUCT CARD ---------- */
+    .product-card {
+        border-radius: 16px !important;
+        padding: 0 !important;
+        box-shadow: 0 6px 18px rgba(0,0,0,.06) !important;
+    }
+
+    /* ---------- IMAGE ---------- */
+    .product-img-box {
+        height: auto !important;
+        aspect-ratio: 1 / 1 !important;
+        background: #f5f6fb !important;
+    }
+
+    .product-img-box img {
+        object-fit: contain !important;
+        padding: 12px !important;
+    }
+
+    /* ---------- BADGES ---------- */
+    .discount-badge {
+        font-size: 10px !important;
+        padding: 4px 6px !important;
+        border-radius: 6px !important;
+    }
+
+    .fav-btn {
+        width: 32px !important;
+        height: 32px !important;
+    }
+
+    /* ---------- INFO ---------- */
+    .product-info {
+        padding: 10px !important;
+        gap: 6px !important;
+    }
+
+    .product-title {
+        font-size: 13px !important;
+        line-height: 1.3 !important;
+        max-height: 34px;
+        overflow: hidden;
+    }
+
+    /* ---------- PRICE ---------- */
+    .price-row {
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+
+    .old-price {
+        font-size: 11px !important;
+    }
+
+    .new-price {
+        font-size: 14px !important;
+        margin-left: 0 !important;
+    }
+
+    /* ---------- QTY ---------- */
+    .qty-label {
+        display: none !important;
+    }
+
+    .qty-btn {
+        width: 26px !important;
+        height: 26px !important;
+        font-size: 14px !important;
+        background: #eef1f7 !important;
+        border-radius: 8px !important;
+        color: #111 !important;
+    }
+
+    .qty {
+        font-size: 13px !important;
+    }
+
+    /* ---------- ADD TO CART ---------- */
+    .add-cart-btn {
+        padding: 8px 0 !important;
+        font-size: 13px !important;
+        border-radius: 12px !important;
+    }
+
+    /* ---------- EMPTY ---------- */
+    .empty-box {
+        margin: 24px 12px !important;
+    }
+}

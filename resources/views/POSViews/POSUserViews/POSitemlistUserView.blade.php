@@ -10,10 +10,10 @@
     <div class="page-wrap">
         <main class="content-area">
             <div class="header">
-                <div class="topbar">
+
                     <div class="top">
                         <h1 class="title">
-                            Products
+                           Products
                         </h1>
 
                         <a href="{{ route('user.pos.cart') }}" class="cart-box">
@@ -46,88 +46,90 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            <div id="messageBox" class="message-box"></div>
 
-            @if ($items->isEmpty())
-                <div class="empty-box">No items found.</div>
-            @else
-                <div class="products-grid" id="productsGrid">
-                    @foreach ($items as $item)
-                        @php
-                            $salePrice = (float) ($item->unit_price ?? 0);
-                            $discountPercent = (float) ($item->discount_percent ?? 40);
-                            $oldPrice = (float) ($item->original_price ?? ($salePrice > 0 ? $salePrice * 2.4 : 0));
-                            // $descText = $item->short_description ?? '';
-                        @endphp
+                <div id="messageBox" class="message-box"></div>
 
-                        <div class="product-card product-item" data-id="{{ $item->id }}"
-                            data-name="{{ strtolower($item->display_name ?? '') }}"
-                            data-display-name="{{ $item->display_name ?? '' }}" {{-- data-desc="{{ strtolower($descText ?? '') }}" --}}
-                            data-uom="{{ strtolower($item->base_unit_of_measure_code ?? '') }}"
-                            data-category="{{ strtolower($item->item_category_code ?? '') }}"
-                            data-price="{{ number_format($salePrice, 2, '.', '') }}"
-                            data-image="{{ $item->image_url ?: asset('images/no-image.png') }}">
+                @if ($items->isEmpty())
+                    <div class="empty-box">No items found.</div>
+                @else
+                    <div class="products-grid" id="productsGrid">
+                        @foreach ($items as $item)
+                            @php
+                                $salePrice = (float) ($item->unit_price ?? 0);
+                                $discountPercent = (float) ($item->discount_percent ?? 40);
+                                $oldPrice = (float) ($item->original_price ?? ($salePrice > 0 ? $salePrice * 2.4 : 0));
+                                // $descText = $item->short_description ?? '';
+                            @endphp
 
-                            <div class="product-img-box">
-                                @if ($discountPercent > 0)
-                                    <div class="discount-badge">
-                                        SAVE {{ rtrim(rtrim(number_format($discountPercent, 2), '0'), '.') }} %
-                                    </div>
-                                @endif
+                            <div class="product-card product-item" data-id="{{ $item->id }}"
+                                data-name="{{ strtolower($item->display_name ?? '') }}"
+                                data-display-name="{{ $item->display_name ?? '' }}"
+                                {{-- data-desc="{{ strtolower($descText ?? '') }}" --}}
+                                data-uom="{{ strtolower($item->base_unit_of_measure_code ?? '') }}"
+                                data-category="{{ strtolower($item->item_category_code ?? '') }}"
+                                data-price="{{ number_format($salePrice, 2, '.', '') }}"
+                                data-image="{{ $item->image_url ?: asset('images/no-image.png') }}">
 
-                                <button class="fav-btn" data-item-id="{{ $item->id }}">
-                                    <i
-                                        class="bi {{ in_array($item->id, $favoriteIds) ? 'bi-heart-fill text-danger' : 'bi-heart' }}"></i>
-                                </button>
+                                <div class="product-img-box">
+                                    @if($discountPercent > 0)
+                                        <div class="discount-badge">
+                                            SAVE {{ rtrim(rtrim(number_format($discountPercent, 2), '0'), '.') }} %
+                                        </div>
+                                    @endif
 
-                                <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
-                                    alt="{{ $item->display_name ?? 'No Name' }}" loading="lazy"
-                                    onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
-                            </div>
+                                    <button class="fav-btn" data-item-id="{{ $item->id }}">
+                                        <i class="bi {{ in_array($item->id, $favoriteIds) ? 'bi-heart-fill text-danger' : 'bi-heart' }}"></i>
+                                    </button>
 
-                            <div class="product-info">
-                                <div class="product-title">
-                                    {{ $item->display_name ?: 'No Name' }}
+                                    <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
+                                        alt="{{ $item->display_name ?? 'No Name' }}"
+                                        loading="lazy"
+                                        onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
                                 </div>
 
-                                {{-- <div class="product-desc">
+                                <div class="product-info">
+                                    <div class="product-title">
+                                        {{ $item->display_name ?: 'No Name' }}
+                                    </div>
+
+                                    {{-- <div class="product-desc">
                                         {{ $descText }}
                                     </div> --}}
 
-                                <div class="price-row">
-                                    <div class="old-price">
-                                        @if ($oldPrice > $salePrice)
-                                            ${{ number_format($oldPrice, 2) }}
-                                        @endif
+                                    <div class="price-row">
+                                        <div class="old-price">
+                                            @if($oldPrice > $salePrice)
+                                                ${{ number_format($oldPrice, 2) }}
+                                            @endif
+                                        </div>
+
+                                        <div class="new-price">
+                                            ${{ number_format($salePrice, 2) }}
+                                        </div>
                                     </div>
 
-                                    <div class="new-price">
-                                        ${{ number_format($salePrice, 2) }}
+                                    <div class="qty-section">
+                                        <span class="qty-label">Quantity:</span>
+                                        <div class="qty-box">
+                                            <button type="button" class="qty-btn minus">−</button>
+                                            <span class="qty">0</span>
+                                            <button type="button" class="qty-btn plus">+</button>
+                                        </div>
                                     </div>
+
+                                    <button type="button" class="add-cart-btn mobile-action"
+                                        data-id="{{ $item->id }}">
+                                        Add to cart
+                                    </button>
                                 </div>
-
-                                <div class="qty-section">
-                                    <span class="qty-label">Quantity:</span>
-                                    <div class="qty-box">
-                                        <button type="button" class="qty-btn minus">−</button>
-                                        <span class="qty">0</span>
-                                        <button type="button" class="qty-btn plus">+</button>
-                                    </div>
-                                </div>
-
-                                <button type="button" class="add-cart-btn mobile-action" data-id="{{ $item->id }}">
-                                    Add to cart
-                                </button>
                             </div>
-                        </div>
-                    @endforeach
-                </div>
+                        @endforeach
+                    </div>
 
-                <div id="noSearchResult" class="empty-box" style="display:none; margin-top:16px;">
-                    No matching products found.
-                </div>
-            @endif
+                    <div id="noSearchResult" class="empty-box" style="display:none; margin-top:16px;">
+                        No matching products found.
+                    </div>
+                @endif
 
         </main>
     </div>
@@ -200,8 +202,7 @@
                 return {
                     id: card.dataset.id || "",
                     name: (card.dataset.name || "").toLowerCase(),
-                    displayName: card.dataset.displayName || card.querySelector(".product-title")?.textContent
-                        ?.trim() || "No Name",
+                    displayName: card.dataset.displayName || card.querySelector(".product-title")?.textContent?.trim() || "No Name",
                     desc: (card.dataset.desc || "").toLowerCase(),
                     category: (card.dataset.category || "").toLowerCase(),
                     uom: (card.dataset.uom || "").toLowerCase(),
@@ -273,9 +274,9 @@
                 if (!els.searchSuggestions) return;
 
                 const text = keyword.trim().toLowerCase();
-                let suggestions = text ?
-                    recentSearches.filter(item => item.includes(text)) :
-                    recentSearches;
+                let suggestions = text
+                    ? recentSearches.filter(item => item.includes(text))
+                    : recentSearches;
 
                 if (!suggestions.length) {
                     els.searchSuggestions.innerHTML = `<div class="search-empty">No search history</div>`;
@@ -371,8 +372,7 @@
                     filterProducts(value);
                 } else {
                     if (els.searchPreviewProducts) {
-                        els.searchPreviewProducts.innerHTML =
-                            `<div class="search-empty">Start typing to find products...</div>`;
+                        els.searchPreviewProducts.innerHTML = `<div class="search-empty">Start typing to find products...</div>`;
                     }
                     filterProducts("");
                 }
@@ -462,8 +462,7 @@
                                 }
 
                                 if (qtyEl) qtyEl.textContent = "1";
-                                showMessage("success", data.message ||
-                                    "Added to cart successfully.");
+                                showMessage("success", data.message || "Added to cart successfully.");
                             } else {
                                 showMessage("error", data.message || "Failed to add to cart.");
                             }
@@ -487,18 +486,17 @@
                         if (!itemId) return;
 
                         try {
-                            const response = await fetch(
-                                "{{ route('user.pos.favorite.toggle') }}", {
-                                    method: "POST",
-                                    headers: {
-                                        "Content-Type": "application/json",
-                                        "X-CSRF-TOKEN": csrfToken,
-                                        "Accept": "application/json"
-                                    },
-                                    body: JSON.stringify({
-                                        item_id: itemId
-                                    })
-                                });
+                            const response = await fetch("{{ route('user.pos.favorite.toggle') }}", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRF-TOKEN": csrfToken,
+                                    "Accept": "application/json"
+                                },
+                                body: JSON.stringify({
+                                    item_id: itemId
+                                })
+                            });
 
                             const data = await response.json();
 
@@ -565,7 +563,4 @@
             bindSearch();
         });
     </script>
-
-</body>
-
-</html>
+@endpush
