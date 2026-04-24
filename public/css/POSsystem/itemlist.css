@@ -55,6 +55,7 @@
     top: 0;
     z-index: 100;
     padding: 0 10px;
+    background:white;
 }
 
 .title {
@@ -499,35 +500,43 @@ h2 {
 
 .price-row {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 10px;
-    margin-top: 2px;
+    justify-content: space-around;
+    align-items:flex-start;
+    /* gap: 10px; */
+    /* margin-top: 2px; */
+}
+
+.price-row.no-discount {
+    justify-content: flex-start;
 }
 
 .old-price {
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 600;
     color: #1f2937;
     text-decoration: line-through;
-    opacity: 0.9;
-    min-height: 20px;
+    /* opacity: 0.9; */
+    /* min-height: 20px; */
 }
 
 .new-price {
-    font-size: 16px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 700;
     color: #111827;
     line-height: 1;
     margin-left: auto;
+}
+
+.price-row.no-discount .new-price {
+    margin-left: 0;
 }
 
 .qty-section {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    margin-top: 2px;
+    /* gap: 10px; */
+    /* margin-top: 2px; */
 }
 
 .qty-label {

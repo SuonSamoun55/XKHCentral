@@ -1,11 +1,9 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>User Chat</title>
-    <link rel="stylesheet" href="{{ asset('css/ManagementSystem/aside.css') }}">
+@extends('ManagementSystemViews.UserViews.Layouts.app')
+
+@section('title', 'User Chat')
+
+@push('styles')
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         .chat-page {
             display: flex;
@@ -239,8 +237,9 @@
             .emoji-panel { right: 76px; bottom: 64px; }
         }
     </style>
-</head>
-<body>
+@endpush
+
+@section('content')
 <div class="chat-page">
     <aside class="conversation-pane">
         <div class="search-wrap">
@@ -356,7 +355,9 @@
         @endif
     </section>
 </div>
+@endsection
 
+@push('scripts')
 <script>
     (function () {
         const chatBody = document.getElementById('chatBody');
@@ -805,5 +806,4 @@
         setInterval(pollMessages, 2500);
     })();
 </script>
-</body>
-</html>
+@endpush

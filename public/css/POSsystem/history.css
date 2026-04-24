@@ -311,10 +311,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     /* 1. The Container */
 .custom-table-card {
     position: relative;
-    max-height: 600px; /* Adjust as needed */
-    /* overflow-y: auto; 
-    border: 1px solid #eee;
-    border-radius: 8px; */
+    max-height: 60vh;
+    overflow-y: auto;
+    overflow-x: auto;
 }
 
 /* 2. The Table */

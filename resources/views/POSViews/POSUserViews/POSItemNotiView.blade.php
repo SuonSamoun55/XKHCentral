@@ -1,24 +1,14 @@
-<!DOCTYPE html>
-<html>
+@extends('ManagementSystemViews.UserViews.Layouts.app')
 
-<head>
-    <title>Notifications</title>
+@section('title', 'Notifications')
 
-    <link rel="stylesheet" href="{{ asset('css/ManagementSystem/aside.css') }}">
+@push('styles')
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ asset('css/POSsystem/notification.css') }}" />
-</head>
+@endpush
 
-<body>
-
-    <div class="app-shell" id="appShell">
-
-        {{-- Sidebar --}}
-        @include('ManagementSystemViews.UserViews.Layouts.aside')
-
-        {{-- Content --}}
-        <div class="page-wrap">
+@section('content')
+    <div class="page-wrap">
             <div class="header">
                 <div class="notification-header">
                     <h2>Notification</h2>
@@ -191,6 +181,9 @@
             </div>
         </div>
 
+@endsection
+
+@push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
             const searchInput = document.getElementById('searchInput');
@@ -397,6 +390,4 @@
                 }
             });
         </script>
-</body>
-
-</html>
+@endpush
