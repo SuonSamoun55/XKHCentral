@@ -13,73 +13,77 @@
 
             <div id="messageBox" class="message-box"></div>
             <div class="top">
-    @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Favorite Items'])
+                <div class="topbar">
+                    @include('ManagementSystemViews.UserViews.Layouts.header', [
+                        'title' => 'Favorite Items',
+                    ])
 
-    <div class="cart-box">
-        <i class="bi bi-cart3"></i>
-        <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
-    </div>
-</div>
+                    <div class="cart-box">
+                        <i class="bi bi-cart3"></i>
+                        <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
+                    </div>
+                </div>
 
-            <div id="messageBox" class="message-box"></div>
+                <div id="messageBox" class="message-box"></div>
+                </div>
 
-            @if ($favorites->isEmpty())
-                <div class="empty-box">No favorite items found.</div>
-            @else
-                <div class="products-grid" id="productsGrid">
-                    @foreach ($favorites as $item)
-                        @php
-                            $normalPrice = (float) ($item->unit_price ?? 0);
-                            $discountPercent = (float) ($item->effective_discount_percent ?? 0);
-                            $salePrice = (float) ($item->final_price ?? $normalPrice);
-                            $oldPrice = $discountPercent > 0 ? $normalPrice : 0;
-                        @endphp
-                        <div class="product-card product-item" data-name="{{ strtolower($item->display_name ?? '') }}"
-                            data-uom="{{ strtolower($item->base_unit_of_measure_code ?? '') }}">
+                @if ($favorites->isEmpty())
+                    <div class="empty-box">No favorite items found.</div>
+                @else
+                    <div class="products-grid" id="productsGrid">
+                        @foreach ($favorites as $item)
+                            @php
+                                $normalPrice = (float) ($item->unit_price ?? 0);
+                                $discountPercent = (float) ($item->effective_discount_percent ?? 0);
+                                $salePrice = (float) ($item->final_price ?? $normalPrice);
+                                $oldPrice = $discountPercent > 0 ? $normalPrice : 0;
+                            @endphp
+                            <div class="product-card product-item" data-name="{{ strtolower($item->display_name ?? '') }}"
+                                data-uom="{{ strtolower($item->base_unit_of_measure_code ?? '') }}">
 
-                            <div class="product-img-box">
-                                <button type="button" class="fav-btn" data-item-id="{{ $item->id }}">
-                                    <i class="bi bi-heart-fill text-danger"></i>
-                                </button>
+                                <div class="product-img-box">
+                                    <button type="button" class="fav-btn" data-item-id="{{ $item->id }}">
+                                        <i class="bi bi-heart-fill text-danger"></i>
+                                    </button>
 
-                                <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
-                                    alt="{{ $item->display_name ?? 'No Name' }}" loading="lazy"
-                                    onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
-                            </div>
+                                    <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
+                                        alt="{{ $item->display_name ?? 'No Name' }}" loading="lazy"
+                                        onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
+                                </div>
 
-                            <div class="product-info">
-                                <div class="product-title">{{ $item->display_name ?? 'No Name' }}</div>
+                                <div class="product-info">
+                                    <div class="product-title">{{ $item->display_name ?? 'No Name' }}</div>
 
-                                {{-- <div class="product-desc">
+                                    {{-- <div class="product-desc">
                                     {{ $item->description ?: ('Thick ' . ($item->display_name ?? 'product')) }}
                                 </div> --}}
 
-                                <div class="price-row {{ $oldPrice > $salePrice ? 'has-discount' : 'no-discount' }}">
-                                    <div class="old-price">
-                                        @if ($oldPrice > $salePrice)
-                                            ${{ number_format($oldPrice, 2) }}
-                                        @endif
+                                    <div class="price-row {{ $oldPrice > $salePrice ? 'has-discount' : 'no-discount' }}">
+                                        <div class="old-price">
+                                            @if ($oldPrice > $salePrice)
+                                                ${{ number_format($oldPrice, 2) }}
+                                            @endif
+                                        </div>
+                                        <div class="new-price">${{ number_format($salePrice, 2) }}</div>
                                     </div>
-                                    <div class="new-price">${{ number_format($salePrice, 2) }}</div>
-                                </div>
 
-                                <div class="qty-section">
-                                    <span class="qty-label">Quantity:</span>
-                                    <div class="qty-box">
-                                        <button type="button" class="qty-btn minus">−</button>
-                                        <span class="qty">1</span>
-                                        <button type="button" class="qty-btn plus">+</button>
+                                    <div class="qty-section">
+                                        <span class="qty-label">Quantity:</span>
+                                        <div class="qty-box">
+                                            <button type="button" class="qty-btn minus">−</button>
+                                            <span class="qty">1</span>
+                                            <button type="button" class="qty-btn plus">+</button>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <button type="button" class="add-cart-btn" data-id="{{ $item->id }}">
-                                    Add to cart
-                                </button>
+                                    <button type="button" class="add-cart-btn" data-id="{{ $item->id }}">
+                                        Add to cart
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    @endforeach
-                </div>
-            @endif
+                        @endforeach
+                    </div>
+                @endif
         </main>
     </div>
 @endsection
