@@ -15,6 +15,11 @@ class Item extends Model
         'number',
         'display_name',
         'unit_price',
+        'vat_percent',
+        'tax_amount',
+        'discount_amount',
+        'discount_start_date',
+        'discount_end_date',
         'inventory',
         'blocked',
         'is_visible',
@@ -33,6 +38,11 @@ class Item extends Model
         'category_visible' => 'boolean',
         'price_includes_tax' => 'boolean',
         'unit_price' => 'decimal:2',
+        'vat_percent' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
+        'discount_start_date' => 'datetime',
+        'discount_end_date' => 'datetime',
     ];
 
     public function company()
@@ -48,5 +58,10 @@ class Item extends Model
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function inventoryMovements()
+    {
+        return $this->hasMany(InventoryMovement::class, 'item_id');
     }
 }

@@ -9,6 +9,7 @@ use App\Models\POSModel\Item;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class CartController extends Controller
 {
@@ -22,18 +23,25 @@ public function index()
         ->first();
 
     $subtotal = 0;
+    $discountAmount = 0;
+    $taxAmount = 0;
     $total = 0;
     $itemCount = 0;
 
     if ($cart && $cart->items->count()) {
-        $subtotal = $cart->items->sum('line_total');
-        $total = $subtotal;
+        $totals = $this->calculateCartTotals($cart);
+        $subtotal = $totals['subtotal'];
+        $discountAmount = $totals['discount_amount'];
+        $taxAmount = $totals['tax_amount'];
+        $total = $totals['total'];
         $itemCount = $cart->items->sum('qty');
     }
 
     return view('POSViews.POSUserViews.POSItemcartView', compact(
         'cart',
         'subtotal',
+        'discountAmount',
+        'taxAmount',
         'total',
         'itemCount'
     ));
@@ -61,14 +69,16 @@ public function index()
             ]
         );
 
-        $subtotal = $cart->items->sum('line_total');
+        $totals = $this->calculateCartTotals($cart);
         $itemCount = $cart->items->sum('qty');
 
         return response()->json([
             'success'    => true,
             'cart'       => $cart,
-            'subtotal'   => $subtotal,
-            'total'      => $subtotal,
+            'subtotal'   => $totals['subtotal'],
+            'discount_amount' => $totals['discount_amount'],
+            'tax_amount' => $totals['tax_amount'],
+            'total'      => $totals['total'],
             'item_count' => $itemCount,
         ]);
     }
@@ -104,15 +114,24 @@ public function index()
 
         $item = Item::findOrFail($validated['item_id']);
 
+        if (!$item->is_visible) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This product is inactive and cannot be added to cart.',
+            ], 422);
+        }
+
         $cartItem = CartItem::where('cart_id', $cart->id)
             ->where('item_id', $item->id)
             ->first();
 
         if ($cartItem) {
             $cartItem->qty += $qty;
-            $cartItem->line_total = $cartItem->qty * $cartItem->unit_price;
+            $linePricing = $this->calculateLinePricing($item, (int) $cartItem->qty);
+            $cartItem->line_total = $linePricing['line_total'];
             $cartItem->save();
         } else {
+            $linePricing = $this->calculateLinePricing($item, $qty);
             $cartItem = CartItem::create([
                 'cart_id'    => $cart->id,
                 'item_id'    => $item->id,
@@ -120,7 +139,7 @@ public function index()
                 'item_name'  => $item->display_name,
                 'qty'        => $qty,
                 'unit_price' => $item->unit_price,
-                'line_total' => $qty * $item->unit_price,
+                'line_total' => $linePricing['line_total'],
             ]);
         }
 
@@ -156,7 +175,8 @@ return response()->json([
             ->firstOrFail();
 
         $cartItem->qty = (int) $validated['qty'];
-        $cartItem->line_total = $cartItem->qty * $cartItem->unit_price;
+        $linePricing = $this->calculateLinePricing($cartItem->item, (int) $cartItem->qty);
+        $cartItem->line_total = $linePricing['line_total'];
         $cartItem->save();
 
         return response()->json([
@@ -216,5 +236,87 @@ return response()->json([
             'success' => true,
             'message' => 'Cart cleared successfully.',
         ]);
+    }
+
+    private function calculateCartTotals(Cart $cart): array
+    {
+        $subtotal = 0.0;
+        $discountAmount = 0.0;
+        $taxAmount = 0.0;
+
+        foreach ($cart->items as $cartItem) {
+            $item = $cartItem->item;
+
+            if (!$item) {
+                continue;
+            }
+
+            $line = $this->calculateLinePricing($item, (int) $cartItem->qty);
+            $subtotal += $line['subtotal'];
+            $discountAmount += $line['discount_amount'];
+            $taxAmount += $line['tax_amount'];
+        }
+
+        $total = ($subtotal - $discountAmount) + $taxAmount;
+
+        return [
+            'subtotal' => round($subtotal, 2),
+            'discount_amount' => round($discountAmount, 2),
+            'tax_amount' => round($taxAmount, 2),
+            'total' => round($total, 2),
+        ];
+    }
+
+    private function calculateLinePricing(Item $item, int $qty): array
+    {
+        $unitPrice = (float) ($item->unit_price ?? 0);
+        $subtotal = max(0, $unitPrice * $qty);
+
+        $discountPercent = $this->resolveDiscountPercent($item);
+        $discountAmount = $subtotal * ($discountPercent / 100);
+
+        $taxableAmount = max(0, $subtotal - $discountAmount);
+        $taxAmount = 0;
+
+        if (!$item->price_includes_tax) {
+            $vatPercent = max(0, (float) ($item->vat_percent ?? 0));
+            $fixedTaxPerUnit = max(0, (float) ($item->tax_amount ?? 0));
+
+            $percentTaxAmount = $taxableAmount * ($vatPercent / 100);
+            $fixedTaxAmount = $fixedTaxPerUnit * $qty;
+            $taxAmount = $percentTaxAmount + $fixedTaxAmount;
+        }
+
+        $lineTotal = $taxableAmount + $taxAmount;
+
+        return [
+            'subtotal' => round($subtotal, 2),
+            'discount_percent' => round($discountPercent, 2),
+            'discount_amount' => round($discountAmount, 2),
+            'tax_amount' => round($taxAmount, 2),
+            'line_total' => round($lineTotal, 2),
+        ];
+    }
+
+    private function resolveDiscountPercent(Item $item): float
+    {
+        $discount = max(0, (float) ($item->discount_amount ?? 0));
+        if ($discount <= 0) {
+            return 0.0;
+        }
+
+        $today = Carbon::today();
+        $start = $item->discount_start_date ? Carbon::parse($item->discount_start_date)->startOfDay() : null;
+        $end = $item->discount_end_date ? Carbon::parse($item->discount_end_date)->endOfDay() : null;
+
+        if ($start && $today->lt($start)) {
+            return 0.0;
+        }
+
+        if ($end && $today->gt($end)) {
+            return 0.0;
+        }
+
+        return min(100, $discount);
     }
 }

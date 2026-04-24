@@ -1,15 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Item Detail</title>
+@extends('POSViews.POSAdminViews.app')
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+@section('title', 'Item Detail')
 
-    <style>
-        :root{
+@push('styles')
+<style>
+:root{
             --primary:#18b8c7;
             --primary-dark:#119aa7;
             --bg:#f5f6f8;
@@ -44,7 +39,7 @@
             overflow-y:auto;
         } */
 
-        .content-area{
+        .detail-content{
             flex:1;
             padding:18px;
         }
@@ -179,14 +174,10 @@
             } */
         }
     </style>
-</head>
-<body>
-<div class="page-layout">
-    {{-- <aside class="sidebar-area"> --}}
-        @include('POSViews.POSAdminViews.aside')
-    {{-- </aside> --}}
+@endpush
 
-    <main class="content-area">
+@section('content')
+<main class="detail-content">
         <div class="detail-card">
             <a href="{{ url()->previous() }}" class="back-btn text-decoration-none">
                 <i class="bi bi-chevron-left"></i>
@@ -241,6 +232,5 @@
             </div>
         </div>
     </main>
-</div>
-</body>
-</html>
+@endsection
+

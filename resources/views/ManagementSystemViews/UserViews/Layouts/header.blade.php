@@ -21,18 +21,18 @@
     margin-bottom: 12px;
     width: 100%;
     box-sizing: border-box;
-    border-radius: 20px;
+    border-radius: 20px;    
+    height: 70px;
 
     /* REQUIRED Sticky Fixes */
-    position: relative;
-    top: 0px;                /* Sticks to very top */
+    position: sticky;
+    top: 0;                /* Sticks to very top */
     z-index: 100;          /* High number to stay on top of products */
 }
     .page-title {
         font-size: 24px;
         font-weight: 700;
         color: var(--primary); /* Uses your aqua/teal color */
-               margin-top: 20px;
 
     }
 </style>

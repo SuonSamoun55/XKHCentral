@@ -111,12 +111,24 @@
             'icon' => asset('images/aside/user.png'),
             'active' => ['admin/orders', 'admin/orders/*'],
         ],
-            [
-        'url' => '/store-management',
-        'name' => 'Store Management',
-        'icon' => asset('images/aside/company.png'),
-        'active' => ['store-management', 'store-management/*'],
-    ],
+        [
+            'url' => '/store-management',
+            'name' => 'Store Management',
+            'icon' => asset('images/aside/company.png'),
+            'active' => ['store-management', 'store-management/*'],
+        ],
+        [
+            'url' => '/store-management/tracking',
+            'name' => 'Stock Tracking',
+            'icon' => asset('images/aside/company.png'),
+            'active' => ['store-management/tracking', 'store-management/tracking/*'],
+        ],
+        [
+            'url' => '/discounts',
+            'name' => 'Discount',
+            'icon' => null,
+            'active' => ['discounts', 'discounts/*'],
+        ],
 
         [
             'url' => '/admin/notification',
@@ -161,7 +173,11 @@
                     <a href="{{ $menu['url'] }}" class="nav-link-wrap">
                         <div class="nav-btn {{ $isActive ? 'active' : '' }}">
                             <span class="nav-icon">
-                                <img src="{{ $menu['icon'] }}" alt="{{ $menu['name'] }} Icon">
+                                @if(!empty($menu['icon']))
+                                    <img src="{{ $menu['icon'] }}" alt="{{ $menu['name'] }} Icon">
+                                @else
+                                    <i class="bi bi-percent" style="font-size:18px;"></i>
+                                @endif
                             </span>
                             <span class="nav-label">{{ $menu['name'] }}</span>
                         </div>
@@ -197,7 +213,7 @@
 
                 <div class="settings-menu">
                     <a href="{{ route('profile') }}" class="settings-link">Edit Profile</a>
-                    <a href="#" class="settings-link">Change Password</a>
+                    <a href="{{ route('admin.password.change') }}" class="settings-link">Change Password</a>
                     <a href="#" class="settings-link">Policy</a>
                 </div>
             </div>

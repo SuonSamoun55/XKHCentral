@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\POSControllers\POSUserController\CartController;
 use App\Http\Controllers\Api\POSControllers\POSUserController\POSUserControllerItemList;
 use App\Http\Controllers\Api\POSControllers\POSUserController\OrderController;
 use App\Http\Controllers\Api\ManagementSystemController\AdminNotificationController;
+use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\POSControllers\POSAdminController\AdminOrderController;
 use App\Http\Controllers\Api\POSControllers\POSUserController\FavoriteController;
 use App\Http\Controllers\Api\POSControllers\POSUserController\NotificationController;
@@ -18,6 +19,11 @@ use App\Http\Controllers\Api\POSControllers\POSUserController\UserProfileControl
 use App\Http\Controllers\Api\POSControllers\POSUserController\HistoryController;
 use App\Http\Controllers\Api\ManagementSystemController\CompanyController;
 use App\Http\Controllers\Api\POSControllers\POSAdminController\StoreManagementController;
+use App\Http\Controllers\Api\POSControllers\POSAdminController\DiscountController;
+use App\Http\Controllers\Api\POSControllers\POSAdminController\UserController;
+use App\Http\Controllers\Api\POSControllers\POSAdminController\AdminProfileController;
+
+
 
 // Route::get('/store-management', [StoreManagementController::class, 'index'])->name('store.management.index');
 // ================= AUTH =================
@@ -49,6 +55,8 @@ Route::middleware(['auth'])->post('/heartbeat', function () {
 Route::middleware(['auth', 'last.seen'])->group(function () {
 Route::get('/store-management/data', [StoreManagementController::class, 'getData'])->name('store.management.data');
 Route::get('/store-management', [StoreManagementController::class, 'index'])->name('store.management.index');
+Route::get('/store-management/tracking', [StoreManagementController::class, 'tracking'])->name('store.management.tracking');
+Route::get('/store-management/products/{id}/detail', [StoreManagementController::class, 'productDetail'])->name('store.management.products.detail');
 // Route::get('/store-management/data', [StoreManagementController::class, 'getData'])->name('store.management.data');
 Route::post('/store-management/products/{id}/toggle', [StoreManagementController::class, 'toggleProduct'])->name('store.management.products.toggle');
 Route::post('/store-management/categories/{code}/toggle', [StoreManagementController::class, 'toggleCategory'])->name('store.management.categories.toggle');
@@ -79,12 +87,19 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::get('/admin/order-actions', [AdminOrderController::class, 'actionHistory'])->name('admin.orders.actions');
     Route::get('/admin/orders/{id}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
 
+    ////////USER CONTROLLER
+    Route::prefix('admin')->group(function () {
+    Route::get('/users/{id}', [App\Http\Controllers\Api\POSControllers\POSAdminController\UserController::class, 'show'])->name('admin.users.show');
+});
     // ---------- POS User ----------
     Route::get('/pos-system', [POSUserControllerItemList::class, 'getItems'])->name('user.posinterface');
     Route::get('/pos-system/favorites', [FavoriteController::class, 'getFavorites'])->name('user.pos.favorites');
     Route::post('/pos-system/favorite-toggle', [FavoriteController::class, 'toggle'])->name('user.pos.favorite.toggle');
 
     Route::get('/pos-system/notifications', [NotificationController::class, 'getNotifications'])->name('user.notifications');
+    Route::get('/pos-system/chat', [ChatController::class, 'userIndex'])->name('user.chat.index');
+    Route::post('/pos-system/chat/send', [ChatController::class, 'userSend'])->name('user.chat.send');
+    Route::get('/pos-system/chat/messages', [ChatController::class, 'userMessages'])->name('user.chat.messages');
     Route::get('/pos-system/notifications/unread', [NotificationController::class, 'unreadNotifications'])->name('user.notifications.unread');
     Route::get('/pos-system/notifications/{id}', [NotificationController::class, 'show'])->name('user.notifications.show');
     Route::post('/pos-system/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('user.notifications.read');
@@ -93,6 +108,8 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
 
     Route::get('/profile', [UserProfileController::class, 'index'])->name('profile');
     Route::put('/profile/update', [UserProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/change-password', [UserProfileController::class, 'showChangePasswordForm'])->name('user.password.change');
+    Route::put('/profile/change-password', [UserProfileController::class, 'updatePassword'])->name('user.password.update');
 
     Route::get('/pos-system/order/download/{id}', [HistoryController::class, 'downloadInvoice'])->name('user.pos.order.download');
     Route::get('/pos-system/order-history', [HistoryController::class, 'history'])->name('user.pos.order.history');
@@ -107,20 +124,37 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
 
     Route::get('/favorites', [FavoriteController::class, 'index']);
 
-    // ---------- Notifications ----------
-    Route::get('/notifications', [NotificationController::class, 'getNotifications'])->name('notifications.index');
-    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
-    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read.all');
-    Route::delete('/notifications/delete-selected', [NotificationController::class, 'deleteSelected'])->name('notifications.delete.selected');
-
-    // ---------- Admin Notifications ----------
-    Route::prefix('admin/notification')->name('admin.notifications.')->group(function () {
+    // ---------- Admin Notifications (Canonical) ----------
+    Route::prefix('admin/notifications')->name('admin.notifications.')->group(function () {
         Route::get('/', [AdminNotificationController::class, 'index'])->name('index');
+        Route::get('/{id}', [AdminNotificationController::class, 'show'])->name('show');
         Route::post('/store', [AdminNotificationController::class, 'store'])->name('store');
         Route::post('/read/{id}', [AdminNotificationController::class, 'markAsRead'])->name('read');
         Route::post('/read-all', [AdminNotificationController::class, 'markAllAsRead'])->name('read.all');
         Route::delete('/delete-selected', [AdminNotificationController::class, 'deleteSelected'])->name('delete.selected');
         Route::delete('/destroy/{id}', [AdminNotificationController::class, 'destroy'])->name('destroy');
+        Route::get('/ajax/search-customers', [AdminNotificationController::class, 'searchCustomers'])->name('ajax.search.customers');
+        Route::get('/ajax/latest', [AdminNotificationController::class, 'latestNotifications'])->name('ajax.latest');
+    });
+
+    // ---------- Admin Notifications (Legacy /admin/notification path) ----------
+    Route::prefix('admin/notification')->group(function () {
+        Route::get('/', [AdminNotificationController::class, 'index']);
+        Route::post('/store', [AdminNotificationController::class, 'store']);
+        Route::post('/read/{id}', [AdminNotificationController::class, 'markAsRead']);
+        Route::post('/read-all', [AdminNotificationController::class, 'markAllAsRead']);
+        Route::delete('/delete-selected', [AdminNotificationController::class, 'deleteSelected']);
+        Route::delete('/destroy/{id}', [AdminNotificationController::class, 'destroy']);
+    });
+    Route::get('/admin/notification/chat', [ChatController::class, 'adminIndex'])->name('admin.chat.index');
+    Route::post('/admin/notification/chat/send', [ChatController::class, 'adminSend'])->name('admin.chat.send');
+    Route::get('/admin/notification/chat/messages', [ChatController::class, 'adminMessages'])->name('admin.chat.messages');
+    ///-----------admin settings----------
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('/profile', [AdminProfileController::class, 'index'])->name('profile');
+        Route::put('/profile/update', [AdminProfileController::class, 'update'])->name('profile.update');
+        Route::get('/change-password', [AdminProfileController::class, 'showChangePasswordForm'])->name('password.change');
+        Route::put('/change-password', [AdminProfileController::class, 'updatePassword'])->name('password.update');
     });
 
     // ---------- Companies ----------
@@ -129,9 +163,12 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::post('/companies', [CompanyController::class, 'store'])->name('companies.store');
     Route::get('/companies/{id}/edit', [CompanyController::class, 'edit'])->name('companies.edit');
     Route::put('/companies/{id}', [CompanyController::class, 'update'])->name('companies.update');
+    Route::get('/companies/{id}/api-setup', [CompanyController::class, 'apiSetup'])->name('companies.api.setup');
+    Route::put('/companies/{id}/api-setup', [CompanyController::class, 'updateApiSetup'])->name('companies.api.setup.update');
     Route::delete('/companies/{id}', [CompanyController::class, 'destroy'])->name('companies.destroy');
+
 });
- Route::prefix('users')->name('users.')->group(function () {
+Route::middleware(['auth', 'last.seen'])->prefix('users')->name('users.')->group(function () {
         Route::get('/', [WebUserController::class, 'index'])->name('index');
         Route::get('/bc-image/{bcId}', [WebUserController::class, 'getBCImage'])->name('bc-image');
         Route::get('/sync', [WebUserController::class, 'syncBCCustomers'])->name('sync');
@@ -144,3 +181,11 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
         Route::post('/delete-selected', [WebUserController::class, 'deleteSelected'])->name('deleteSelected');
         Route::get('/data', [WebUserController::class, 'getUsers'])->name('data');
     });
+Route::middleware(['auth', 'last.seen'])->group(function () {
+    Route::get('/discounts', [DiscountController::class, 'index'])->name('discounts.index');
+    Route::get('/discounts/create', [DiscountController::class, 'create'])->name('discounts.create');
+    Route::post('/discounts', [DiscountController::class, 'store'])->name('discounts.store');
+    Route::get('/discounts/{id}/edit', [DiscountController::class, 'edit'])->name('discounts.edit');
+    Route::put('/discounts/{id}', [DiscountController::class, 'update'])->name('discounts.update');
+    Route::delete('/discounts/{id}', [DiscountController::class, 'destroy'])->name('discounts.destroy');
+});

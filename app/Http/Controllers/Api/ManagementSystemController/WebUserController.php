@@ -172,7 +172,10 @@ protected function getCustomerImageDisplay($customer, $linkedUser = null)
                 ->with('error', 'Business Central authentication failed.');
         }
 
-        $url = $this->bcUrl("customers?\$select=id,number,displayName,email,phoneNumber");
+        $url = $this->bcEndpoint(
+            'customers_endpoint',
+            "customers?\$select=id,number,displayName,email,phoneNumber"
+        );
 
         if (!$url) {
             return redirect()->route('users.index')

@@ -3,16 +3,10 @@
 namespace App\Http\Controllers\Api\POSControllers\POSUserController;
 
 use App\Http\Controllers\Controller;
-use App\Models\POSModel\Cart;
 use App\Models\POSModel\Order;
-use App\Models\POSModel\OrderItem;
-use App\Models\MagamentSystemModel\Notification;
-use App\Models\MagamentSystemModel\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 class HistoryController extends Controller
 {
    public function history(Request $request)
@@ -54,15 +48,78 @@ $perPage = $request->get('limit', 10);
         abort(403, 'Unauthorized action.');
     }
 
+    $token = $this->getToken();
 
-    // Example using DomPDF (Standard Laravel way)
-    // $pdf = Pdf::loadView('POSViews.Invoices.Template', compact('order'));
-    // return $pdf->download('Invoice-'.$order->order_no.'.pdf');
+    if (!$token) {
+        return back()->with('error', 'Failed to authenticate with Business Central.');
+    }
 
-    // Simple Test: Just download a text file to make sure the button works
-    $content = "Order: #{$order->order_no}\nTotal: {$order->total_amount}\nStatus: {$order->status}";
-    return response($content)
-            ->header('Content-Type', 'text/plain')
-            ->header('Content-Disposition', "attachment; filename=order-{$order->order_no}.txt");
+    $bcOrderId = $this->resolveBusinessCentralOrderId($order, $token);
+
+    if (!$bcOrderId) {
+        return back()->with('error', 'Invoice PDF is available only after admin confirms and syncs this order to Business Central.');
+    }
+
+    $endpoint = $this->bcEndpoint(
+        'sales_order_pdf_endpoint',
+        'salesOrders({salesOrderId})/pdfDocument/pdfDocumentContent',
+        ['salesOrderId' => $bcOrderId]
+    );
+
+    if (!$endpoint) {
+        return back()->with('error', 'Business Central URL is not configured.');
+    }
+
+    $response = Http::withoutVerifying()
+        ->withToken($token)
+        ->withHeaders([
+            'Accept' => 'application/pdf',
+        ])
+        ->get($endpoint);
+
+    if (!$response->successful()) {
+        return back()->with('error', 'Failed to download invoice PDF from Business Central.');
+    }
+
+    $safeOrderNo = preg_replace('/[^A-Za-z0-9\-_]/', '-', (string) $order->order_no);
+    $fileName = 'invoice-' . ($safeOrderNo ?: $order->id) . '.pdf';
+
+    return response($response->body())
+        ->header('Content-Type', 'application/pdf')
+        ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+}
+
+private function resolveBusinessCentralOrderId(Order $order, string $token): ?string
+{
+    if ($order->status !== 'confirmed' || empty($order->bc_document_no)) {
+        return null;
+    }
+
+    $documentNo = str_replace("'", "''", (string) $order->bc_document_no);
+    $searchUrl = $this->bcEndpoint(
+        'sales_orders_by_number_endpoint',
+        "salesOrders?\$filter=number eq '{documentNo}'&\$top=1",
+        ['documentNo' => $documentNo]
+    );
+
+    if (!$searchUrl) {
+        return null;
+    }
+
+    $response = Http::withoutVerifying()
+        ->withToken($token)
+        ->acceptJson()
+        ->get($searchUrl);
+
+    if (!$response->successful()) {
+        return null;
+    }
+
+    $rows = $response->json('value') ?? [];
+    if (!is_array($rows) || empty($rows[0]['id'])) {
+        return null;
+    }
+
+    return (string) $rows[0]['id'];
 }
 }

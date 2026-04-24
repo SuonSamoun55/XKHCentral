@@ -12,13 +12,25 @@ class POSUserControllerItemList extends Controller
 {
     $user = Auth::user();
 
-    $items = Item::where('blocked', false)->get();
+    $items = Item::where('blocked', false)
+        ->where('is_visible', true)
+        ->get();
 
     $favoriteIds = Favorite::where('user_id', $user->id)
                     ->pluck('item_id')
                     ->toArray();
 
     return view('POSViews.POSUserViews.POSitemlistUserView', compact('items','favoriteIds'));
+}
+public function show($id)
+{
+    $customer = Customer::findOrFail($id);
+    $user = $customer->user; // or however your relationship is defined
+
+    // Return a partial view
+    return view('ManagementSystemViews.AdminViews.Layouts.UserinfoView.UserShow', 
+        compact('customer', 'user')
+    )->render(); 
 }
 }
     

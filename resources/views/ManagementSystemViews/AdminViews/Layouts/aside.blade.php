@@ -81,7 +81,7 @@
 
         <div class="sidebar-top">
             <div class="brand">
-                <div class="brand-logo company-logo-box">
+                <div class="company-logo-box">
                     <img src="{{ $companyLogoUrl }}"
                          alt="Company Logo"
                          onerror="this.onerror=null;this.src='{{ asset('images/default-company.png') }}';">
@@ -110,7 +110,7 @@
                 <a href="/pos/interface" class="nav-link-wrap">
                     <div class="nav-btn {{ request()->is('pos/interface') || request()->is('pos/*') ? 'active' : '' }}">
                         <span class="nav-icon">
-                            <img src="{{ asset('images/aside/Cart.png') }}" alt="POS Icon">
+                            <img src="{{ asset('images/aside/pos.png') }}" alt="POS Icon">
                         </span>
                         <span class="nav-label">Pos System</span>
                     </div>
@@ -128,7 +128,7 @@
                 <a href="/companies/select" class="nav-link-wrap">
                     <div class="nav-btn {{ request()->is('companies/select') ? 'active' : '' }}">
                         <span class="nav-icon">
-                            <img src="{{ asset('images/aside/switch.png') }}" alt="Select Company Icon">
+                            <img src="{{ asset('images/aside/mm.png') }}" alt="Select Company Icon">
                         </span>
                         <span class="nav-label">Select Company</span>
                     </div>
@@ -169,8 +169,8 @@
                 </button>
 
                 <div class="settings-menu">
-                    <a href="{{ route('profile') }}" class="settings-link">Edit Profile</a>
-                    <a href="#" class="settings-link">Change Password</a>
+                    <a href="{{ route('admin.profile') }}" class="settings-link">Edit Profile</a>
+                    <a href="{{ route('admin.password.change') }}" class="settings-link">Change Password</a>
                     <a href="#" class="settings-link">Policy</a>
                 </div>
             </div>

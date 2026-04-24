@@ -100,7 +100,7 @@ class User extends Authenticatable
             return asset('images/default-user.png');
         }
 
-        return '';
+        return asset('images/pos/Rectangle 2.png');
     }
 
     public function getIsOnlineAttribute(): bool

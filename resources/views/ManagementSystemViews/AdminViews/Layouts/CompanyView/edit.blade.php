@@ -1,280 +1,39 @@
 @extends('ManagementSystemViews.AdminViews.Layouts.app')
+<link rel="stylesheet" href="{{ asset('css/POSsystem/POSAdmin/edit_company.css') }}">
 
 @section('title', 'Edit Company')
 
 @push('styles')
-<style>
-    .company-setup-page{
-        width: 100%;
-    }
-    .content-area{
-width: 100%;
-    }
-    .company-setup-page .page-title{
-        font-size:20px;
-        font-weight:700;
-        margin-bottom:2px;
-        color:#111827;
-    }
 
-    .company-setup-page .page-subtitle{
-        font-size:12px;
-        color:#9ca3af;
-        margin-bottom:18px;
-    }
-
-    .company-setup-card{
-        background:#f8fafc;
-        border-radius:18px;
-        padding:20px;
-        border:1px solid #eef2f7;
-         width: 100%;
-         min-width: 100%;
-    }
-
-    .company-setup-grid{
-        display:grid;
-        grid-template-columns:260px 1fr;
-        width: 100%;
-        gap:28px;
-        align-items:start;
-    }
-
-    .logo-panel{
-        background:#f1f5f9;
-        border-radius:14px;
-        min-height:100%;
-        padding:16px;
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-    }
-
-    .logo-box{
-        width:120px;
-        height:120px;
-        border-radius:12px;
-        background:linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        position:relative;
-        overflow:hidden;
-        margin-bottom:14px;
-        border:3px solid #ffffff;
-        box-shadow:0 4px 12px rgba(0,0,0,0.08);
-    }
-
-    .logo-box img{
-        width:100%;
-        height:100%;
-        object-fit:cover;
-        display:block;
-    }
-
-    .logo-placeholder{
-        text-align:center;
-        color:#0ea5b7;
-        font-size:11px;
-        line-height:1.5;
-        font-weight:700;
-    }
-
-    .logo-edit-btn{
-        position:absolute;
-        right:8px;
-        bottom:8px;
-        width:28px;
-        height:28px;
-        border:none;
-        border-radius:50%;
-        background:#ffffff;
-        color:#06b6d4;
-        box-shadow:0 2px 8px rgba(0,0,0,0.15);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        cursor:pointer;
-    }
-
-    .logo-note{
-        width:100%;
-        background:#e0e7ff;
-        border-radius:10px;
-        padding:12px 14px;
-        color:#38bdf8;
-        font-size:11px;
-    }
-
-    .logo-note strong{
-        display:block;
-        color:#334155;
-        font-size:11px;
-        margin-bottom:6px;
-    }
-
-    .logo-note ul{
-        padding-left:16px;
-        margin:0;
-    }
-
-    .form-section-title{
-        display:flex;
-        align-items:center;
-        gap:10px;
-        font-size:24px;
-        font-weight:700;
-        color:#111827;
-        margin-bottom:18px;
-    }
-
-    .form-section-title::before{
-        content:"";
-        width:4px;
-        height:26px;
-        border-radius:99px;
-        background:#06b6d4;
-        display:block;
-    }
-
-    .field-label{
-        font-size:10px;
-        font-weight:700;
-        letter-spacing:0.08em;
-        color:#6b7280;
-        margin-bottom:6px;
-        text-transform:uppercase;
-    }
-
-    .custom-input,
-    .custom-textarea,
-    .custom-file{
-        width:100%;
-        border:none;
-        outline:none;
-        background:#eceff3;
-        border-radius:8px;
-        padding:8px 11px;
-        font-size:14px;
-        color:#111827;
-    }
-
-    .custom-textarea{
-        height: 40px;
-        resize:vertical;
-    }
-
-    .form-grid{
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:16px 14px;
-    }
-
-    .form-col-span-2{
-        grid-column:span 2;
-    }
-
-    .checkbox-row{
-        display:flex;
-        align-items:center;
-        gap:8px;
-        margin-top:10px;
-        color:#4b5563;
-        font-size:14px;
-    }
-
-    .checkbox-row input{
-        width:16px;
-        height:16px;
-        accent-color:#06b6d4;
-    }
-
-    .btn-submit-wrap{
-        display:flex;
-        justify-content:center;
-        margin-top:20px;
-        gap:10px;
-        flex-wrap:wrap;
-    }
-
-    .btn-submit-company{
-        min-width:180px;
-        border:none;
-        border-radius:8px;
-        background:#11c5df;
-        color:#fff;
-        font-size:14px;
-        font-weight:600;
-        padding:12px 20px;
-        box-shadow:0 4px 10px rgba(6, 182, 212, 0.25);
-    }
-
-    .btn-submit-company:hover{
-        background:#0fb4cc;
-    }
-    .container{
-        margin: 0 auto;
-        margin-top: 10px !important;
-        margin-right: 10px !important;
-     
-    }
-
-    .btn-back-company{
-        min-width:180px;
-        border:1px solid #cbd5e1;
-        border-radius:8px;
-        background:#fff;
-        color:#334155;
-        font-size:14px;
-        font-weight:600;
-        padding:12px 20px;
-        text-align:center;
-        text-decoration:none;
-    }
-
-    @media (max-width: 992px){
-        .company-setup-grid{
-            grid-template-columns:1fr;
-        }
-
-        .logo-panel{
-            min-height:auto;
-        }
-
-        .form-grid{
-            grid-template-columns:1fr;
-        }
-
-        .form-col-span-2{
-            grid-column:span 1;
-        }
-    }
-</style>
 @endpush
 
 @section('content')
 <div class="company-setup-page">
-   
+    <!-- Alert Container -->
+    <div class="alert-container">
+        @if(session('success'))
+            <div class="custom-alert alert-success">
+                <i class="bi bi-check-circle-fill"></i>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
 
-    @if(session('success'))
-    
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+        @if(session('error'))
+            <div class="custom-alert alert-danger">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
 
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
+        @if ($errors->any())
+            <div class="custom-alert alert-danger">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>Please fix the errors below.</span>
+            </div>
+        @endif
+    </div>
 
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0 ps-3">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-<div class="container">
+    <div class="container">
     <div class="company-setup-card">
         <form action="{{ route('companies.update', $company->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -324,7 +83,7 @@ width: 100%;
                 </div>
 
                 <div>
-                    
+                    <div class="scrollable-info-panel">
                     <div class="form-section-title">Company Info</div>
 
                     <div class="form-grid">
@@ -408,12 +167,16 @@ width: 100%;
                         </div>
                     </div>
 
-                    <div class="btn-submit-wrap">
+                  
+                    </div>
+                      <div class="btn-submit-wrap">
                         <a href="{{ route('companies.index') }}" class="btn-back-company">Back</a>
+                        <a href="{{ route('companies.api.setup', $company->id) }}" class="btn-back-company">API Setup</a>
                         <button type="submit" class="btn-submit-company">Save</button>
 
                     </div>
                 </div>
+                
             </div>
         </form>
     </div>
@@ -454,5 +217,22 @@ width: 100%;
             updateLogoPreview(file);
         });
     }
+
+    // Auto-close alerts
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.custom-alert');
+
+        alerts.forEach(function(alert) {
+            // Auto-close after 4 seconds
+            setTimeout(function() {
+                alert.style.animation = 'fadeOut 0.5s ease-in forwards';
+
+                // Remove from DOM after animation finishes
+                alert.addEventListener('animationend', function() {
+                    alert.remove();
+                });
+            }, 4000);
+        });
+    });
 </script>
 @endpush

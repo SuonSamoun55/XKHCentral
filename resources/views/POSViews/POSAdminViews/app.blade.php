@@ -19,6 +19,13 @@
             gap: 10px;
         }
 
+        .content-wrapper{
+            flex: 1;
+            min-width: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
 
     </style>
 
@@ -29,7 +36,7 @@
     <div class="main-wrapper">
         @include('POSViews.POSAdminViews.aside')
 
-        <div class="content-area">
+        <div class="content-wrapper">
             @yield('content')
         </div>
     </div>

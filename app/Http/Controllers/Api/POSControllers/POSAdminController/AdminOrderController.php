@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\POSControllers\POSAdminController;
 
 use App\Http\Controllers\Controller;
+use App\Models\POSModel\Item;
+use App\Models\POSModel\InventoryMovement;
 use App\Models\POSModel\Order;
 use App\Models\MagamentSystemModel\OrderAction;
 use App\Models\MagamentSystemModel\Notification;
@@ -10,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Carbon\Carbon;
 
 class AdminOrderController extends Controller
 {
@@ -73,7 +76,7 @@ class AdminOrderController extends Controller
             return back()->with('error', 'Unauthorized.');
         }
 
-        $order = Order::with(['user', 'items'])->find($id);
+        $order = Order::with(['user', 'items.item'])->find($id);
 
         if (!$order) {
             return back()->with('error', 'Order not found.');
@@ -95,6 +98,8 @@ class AdminOrderController extends Controller
             return back()->with('error', 'Order has no items.');
         }
 
+        $orderItems = $order->items()->get();
+
         DB::beginTransaction();
 
         try {
@@ -107,7 +112,7 @@ class AdminOrderController extends Controller
             $orderResponse = Http::withoutVerifying()
                 ->withToken($token)
                 ->acceptJson()
-                ->post($this->bcUrl('salesOrders'), [
+                ->post($this->bcEndpoint('sales_orders_endpoint', 'salesOrders'), [
                     'customerNumber' => $order->user->bc_customer_no,
                 ]);
 
@@ -123,15 +128,48 @@ class AdminOrderController extends Controller
                 throw new \Exception('BC sales order ID not returned.');
             }
 
-            foreach ($order->items as $item) {
+            foreach ($orderItems as $item) {
+                $discountPercent = $this->resolveDiscountPercent($item->item);
+                $linePayload = [
+                    'lineType'         => 'Item',
+                    'lineObjectNumber' => $item->item_no,
+                    'quantity'         => (int) $item->qty,
+                ];
+
+                if ($discountPercent > 0) {
+                    $linePayload['discountPercent'] = round($discountPercent, 2);
+                }
+
                 $lineResponse = Http::withoutVerifying()
                     ->withToken($token)
                     ->acceptJson()
-                    ->post($this->bcUrl("salesOrders({$salesOrderId})/salesOrderLines"), [
-                        'lineType'         => 'Item',
-                        'lineObjectNumber' => $item->item_no,
-                        'quantity'         => (int) $item->qty,
-                    ]);
+                    ->post(
+                        $this->bcEndpoint(
+                            'sales_order_lines_endpoint',
+                            'salesOrders({salesOrderId})/salesOrderLines',
+                            ['salesOrderId' => $salesOrderId]
+                        ),
+                        $linePayload
+                    );
+
+                if (
+                    !$lineResponse->successful()
+                    && array_key_exists('discountPercent', $linePayload)
+                    && $this->isUnknownFieldError($lineResponse->body(), 'discountPercent')
+                ) {
+                    unset($linePayload['discountPercent']);
+                    $lineResponse = Http::withoutVerifying()
+                        ->withToken($token)
+                        ->acceptJson()
+                        ->post(
+                            $this->bcEndpoint(
+                                'sales_order_lines_endpoint',
+                                'salesOrders({salesOrderId})/salesOrderLines',
+                                ['salesOrderId' => $salesOrderId]
+                            ),
+                            $linePayload
+                        );
+                }
 
                 if (!$lineResponse->successful()) {
                     throw new \Exception(
@@ -140,10 +178,71 @@ class AdminOrderController extends Controller
                 }
             }
 
+            foreach ($orderItems as $orderItem) {
+                if (empty($orderItem->item_id)) {
+                    throw new \Exception("Order item {$orderItem->id} is missing item reference.");
+                }
+            }
+
+            $requestedQtyByItemId = $orderItems
+                ->groupBy('item_id')
+                ->map(fn ($rows) => (int) $rows->sum('qty'))
+                ->filter(fn ($qty) => $qty > 0);
+
+            if ($requestedQtyByItemId->isNotEmpty()) {
+                $lockedItems = Item::query()
+                    ->whereIn('id', $requestedQtyByItemId->keys()->all())
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('id');
+
+                foreach ($requestedQtyByItemId as $itemId => $requestedQty) {
+                    $product = $lockedItems->get($itemId);
+
+                    if (!$product) {
+                        throw new \Exception("Item not found for stock update. Item ID: {$itemId}");
+                    }
+
+                    $availableQty = (int) ($product->inventory ?? 0);
+                    if ($availableQty < $requestedQty) {
+                        throw new \Exception(
+                            "Insufficient stock for item {$product->number}. Requested {$requestedQty}, available {$availableQty}."
+                        );
+                    }
+                }
+
+                foreach ($requestedQtyByItemId as $itemId => $requestedQty) {
+                    $product = $lockedItems->get($itemId);
+                    if (!$product) {
+                        continue;
+                    }
+
+                    $oldInventory = (int) ($product->inventory ?? 0);
+                    $newInventory = $oldInventory - $requestedQty;
+
+                    $product->decrement('inventory', $requestedQty);
+
+                    InventoryMovement::create([
+                        'company_id' => $order->company_id,
+                        'item_id' => $product->id,
+                        'order_id' => $order->id,
+                        'actor_user_id' => $admin->id,
+                        'buyer_user_id' => $order->user_id,
+                        'source' => 'sale',
+                        'quantity_change' => -$requestedQty,
+                        'old_inventory' => $oldInventory,
+                        'new_inventory' => $newInventory,
+                        'happened_at' => now(),
+                        'reference_no' => $order->order_no,
+                        'note' => 'Inventory deducted after order confirmation.',
+                    ]);
+                }
+            }
+
             $order->update([
                 'status'         => 'confirmed',
                 'sync_status'    => 'synced',
-                'bc_document_no' => $salesOrderNo ?: $salesOrderId,
+                'bc_document_no' => $salesOrderNo ?: null,
             ]);
 
             OrderAction::create([
@@ -238,4 +337,38 @@ class AdminOrderController extends Controller
         return back()->with('error', 'Cancel failed: ' . $e->getMessage());
     }
 }
+
+    private function isUnknownFieldError(string $responseBody, string $field): bool
+    {
+        return str_contains($responseBody, "property '{$field}' does not exist")
+            || str_contains($responseBody, "property `{$field}` does not exist")
+            || str_contains($responseBody, '"' . $field . '"')
+                && str_contains(strtolower($responseBody), 'does not exist');
+    }
+
+    private function resolveDiscountPercent($item): float
+    {
+        if (!$item) {
+            return 0.0;
+        }
+
+        $discount = max(0, (float) ($item->discount_amount ?? 0));
+        if ($discount <= 0) {
+            return 0.0;
+        }
+
+        $today = Carbon::today();
+        $start = $item->discount_start_date ? Carbon::parse($item->discount_start_date)->startOfDay() : null;
+        $end = $item->discount_end_date ? Carbon::parse($item->discount_end_date)->endOfDay() : null;
+
+        if ($start && $today->lt($start)) {
+            return 0.0;
+        }
+
+        if ($end && $today->gt($end)) {
+            return 0.0;
+        }
+
+        return min(100, $discount);
+    }
 }

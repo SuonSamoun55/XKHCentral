@@ -28,24 +28,14 @@
     }
 
     // 3. Setup User Avatar Logic
-    $userAvatar = asset('images/default-user.png');
-    if ($authUser) {
-        $img = $authUser->avatar ?? $authUser->profile_image ?? $authUser->image;
-        if ($img) {
-            if (preg_match('/^https?:\/\//i', $img)) {
-                $userAvatar = $img;
-            } else {
-                $userAvatar = asset($img);
-            }
-        }
-    }
+    $userAvatar = $authUser->profile_image_display ?? asset('images/default-user.png');
 @endphp
 
 <div class="sidebar-wrap">
     <aside class="sidebar">
         <div class="sidebar-top">
-           <div class="brand">
-                <div class="brand-logo company-logo-box" style="width: 45px; height: 45px; overflow: hidden; border-radius: 8px;">
+            <div class="brand">
+                <div class="company-logo-box" style="width: 45px; height: 45px; overflow: hidden; border-radius: 8px;">
                     <img src="{{ $companyLogoUrl }}" 
                          alt="Company Logo" 
                          style="width: 100%; height: 100%; object-fit: cover;"
@@ -75,7 +65,7 @@
                         <span class="nav-icon">
                             <img src="{{ asset('images/aside/Cart.png') }}" alt="Cart Icon">
                         </span>
-                        <span class="nav-label">Card</span>
+                        <span class="nav-label">Cart</span>
                     </button>
                 </a>
 
@@ -114,15 +104,10 @@
             @php $authUser = Auth::user(); @endphp
             {{-- <a href="{{ route('profile') }}" class="user-link"> --}}
             @php
-                $avatar = $authUser && $authUser->avatar ? $authUser->avatar : null;
-                $avatarUrl = $avatar
-                    ? (preg_match('/^https?:\/\//i', $avatar)
-                        ? $avatar
-                        : asset($avatar))
-                    : 'https://i.pravatar.cc/80?img=12';
+                $avatarUrl = $userAvatar;
             @endphp
             <div class="profile">
-                <img src="{{ $avatarUrl }}" alt="User">
+                <img src="{{ $avatarUrl }}" alt="User" id="sidebarProfileImage">
                 <div class="profile-text">
                     <div class="user-meta">
                         <div class="user-name">{{ $authUser ? $authUser->name : 'Guest' }}</div>
@@ -142,7 +127,7 @@
 
                 <div class="settings-menu">
                     <a href="{{ route('profile') }}" class="settings-link">Edit Profile</a>
-                    <a href="#" class="settings-link">Change new password</a>
+                    <a href="{{ route('user.password.change') }}" class="settings-link">Change new password</a>
                     <a href="#" class="settings-link">Policy</a>
                 </div>
             </div>
