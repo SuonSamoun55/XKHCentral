@@ -1,34 +1,122 @@
 <?php
 
 namespace App\Http\Controllers\Api\POSControllers\POSUserController;
-use Illuminate\Support\Facades\Auth;
-use App\Models\POSModel\Favorite;
+
 use App\Http\Controllers\Controller;
+use App\Models\POSModel\Cart;
+use App\Models\POSModel\Favorite;
 use App\Models\POSModel\Item;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class POSUserControllerItemList extends Controller
 {
-   public function getItems()
-{
-    $user = Auth::user();
+    public function getItems()
+    {
+        $user = Auth::user();
 
-    $items = Item::where('blocked', false)->get();
+        $items = Item::query()
+            ->where(function ($q) {
+                $q->where('blocked', false)->orWhereNull('blocked');
+            })
+            ->where(function ($q) {
+                $q->where('is_visible', true)->orWhereNull('is_visible');
+            })
+            ->where(function ($q) {
+                $q->where('category_visible', true)->orWhereNull('category_visible');
+            })
+            ->orderBy('display_name')
+            ->get();
 
-    $favoriteIds = Favorite::where('user_id', $user->id)
-                    ->pluck('item_id')
-                    ->toArray();
+        $items->transform(function (Item $item) {
+            $discountPercent = $this->resolveDiscountPercent($item);
+            $unitPrice = (float) ($item->unit_price ?? 0);
+            $finalPrice = round(max(0, $unitPrice * (1 - ($discountPercent / 100))), 2);
 
-    return view('POSViews.POSUserViews.POSitemlistUserView', compact('items','favoriteIds'));
+            $item->setAttribute('effective_discount_percent', round($discountPercent, 2));
+            $item->setAttribute('final_price', $finalPrice);
+
+            return $item;
+        });
+
+        $favoriteIds = Favorite::where('user_id', $user->id)
+            ->pluck('item_id')
+            ->toArray();
+
+        $cartCount = 0;
+        if ($user) {
+            $activeCart = Cart::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->first();
+
+            if ($activeCart) {
+                $cartCount = (int) $activeCart->items()->sum('qty');
+            }
+        }
+
+        return view('POSViews.POSUserViews.POSitemlistUserView', compact('items', 'favoriteIds', 'cartCount'));
+    }
+
+    public function detail($id)
+    {
+        $user = Auth::user();
+
+        $item = Item::query()
+            ->where('id', $id)
+            ->where(function ($q) {
+                $q->where('blocked', false)->orWhereNull('blocked');
+            })
+            ->where(function ($q) {
+                $q->where('is_visible', true)->orWhereNull('is_visible');
+            })
+            ->where(function ($q) {
+                $q->where('category_visible', true)->orWhereNull('category_visible');
+            })
+            ->firstOrFail();
+
+        $discountPercent = $this->resolveDiscountPercent($item);
+        $unitPrice = (float) ($item->unit_price ?? 0);
+        $finalPrice = round(max(0, $unitPrice * (1 - ($discountPercent / 100))), 2);
+        $cartCount = 0;
+
+        if ($user) {
+            $activeCart = Cart::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->first();
+
+            if ($activeCart) {
+                $cartCount = (int) $activeCart->items()->sum('qty');
+            }
+        }
+
+        return view('POSViews.POSUserViews.POSItemDetailView', compact(
+            'item',
+            'discountPercent',
+            'finalPrice',
+            'unitPrice',
+            'cartCount'
+        ));
+    }
+
+    private function resolveDiscountPercent(Item $item): float
+    {
+        $discount = max(0, (float) ($item->discount_amount ?? 0));
+        if ($discount <= 0) {
+            return 0.0;
+        }
+
+        $today = Carbon::today();
+        $start = $item->discount_start_date ? Carbon::parse($item->discount_start_date)->startOfDay() : null;
+        $end = $item->discount_end_date ? Carbon::parse($item->discount_end_date)->endOfDay() : null;
+
+        if ($start && $today->lt($start)) {
+            return 0.0;
+        }
+
+        if ($end && $today->gt($end)) {
+            return 0.0;
+        }
+
+        return min(100, $discount);
+    }
 }
-public function show($id)
-{
-    $customer = Customer::findOrFail($id);
-    $user = $customer->user; // or however your relationship is defined
-
-    // Return a partial view
-    return view('ManagementSystemViews.AdminViews.Layouts.UserinfoView.UserShow', 
-        compact('customer', 'user')
-    )->render(); 
-}
-}
-    

@@ -118,6 +118,12 @@
             'active' => ['store-management', 'store-management/*'],
         ],
         [
+            'url' => '/store-management/tracking',
+            'name' => 'Stock Tracking',
+            'icon' => asset('images/aside/company.png'),
+            'active' => ['store-management/tracking', 'store-management/tracking/*'],
+        ],
+        [
             'url' => '/discounts',
             'name' => 'Discount',
             'icon' => null,

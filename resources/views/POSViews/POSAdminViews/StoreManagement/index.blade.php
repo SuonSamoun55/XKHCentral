@@ -93,6 +93,58 @@
         flex:1;
     }
 
+    .store-menu-wrap{
+        position:relative;
+    }
+
+    .store-menu-trigger{
+        width:34px;
+        height:34px;
+        border:none;
+        border-radius:8px;
+        background:#eef7f8;
+        color:#1f7f8b;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        font-size:16px;
+        cursor:pointer;
+    }
+
+    .store-menu-panel{
+        position:absolute;
+        right:0;
+        top:40px;
+        z-index:30;
+        width:230px;
+        background:#fff;
+        border:1px solid #dce5ec;
+        border-radius:10px;
+        box-shadow:0 14px 30px rgba(15, 23, 42, 0.14);
+        padding:10px;
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+    }
+
+    .store-menu-item{
+        display:flex;
+        flex-direction:column;
+        gap:4px;
+    }
+
+    .store-menu-label{
+        font-size:12px;
+        color:#64748b;
+        font-weight:700;
+    }
+
+    .store-menu-panel .store-select-control,
+    .store-menu-btn{
+        width:100%;
+        min-width:0;
+    }
+
     .store-tab-switcher-inline{
         display:flex;
         align-items:center;
@@ -241,6 +293,108 @@
         display:flex;
         flex-direction:column;
         background:#fff;
+    }
+
+    .product-card-toolbar{
+        display:flex;
+        align-items:center;
+        justify-content:flex-end;
+        margin-bottom:10px;
+    }
+
+    .select-all-wrap{
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        font-size:12px;
+        font-weight:700;
+        color:#475569;
+        background:#eff9fb;
+        border-radius:6px;
+        padding:6px 10px;
+        border:1px solid #d7edf1;
+    }
+
+    .product-card-grid-wrap{
+        flex:1;
+        min-height:0;
+        overflow:auto;
+        border:1px solid #e2edf1;
+        border-radius:10px;
+        background:#fff;
+        padding:12px;
+    }
+
+    .product-card-grid{
+        display:grid;
+        grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));
+        gap:12px;
+    }
+
+    .product-manage-card{
+        background:#f8fcfd;
+        border:1px solid #e2edf1;
+        border-radius:10px;
+        padding:10px;
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+    }
+
+    .pm-top{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+    }
+
+    .pm-image-box{
+        width:100%;
+        height:120px;
+        border-radius:8px;
+        overflow:hidden;
+        border:1px solid #dde7eb;
+        background:#fff;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+    }
+
+    .pm-image-box img{
+        width:100%;
+        height:100%;
+        object-fit:cover;
+        display:block;
+    }
+
+    .pm-title{
+        font-size:13px;
+        font-weight:800;
+        color:#0f172a;
+        line-height:1.35;
+    }
+
+    .pm-meta{
+        font-size:11px;
+        color:#64748b;
+    }
+
+    .pm-bottom{
+        display:flex;
+        align-items:flex-end;
+        justify-content:space-between;
+        gap:8px;
+        margin-top:auto;
+    }
+
+    .pm-price{
+        font-size:14px;
+        font-weight:800;
+        color:#0f172a;
+    }
+
+    .pm-stock{
+        font-size:11px;
+        color:#64748b;
     }
 
     .table-scroll-wrap{
@@ -702,6 +856,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let activeTab = 'products';
     let currentProductPage = 1;
     let currentCategoryPage = 1;
+    let storeMenuOutsideBound = false;
 
     function showMessage(message, type = 'success') {
         flashBox.innerHTML = `
@@ -770,6 +925,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ajaxContainer.innerHTML = data.html;
             fixAjaxTabLayout();
             bindClientFiltering();
+            bindMenuToggle();
             updateSelectedCounts();
             switchTab('products');
         } catch (error) {
@@ -806,7 +962,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const visibleProductCheckboxes = Array.from(document.querySelectorAll('.product-checkbox'))
             .filter(cb => {
-                const row = cb.closest('tr');
+                const row = cb.closest('.product-row');
                 return row && row.style.display !== 'none';
             });
 
@@ -992,7 +1148,6 @@ document.addEventListener('DOMContentLoaded', function () {
         cards.forEach(card => {
             const text = (card.dataset.name || '').toLowerCase();
             const cardStatus = card.dataset.status || 'inactive';
-
             const matchKeyword = !keyword || text.includes(keyword);
             const matchStatus = status === 'all' || cardStatus === status;
 
@@ -1121,6 +1276,32 @@ document.addEventListener('DOMContentLoaded', function () {
         runCurrentTabFilter();
     }
 
+    function bindMenuToggle() {
+        const trigger = document.getElementById('storeMenuTrigger');
+        const panel = document.getElementById('storeMenuPanel');
+        const wrap = document.getElementById('storeMenuWrap');
+
+        if (!trigger || !panel || !wrap) return;
+
+        trigger.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            panel.classList.toggle('d-none');
+        });
+
+        if (!storeMenuOutsideBound) {
+            document.addEventListener('click', function (e) {
+                const currentWrap = document.getElementById('storeMenuWrap');
+                const currentPanel = document.getElementById('storeMenuPanel');
+                if (!currentWrap || !currentPanel) return;
+                if (!currentWrap.contains(e.target)) {
+                    currentPanel.classList.add('d-none');
+                }
+            });
+            storeMenuOutsideBound = true;
+        }
+    }
+
     document.addEventListener('click', async function (e) {
         const productToggle = e.target.closest('.js-toggle-product');
         if (productToggle) {
@@ -1137,15 +1318,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
 
-                const row = productToggle.closest('tr');
-                const chip = row ? row.querySelector('.status-chip') : null;
-
-                if (chip) {
-                    chip.textContent = result.label;
-                    chip.classList.toggle('active', result.is_visible);
-                    chip.classList.toggle('inactive', !result.is_visible);
-                }
-
+                const row = productToggle.closest('.product-row');
                 if (row) {
                     row.dataset.status = result.is_visible ? 'active' : 'inactive';
                 }
@@ -1178,15 +1351,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
 
-                const card = categoryToggle.closest('.category-item-card');
-                const chip = card ? card.querySelector('.status-chip') : null;
-
-                if (chip) {
-                    chip.textContent = result.label;
-                    chip.classList.toggle('active', result.is_visible);
-                    chip.classList.toggle('inactive', !result.is_visible);
-                }
-
+                const card = categoryToggle.closest('.category-card');
                 if (card) {
                     card.dataset.status = result.is_visible ? 'active' : 'inactive';
                 }
@@ -1276,7 +1441,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('change', function (e) {
         if (e.target && e.target.id === 'selectAllProducts') {
             document.querySelectorAll('.product-checkbox').forEach(cb => {
-                const row = cb.closest('tr');
+                const row = cb.closest('.product-row');
                 if (row && row.style.display !== 'none') {
                     cb.checked = e.target.checked;
                 }

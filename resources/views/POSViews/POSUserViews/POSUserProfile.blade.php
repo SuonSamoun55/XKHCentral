@@ -132,7 +132,6 @@
                     @endif
 
                     {{-- Header --}}
-                    <h4 class="profile-title">Profile Information</h4>
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <div>
                             <h4 class="profile-title">Profile Information</h4>

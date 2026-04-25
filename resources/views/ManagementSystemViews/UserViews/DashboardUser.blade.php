@@ -33,18 +33,22 @@
 
                 <section class="card hero-card">
                     <div class="hero-title">Orders</div>
-                    <div class="Orders">
-                        <img src="{{ asset('images/pos/product 2.png') }}" alt="Orders">
-                    </div>
+                    <a href="{{ route('user.pos.order.history') }}">
+                        <div class="Orders">
+                            <img src="{{ asset('images/pos/product 2.png') }}" alt="Orders">
+                        </div>
+                    </a>
+                    <div class="small-sub">Total Orders: <strong>{{ number_format((int) ($totalOrders ?? 0)) }}</strong></div>
                 </section>
 
                 <section class="card hero-card">
-                    <div class="hero-title">POS System</div>
-                    <div class="soft-card bg-pos" data-href="/pos/interface">
-
+                    <div class="hero-title">Pending Orders</div>
+                    <a href="{{ route('user.pos.order.history', ['status' => 'Pending']) }}">
                         <div class="pos-system">
                             <img src="{{ asset('images/pos/product 3.png') }}" alt="POS">
                         </div>
+                    </a>
+                    <div class="small-sub">Pending: <strong>{{ number_format((int) ($pendingOrders ?? 0)) }}</strong></div>
                 </section>
 
                 <section class="card recent-card">
@@ -52,188 +56,202 @@
                         <h3>Recent Order</h3>
                         <div class="small-text">Sort by Newest ⌄</div>
                     </div>
-
                     <div class="order-list">
-                        <div class="order-item">
-                            <div class="order-left">
-                                <img src="https://i.pravatar.cc/80?img=15" alt="">
-                                <div>
-                                    <div class="order-name">Chris Friedkly</div>
-                                    <div class="order-sub">Supermarket Villanova</div>
+                        @forelse($recentOrders as $order)
+                            @php
+                                $firstOrderItem = $order->items->first();
+                                $itemName = $firstOrderItem?->item?->display_name
+                                    ?? $firstOrderItem?->item_name
+                                    ?? 'Unknown item';
+                                $itemImage = 'https://cdn-icons-png.flaticon.com/512/11181/11181220.png';
+                                $totalQty = (int) ($order->items->sum('qty') ?? 0);
+                            @endphp
+                            <a href="{{ route('user.pos.order.show', $order->id) }}" class="order-item">
+                                <div class="order-left">
+                                    <img class="recent-order-icon" src="{{ $itemImage }}" alt="{{ $itemName }}"
+                                        onerror="this.onerror=null;this.src='{{ asset('images/aside/history.png') }}';">
+                                    <div>
+                                        <div class="order-name">{{ $order->order_no }}</div>
+                                        <div class="order-sub">
+                                            {{ \Illuminate\Support\Str::limit($itemName, 30) }} •
+                                            {{ $totalQty }} item(s)
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="order-item active">
-                            <div class="order-left">
-                                <img src="https://i.pravatar.cc/80?img=32" alt="">
-                                <div>
-                                    <div class="order-name">Maggie Johnson</div>
-                                    <div class="order-sub">Oasis Organic Inc.</div>
+                                <div class="order-actions">
+                                    <span>${{ number_format((float) ($order->total_amount ?? 0), 2) }}</span>
                                 </div>
-                            </div>
-
-                            <div class="order-actions">
-                                <span>◌</span>
-                                <span>☆</span>
-                                <span>✎</span>
-                                <span>⋮</span>
-                            </div>
-                        </div>
-
-                        <div class="order-item">
-                            <div class="order-left">
-                                <img src="https://i.pravatar.cc/80?img=47" alt="">
-                                <div>
-                                    <div class="order-name">Gael Harry</div>
-                                    <div class="order-sub">New York Finest Fruits</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="order-item">
-                            <div class="order-left">
-                                <img src="https://i.pravatar.cc/80?img=49" alt="">
-                                <div>
-                                    <div class="order-name">Jenna Sullivan</div>
-                                    <div class="order-sub">Walmart</div>
-                                </div>
-                            </div>
-                        </div>
+                            </a>
+                        @empty
+                            <div class="small-text">No recent orders yet.</div>
+                        @endforelse
                     </div>
 
-                    <a href="#" class="gold-link">summary orders →</a>
+                    <a href="{{ route('user.pos.order.history') }}" class="gold-link">summary orders →</a>
                 </section>
 
                 <section class="card report-card">
                     <div class="card-head">
                         <h3 class="report-title">Report</h3>
-                        <div class="small-text">Yearly ⌄</div>
+                        <div class="small-text">Orders & Money</div>
                     </div>
 
                     <div class="chart-box">
-                        <svg viewBox="0 0 100 40" preserveAspectRatio="none">
-                            <polyline fill="none" stroke="#67cd63" stroke-width="1.7" stroke-dasharray="2 2"
-                                points="0,33 13,30 26,18 38,13 52,31 66,26 82,10 100,2" />
-                        </svg>
+                        <canvas id="reportChart"></canvas>
                     </div>
 
-                    <div class="chart-years">
-                        <span>2016</span>
-                        <span>2017</span>
-                        <span>2018</span>
-                        <span>2019</span>
-                        <span>2020</span>
-                        <span>2021</span>
-                        <span>2022</span>
-                        <span>2023</span>
+                    <div class="chart-years" style="font-size:12px;">
+                        <span>Total: {{ number_format((int) ($totalOrders ?? 0)) }}</span>
+                        <span>Amount: ${{ number_format((float) ($totalOrderAmount ?? 0), 2) }}</span>
                     </div>
                 </section>
 
                 <section class="mini-stats">
                     <div class="card mini-card">
-                        <div class="mini-label">Top month</div>
-                        <div class="mini-value">November</div>
-                        <div class="mini-sub accent">2019</div>
+                        <div class="mini-label">This month orders</div>
+                        <div class="mini-value">{{ number_format((int) ($thisMonthOrders ?? 0)) }}</div>
+                        <div class="mini-sub accent">{{ now()->format('F Y') }}</div>
                     </div>
 
                     <div class="card mini-card">
-                        <div class="mini-label">Top year</div>
-                        <div class="mini-value">2023</div>
-                        <div class="mini-sub">96K sold so far</div>
+                        <div class="mini-label">This month amount</div>
+                        <div class="mini-value">${{ number_format((float) ($thisMonthAmount ?? 0), 2) }}</div>
+                        <div class="mini-sub">based on your orders</div>
                     </div>
 
                     <div class="card mini-card">
-                        <div class="mini-label">Top buyer</div>
-                        <div class="top-buyer">
-                            <img src="https://i.pravatar.cc/80?img=32" alt="">
-                            <div>
-                                <div class="buyer-name">Maggie Johnson</div>
-                                <div class="buyer-sub">Oasis Organic Inc.</div>
+                        <div class="mini-label">Pending orders</div>
+                        <div class="mini-value">{{ number_format((int) ($pendingOrders ?? 0)) }}</div>
+                        <div class="mini-sub">need approval/delivery</div>
+                    </div>
+                </section>
+
+                <section class="card summary-card">
+                    <div class="card-head">
+                        <h3>Items You Bought</h3>
+                        <form method="GET" action="{{ route('user.index') }}">
+                            <select name="purchase_period" onchange="this.form.submit()" class="period-filter">
+                                <option value="week" {{ ($purchasePeriod ?? 'month') === 'week' ? 'selected' : '' }}>Week</option>
+                                <option value="month" {{ ($purchasePeriod ?? 'month') === 'month' ? 'selected' : '' }}>Month</option>
+                                <option value="year" {{ ($purchasePeriod ?? 'month') === 'year' ? 'selected' : '' }}>Year</option>
+                            </select>
+                        </form>
+                    </div>
+                    <div class="small-sub" style="margin-bottom:10px;">
+                        Total Qty: <strong>{{ number_format((int) ($purchaseQtyTotal ?? 0)) }}</strong>
+                        •
+                        Total Amount: <strong>${{ number_format((float) ($purchaseAmountTotal ?? 0), 2) }}</strong>
+                    </div>
+                    <div class="order-list">
+                        @forelse($topPurchasedItems as $item)
+                            @php
+                                $boughtItemName = $item->item_name ?: 'Unknown item';
+                                $boughtItemImage = $item->image_url ?: 'https://cdn-icons-png.flaticon.com/512/11181/11181220.png';
+                            @endphp
+                            <div class="order-item">
+                                <div class="order-left">
+                                    <img src="{{ $boughtItemImage }}" alt="{{ $boughtItemName }}"
+                                        onerror="this.onerror=null;this.src='{{ asset('images/aside/history.png') }}';">
+                                    <div>
+                                        <div class="order-name">{{ \Illuminate\Support\Str::limit($boughtItemName, 32) }}</div>
+                                        <div class="order-sub">
+                                            ID: {{ $item->item_no ?? 'N/A' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="order-actions">
+                                    <span>{{ number_format((int) ($item->total_qty ?? 0)) }} qty</span>
+                                </div>
                             </div>
-                        </div>
+                        @empty
+                            <div class="small-text">No bought items in this period.</div>
+                        @endforelse
                     </div>
                 </section>
 
                 <section class="card notification-card">
-                    <h3>Notification</h3>
-                    <div class="small-sub">2 unread messages</div>
+                    <a href="{{ route('user.notifications') }}">
+                        <h3>Notification</h3>
+                    </a>
+                    <div class="small-sub">{{ number_format((int) ($unreadNotificationCount ?? 0)) }} unread messages</div>
 
-                    <div class="avatar-row">
-                        <img src="https://i.pravatar.cc/80?img=32" alt="">
-                        <img src="https://i.pravatar.cc/80?img=15" alt="">
-                        <img src="https://i.pravatar.cc/80?img=59" alt="">
-                        <img src="https://i.pravatar.cc/80?img=47" alt="">
+                    <div class="order-list" style="margin-top:10px;">
+                        @forelse($recentNotifications as $notification)
+                            <a href="{{ route('user.notifications') }}" class="order-item">
+                                <div class="order-left">
+                                    <img src="{{ $notification->sender_profile_image ?: asset('images/default-user.png') }}"
+                                        alt="{{ $notification->title ?? 'Notification' }}">
+                                    <div>
+                                        <div class="order-name">{{ \Illuminate\Support\Str::limit($notification->title ?? 'Notification', 26) }}</div>
+                                        <div class="order-sub">{{ optional($notification->created_at)->format('M d, Y h:i A') }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        @empty
+                            <div class="small-text">No notifications yet.</div>
+                        @endforelse
                     </div>
 
-                    <a href="#" class="gold-link">All messages →</a>
-                </section>
-
-                <section class="card states-card">
-                    <h3>Top states</h3>
-
-                    <div class="state-list">
-                        <div class="state-item">
-                            <span class="state-code">NY</span>
-                            <div class="state-bar">
-                                <div class="state-fill" style="width:100%">120K</div>
-                            </div>
-                        </div>
-
-                        <div class="state-item">
-                            <span class="state-code">MA</span>
-                            <div class="state-bar">
-                                <div class="state-fill" style="width:82%">80K</div>
-                            </div>
-                        </div>
-
-                        <div class="state-item">
-                            <span class="state-code">NH</span>
-                            <div class="state-bar">
-                                <div class="state-fill" style="width:70%">70K</div>
-                            </div>
-                        </div>
-
-                        <div class="state-item">
-                            <span class="state-code">OR</span>
-                            <div class="state-bar">
-                                <div class="state-fill" style="width:54%">50K</div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="card deals-card">
-                    <h3>New deals</h3>
-
-                    <div class="deal-grid">
-                        <div class="deal-item"><span class="deal-plus">+</span><span>Fruit2Go</span></div>
-                        <div class="deal-item"><span class="deal-plus">+</span><span>Marshall's MKT</span></div>
-                        <div class="deal-item"><span class="deal-plus">+</span><span>CCNT</span></div>
-                        <div class="deal-item"><span class="deal-plus">+</span><span>Joana Mini-market</span></div>
-                        <div class="deal-item"><span class="deal-plus">+</span><span>Little Brazil Vegan</span></div>
-                        <div class="deal-item"><span class="deal-plus">+</span><span>Target</span></div>
-                        <div class="deal-item"><span class="deal-plus">+</span><span>Organic Place</span></div>
-                        <div class="deal-item"><span class="deal-plus">+</span><span>Morello's</span></div>
-                    </div>
+                    <a href="{{ route('user.notifications') }}" class="gold-link">All messages →</a>
                 </section>
 
             </div>
         </main>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        < script src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" >
-    </script>
+        (() => {
+            const ctx = document.getElementById('reportChart');
+            if (!ctx || typeof Chart === 'undefined') return;
 
-    <script>
-        document.querySelectorAll('.soft-card').forEach(card => {
-            card.addEventListener('click', (e) => {
-                // don't trigger when clicking the button/link
-                if (e.target.closest('a')) return;
-                const href = card.getAttribute('data-href');
-                if (href) window.location.href = href;
+            const labels = @json($reportLabels ?? []);
+            const dates = @json($reportDates ?? []);
+            const values = @json($reportValues ?? []);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: values,
+                        borderColor: '#22b8a7',
+                        backgroundColor: 'rgba(34, 184, 167, 0.14)',
+                        fill: true,
+                        borderWidth: 2,
+                        tension: 0.35,
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: '#22b8a7',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => {
+                                    const i = items?.[0]?.dataIndex ?? 0;
+                                    return dates[i] || '';
+                                },
+                                label: (item) => `Money: $${Number(item.raw || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (value) => `$${Number(value).toLocaleString()}`
+                            }
+                        }
+                    }
+                }
             });
-        });
+        })();
     </script>
 
 </body>

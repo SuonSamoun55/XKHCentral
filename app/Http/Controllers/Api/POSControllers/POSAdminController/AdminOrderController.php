@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\POSControllers\POSAdminController;
 
 use App\Http\Controllers\Controller;
+use App\Models\POSModel\Item;
+use App\Models\POSModel\InventoryMovement;
 use App\Models\POSModel\Order;
 use App\Models\MagamentSystemModel\OrderAction;
 use App\Models\MagamentSystemModel\Notification;
@@ -40,7 +42,6 @@ class AdminOrderController extends Controller
                     });
             });
         }
-
         if ($tab === 'approved') {
             $query->where('status', 'confirmed');
         } else {
@@ -96,6 +97,8 @@ class AdminOrderController extends Controller
             return back()->with('error', 'Order has no items.');
         }
 
+        $orderItems = $order->items()->get();
+
         DB::beginTransaction();
 
         try {
@@ -124,7 +127,7 @@ class AdminOrderController extends Controller
                 throw new \Exception('BC sales order ID not returned.');
             }
 
-            foreach ($order->items as $item) {
+            foreach ($orderItems as $item) {
                 $discountPercent = $this->resolveDiscountPercent($item->item);
                 $linePayload = [
                     'lineType'         => 'Item',
@@ -171,6 +174,67 @@ class AdminOrderController extends Controller
                     throw new \Exception(
                         'Create BC sales order line failed for item [' . $item->item_no . ']: ' . $lineResponse->body()
                     );
+                }
+            }
+
+            foreach ($orderItems as $orderItem) {
+                if (empty($orderItem->item_id)) {
+                    throw new \Exception("Order item {$orderItem->id} is missing item reference.");
+                }
+            }
+
+            $requestedQtyByItemId = $orderItems
+                ->groupBy('item_id')
+                ->map(fn ($rows) => (int) $rows->sum('qty'))
+                ->filter(fn ($qty) => $qty > 0);
+
+            if ($requestedQtyByItemId->isNotEmpty()) {
+                $lockedItems = Item::query()
+                    ->whereIn('id', $requestedQtyByItemId->keys()->all())
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('id');
+
+                foreach ($requestedQtyByItemId as $itemId => $requestedQty) {
+                    $product = $lockedItems->get($itemId);
+
+                    if (!$product) {
+                        throw new \Exception("Item not found for stock update. Item ID: {$itemId}");
+                    }
+
+                    $availableQty = (int) ($product->inventory ?? 0);
+                    if ($availableQty < $requestedQty) {
+                        throw new \Exception(
+                            "Insufficient stock for item {$product->number}. Requested {$requestedQty}, available {$availableQty}."
+                        );
+                    }
+                }
+
+                foreach ($requestedQtyByItemId as $itemId => $requestedQty) {
+                    $product = $lockedItems->get($itemId);
+                    if (!$product) {
+                        continue;
+                    }
+
+                    $oldInventory = (int) ($product->inventory ?? 0);
+                    $newInventory = $oldInventory - $requestedQty;
+
+                    $product->decrement('inventory', $requestedQty);
+
+                    InventoryMovement::create([
+                        'company_id' => $order->company_id,
+                        'item_id' => $product->id,
+                        'order_id' => $order->id,
+                        'actor_user_id' => $admin->id,
+                        'buyer_user_id' => $order->user_id,
+                        'source' => 'sale',
+                        'quantity_change' => -$requestedQty,
+                        'old_inventory' => $oldInventory,
+                        'new_inventory' => $newInventory,
+                        'happened_at' => now(),
+                        'reference_no' => $order->order_no,
+                        'note' => 'Inventory deducted after order confirmation.',
+                    ]);
                 }
             }
 
