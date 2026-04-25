@@ -10,127 +10,168 @@
     <div class="page-wrap">
         <main class="content-area">
             <div class="header">
+                <div class="header-top-bar">
+                    <div class="brand-name">UMAH!</div>
+                    <a href="{{ route('user.pos.cart') }}" class="cart-box">
+                        <i class="bi bi-cart3"></i>
+                        <span class="cart-count" id="cartCount">0</span>
+                    </a>
+                </div>
 
-                    <div class="top">
-                        <h1 class="title">
-                           Products
-                        </h1>
+                <div class="header-actions">
+                    <a href="#" class="header-action-btn active">
+                        <i class="bi bi-bag-check"></i>
+                        <span>Order</span>
+                    </a>
+                    <a href="{{ route('user.posinterface') }}" class="header-action-btn">
+                        <i class="bi bi-display"></i>
+                        <span>POS System</span>
+                    </a>
+                    <a href="{{ route('user.notifications') }}" class="header-action-btn">
+                        <i class="bi bi-bell"></i>
+                        <span>Notification</span>
+                    </a>
+                </div>
 
-                        <a href="{{ route('user.pos.cart') }}" class="cart-box">
-                            <i class="bi bi-cart3"></i>
-                            <span class="cart-count" id="cartCount">0</span>
-                        </a>
+                <div class="hero-card">
+                    <div class="hero-title">New collections is available!</div>
+
+                    <div class="hero-image">
+                        <img src="{{ asset('images/pos/Image.png') }}" alt="sofa">
                     </div>
+                    
+                </div>
+                 <a href="#" class="hero-link">
+                        Learn more <i class="bi bi-arrow-right"></i>
+                    </a>
+                
 
-                    <div class="search-area">
-                        <div class="search-wrapper">
-                            <div class="search-box">
-                                <i class="bi bi-search"></i>
-                                <input type="text" id="searchInput" placeholder="Search Product">
-                                <button type="button" id="searchSubmitBtn" class="search-submit-btn">
-                                    <i class="bi bi-send"></i>
-                                </button>
+
+                <div class="search-area">
+                    <div class="search-wrapper">
+                        <div class="search-box">
+                            <i class="bi bi-search"></i>
+                            <input type="text" id="searchInput" placeholder="Search Product">
+                            <button type="button" id="searchSubmitBtn" class="search-submit-btn">
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </div>
+
+                        <div class="search-dropdown" id="searchDropdown">
+                            <div class="search-dropdown-left">
+                                <div class="search-section-title">Your Searches</div>
+                                <div id="searchSuggestions"></div>
                             </div>
 
-                            <div class="search-dropdown" id="searchDropdown">
-                                <div class="search-dropdown-left">
-                                    <div class="search-section-title">Your Searches</div>
-                                    <div id="searchSuggestions"></div>
-                                </div>
-
-                                <div class="search-dropdown-right">
-                                    <div class="search-section-title">Products</div>
-                                    <div id="searchPreviewProducts" class="search-preview-products"></div>
-                                </div>
+                            <div class="search-dropdown-right">
+                                <div class="search-section-title">Products</div>
+                                <div id="searchPreviewProducts" class="search-preview-products"></div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div id="messageBox" class="message-box"></div>
+            <div id="messageBox" class="message-box"></div>
 
-                @if ($items->isEmpty())
-                    <div class="empty-box">No items found.</div>
-                @else
-                    <div class="products-grid" id="productsGrid">
-                        @foreach ($items as $item)
-                            @php
-                                $salePrice = (float) ($item->unit_price ?? 0);
-                                $discountPercent = (float) ($item->discount_percent ?? 40);
-                                $oldPrice = (float) ($item->original_price ?? ($salePrice > 0 ? $salePrice * 2.4 : 0));
-                                // $descText = $item->short_description ?? '';
-                            @endphp
+            @if ($items->isEmpty())
+                <div class="empty-box">No items found.</div>
+            @else
+                <div class="products-grid" id="productsGrid">
+                    @foreach ($items as $item)
+                        @php
+                            $salePrice = (float) ($item->unit_price ?? 0);
+                            $discountPercent = (float) ($item->discount_percent ?? 40);
+                            $oldPrice = (float) ($item->original_price ?? ($salePrice > 0 ? $salePrice * 2.4 : 0));
+                            // $descText = $item->short_description ?? '';
+                        @endphp
 
-                            <div class="product-card product-item" data-id="{{ $item->id }}"
-                                data-name="{{ strtolower($item->display_name ?? '') }}"
-                                data-display-name="{{ $item->display_name ?? '' }}"
-                                {{-- data-desc="{{ strtolower($descText ?? '') }}" --}}
-                                data-uom="{{ strtolower($item->base_unit_of_measure_code ?? '') }}"
-                                data-category="{{ strtolower($item->item_category_code ?? '') }}"
-                                data-price="{{ number_format($salePrice, 2, '.', '') }}"
-                                data-image="{{ $item->image_url ?: asset('images/no-image.png') }}">
+                        <div class="product-card product-item" data-id="{{ $item->id }}"
+                            data-name="{{ strtolower($item->display_name ?? '') }}"
+                            data-display-name="{{ $item->display_name ?? '' }}" {{-- data-desc="{{ strtolower($descText ?? '') }}" --}}
+                            data-uom="{{ strtolower($item->base_unit_of_measure_code ?? '') }}"
+                            data-category="{{ strtolower($item->item_category_code ?? '') }}"
+                            data-price="{{ number_format($salePrice, 2, '.', '') }}"
+                            data-image="{{ $item->image_url ?: asset('images/no-image.png') }}">
 
-                                <div class="product-img-box">
-                                    @if($discountPercent > 0)
-                                        <div class="discount-badge">
-                                            SAVE {{ rtrim(rtrim(number_format($discountPercent, 2), '0'), '.') }} %
-                                        </div>
-                                    @endif
+                            <div class="product-img-box">
+                                @if ($discountPercent > 0)
+                                    <div class="discount-badge">
+                                        SAVE {{ rtrim(rtrim(number_format($discountPercent, 2), '0'), '.') }} %
+                                    </div>
+                                @endif
 
-                                    <button class="fav-btn" data-item-id="{{ $item->id }}">
-                                        <i class="bi {{ in_array($item->id, $favoriteIds) ? 'bi-heart-fill text-danger' : 'bi-heart' }}"></i>
-                                    </button>
+                                <button class="fav-btn" data-item-id="{{ $item->id }}">
+                                    <i
+                                        class="bi {{ in_array($item->id, $favoriteIds) ? 'bi-heart-fill text-danger' : 'bi-heart' }}"></i>
+                                </button>
 
-                                    <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
-                                        alt="{{ $item->display_name ?? 'No Name' }}"
-                                        loading="lazy"
-                                        onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
+                                <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
+                                    alt="{{ $item->display_name ?? 'No Name' }}" loading="lazy"
+                                    onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
+                            </div>
+
+                            <div class="product-info">
+                                <div class="product-title">
+                                    {{ $item->display_name ?: 'No Name' }}
                                 </div>
 
-                                <div class="product-info">
-                                    <div class="product-title">
-                                        {{ $item->display_name ?: 'No Name' }}
-                                    </div>
-
-                                    {{-- <div class="product-desc">
+                                {{-- <div class="product-desc">
                                         {{ $descText }}
                                     </div> --}}
 
-                                    <div class="price-row">
-                                        <div class="old-price">
-                                            @if($oldPrice > $salePrice)
-                                                ${{ number_format($oldPrice, 2) }}
-                                            @endif
-                                        </div>
-
-                                        <div class="new-price">
-                                            ${{ number_format($salePrice, 2) }}
-                                        </div>
+                                <div class="price-row">
+                                    <div class="old-price">
+                                        @if ($oldPrice > $salePrice)
+                                            ${{ number_format($oldPrice, 2) }}
+                                        @endif
                                     </div>
 
-                                    <div class="qty-section">
-                                        <span class="qty-label">Quantity:</span>
-                                        <div class="qty-box">
-                                            <button type="button" class="qty-btn minus">−</button>
-                                            <span class="qty">0</span>
-                                            <button type="button" class="qty-btn plus">+</button>
-                                        </div>
+                                    <div class="new-price">
+                                        ${{ number_format($salePrice, 2) }}
                                     </div>
-
-                                    <button type="button" class="add-cart-btn mobile-action"
-                                        data-id="{{ $item->id }}">
-                                        Add to cart
-                                    </button>
                                 </div>
+
+                                <div class="qty-section">
+                                    <span class="qty-label">Quantity:</span>
+                                    <div class="qty-box">
+                                        <button type="button" class="qty-btn minus">−</button>
+                                        <span class="qty">0</span>
+                                        <button type="button" class="qty-btn plus">+</button>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="add-cart-btn mobile-action" data-id="{{ $item->id }}">
+                                    <span class="add-cart-text">Add to cart</span>
+                                </button>
                             </div>
-                        @endforeach
-                    </div>
+                        </div>
+                    @endforeach
+                </div>
 
-                    <div id="noSearchResult" class="empty-box" style="display:none; margin-top:16px;">
-                        No matching products found.
-                    </div>
-                @endif
+                <div id="noSearchResult" class="empty-box" style="display:none; margin-top:16px;">
+                    No matching products found.
+                </div>
+            @endif
 
+            <div class="mobile-bottom-nav">
+                <a href="{{ route('user.posinterface') }}" class="active">
+                    <i class="bi bi-house-door-fill"></i>
+                    <span>home</span>
+                </a>
+                <a href="{{ route('user.posinterface') }}">
+                    <i class="bi bi-box-seam"></i>
+                    <span>product</span>
+                </a>
+                <a href="#">
+                    <i class="bi bi-heart"></i>
+                    <span>wishlist</span>
+                </a>
+                <a href="#">
+                    <i class="bi bi-person"></i>
+                    <span>user</span>
+                </a>
+            </div>
         </main>
     </div>
 @endsection
@@ -202,7 +243,8 @@
                 return {
                     id: card.dataset.id || "",
                     name: (card.dataset.name || "").toLowerCase(),
-                    displayName: card.dataset.displayName || card.querySelector(".product-title")?.textContent?.trim() || "No Name",
+                    displayName: card.dataset.displayName || card.querySelector(".product-title")?.textContent
+                        ?.trim() || "No Name",
                     desc: (card.dataset.desc || "").toLowerCase(),
                     category: (card.dataset.category || "").toLowerCase(),
                     uom: (card.dataset.uom || "").toLowerCase(),
@@ -274,9 +316,9 @@
                 if (!els.searchSuggestions) return;
 
                 const text = keyword.trim().toLowerCase();
-                let suggestions = text
-                    ? recentSearches.filter(item => item.includes(text))
-                    : recentSearches;
+                let suggestions = text ?
+                    recentSearches.filter(item => item.includes(text)) :
+                    recentSearches;
 
                 if (!suggestions.length) {
                     els.searchSuggestions.innerHTML = `<div class="search-empty">No search history</div>`;
@@ -372,7 +414,8 @@
                     filterProducts(value);
                 } else {
                     if (els.searchPreviewProducts) {
-                        els.searchPreviewProducts.innerHTML = `<div class="search-empty">Start typing to find products...</div>`;
+                        els.searchPreviewProducts.innerHTML =
+                            `<div class="search-empty">Start typing to find products...</div>`;
                     }
                     filterProducts("");
                 }
@@ -462,7 +505,8 @@
                                 }
 
                                 if (qtyEl) qtyEl.textContent = "1";
-                                showMessage("success", data.message || "Added to cart successfully.");
+                                showMessage("success", data.message ||
+                                    "Added to cart successfully.");
                             } else {
                                 showMessage("error", data.message || "Failed to add to cart.");
                             }
@@ -486,17 +530,18 @@
                         if (!itemId) return;
 
                         try {
-                            const response = await fetch("{{ route('user.pos.favorite.toggle') }}", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "X-CSRF-TOKEN": csrfToken,
-                                    "Accept": "application/json"
-                                },
-                                body: JSON.stringify({
-                                    item_id: itemId
-                                })
-                            });
+                            const response = await fetch(
+                                "{{ route('user.pos.favorite.toggle') }}", {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-CSRF-TOKEN": csrfToken,
+                                        "Accept": "application/json"
+                                    },
+                                    body: JSON.stringify({
+                                        item_id: itemId
+                                    })
+                                });
 
                             const data = await response.json();
 
