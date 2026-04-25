@@ -107,7 +107,7 @@
         "hero1 hero2 hero3"
         "recent recent report"
         "recent recent stats"
-        "notify states deals";
+        "summary summary notify";
       gap: 12px;
     }
 
@@ -152,9 +152,14 @@
 
     .recent-card { grid-area: recent; min-height: 270px; }
     .report-card { grid-area: report; min-height: 180px; }
+    .summary-card {
+      grid-area: summary;
+      height: 70vh;
+      min-height: 260px;
+      display: flex;
+      flex-direction: column;
+    }
     .notification-card { grid-area: notify; min-height: 170px; }
-    .states-card { grid-area: states; min-height: 170px; }
-    .deals-card { grid-area: deals; min-height: 170px; }
 
     .mini-stats {
       grid-area: stats;
@@ -192,6 +197,13 @@
       gap: 10px;
     }
 
+    .summary-card .order-list {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
     .order-item {
       min-height: 46px;
       border-radius: 14px;
@@ -219,11 +231,13 @@
     }
 
     .order-left img {
-      width: 34px;
-      height: 34px;
-      min-width: 34px;
+      width: 46px;
+      height: 46px;
+      min-width: 46px;
       object-fit: cover;
       border-radius: 50%;
+      background: #f3f4f6;
+      border: 1px solid #ececec;
     }
 
     .order-name {
@@ -263,13 +277,12 @@
         repeating-linear-gradient(to right, transparent, transparent 52px, rgba(0,0,0,0.04) 52px, rgba(0,0,0,0.04) 53px),
         repeating-linear-gradient(to bottom, transparent, transparent 36px, rgba(0,0,0,0.04) 36px, rgba(0,0,0,0.04) 37px);
       position: relative;
+      padding: 8px;
     }
 
-    .chart-box svg {
-      position: absolute;
-      inset: 12px 10px 14px;
-      width: calc(100% - 20px);
-      height: calc(100% - 26px);
+    .chart-box canvas {
+      width: 100% !important;
+      height: 100% !important;
     }
 
     .chart-years {
@@ -377,6 +390,17 @@
       font-weight: 700;
     }
 
+    .period-filter {
+      border: 1px solid #ddd4c4;
+      border-radius: 8px;
+      background: #fff;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: #595959;
+      outline: none;
+      cursor: pointer;
+    }
+
     .deal-grid {
       margin-top: 18px;
       display: grid;
@@ -414,8 +438,8 @@
           "recent recent"
           "report report"
           "stats stats"
-          "notify states"
-          "deals deals";
+          "summary summary"
+          "notify notify";
       }
     }
 
@@ -439,9 +463,8 @@
           "recent"
           "report"
           "stats"
+          "summary"
           "notify"
-          "states"
-          "deals";
       }
 
       .mini-stats,

@@ -41,6 +41,10 @@
 
                     <div class="hero-image">
                         <img src="{{ asset('images/pos/Image.png') }}" alt="sofa">
+                        <a href="{{ route('user.pos.cart') }}" class="cart-box">
+                            <i class="bi bi-cart3"></i>
+                            <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
+                        </a>
                     </div>
                     
                 </div>
@@ -84,15 +88,18 @@
                 <div class="products-grid" id="productsGrid">
                     @foreach ($items as $item)
                         @php
-                            $salePrice = (float) ($item->unit_price ?? 0);
-                            $discountPercent = (float) ($item->discount_percent ?? 40);
-                            $oldPrice = (float) ($item->original_price ?? ($salePrice > 0 ? $salePrice * 2.4 : 0));
-                            // $descText = $item->short_description ?? '';
+                            $normalPrice = (float) ($item->unit_price ?? 0);
+                            $discountPercent = (float) ($item->effective_discount_percent ?? 0);
+                            $salePrice = (float) ($item->final_price ?? $normalPrice);
+                            $oldPrice = $discountPercent > 0 ? $normalPrice : 0;
+                            $descText = $item->short_description ?? '';
                         @endphp
 
                         <div class="product-card product-item" data-id="{{ $item->id }}"
+                            {{-- data-detail-url="{{ route('user.pos.items.detail', $item->id) }}" --}}
                             data-name="{{ strtolower($item->display_name ?? '') }}"
-                            data-display-name="{{ $item->display_name ?? '' }}" {{-- data-desc="{{ strtolower($descText ?? '') }}" --}}
+                            data-display-name="{{ $item->display_name ?? '' }}"
+                            data-desc="{{ strtolower($descText ?? '') }}"
                             data-uom="{{ strtolower($item->base_unit_of_measure_code ?? '') }}"
                             data-category="{{ strtolower($item->item_category_code ?? '') }}"
                             data-price="{{ number_format($salePrice, 2, '.', '') }}"
@@ -124,7 +131,7 @@
                                         {{ $descText }}
                                     </div> --}}
 
-                                <div class="price-row">
+                                <div class="price-row {{ $oldPrice > $salePrice ? 'has-discount' : 'no-discount' }}">
                                     <div class="old-price">
                                         @if ($oldPrice > $salePrice)
                                             ${{ number_format($oldPrice, 2) }}
@@ -140,7 +147,7 @@
                                     <span class="qty-label">Quantity:</span>
                                     <div class="qty-box">
                                         <button type="button" class="qty-btn minus">−</button>
-                                        <span class="qty">0</span>
+                                        <span class="qty">1</span>
                                         <button type="button" class="qty-btn plus">+</button>
                                     </div>
                                 </div>
@@ -605,11 +612,29 @@
                 });
             }
 
+            function bindProductDetailNavigation() {
+                els.productCards.forEach(card => {
+                    card.style.cursor = "pointer";
+
+                    card.addEventListener("click", (e) => {
+                        if (e.target.closest(".qty-btn, .add-cart-btn, .fav-btn, .search-preview-btn")) {
+                            return;
+                        }
+
+                        const detailUrl = card.dataset.detailUrl;
+                        if (!detailUrl) return;
+
+                        window.location.href = detailUrl;
+                    });
+                });
+            }
+
             bindSidebar();
             bindQuantityButtons();
             bindAddToCart();
             bindFavoriteButtons();
             bindSearch();
+            bindProductDetailNavigation();
         });
     </script>
 @endpush
