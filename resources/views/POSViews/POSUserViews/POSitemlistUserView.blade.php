@@ -12,6 +12,9 @@
             <div class="header">
                 <div class="header-top-bar">
                     <div class="brand-name">UMAH!</div>
+                    <h1 class="title">
+                            Products
+                        </h1>
                     <a href="{{ route('user.pos.cart') }}" class="cart-box">
                         <i class="bi bi-cart3"></i>
                         <span class="cart-count" id="cartCount">0</span>
@@ -44,6 +47,7 @@
                  <a href="#" class="hero-link">
                         Learn more <i class="bi bi-arrow-right"></i>
                     </a>
+                    <h4>Product</h4>
                 
 
 
