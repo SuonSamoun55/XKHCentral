@@ -3,9 +3,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 1rem;
-    padding: 0 10px;
-    padding-bottom: 15px;
+    /* margin-top: 1rem; */
+    padding: 8px 10px;
+    /* padding-bottom: 15px; */
     
 }
 

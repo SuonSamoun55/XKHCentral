@@ -125,10 +125,10 @@
         color: #666;
         white-space: nowrap;
     }
-    .page-wrap{
+    /* .page-wrap{
         flex:1;
         overflow-y: auto;
-    }
+    } */
     .layout{
         display:flex;
         gap:12px;
@@ -137,7 +137,6 @@
 
     .page-wrap{
         flex:1;
-        overflow:auto;
     }
 
     .content-area{
