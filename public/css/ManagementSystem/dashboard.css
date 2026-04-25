@@ -154,7 +154,7 @@
     .report-card { grid-area: report; min-height: 180px; }
     .summary-card {
       grid-area: summary;
-      height: 70;
+      height: 70vh;
       min-height: 260px;
       display: flex;
       flex-direction: column;
