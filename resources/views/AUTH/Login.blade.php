@@ -57,14 +57,19 @@
             </div>
 
             {{-- 2. Right Side (Bottom on Mobile) --}}
+
+
+
             <div class="login-right">
                 <div class="login-form-box">
-                    <button type="button" class="btn-back" id="backBtn" title="Go back">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M19 12H5M12 19l-7-7 7-7" />
-                        </svg>
-                    </button>
+                    <form method="POST" action="{{ route('logout') }}" class="logout-link">
+    @csrf
+    <button class="logout-btn" type="submit" title="Logout">
+        <span class="nav-icon">
+            <img src="{{ asset('images/pos/Vector.png') }}" alt="Logout Icon">
+        </span>
+    </button>
+</form>
                     <img src="{{ asset('images/pos/image 14.png') }}" alt="second login image" class="login-form-image">
                     <h1 class="login-title">Account Login</h1>
                     <p class="login-subtitle">
@@ -130,7 +135,7 @@
                 progressSteps.forEach((step, i) => {
                     step.classList.remove('active');
                 });
-                
+
                 // Show progress from slide 2 onwards, activate only current step
                 if (index >= 1) {
                     progressContainer.classList.add('visible');
@@ -141,7 +146,7 @@
                 } else {
                     progressContainer.classList.remove('visible');
                 }
-                
+
                 currentSlide = index;
             }
 
