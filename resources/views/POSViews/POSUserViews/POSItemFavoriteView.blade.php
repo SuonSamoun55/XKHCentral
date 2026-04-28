@@ -13,13 +13,13 @@
 
             <div id="messageBox" class="message-box"></div>
             <div class="top">
-    @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Favorite Items'])
+                @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Favorite Items'])
 
-    <div class="cart-box">
-        <i class="bi bi-cart3"></i>
-        <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
-    </div>
-</div>
+                <div class="cart-box">
+                    <i class="bi bi-cart3"></i>
+                    <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
+                </div>
+            </div>
 
             <div id="messageBox" class="message-box"></div>
 
@@ -81,6 +81,30 @@
                 </div>
             @endif
         </main>
+        <div class="mobile-bottom-nav">
+            <a href="{{ route('user.posinterface') }}"
+                class="{{ request()->routeIs('user.posinterface') ? 'active' : '' }}">
+                <i class="bi bi-house-door-fill"></i>
+                <span>home</span>
+            </a>
+
+            <a href="{{ route('user.pos.categories') }}"
+                class="{{ request()->routeIs('user.pos.categories*') ? 'active' : '' }}">
+                <i class="bi bi-box-seam"></i>
+                <span>products</span>
+            </a>
+
+            <a href="{{ route('user.pos.favorites') }}"
+                class="{{ request()->routeIs('user.pos.favorites') ? 'active' : '' }}">
+                <i class="bi bi-heart-fill"></i>
+                <span>wishlist</span>
+            </a>
+
+            <a href="{{ route('user.notifications') }}">
+                <i class="bi bi-person"></i>
+                <span>user</span>
+            </a>
+        </div>
     </div>
 @endsection
 

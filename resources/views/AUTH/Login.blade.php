@@ -155,7 +155,7 @@
                 if (currentSlide === 0) {
                     showSlide(1);
                 }
-            }, 1000);
+            }, 5000);
 
             // Handle next button clicks
             nextBtns.forEach(btn => {

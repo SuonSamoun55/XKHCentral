@@ -194,8 +194,6 @@ body {
 .nav-icon img {
     display: none;
 }
-
-
 /* @media (max-width: 991.98px) {
         .login-shell {
             flex-direction: column;
@@ -235,8 +233,6 @@ body {
     body {
         display: block;
     }
-
-    
 .onboarding-overlay {
     display: flex;
     position: fixed;

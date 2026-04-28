@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/ManagementSystem/dashboard.css') }}" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
 </head>
 <body>
@@ -197,6 +198,26 @@
 
             </div>
         </main>
+
+        <div class="mobile-nav">
+            <a href="{{ route('user.posinterface') }}" class="active">
+                <i class="bi bi-house-door-fill"></i>
+                <span>home</span>
+            </a>
+            <a href="{{ route('user.posinterface') }}">
+                <i class="bi bi-box-seam"></i>
+                <span>product</span>
+            </a>
+            <a href="#">
+                <i class="bi bi-heart"></i>
+                <span>wishlist</span>
+            </a>
+            <a href="#">
+                <i class="bi bi-person"></i>
+                <span>user</span>
+            </a>
+        </div>
+
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -13,8 +13,8 @@
                 <div class="header-top-bar">
                     <div class="brand-name">UMAH!</div>
                     <h1 class="title">
-                            Products
-                        </h1>
+                        Products
+                    </h1>
                     <a href="{{ route('user.pos.cart') }}" class="cart-box">
                         <i class="bi bi-cart3"></i>
                         <span class="cart-count" id="cartCount">0</span>
@@ -41,18 +41,18 @@
 
                     <div class="hero-image">
                         <img src="{{ asset('images/pos/Image.png') }}" alt="sofa">
-                        <a href="{{ route('user.pos.cart') }}" class="cart-box">
+                        {{-- <a href="{{ route('user.pos.cart') }}" class="cart-box">
                             <i class="bi bi-cart3"></i>
                             <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
-                        </a>
+                        </a> --}}
                     </div>
-                    
+
                 </div>
-                 <a href="#" class="hero-link">
-                        Learn more <i class="bi bi-arrow-right"></i>
-                    </a>
-                    <h4>Product</h4>
-                
+                <a href="#" class="hero-link">
+                    Learn more <i class="bi bi-arrow-right"></i>
+                </a>
+                <h4>Product</h4>
+
 
 
                 <div class="search-area">
@@ -95,8 +95,7 @@
                             $descText = $item->short_description ?? '';
                         @endphp
 
-                        <div class="product-card product-item" data-id="{{ $item->id }}"
-                            {{-- data-detail-url="{{ route('user.pos.items.detail', $item->id) }}" --}}
+                        <div class="product-card product-item" data-id="{{ $item->id }}" {{-- data-detail-url="{{ route('user.pos.items.detail', $item->id) }}" --}}
                             data-name="{{ strtolower($item->display_name ?? '') }}"
                             data-display-name="{{ $item->display_name ?? '' }}"
                             data-desc="{{ strtolower($descText ?? '') }}"
@@ -166,22 +165,35 @@
             @endif
 
             <div class="mobile-bottom-nav">
-                <a href="{{ route('user.posinterface') }}" class="active">
+
+                {{-- HOME --}}
+                <a href="{{ route('user.posinterface') }}"
+                    class="{{ request()->routeIs('user.posinterface') ? 'active' : '' }}">
                     <i class="bi bi-house-door-fill"></i>
                     <span>home</span>
                 </a>
-                <a href="{{ route('user.posinterface') }}">
+
+                {{-- PRODUCTS (categories + category products) --}}
+                <a href="{{ route('user.pos.categories') }}"
+                    class="{{ request()->routeIs('user.pos.categories') || request()->routeIs('user.pos.categories.products') ? 'active' : '' }}">
                     <i class="bi bi-box-seam"></i>
-                    <span>product</span>
+                    <span>products</span>
                 </a>
-                <a href="#">
+
+                {{-- WISHLIST --}}
+                <a href="{{ route('user.pos.favorites') }}"
+                    class="{{ request()->routeIs('user.pos.favorites') ? 'active' : '' }}">
                     <i class="bi bi-heart"></i>
                     <span>wishlist</span>
                 </a>
-                <a href="#">
+
+                {{-- USER --}}
+                <a href="{{ route('user.notifications') }}"
+                    class="{{ request()->routeIs('user.notifications') ? 'active' : '' }}">
                     <i class="bi bi-person"></i>
                     <span>user</span>
                 </a>
+
             </div>
         </main>
     </div>
@@ -617,7 +629,8 @@
                     card.style.cursor = "pointer";
 
                     card.addEventListener("click", (e) => {
-                        if (e.target.closest(".qty-btn, .add-cart-btn, .fav-btn, .search-preview-btn")) {
+                        if (e.target.closest(
+                                ".qty-btn, .add-cart-btn, .fav-btn, .search-preview-btn")) {
                             return;
                         }
 
