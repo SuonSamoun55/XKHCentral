@@ -38,7 +38,7 @@
     .main-wrap{
         width:100%;
         min-width:100%;
-        height:100vh;    
+        height:100vh;
         overflow-y:auto;
         background: white;
         padding: 14px;
@@ -566,23 +566,16 @@
 @section('content')
 @php
     $discountItems = collect($items ?? [])->filter(function ($item) {
-        return !is_null($item->discount_amount) && (float)$item->discount_amount > 0;
+        return (($item->discount_status ?? '') !== 'inactive')
+            || (!is_null($item->discount_amount) && (float)$item->discount_amount > 0)
+            || !is_null($item->discount_start_date)
+            || !is_null($item->discount_end_date);
     })->values();
 
     $categoryOptions = $discountItems->pluck('item_category_code')->filter()->unique()->sort()->values();
 
     $preparedItems = $discountItems->map(function ($item) {
-        $today = \Carbon\Carbon::today();
-        $startDate = $item->discount_start_date ? \Carbon\Carbon::parse($item->discount_start_date) : null;
-        $endDate = $item->discount_end_date ? \Carbon\Carbon::parse($item->discount_end_date) : null;
-
-        if (!$startDate && !$endDate) {
-            $status = 'forever';
-        } elseif ($endDate && $endDate->lt($today)) {
-            $status = 'expired';
-        } else {
-            $status = 'scheduled';
-        }
+        $status = $item->discount_status ?? 'inactive';
 
         return [
             'id' => $item->id,
@@ -644,6 +637,10 @@
                 <button type="button" id="selectVisibleBtn" class="btn-light-main">
                     <i class="bi bi-check2-square"></i>
                     Select Visible
+                </button>
+                <button type="button" id="deleteSelectedBtn" class="btn-danger-soft">
+                    <i class="bi bi-trash"></i>
+                    Delete Selected
                 </button>
 
                 <a href="{{ route('discounts.create') }}" class="btn-main">
@@ -737,6 +734,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const pageNumbers     = document.getElementById('pageNumbers');
     const masterCheckbox  = document.getElementById('masterCheckbox');
     const selectVisibleBtn = document.getElementById('selectVisibleBtn');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
     const ajaxAlertBox    = document.getElementById('ajaxAlertBox');
 
     let currentPage = 1;
@@ -761,6 +759,11 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => {
             ajaxAlertBox.innerHTML = '';
         }, 2500);
+    }
+
+    function getDeleteUrlById(id) {
+        const item = allItems.find(entry => Number(entry.id) === Number(id));
+        return item ? item.delete_url : null;
     }
 
     function getPerPage() {
@@ -869,6 +872,7 @@ document.addEventListener('DOMContentLoaded', function () {
         discountCount.textContent = total;
         renderPageNumbers(totalPages);
         updateMasterCheckbox();
+        updateBulkDeleteButtonState();
         bindRowEvents();
     }
 
@@ -940,12 +944,19 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!visibleCheckboxes.length) {
             masterCheckbox.checked = false;
             masterCheckbox.indeterminate = false;
+            updateBulkDeleteButtonState();
             return;
         }
 
         const checkedCount = visibleCheckboxes.filter(cb => cb.checked).length;
         masterCheckbox.checked = checkedCount > 0 && checkedCount === visibleCheckboxes.length;
         masterCheckbox.indeterminate = checkedCount > 0 && checkedCount < visibleCheckboxes.length;
+        updateBulkDeleteButtonState();
+    }
+
+    function updateBulkDeleteButtonState() {
+        if (!deleteSelectedBtn) return;
+        deleteSelectedBtn.disabled = selectedIds.size === 0;
     }
 
     searchInput.addEventListener('input', filterItems);
@@ -991,6 +1002,70 @@ document.addEventListener('DOMContentLoaded', function () {
             selectedIds.add(Number(checkbox.dataset.id));
         });
         updateMasterCheckbox();
+    });
+
+    deleteSelectedBtn.addEventListener('click', async function () {
+        const ids = Array.from(selectedIds);
+        if (!ids.length) {
+            showAlert('Please select at least one discount.', 'danger');
+            return;
+        }
+
+        if (!confirm(`Delete ${ids.length} selected discount(s)?`)) return;
+
+        deleteSelectedBtn.disabled = true;
+
+        const results = await Promise.allSettled(
+            ids.map(async (id) => {
+                const url = getDeleteUrlById(id);
+                if (!url) {
+                    throw new Error(`No delete URL for item ${id}.`);
+                }
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        _method: 'DELETE'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Delete failed for item ${id}.`);
+                }
+
+                return id;
+            })
+        );
+
+        let successCount = 0;
+        let failCount = 0;
+
+        results.forEach((result) => {
+            if (result.status === 'fulfilled') {
+                const id = Number(result.value);
+                const itemIndex = allItems.findIndex(item => Number(item.id) === id);
+                if (itemIndex !== -1) {
+                    allItems.splice(itemIndex, 1);
+                }
+                selectedIds.delete(id);
+                successCount++;
+            } else {
+                failCount++;
+            }
+        });
+        filterItems();
+
+        if (failCount === 0) {
+            showAlert(`Deleted ${successCount} discount(s) successfully.`);
+        } else {
+            showAlert(`Deleted ${successCount} discount(s). ${failCount} failed.`, 'danger');
+        }
     });
 
     filterItems();
