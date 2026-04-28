@@ -10,16 +10,18 @@ body {
 }
 
 .login-page {
-
+    
     display: flex;
     align-items: center;
     justify-content: center;
+    min-height: 100vh; /* 👈 important */
+
 
 }
 
 .login-shell {
     width: 60%;
-    max-width: 100%;
+     max-width: 1200px;
     /* min-height: 660px; */
     /* height: 50%; */
     background: #f5f5f5;
@@ -187,6 +189,9 @@ body {
     display: none;
 }
 .btn-back {
+    display: none;
+}
+.nav-icon img {
     display: none;
 }
 
@@ -397,6 +402,11 @@ body {
     font-size: 48px;
     margin-bottom: 18px;
 }
+.nav-icon img{
+    display: block;
+    width: 20px;
+    height: 20px;
+}
 
 
 .onboarding-btn:hover {
@@ -503,4 +513,12 @@ body {
     color: #111827;
 }
 }
+
+/* Hide onboarding overlay on desktop */
+@media (min-width: 769px) {
+    .onboarding-overlay {
+        display: none;
+    }
+}
+
 /*feel toxic mes*/
