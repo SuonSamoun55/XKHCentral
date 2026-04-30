@@ -656,24 +656,33 @@
                 });
             }
 
-            function bindProductDetailNavigation() {
-                els.productCards.forEach(card => {
-                    card.style.cursor = "pointer";
+           function bindProductDetailNavigation() {
+    els.productCards.forEach(card => {
 
-                    card.addEventListener("click", (e) => {
-                        if (e.target.closest(
-                                ".qty-btn, .add-cart-btn, .fav-btn, .search-preview-btn")) {
-                            return;
-                        }
+        card.addEventListener("click", (e) => {
 
-                        const detailUrl = card.dataset.detailUrl;
-                        if (!detailUrl) return;
-
-                        window.location.href = detailUrl;
-                    });
-                });
+            // ✅ Ignore inner buttons (keep existing behavior)
+            if (e.target.closest(
+                ".qty-btn, .add-cart-btn, .fav-btn, .search-preview-btn"
+            )) {
+                return;
             }
 
+            // ✅ MOBILE ONLY
+            const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+            if (!isMobile) {
+                // ❌ Desktop / POS screen → do nothing
+                return;
+            }
+
+            const detailUrl = card.dataset.detailUrl;
+            if (!detailUrl) return;
+
+            window.location.href = detailUrl;
+        });
+    });
+}
             bindSidebar();
             bindQuantityButtons();
             bindAddToCart();
@@ -682,5 +691,6 @@
             bindProductDetailNavigation();
         });
     </script>
+    
  
 @endpush

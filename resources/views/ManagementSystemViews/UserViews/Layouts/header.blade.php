@@ -35,4 +35,11 @@
         color: var(--primary); /* Uses your aqua/teal color */
 
     }
+    
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 20px;
+        margin-left: -20px;
+    }
+}
 </style>

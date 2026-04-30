@@ -238,27 +238,150 @@
             margin-top: 2%;
         }
 
-        @media (max-width: 768px) {
-            .cart-container {
-                padding: 3% 3.5%;
-            }
+       /* =========================
+   MOBILE CART UI REWRITE
+   ========================= */
+@media (max-width: 768px) {
 
-            .cart-list-wrapper {
-                padding: 0;
-            }
+    body {
+        background: #f6f7f9;
+    }
 
-            .item-image {
-                width: 22%;
-            }
+    .cart-container {
+        padding: 12px 12px 120px; /* space for sticky bottom */
+        border-radius: 0;
+    }
+     #cartMainContent {
+            width: 100%;
+            height: auto;
+            padding:0 !important;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
 
-            .qty-controls {
-                width: 45%;
-                min-width: 7rem;
-            }
 
-            .place-order-btn {
-                width: 100%;
-            }
+    /* Header */
+    .cart-nav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: #fff;
+        padding: 8px 0 12px;
+    }
+
+    .nav-title {
+        font-size: 16px;
+        font-weight: 600;
+        text-align: center;
+        flex: 1;
+        color: #000;
+    }
+
+    /* Cart list spacing */
+    .cart-list-wrapper {
+        padding: 0;
+        margin-top: 8px;
+    }
+
+    /* Each item becomes a CARD */
+    .item-card {
+        background: #f1f5f9;
+        border-radius: 14px;
+        padding: 12px;
+        margin-bottom: 12px;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        gap: 12px;
+    }
+
+    .item-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        object-fit: contain;
+        background: #f1f5f9;
+    }
+
+    .item-details h3 {
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    /* Quantity controls – touch friendly */
+    .qty-controls {
+        width: 120px;
+        height: 36px;
+        background: #eef2f7;
+        border-radius: 999px;
+        padding: 0 8px;
+    }
+
+    .qty-btn {
+        font-size: 18px;
+        width: 28px;
+        height: 28px;
+    }
+
+    .qty-val {
+        font-size: 14px;
+    }
+
+    /* Remove icon */
+    .remove-icon {
+        top: 10px;
+        right: 10px;
+        font-size: 20px;
+    }
+
+    /* =========================
+       STICKY BOTTOM SUMMARY
+       ========================= */
+    .summary-box {
+        position: fixed;
+        bottom: 8%;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        background: #1f7a85; /* teal like screenshot */
+        color: #fff;
+        padding: 12px 16px 16px;
+        border-radius: 16px 16px 0 0;
+    }
+
+    .summary-line {
+        font-size: 13px;
+        color: rgba(255,255,255,0.85);
+    }
+
+    .summary-line.total-usd,
+    .summary-line.total-riel {
+        color: #fff;
+        font-size: 14px;
+    }
+
+    /* Checkout button */
+    .place-order-btn {
+        width: 100%;
+        background: #2fd4c7;
+        /* margin-top: 100%; */
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 34px;
+        font-size: 15px;
+        border-radius: 14px;
+        box-shadow: none;
+    }
+
+    /* Hide scrollbar for clean mobile feel */
+    .scroll-limit-5,
+    .scroll-limit-10 {
+        max-height: none;
+        overflow: visible;
+    }
+
         }
     </style>
 @endpush
@@ -328,7 +451,7 @@
                 </div>
             </div>
 
-            <button id="checkoutBtn" class="place-order-btn">Place Order</button>
+            <button id="checkoutBtn" class="place-order-btn">Check out</button>
         @endif
     </div>
 

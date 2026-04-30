@@ -80,6 +80,7 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::post('/pos-admin/items/{id}/update-location', [ItemPosController::class, 'updateLocalItemLocation']);
     Route::get('/pos/items/{id}', [ItemPosController::class, 'detail'])->name('pos.items.detail');
     Route::get('/pos/items/{id}/json', [ItemPosController::class, 'showItem'])->name('pos.items.json');
+    Route::post('/pos/cart/add', [ItemPosController::class, 'addItemToCart'])->name('pos.cart.add');
 
     Route::get('/admin/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
     Route::post('/admin/orders/{id}/confirm', [AdminOrderController::class, 'confirm'])->name('admin.orders.confirm');

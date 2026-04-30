@@ -240,6 +240,43 @@ public function index()
         'categories'
     ));
 }
+public function add(Request $request)
+{
+    $user = Auth::user();
+
+    if (!$user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Not authenticated'
+        ], 401);
+    }
+
+    // ✅ Get or create active cart
+    $cart = Cart::firstOrCreate([
+        'user_id' => $user->id,
+        'status' => 'active'
+    ]);
+
+    // ✅ Check if item already exists
+    $cartItem = $cart->items()->where('item_id', $request->item_id)->first();
+
+    if ($cartItem) {
+        $cartItem->increment('qty', 1);
+    } else {
+        $cart->items()->create([
+            'item_id' => $request->item_id,
+            'qty' => 1
+        ]);
+    }
+
+    // ✅ THIS IS THE KEY FIX
+    $count = (int) $cart->items()->sum('qty');
+
+    return response()->json([
+        'success' => true,
+        'count' => $count
+    ]);
+}
 
 
     public function detail($id)

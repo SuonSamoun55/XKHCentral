@@ -194,6 +194,29 @@
             display: block;
             height: 1px;
         }
+
+        .cart-btn {
+            position: relative;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 999px;
+            min-width: 16px;
+            text-align: center;
+        }
+
+        .top-bar .cart-box {
+            position: relative;
+            top: -6px;
+        }
     </style>
 @endpush
 
@@ -211,9 +234,8 @@
 
                         <div style="text-align:center;font-weight:700">Products</div>
 
-                        <a href="{{ route('user.pos.cart') }}" class="cart-btn">
-                            <i class="bi bi-cart3"></i>
-                        </a>
+                        @include('ManagementSystemViews/UserViews/Layouts/header_mobile')
+
                     </div>
 
                     {{-- SEARCH --}}
@@ -251,8 +273,7 @@
                             {{-- IMAGE --}}
                             <div class="product-thumb">
                                 <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
-                                    alt="{{ $item->display_name }}"
-                                    onerror="this.src='{{ asset('images/no-image.png') }}'">
+                                    alt="{{ $item->display_name }}" onerror="this.src='{{ asset('images/no-image.png') }}'">
                             </div>
 
                             {{-- FAVORITE --}}
@@ -272,9 +293,11 @@
                             </div>
 
                             {{-- ADD --}}
-                            <div class="product-add">
+
+                            <div class="product-add" data-item-id="{{ $item->id }}">
                                 <i class="bi bi-plus"></i>
                             </div>
+
                         </div>
                     @endforeach
                 </div>
@@ -284,112 +307,128 @@
 
 @endsection
 
-@push('scripts')
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
 
-            const csrf = document.querySelector('meta[name="csrf-token"]').content;
+        const csrf = document.querySelector('meta[name="csrf-token"]').content;
 
-            const searchInput = document.getElementById('search-input');
-            const filters = document.querySelectorAll('.category-filter');
-            const products = document.querySelectorAll('.product-card');
-            const productCount = document.getElementById('product-count');
+        const searchInput = document.getElementById('search-input');
+        const filters = document.querySelectorAll('.category-filter');
+        const products = document.querySelectorAll('.product-card');
+        const productCount = document.getElementById('product-count');
 
-            let activeCategory = "";
+        let activeCategory = "";
 
-            function applyFilters() {
-                const keyword = searchInput.value.toLowerCase().trim();
-                let visible = 0;
+        function applyFilters() {
+            const keyword = searchInput.value.toLowerCase().trim();
+            let visible = 0;
 
-                products.forEach(product => {
-                    const title =
-                        product.querySelector('.product-title')?.innerText.toLowerCase() || "";
+            products.forEach(product => {
+                const title = product.querySelector('.product-title')?.innerText.toLowerCase() || "";
+                const category = product.dataset.category;
 
-                    const category = product.dataset.category;
+                const matchCategory = !activeCategory || category === activeCategory;
+                const matchSearch = !keyword || title.includes(keyword);
 
-                    const matchCategory = !activeCategory || category === activeCategory;
-                    const matchSearch = !keyword || title.includes(keyword);
-
-                    if (matchCategory && matchSearch) {
-                        product.style.display = "block";
-                        visible++;
-                    } else {
-                        product.style.display = "none";
-                    }
-                });
-
-                productCount.innerText = `${visible} products`;
-            }
-
-            // ✅ CATEGORY FILTER
-            filters.forEach(filter => {
-                filter.addEventListener('click', e => {
-                    e.preventDefault();
-
-                    filters.forEach(f => f.classList.remove('active'));
-                    filter.classList.add('active');
-
-                    activeCategory = filter.dataset.category || "";
-                    applyFilters();
-                });
+                if (matchCategory && matchSearch) {
+                    product.style.display = "block";
+                    visible++;
+                } else {
+                    product.style.display = "none";
+                }
             });
 
-            // ✅ SEARCH FILTER
-            searchInput.addEventListener('input', () => {
+            productCount.textContent = `${visible} products`;
+        }
+
+        // CATEGORY FILTER
+        filters.forEach(filter => {
+            filter.addEventListener('click', e => {
+                e.preventDefault();
+                filters.forEach(f => f.classList.remove('active'));
+                filter.classList.add('active');
+                activeCategory = filter.dataset.category || "";
                 applyFilters();
             });
-
-            // ✅ CARD CLICK → PRODUCT DETAIL (event delegation)
-            document.addEventListener('click', e => {
-                const card = e.target.closest('.product-card');
-                if (!card) return;
-
-                // ignore favorite & add buttons
-                if (
-                    e.target.closest('.fav-btn') ||
-                    e.target.closest('.product-add')
-                ) {
-                    return;
-                }
-
-                const url = card.dataset.detailUrl;
-                if (url) {
-                    window.location.href = url;
-                }
-            });
-
-            // ✅ FAVORITE TOGGLE
-            document.addEventListener('click', async e => {
-                const btn = e.target.closest('.fav-btn');
-                if (!btn) return;
-
-                e.stopPropagation();
-
-                const icon = btn.querySelector('i');
-                const itemId = btn.dataset.itemId;
-
-                try {
-                    const res = await fetch("{{ route('user.pos.favorite.toggle') }}", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": csrf
-                        },
-                        body: JSON.stringify({
-                            item_id: itemId
-                        })
-                    });
-
-                    await res.json();
-
-                    icon.classList.toggle('bi-heart');
-                    icon.classList.toggle('bi-heart-fill');
-                    icon.classList.toggle('text-danger');
-
-                } catch (err) {
-                    console.error("Favorite toggle failed", err);
-                }
-            });
-
         });
-    </script>
+
+        // SEARCH
+        searchInput.addEventListener('input', applyFilters);
+
+        // CARD CLICK → DETAIL
+        document.addEventListener('click', e => {
+            const card = e.target.closest('.product-card');
+            if (!card) return;
+
+            if (e.target.closest('.fav-btn') || e.target.closest('.product-add')) return;
+
+            const url = card.dataset.detailUrl;
+            if (url) window.location.href = url;
+        });
+
+        // FAVORITE
+        document.addEventListener('click', async e => {
+            const btn = e.target.closest('.fav-btn');
+            if (!btn) return;
+
+            e.stopPropagation();
+
+            const res = await fetch("{{ route('user.pos.favorite.toggle') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": csrf
+                },
+                body: JSON.stringify({
+                    item_id: btn.dataset.itemId
+                })
+            });
+
+            await res.json();
+            btn.querySelector('i').classList.toggle('bi-heart');
+            btn.querySelector('i').classList.toggle('bi-heart-fill');
+            btn.querySelector('i').classList.toggle('text-danger');
+        });
+
+        // ✅ ADD TO CART — THIS IS THE KEY FIX
+                   document.querySelectorAll(".add-cart-btn").forEach(button => {
+                button.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const itemId = this.dataset.id;
+                    const card = this.closest(".product-card");
+                    const qty = parseInt(card.querySelector(".qty").innerText, 10) || 1;
+                    this.disabled = true;
+
+                    fetch("{{ route('user.pos.cart.add') }}", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": csrfToken
+                            },
+                            body: JSON.stringify({
+                                item_id: itemId,
+                                qty: qty
+                            })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success && cartCount) {
+                                cartCount.innerText = data.cartCount;
+                            }
+                            if (data.success && typeof window.showAppToast === "function") {
+                                window.showAppToast("Added to cart successfully.", "success");
+                            }
+                        })
+                        .catch(() => {
+                            if (typeof window.showAppToast === "function") {
+                                window.showAppToast("Failed to add item to cart.", "error");
+                            }
+                        })
+                        .finally(() => {
+                            this.disabled = false;
+                        });
+                });
+            });
+    });
+</script>

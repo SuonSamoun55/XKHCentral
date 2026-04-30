@@ -12,14 +12,8 @@
         <main class="content-area">
 
             <div id="messageBox" class="message-box"></div>
-            <div class="top">
-                @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Favorite Items'])
-
-                <div class="cart-box">
-                    <i class="bi bi-cart3"></i>
-                    <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
-                </div>
-            </div>
+            @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Favorite Items'])
+            @include('ManagementSystemViews/UserViews/Layouts/header_mobile')
 
             <div id="messageBox" class="message-box"></div>
 
