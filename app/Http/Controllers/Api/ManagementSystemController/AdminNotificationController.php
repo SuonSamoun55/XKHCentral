@@ -16,6 +16,13 @@ class AdminNotificationController extends Controller
     {
         $selectedCompanyId = session('selected_company_id');
         $tab = $request->get('tab', 'order_notification');
+        $perPage = (int) $request->get('per_page', 10);
+        $allowedPerPage = [10, 20, 50];
+
+        if (!in_array($perPage, $allowedPerPage, true)) {
+            $perPage = 10;
+        }
+
         if (in_array($tab, ['all', 'new'], true)) {
             $tab = 'order_notification';
         }
@@ -54,7 +61,7 @@ class AdminNotificationController extends Controller
 
         $notifications = $notificationQuery
             ->latest('updated_at')
-            ->paginate(10)
+            ->paginate($perPage)
             ->appends($request->query());
 
         $notifications->getCollection()->transform(function ($notification) {
@@ -101,12 +108,13 @@ class AdminNotificationController extends Controller
                 'userContactCount',
                 'outOfStockCount',
                 'globalMessageCount',
-                'tab'
+                'tab',
+                'perPage'
             )
         );
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $selectedCompanyId = session('selected_company_id');
 
@@ -121,6 +129,14 @@ class AdminNotificationController extends Controller
             $notification->update([
                 'is_read' => true,
                 'unread_count' => 0,
+            ]);
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'id' => $notification->id,
+                'redirect_url' => route('admin.notifications.show', $notification->id),
             ]);
         }
 
@@ -192,16 +208,46 @@ class AdminNotificationController extends Controller
     {
         $selectedCompanyId = session('selected_company_id');
         $lastId = (int) $request->get('last_id', 0);
-        $lastSeenAt = $request->get('last_seen_at');
+        $tab = $request->get('tab', 'order_notification');
 
-        $notifications = $this->baseAdminNotificationQuery($selectedCompanyId)
-            ->where(function ($query) use ($lastId, $lastSeenAt) {
-                $query->where('id', '>', $lastId);
+        if (in_array($tab, ['all', 'new'], true)) {
+            $tab = 'order_notification';
+        }
 
-                if (!empty($lastSeenAt)) {
-                    $query->orWhere('updated_at', '>', $lastSeenAt);
-                }
-            })
+        $notificationQuery = $this->baseAdminNotificationQuery($selectedCompanyId);
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+
+            $notificationQuery->where(function ($q) use ($search) {
+                $q->where('title', 'like', '%' . $search . '%')
+                    ->orWhere('message', 'like', '%' . $search . '%')
+                    ->orWhere('type', 'like', '%' . $search . '%')
+                    ->orWhere('sender_name', 'like', '%' . $search . '%')
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'like', '%' . $search . '%')
+                            ->orWhere('email', 'like', '%' . $search . '%')
+                            ->orWhere('phone', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
+        if ($request->filled('date')) {
+            $notificationQuery->whereDate('created_at', $request->date);
+        }
+
+        if ($tab === 'order_notification') {
+            $this->applyOrderNotificationFilter($notificationQuery);
+        } elseif ($tab === 'user_contact') {
+            $this->applyUserContactFilter($notificationQuery);
+        } elseif ($tab === 'out_of_stock') {
+            $this->applyOutOfStockFilter($notificationQuery);
+        } elseif ($tab === 'global_message') {
+            $this->applyGlobalMessageFilter($notificationQuery);
+        }
+
+        $notifications = $notificationQuery
+            ->where('id', '>', $lastId)
             ->latest('updated_at')
             ->limit(20)
             ->get();
@@ -245,11 +291,27 @@ class AdminNotificationController extends Controller
             ];
         })->values();
 
+        $baseCountQuery = $this->baseAdminNotificationQuery($selectedCompanyId);
+
         return response()->json([
             'success' => true,
             'data' => $mapped,
             'last_id' => $notifications->max('id') ?? $lastId,
-            'last_seen_at' => optional($notifications->max('updated_at'))->toDateTimeString() ?? $lastSeenAt,
+            'last_seen_at' => optional($notifications->max('updated_at'))->toDateTimeString(),
+            'counts' => [
+                'order_notification' => $this->unreadBadgeCount(
+                    $this->applyOrderNotificationFilter(clone $baseCountQuery)
+                ),
+                'user_contact' => $this->unreadBadgeCount(
+                    $this->applyUserContactFilter(clone $baseCountQuery)
+                ),
+                'out_of_stock' => $this->unreadBadgeCount(
+                    $this->applyOutOfStockFilter(clone $baseCountQuery)
+                ),
+                'global_message' => $this->unreadBadgeCount(
+                    $this->applyGlobalMessageFilter(clone $baseCountQuery)
+                ),
+            ],
         ]);
     }
 
@@ -268,8 +330,7 @@ class AdminNotificationController extends Controller
             'message' => 'required|string',
         ]);
 
-        $allowedHtml = '<b><strong><i><em><u><ul><ol><li><br><p><div>';
-        $cleanMessage = trim(strip_tags($request->message, $allowedHtml));
+        $cleanMessage = $this->sanitizeNotificationMessage($request->message);
 
         if ($cleanMessage === '') {
             return back()->withInput()->with('error', 'Message cannot be empty.');
@@ -297,6 +358,13 @@ class AdminNotificationController extends Controller
 
             $this->createBulkSummaryNotification($customers, $request, $cleanMessage, $sender, $groupKey, 'global_message');
 
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Notification sent to all customers successfully.',
+                ]);
+            }
+
             return back()->with('success', 'Notification sent to all customers successfully.');
         }
 
@@ -312,6 +380,13 @@ class AdminNotificationController extends Controller
             }
 
             $this->createSingleUserNotification($customer, $request, $cleanMessage, $sender, null);
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Notification sent successfully.',
+                ]);
+            }
 
             return back()->with('success', 'Notification sent successfully.');
         }
@@ -342,10 +417,17 @@ class AdminNotificationController extends Controller
 
         $this->createBulkSummaryNotification($customers, $request, $cleanMessage, $sender, $groupKey);
 
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Notification sent to selected customers successfully.',
+            ]);
+        }
+
         return back()->with('success', 'Notification sent to selected customers successfully.');
     }
 
-    public function markAsRead($id)
+    public function markAsRead(Request $request, $id)
     {
         $notification = Notification::findOrFail($id);
 
@@ -356,19 +438,35 @@ class AdminNotificationController extends Controller
             ]);
         }
 
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Notification marked as read.',
+                'id' => $notification->id,
+            ]);
+        }
+
         return back()->with('success', 'Notification marked as read.');
     }
 
-    public function markAllAsRead()
+    public function markAllAsRead(Request $request)
     {
         $selectedCompanyId = session('selected_company_id');
 
-        $this->baseAdminNotificationQuery($selectedCompanyId)
+        $updated = $this->baseAdminNotificationQuery($selectedCompanyId)
             ->where('is_read', false)
             ->update([
                 'is_read' => true,
                 'unread_count' => 0,
             ]);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'All notifications marked as read.',
+                'updated' => $updated,
+            ]);
+        }
 
         return back()->with('success', 'All notifications marked as read.');
     }
@@ -382,17 +480,34 @@ class AdminNotificationController extends Controller
             return back()->with('error', 'No notifications selected.');
         }
 
-        $this->baseAdminNotificationQuery($selectedCompanyId)
+        $deleted = $this->baseAdminNotificationQuery($selectedCompanyId)
             ->whereIn('id', $ids)
             ->delete();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Selected notifications deleted.',
+                'deleted' => $deleted,
+                'ids' => array_values(array_map('intval', $ids)),
+            ]);
+        }
 
         return back()->with('success', 'Selected notifications deleted.');
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $notification = Notification::findOrFail($id);
         $notification->delete();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Notification deleted successfully.',
+                'id' => (int) $id,
+            ]);
+        }
 
         return back()->with('success', 'Notification deleted successfully.');
     }
@@ -496,7 +611,7 @@ class AdminNotificationController extends Controller
             'user_id' => $customer->id,
             'sender_id' => $sender?->id,
             'sender_name' => $sender?->name,
-            'sender_profile_image' => $sender?->profile_image_display,
+            'sender_profile_image' => $this->getSenderProfileImage($sender),
             'order_id' => null,
             'item_id' => null,
             'type' => $forcedType ?: $request->type,
@@ -523,7 +638,7 @@ class AdminNotificationController extends Controller
             'user_id' => null,
             'sender_id' => $sender?->id,
             'sender_name' => $sender?->name,
-            'sender_profile_image' => $sender?->profile_image_display,
+            'sender_profile_image' => $this->getSenderProfileImage($sender),
             'order_id' => null,
             'item_id' => null,
             'type' => $forcedType ?: $request->type,
@@ -556,5 +671,47 @@ class AdminNotificationController extends Controller
 
         return $visibleRecipients;
     }
-}
 
+    protected function sanitizeNotificationMessage(?string $message): string
+    {
+        $allowedHtml = '<a><b><strong><i><em><u><ul><ol><li><br><p><div>';
+        $cleanMessage = trim(strip_tags((string) $message, $allowedHtml));
+
+        if ($cleanMessage === '') {
+            return '';
+        }
+
+        return preg_replace_callback(
+            '/<a\b[^>]*href=(["\'])(.*?)\1[^>]*>/i',
+            function ($matches) {
+                $href = trim(html_entity_decode($matches[2], ENT_QUOTES, 'UTF-8'));
+
+                if ($href === '' || preg_match('/^\s*javascript:/i', $href)) {
+                    $href = '#';
+                } elseif (!preg_match('/^(https?:\/\/|mailto:)/i', $href)) {
+                    $href = 'https://' . ltrim($href, '/');
+                }
+
+                return '<a href="' . e($href) . '" target="_blank" rel="noopener noreferrer">';
+            },
+            $cleanMessage
+        );
+    }
+
+    protected function getSenderProfileImage(?User $sender): ?string
+    {
+        if (!$sender) {
+            return null;
+        }
+
+        if (!empty($sender->profile_image)) {
+            return asset('storage/' . ltrim($sender->profile_image, '/'));
+        }
+
+        if (!empty($sender->profile_image_url)) {
+            return $sender->profile_image_url;
+        }
+
+        return null;
+    }
+}

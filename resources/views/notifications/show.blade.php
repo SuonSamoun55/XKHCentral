@@ -18,6 +18,14 @@
         .notification-detail-card p { margin: 0.5rem 0; }
         .notification-detail-card .meta { color:#6b7280; font-size:0.88rem; }
         .btn-back { display:inline-block; margin-top:1rem; color:#007bff; text-decoration:none; }
+        .message-body {
+            line-height: 1.6;
+            word-break: break-word;
+        }
+        .message-body a {
+            color: #2563eb;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -38,7 +46,14 @@
                     </div>
                 </div>
                 <div style="border-top: 1px solid #e5e7eb; padding-top: 1rem;">
-                    <p style="margin: 0; line-height: 1.6;">{{ $notification->message }}</p>
+                    @php
+                        $messageHtml = preg_replace(
+                            '/(https?:\/\/[^\s<]+)/i',
+                            '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>',
+                            e($notification->message ?? '')
+                        );
+                    @endphp
+                    <div class="message-body">{!! nl2br($messageHtml) !!}</div>
                 </div>
                 <a href="{{ route('user.notifications') }}" class="btn-back">← Back to notifications</a>
             </div>

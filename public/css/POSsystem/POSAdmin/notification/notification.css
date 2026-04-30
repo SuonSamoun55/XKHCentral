@@ -15,6 +15,7 @@ body {
 
 .detail-wrapper {
     max-width: 980px;
+    background: white;
 }
 
 .detail-header {

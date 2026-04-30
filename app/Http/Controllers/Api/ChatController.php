@@ -164,6 +164,26 @@ class ChatController extends Controller
             : collect();
         $activeContact = $contacts->firstWhere('id', $activeContactId);
 
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'contacts' => $contacts->map(fn ($contact) => $this->mapContactForJson($contact, $activeContactId))->values(),
+                'active_contact_id' => (int) $activeContactId,
+                'active_contact' => $activeContact ? $this->mapActiveContactForJson($activeContact) : null,
+                'messages' => $messages->map(fn ($message) => $this->mapMessageForJson($message, (int) $admin->id))->values(),
+                'shared_media' => $messages
+                    ->where('message_type', 'image')
+                    ->where('attachment_path', '!=', null)
+                    ->map(function ($message) {
+                        return [
+                            'url' => '/storage/' . ltrim((string) $message->attachment_path, '/'),
+                            'title' => optional($message->created_at)->format('M d, Y g:i A'),
+                        ];
+                    })
+                    ->values(),
+            ]);
+        }
+
         return view('ManagementSystemViews.AdminViews.Layouts.Notifications.AdminChatView', [
             'currentUser' => $admin,
             'contacts' => $contacts,
@@ -295,6 +315,7 @@ class ChatController extends Controller
     private function messagesJsonResponse(int $currentUserId, int $otherUserId, int $afterId = 0)
     {
         $messages = $this->threadMessages($currentUserId, $otherUserId, $afterId);
+        $contact = User::find($otherUserId);
 
         return response()->json([
             'success' => true,
@@ -302,6 +323,12 @@ class ChatController extends Controller
                 return $this->mapMessageForJson($message, $currentUserId);
             })->values(),
             'last_id' => (int) ($messages->max('id') ?? $afterId),
+            'contact_presence' => $contact ? [
+                'is_online' => (bool) ($contact->is_online ?? false),
+                'status_text' => (bool) ($contact->is_online ?? false)
+                    ? 'Online'
+                    : ((string) ($contact->offline_duration ?? 'Offline')),
+            ] : null,
         ]);
     }
 
@@ -321,9 +348,49 @@ class ChatController extends Controller
             'attachment_url' => $attachmentUrl,
             'attachment_mime' => $message->attachment_mime,
             'attachment_size' => $message->attachment_size,
+            'voice_duration' => $message->voice_duration,
             'is_mine' => (int) $message->sender_id === $currentUserId,
             'sent_at' => optional($message->created_at)->format('d/m/Y h:i A'),
             'created_at' => optional($message->created_at)->toDateTimeString(),
+        ];
+    }
+
+    private function mapContactForJson(User $contact, int $activeContactId = 0): array
+    {
+        return [
+            'id' => (int) $contact->id,
+            'name' => (string) ($contact->name ?? ''),
+            'chat_avatar' => (string) ($contact->chat_avatar ?? $this->resolveUserAvatar($contact)),
+            'last_message' => (string) ($contact->last_message ?? ''),
+            'last_message_at' => $contact->last_message_at,
+            'last_message_time' => $contact->last_message_at
+                ? optional(\Carbon\Carbon::parse($contact->last_message_at))->format('g:i A')
+                : '',
+            'unread_count' => (int) ($contact->unread_count ?? 0),
+            'is_online' => (bool) ($contact->is_online ?? false),
+            'status_text' => (bool) ($contact->is_online ?? false)
+                ? 'Online'
+                : ((string) ($contact->offline_duration ?? 'Offline')),
+            'is_active' => (int) $contact->id === (int) $activeContactId,
+            'phone' => $contact->phone,
+            'email' => $contact->email,
+            'location' => $contact->location,
+        ];
+    }
+
+    private function mapActiveContactForJson(User $contact): array
+    {
+        return [
+            'id' => (int) $contact->id,
+            'name' => (string) ($contact->name ?? ''),
+            'chat_avatar' => (string) ($contact->chat_avatar ?? $this->resolveUserAvatar($contact)),
+            'is_online' => (bool) ($contact->is_online ?? false),
+            'status_text' => (bool) ($contact->is_online ?? false)
+                ? 'Online'
+                : ((string) ($contact->offline_duration ?? 'Offline')),
+            'phone' => $contact->phone,
+            'email' => $contact->email,
+            'location' => $contact->location,
         ];
     }
 
