@@ -95,6 +95,11 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::get('/pos-system', [POSUserControllerItemList::class, 'getItems'])->name('user.posinterface');
     Route::get('/pos-system/categories', [POSUserControllerItemList::class, 'mobileCategories'])->name('user.pos.categories');
     Route::get('/pos-system/categories/{category}', [POSUserControllerItemList::class, 'mobileCategoryProducts'])->name('user.pos.categories.products');
+    Route::get('/pos-system/products', [POSUserControllerItemList::class, 'mobileProducts'])->name('user.pos.products');
+    Route::get('/pos/products/filter', [POSUserControllerItemList::class, 'filter'])->name('user.pos.products.filter');
+
+    Route::get('/pos-system/product/{id}', 
+    [POSUserControllerItemList::class, 'showProduct'])->name('user.pos.product.detail');
     Route::get('/pos-system/favorites', [FavoriteController::class, 'getFavorites'])->name('user.pos.favorites');
     Route::post('/pos-system/favorite-toggle', [FavoriteController::class, 'toggle'])->name('user.pos.favorite.toggle');
 

@@ -25,6 +25,52 @@
 
             @if ($favorites->isEmpty())
                 <div class="empty-box">No favorite items found.</div>
+                <div class="wishlist-page">
+                    <!-- SEARCH -->
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="text" placeholder="Search your wishlist ..." />
+                    </div>
+
+                    <!-- COUNT -->
+                    <div class="product-count">0 products</div>
+
+                    <!-- EMPTY STATE -->
+                    <div class="empty-state">
+                        <div class="image-placeholder">
+                            <img src="{{ asset('images/pos/no wishlist 1.png') }}" alt="Empty Wishlist">
+                            <!-- IMAGE WILL GO HERE -->
+                        </div>
+
+                        <h2>Your wishlist is empty</h2>
+                        <p>Looks like you haven't added anything<br>to your wishlist yet</p>
+
+                        <a href="{{ route('user.pos.products') }}" class="primary-btn">
+                            Explore now
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
+
+                    <!-- BOTTOM NAV -->
+                    <div class="bottom-nav">
+                        <div class="nav-item">
+                            <i class="bi bi-house"></i>
+                            <span>home</span>
+                        </div>
+                        <div class="nav-item">
+                            <i class="bi bi-box"></i>
+                            <span>products</span>
+                        </div>
+                        <div class="nav-item active">
+                            <i class="bi bi-heart-fill"></i>
+                            <span>favorite</span>
+                        </div>
+                        <div class="nav-item">
+                            <i class="bi bi-person"></i>
+                            <span>user</span>
+                        </div>
+                    </div>
+                </div>
             @else
                 <div class="products-grid" id="productsGrid">
                     @foreach ($favorites as $item)

@@ -36,17 +36,31 @@
                     </a>
                 </div>
 
-                <div class="hero-card">
-                    <div class="hero-title">New collections is available!</div>
+                <div class="hero-slider-wrapper">
+                    <div class="hero-slider">
 
-                    <div class="hero-image">
-                        <img src="{{ asset('images/pos/Image.png') }}" alt="sofa">
-                        {{-- <a href="{{ route('user.pos.cart') }}" class="cart-box">
-                            <i class="bi bi-cart3"></i>
-                            <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
-                        </a> --}}
+                        <div class="hero-card">
+                            <div class="hero-title">New collections is available!</div>
+                            <div class="hero-image">
+                                <img src="{{ asset('images/pos/Image.png') }}" alt="sofa">
+                            </div>
+                        </div>
+
+                        <div class="hero-card">
+                            <div class="hero-title">New collections is available!</div>
+                            <div class="hero-image">
+                                <img src="{{ asset('images/pos/Image.png') }}" alt="table">
+                            </div>
+                        </div>
+
+                        <div class="hero-card">
+                            <div class="hero-title">New collections is available!</div>
+                            <div class="hero-image">
+                                <img src="{{ asset('images/pos/Image.png') }}" alt="sofa">
+                            </div>
+                        </div>
+
                     </div>
-
                 </div>
                 <a href="#" class="hero-link">
                     Learn more <i class="bi bi-arrow-right"></i>
@@ -95,7 +109,8 @@
                             $descText = $item->short_description ?? '';
                         @endphp
 
-                        <div class="product-card product-item" data-id="{{ $item->id }}" {{-- data-detail-url="{{ route('user.pos.items.detail', $item->id) }}" --}}
+                        <div class="product-card product-item" data-id="{{ $item->id }}"
+                            data-detail-url="{{ route('user.pos.product.detail', $item->id) }}"
                             data-name="{{ strtolower($item->display_name ?? '') }}"
                             data-display-name="{{ $item->display_name ?? '' }}"
                             data-desc="{{ strtolower($descText ?? '') }}"
@@ -200,6 +215,23 @@
 @endsection
 
 @push('scripts')
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const slider = document.querySelector(".hero-slider");
+            const cards = document.querySelectorAll(".hero-card");
+
+            let index = 0;
+
+            setInterval(() => {
+                index++;
+                if (index >= cards.length) {
+                    index = 0;
+                }
+
+                slider.style.transform = `translateX(-${index * 100}%)`;
+            }, 3000);
+        });
+    </script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -650,4 +682,5 @@
             bindProductDetailNavigation();
         });
     </script>
+ 
 @endpush

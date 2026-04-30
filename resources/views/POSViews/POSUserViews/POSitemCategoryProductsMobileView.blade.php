@@ -284,8 +284,9 @@
                     </div>
                 @endif
                 <div class="products-list">
+
                     @foreach ($items as $item)
-                        <a href="#" class="product-card">
+                        <a href="{{ route('user.pos.product.detail', $item->id) }}" class="product-card">
                             <div class="product-thumb">
                                 <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
                                     alt="{{ $item->display_name }}">
