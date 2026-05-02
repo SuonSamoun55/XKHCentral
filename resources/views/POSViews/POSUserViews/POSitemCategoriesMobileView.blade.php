@@ -41,8 +41,8 @@
             width: 100%;
             max-width: 520px;
             margin: 0 auto;
-            padding: 10px !important;
-            background: transparent;
+            padding-left: 10px !important;
+            background: white;
             box-shadow: none;
             border-radius: 0;
         }
@@ -62,13 +62,20 @@
             margin-bottom: 6px;
         }
 
-        .category-title {
-            font-size: 18px;
-            font-weight: 100;
-            padding: 5px;
-            color: var(--text);
-            margin: 0;
-        }
+      .category-title {
+    position: fixed;
+    top: 130px; /* header (70px) + search (~60px) */
+    left: 0;
+    width: 98%;
+    z-index: 30;
+    padding: 10px !important;
+    margin-left: 10px;
+
+    font-size: 18px;
+    font-weight: 100;
+    background: #fff;
+    color: #9ca3af;
+}
 
         .back-btn {
             width: 42px;
@@ -85,15 +92,23 @@
         }
 
         .search-box {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 14px;
-            border-radius: 16px;
-            background: #ffffff;
-            border: 1px solid var(--border);
-            margin-bottom: 18px;
-        }
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%); /* keep it centered */
+
+    width: 96%;
+    z-index: 50;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
 
         .search-box i {
             color: var(--muted);
@@ -110,6 +125,7 @@
         }
 
         .categories-grid {
+            margin-top: 80px;
             display: grid;
             gap: 14px;
         }
@@ -120,10 +136,11 @@
             gap: 14px;
             padding: 16px;
             border-radius: 18px;
-            background: var(--card);
+            height: 120px;
+            background: #f5f9ff;
             text-decoration: none;
             color: inherit;
-            box-shadow: var(--shadow);
+            border: 1px solid #dbe7ff;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
@@ -204,16 +221,24 @@
         }
 
         .header-top-bar {
+            position: sticky;
+            top: 0;
+            
+            z-index: 100;
+            background: white;
+
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 12px;
-            padding: 8px 8px 8px 8px;
-        }
+ padding-top: 20px;  
+ padding-left: 10px;    
+ padding-bottom: 40px;
+  }
 
         .cart-box {
-            width: 52px;
-            height: 52px;
+            width: 46px;
+            height: 46px;
             border-radius: 18px;
             background: rgba(16, 184, 195, 0.12);
             display: inline-flex;
@@ -235,6 +260,41 @@
             color: #fff;
             border-radius: 999px;
         }
+        /* ✅ FORCE PAGE SCROLL (minimal fix) */
+/* ✅ FINAL SCROLL + STICKY FIX */
+
+/* body does NOT scroll */
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+/* page-wrap stays layout-only */
+.page-wrap {
+    overflow: hidden;
+}
+
+/* ✅ ONLY content-area scrolls */
+.content-area {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* smooth mobile scroll */
+}
+
+/* ✅ sticky header stays locked */
+.h3 {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: white;
+    
+ margin-top: -10px;
+    padding-top: 10px;
+   
+
+}
+
+
+
     </style>
 @endpush
 
@@ -242,12 +302,9 @@
     <div class="page-wrap">
         <main class="content-area">
             <div class="header-top-bar">
-                <div class="brand-name">UMAH!</div>
-
-                <a href="{{ route('user.pos.cart') }}" class="cart-box">
-                    <i class="bi bi-cart3"></i>
-                    <span class="cart-count" id="cartCount">0</span>
-                </a>
+                {{-- @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'UMAH!']) --}}
+                <h3>UMAH!</h3>
+                @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
             </div>
             {{-- <div class="category-header">
                 <div>

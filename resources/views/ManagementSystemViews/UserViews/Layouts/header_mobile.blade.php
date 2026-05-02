@@ -1,26 +1,38 @@
-  <div class="top">
+
 
       <div class="cart-box">
           <i class="bi bi-cart3"></i>
           <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
       </div>
-  </div>
+
 <style>
        .top {
-        position: sticky;
-        top: 0;
-        background: white;
-        z-index: 100;
+       
     }
-    .cart-box {
-    position: relative;
-    top: -68px;
-    color: var(--primary);
-    font-size: 30px;
+  /* Fix cart icon to top-right */
+.cart-box {
+    position: fixed;
+    top: 14px;
+    right: 24px;
+    z-index: 999;
+
     display: inline-flex;
     align-items: center;
-    text-decoration: none;
+    font-size: 20px;
+    color: var(--primary);
+
 }
+
+/* Keep badge aligned */
+/* .cart-box .cart-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    font-size: 11px;
+} */
 .cart-count {
     position: absolute;
     top: -8px;

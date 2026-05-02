@@ -130,6 +130,7 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::put('/pos-system/cart/update/{id}', [CartController::class, 'updateQty'])->name('user.pos.cart.update');
     Route::delete('/pos-system/cart/remove/{id}', [CartController::class, 'removeItem'])->name('user.pos.cart.remove');
     Route::delete('/pos-system/cart/clear', [CartController::class, 'clearCart'])->name('user.pos.cart.clear');
+    Route::get('/pos-system/checkout', [CartController::class, 'checkout'])->name('user.pos.checkout');
     Route::post('/pos-system/checkout', [OrderController::class, 'checkout'])->name('user.pos.checkout');
 
     Route::get('/favorites', [FavoriteController::class, 'index']);

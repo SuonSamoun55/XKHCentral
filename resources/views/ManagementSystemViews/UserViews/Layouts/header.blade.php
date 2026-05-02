@@ -14,7 +14,8 @@
 <style>
    .top-bar {
     /* Existing Styles */
-    display: flex;
+    display: sticky;
+    background: white;
     justify-content: space-between;
     align-items: center;
     padding: 15px 25px;

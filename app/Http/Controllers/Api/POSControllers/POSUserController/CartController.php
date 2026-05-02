@@ -46,6 +46,30 @@ public function index()
         'itemCount'
     ));
 }
+public function checkout()
+{
+    $user = Auth::user();
+
+    $cart = Cart::with('items.item')
+        ->where('user_id', $user->id)
+        ->where('status', 'active')
+        ->first();
+
+    if (!$cart || $cart->items->isEmpty()) {
+        return redirect('/pos-system/cart');
+    }
+
+    $totals = $this->calculateCartTotals($cart);
+
+    return view('POSViews.POSUserViews.POSPlaceOrder_mobile', [
+        'cart' => $cart,
+        'subtotal' => $totals['subtotal'],
+        'discountAmount' => $totals['discount_amount'],
+        'taxAmount' => $totals['tax_amount'],
+        'total' => $totals['total'],
+        'itemCount' => $cart->items->sum('qty'),
+    ]);
+}
 
     public function getCart()
     {

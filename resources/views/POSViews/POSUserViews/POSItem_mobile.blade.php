@@ -18,7 +18,7 @@
         .content-area {
             max-width: 430px;
             margin: 0 auto;
-            padding: 10px !important;
+            padding: 0px !important;
         }
 
         .products-page {
@@ -180,13 +180,18 @@
         }
 
         /* ✅ Sticky header container */
-        .sticky-header {
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            background: #ffffff;
-            padding-bottom: 8px;
-        }
+    .sticky-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 50;
+    background: #ffffff;
+    padding-bottom: 8px;
+    padding-left: 8px;
+    padding-right: 14px;
+    padding-top: 14px;
+}
 
         /* ✅ Prevent content jump */
         .sticky-header::after {
@@ -215,7 +220,22 @@
 
         .top-bar .cart-box {
             position: relative;
-            top: -6px;
+            top: 0px;
+            right: 4px;
+        }
+        #product-count {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .cart-box {
+            width: 46px;
+            height: 46px;
+            border-radius: 18px;
+            background: rgba(16, 184, 195, 0.12);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
         }
     </style>
 @endpush

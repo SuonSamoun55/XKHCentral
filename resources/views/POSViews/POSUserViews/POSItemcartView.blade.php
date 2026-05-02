@@ -237,6 +237,10 @@
             text-decoration: none;
             margin-top: 2%;
         }
+        
+.desktop-only { display: block; }
+.mobile-only { display: none; }
+
 
        /* =========================
    MOBILE CART UI REWRITE
@@ -381,6 +385,10 @@
         max-height: none;
         overflow: visible;
     }
+    
+ .desktop-only { display: none !important; }
+    .mobile-only { display: block !important; }
+
 
         }
     </style>
@@ -451,7 +459,21 @@
                 </div>
             </div>
 
-            <button id="checkoutBtn" class="place-order-btn">Check out</button>
+          {{-- Desktop checkout --}}
+<button
+    id="checkoutDesktopBtn"
+    type="button"
+    class="place-order-btn desktop-only">
+    PLACE ORDER
+</button>
+
+{{-- Mobile checkout --}}
+<button
+    id="checkoutMobileBtn"
+    type="button"
+    class="place-order-btn mobile-only">
+    CHECK OUT
+</button>
         @endif
     </div>
 
@@ -610,26 +632,46 @@
             }
         }
     });
+</script>
+<script>
+/* ✅ DESKTOP */
+const checkoutDesktopBtn = document.getElementById('checkoutDesktopBtn');
+if (checkoutDesktopBtn) {
+    checkoutDesktopBtn.onclick = async function () {
+        try {
+            checkoutDesktopBtn.disabled = true;
 
-    // Checkout
-    const checkoutBtn = document.getElementById('checkoutBtn');
-    if(checkoutBtn) {
-        checkoutBtn.onclick = async function() {
-            // Simplified checkout call
-            let res = await fetch('/pos-system/checkout', {
+            const res = await fetch('/pos-system/checkout', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken // ✅ already defined
+                },
                 body: JSON.stringify({ currency: 'USD', factor: 1 })
             });
 
-            let data = await res.json();
+            const data = await res.json();
+
             if (data.success) {
                 document.getElementById('cartMainContent').style.display = 'none';
                 document.getElementById('orderSuccessContent').style.display = 'block';
             } else {
                 alert('Checkout failed');
             }
+        } catch (e) {
+            alert('Error');
+        } finally {
+            checkoutDesktopBtn.disabled = false;
         }
-    }
+    };
+}
+
+/* ✅ MOBILE */
+const checkoutMobileBtn = document.getElementById('checkoutMobileBtn');
+if (checkoutMobileBtn) {
+    checkoutMobileBtn.onclick = function () {
+        window.location.href = '/pos-system/checkout';
+    };
+}
 </script>
 @endpush
