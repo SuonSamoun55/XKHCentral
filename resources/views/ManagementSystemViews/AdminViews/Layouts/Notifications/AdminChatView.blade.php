@@ -33,20 +33,28 @@
     <aside class="conversation-pane">
 
         <div class="pane-header">
-            <h3>Messages</h3>
+            <div class="pane-title-row">
+                <a href="{{ route('admin.notifications.index') }}" class="pane-back-btn" aria-label="Back to notifications">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <h3>Inbox</h3>
+                @php $totalUnread = collect($contacts)->sum(fn($item) => (int) ($item->unread_count ?? 0)); @endphp
+                <span class="pane-count">{{ $totalUnread }}</span>
+                <button class="pane-compose-btn" type="button" aria-label="New message">
+                    <i class="bi bi-pencil"></i>
+                </button>
+            </div>
             <div class="search-wrap">
                 <i class="bi bi-search"></i>
                 <input id="contactSearch"
                        type="text"
                        class="search-input"
-                       placeholder="Search conversations...">
+                       placeholder="Search">
             </div>
         </div>
 
         <div class="contact-list" id="contactList">
             <div id="contactListItems">
-                <div class="divider-label">Today</div>
-
                 @forelse($contacts as $contact)
                     @php
                         $contactIsOnline = (bool) ($contact->is_online ?? false);
@@ -63,9 +71,6 @@
                                  alt="{{ $contact->name }}">
                             <span class="contact-presence-dot {{ $contactIsOnline ? 'is-online' : 'is-offline' }}"></span>
 
-                            @if((int)($contact->unread_count ?? 0) > 0)
-                                <div class="contact-badge">{{ (int)$contact->unread_count }}</div>
-                            @endif
                         </div>
 
                         <div class="contact-text">
@@ -79,6 +84,9 @@
                             </div>
                             <div class="contact-last">{{ $contact->last_message ?: 'No message yet' }}</div>
                         </div>
+                        @if((int)($contact->unread_count ?? 0) > 0)
+                            <div class="contact-badge">{{ (int)$contact->unread_count }}</div>
+                        @endif
 
                     </a>
                 @empty
@@ -86,10 +94,6 @@
                 @endforelse
             </div>
         </div>
-
-        <a href="{{ route('admin.notifications.index') }}" class="back-link">
-            <i class="bi bi-arrow-left"></i> Back to Notifications
-        </a>
 
     </aside>
 
@@ -118,10 +122,14 @@
             @endif
             </div>
 
-            {{-- Toggle right panel --}}
-            <button class="icon-btn header-toggle-btn" id="toggleInfoPane" title="Show / hide info panel" @if(!$activeContact) hidden @endif>
-                <i class="bi bi-layout-sidebar-reverse"></i>
-            </button>
+            <div class="message-header-actions">
+                <button class="icon-btn header-action-btn" type="button" title="Search">
+                    <i class="bi bi-search"></i>
+                </button>
+                <button class="icon-btn header-toggle-btn" id="toggleInfoPane" title="Show / hide info panel" @if(!$activeContact) hidden @endif>
+                    <i class="bi bi-info-circle"></i>
+                </button>
+            </div>
         </header>
 
         {{-- Message stream --}}
@@ -256,21 +264,21 @@
                 <input type="hidden" name="receiver_id" value="{{ $activeContactId }}">
                 <input type="file"   id="imageInput"    accept="image/*" style="display:none">
 
+                {{-- Attach image --}}
+                <button type="button" class="icon-btn" id="attachButton" title="Send image">
+                    <i class="bi bi-paperclip"></i>
+                </button>
+
                 <input type="text"
                        id="chatMessageInput"
                        name="message"
                        class="composer-input"
-                       placeholder="Type a message..."
+                       placeholder="Write a message"
                        autocomplete="off">
-
-                {{-- Attach image --}}
-                <button type="button" class="icon-btn" id="attachButton" title="Send image">
-                    <i class="bi bi-image"></i>
-                </button>
 
                 {{-- Emoji picker toggle --}}
                 <button type="button" class="icon-btn" id="emojiButton" title="Emoji">
-                    <i class="bi bi-emoji-smile"></i>
+                    <i class="bi bi-hand-thumbs-up"></i>
                 </button>
 
                 {{-- Voice record --}}
@@ -283,7 +291,9 @@
                 </button>
 
                 {{-- Send --}}
-                <button type="submit" class="send-btn">Send</button>
+                <button type="submit" class="send-btn" aria-label="Send message">
+                    <i class="bi bi-send-fill"></i>
+                </button>
             </form>
 
             <div class="composer-hint" id="composerHint">
@@ -757,7 +767,7 @@
             contactListItems.innerHTML = '<div class="text-muted px-3 py-2" style="font-size:13px;color:#9ca3af">No chats yet.</div>';
             return;
         }
-        contactListItems.innerHTML = `<div class="divider-label">Today</div>${contactsState.map(function (contact) {
+        contactListItems.innerHTML = `${contactsState.map(function (contact) {
             const isOnline = Boolean(contact.is_online);
             const badge = Number(contact.unread_count || 0) > 0 ? `<div class="contact-badge">${Number(contact.unread_count)}</div>` : '';
             const active = Number(contact.id) === Number(activeContactId) ? ' active' : '';
@@ -769,7 +779,6 @@
                     <div class="contact-avatar-wrap">
                         <img src="${escapeHtml(contact.chat_avatar || '')}" class="contact-avatar" alt="${escapeHtml(contact.name || '')}">
                         <span class="contact-presence-dot ${isOnline ? 'is-online' : 'is-offline'}"></span>
-                        ${badge}
                     </div>
                     <div class="contact-text">
                         <div class="contact-name-row">
@@ -778,6 +787,7 @@
                         </div>
                         <div class="contact-last">${escapeHtml(contact.last_message || 'No message yet')}</div>
                     </div>
+                    ${badge}
                 </a>`;
         }).join('')}`;
         applyContactSearchFilter();
@@ -809,12 +819,12 @@
                 <input type="hidden" name="_token" value="${escapeHtml(csrfToken)}">
                 <input type="hidden" name="receiver_id" value="${Number(contactId)}">
                 <input type="file" id="imageInput" accept="image/*" style="display:none">
-                <input type="text" id="chatMessageInput" name="message" class="composer-input" placeholder="Type a message..." autocomplete="off">
-                <button type="button" class="icon-btn" id="attachButton" title="Send image"><i class="bi bi-image"></i></button>
-                <button type="button" class="icon-btn" id="emojiButton" title="Emoji"><i class="bi bi-emoji-smile"></i></button>
+                <button type="button" class="icon-btn" id="attachButton" title="Send image"><i class="bi bi-paperclip"></i></button>
+                <input type="text" id="chatMessageInput" name="message" class="composer-input" placeholder="Write a message" autocomplete="off">
+                <button type="button" class="icon-btn" id="emojiButton" title="Emoji"><i class="bi bi-hand-thumbs-up"></i></button>
                 <button type="button" class="icon-btn" id="voiceButton" title="Voice message"><i class="bi bi-mic"></i></button>
                 <button type="button" class="voice-cancel-btn" id="voiceCancelButton" title="Cancel recording">Cancel</button>
-                <button type="submit" class="send-btn">Send</button>
+                <button type="submit" class="send-btn" aria-label="Send message"><i class="bi bi-send-fill"></i></button>
             </form>
             <div class="composer-hint" id="composerHint">Click mic to record, click again to send. Press Esc to cancel.</div>
         </div>`;
@@ -1238,7 +1248,7 @@
     toggleInfoPane?.addEventListener('click', function () {
         if (!contactInfoPane) return;
         const hidden = contactInfoPane.classList.toggle('pane-hidden');
-        toggleInfoPane.querySelector('i').className = hidden ? 'bi bi-layout-sidebar-inset-reverse' : 'bi bi-layout-sidebar-reverse';
+        toggleInfoPane.querySelector('i').className = hidden ? 'bi bi-info-circle' : 'bi bi-info-circle-fill';
     });
 
     window.addEventListener('popstate', function () {
