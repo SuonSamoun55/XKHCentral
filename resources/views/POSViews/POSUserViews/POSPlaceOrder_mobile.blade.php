@@ -6,7 +6,7 @@
 <div class="checkout-container" id="checkoutContent">
 
   <div class="checkout-nav">
-    <a href="{{ url('/pos-system/cart') }}" class="back-btn">
+    <a href="{{ url('/pos-system/cart') }}" class="icon-btn">
         <i class="bi bi-arrow-left"></i>
     </a>
     <span class="nav-title">Checkout</span>
@@ -132,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
     display: none !important;
 }
 
+
 /* Layout */
 .checkout-container {
     padding: 16px;
@@ -144,11 +145,19 @@ document.addEventListener('DOMContentLoaded', () => {
 .checkout-nav {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 100px;
     font-weight: 600;
-    padding: 12px;
+    padding-bottom: 18px;
 }
-
+.icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #d4eaf5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 /* Item Cards */
 .checkout-item-card {
     display: flex;
@@ -188,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     display: flex;
     justify-content: space-between;
     font-size: 14px;
-    margin: 6px 0;
+    margin: 12px 0;
 }
 
 .payment-row.total {

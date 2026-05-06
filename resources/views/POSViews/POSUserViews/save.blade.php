@@ -275,271 +275,157 @@
             display: none;
         }
 
+        .empty-cart-container {
+            display: none;
+        }
+
+        .emptycart-container {
+            display: none;
+        }
+
 
         /* =========================
-                           MOBILE CART UI REWRITE
-                           ========================= */
+                       MOBILE CART UI REWRITE
+                       ========================= */
         @media (max-width: 768px) {
 
             body {
                 background: #f6f7f9;
             }
 
-            .cart-container {
-                padding: 0;
-                /* space for sticky bottom */
-                border-radius: 0;
-            }
-
-            #cartMainContent {
-                width: 100%;
-                height: auto;
-                padding: 0 !important;
-                display: flex;
-                flex-direction: column;
-                min-height: 0;
-            }
-
-
-            /* Header */
-            .cart-nav {
-                position: sticky;
-                top: 0;
-                z-index: 50;
-                background: #fff;
-                padding: 8px;
-            }
-
-            .nav-title {
-                font-size: 16px;
-                font-weight: 600;
-                text-align: center;
-                flex: 1;
-                color: #000;
-            }
-
-            /* Cart list spacing */
-            .cart-list-wrapper {
-                padding: 0;
-                margin-top: 8px;
-            }
-
-            /* Each item becomes a CARD */
-            .item-card {
-                background: #f1f5f9;
-                border-radius: 14px;
-                padding: 12px;
-                margin-bottom: 12px;
-                border: none;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-                gap: 12px;
-            }
-
-            .item-image {
-                width: 80px;
-                height: 80px;
-                border-radius: 12px;
-                object-fit: contain;
-                background: #f1f5f9;
-            }
-
-            .item-details h3 {
-                font-size: 14px;
-                margin-bottom: 6px;
-            }
-
-            /* Quantity controls – touch friendly */
-            .qty-controls {
-                width: 120px;
-                height: 36px;
-                background: #eef2f7;
-                border-radius: 999px;
-                padding: 0 8px;
-            }
-
-            .qty-btn {
-                font-size: 18px;
-                width: 28px;
-                height: 28px;
-            }
-
-            .qty-val {
-                font-size: 14px;
-            }
-
-            /* Remove icon */
-            .remove-icon {
-                top: 10px;
-                right: 10px;
-                font-size: 20px;
-            }
-
-            /* =========================
-                               STICKY BOTTOM SUMMARY
-                               ========================= */
-            .summary-box {
-                position: fixed;
-                bottom: 8%;
-                left: 0;
-                right: 0;
-                z-index: 100;
-                background: #1f7a85;
-                /* teal like screenshot */
-                color: #fff;
-                padding: 12px 16px 16px;
-                border-radius: 16px 16px 0 0;
-            }
-
-            .summary-line {
-                font-size: 13px;
-                color: rgba(255, 255, 255, 0.85);
-            }
-
-            .summary-line.total-usd,
-            .summary-line.total-riel {
-                color: #fff;
-                font-size: 14px;
-            }
-
-            /* Checkout button */
-            .place-order-btn {
-                width: 100%;
-                background: #2fd4c7;
-                /* margin-top: 100%; */
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                padding: 34px;
-                font-size: 15px;
-                border-radius: 14px;
-                box-shadow: none;
-            }
-
-            /* Hide scrollbar for clean mobile feel */
-            .scroll-limit-5,
-            .scroll-limit-10 {
-                max-height: none;
-                overflow: visible;
-            }
-
-            .desktop-only {
+            /* Hide sidebar */
+            .sidebar,
+            .sidebar-wrap {
                 display: none !important;
             }
 
-            .mobile-only {
-                display: block !important;
+            #cartMainContent {
+                display: none !important;
+            }
+
+            .emptycart-container {
+                display: block;
+            }
+
+            /* Container */
+            .empty-cart-container {
+                display: block;
+                background: #ffffff;
+                min-height: 100vh;
+                padding-bottom: 120px;
+            }
+
+            /* Header */
+            .cart-nav {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px;
+                font-weight: 600;
+            }
+
+            .back-btn {
+                background: #F3F4F6;
+                border-radius: 10px;
+                padding: 8px;
+                color: #111827;
+            }
+
+            .fav-btn {
+                background: #E0F2F1;
+                color: #14B8A6;
+                border: none;
+                border-radius: 10px;
+                padding: 8px;
+            }
+
+            /* Item count */
+            .item-count {
+                padding: 12px 16px;
+                font-size: 14px;
+                color: #374151;
+            }
+
+            /* Empty content */
+            .empty-cart-image {
+                display: block;
+                width: 220px;
+                margin: 30px auto 16px;
+            }
+
+            .empty-title {
+                text-align: center;
+                font-weight: 600;
+            }
+
+            .empty-desc {
+                text-align: center;
+                font-size: 13px;
+                color: #6B7280;
+                margin-bottom: 20px;
+            }
+
+            /* Shop button */
+            .shop-now-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                background: #14B8A6;
+                color: white;
+                padding: 12px 18px;
+                border-radius: 12px;
+                text-decoration: none;
+                font-weight: 600;
+                margin: 0 134px 28px;
+            }
+
+            /* Summary box */
+            .empty-summary {
+
+                width: 104%;
+                position: fixed;
+                bottom: 40px;
+                left: -24px;
+                background: #1F7A85;
+                color: white;
+                padding-left: 16px;
+                padding-right: 16px;
+                margin: 20px 16px;
+            }
+
+            .summary-row {
+                display: flex;
+                justify-content: space-between;
+                font-size: 13px;
+                border-bottom: none;
+            }
+
+            .summary-row.total {
+                font-weight: 600;
+            }
+
+            .divider {
+                height: 1px;
+                background: rgba(255, 255, 255, 0.3);
+                margin: 10px 0;
+            }
+
+            /* Checkout disabled */
+            .checkout-disabled {
+                position: fixed;
+                bottom: 0;
+                width: 110%;
+                background: #2EC4B6;
+                color: rgba(255, 255, 255, 0.6);
+                padding: 22px;
+                font-size: 16px;
+                font-weight: 600;
+                border: none;
+                margin-left: -100%;
             }
 
 
-        
-        /* Mobile Empty Cart Layout */
-.empty-cart-mobile {
-    padding: 16px;
-    text-align: center;
-}
 
-/* Item count */
-.empty-cart-mobile .item-count {
-    text-align: left;
-    font-size: 14px;
-    color: #374151;
-    margin-bottom: 20px;
-}
-
-/* Illustration */
-.empty-cart-illustration {
-    width: 240px;
-    max-width: 80%;
-    margin: 0 auto 24px;
-    display: block;
-}
-
-/* Title */
-.empty-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 6px;
-}
-
-/* Description */
-.empty-desc {
-    font-size: 13px;
-    color: #6B7280;
-    margin-bottom: 20px;
-    line-height: 1.4;
-}
-
-/* Shop Now button */
-.shop-now-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: #14B8A6;
-    color: #ffffff;
-    padding: 12px 18px;
-    border-radius: 12px;
-    text-decoration: none;
-    font-weight: 600;
-    margin-bottom: 28px;
-}
-
-/* Summary card */
-.empty-summary-card {
-    width: calc(100% + 32px);
-    
- margin-left: -16px;
-    margin-right: -16px;
-
-    background: #1F7A85;
-    color: white;
-    padding: 16px;
-  border-radius: 0;  
-      font-size: 13px;
-    text-align: left;
-    position: relative;
-    top: 38px;
-}
-
-.empty-summary-card > div {
-    display: flex;
-    justify-content: space-between;
-    margin: 6px 0;
-}
-
-.empty-summary-card hr {
-    border: none;
-    height: 1px;
-    background: rgba(255,255,255,0.3);
-    margin: 12px 0;
-}
-
-.empty-summary-card .total {
-    font-weight: 600;
-}
-
-/* Disabled checkout */
-.checkout-disabled {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: #2EC4B6;
-    color: rgba(255,255,255,0.6);
-    padding: 22px;
-    font-size: 16px;
-    font-weight: 600;
-    border: none;
-}
-.icon-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    background: #d4eaf5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
         }
     </style>
 @endpush
@@ -547,57 +433,20 @@
 @section('content')
     <div class="cart-container">
         <div class="cart-nav">
-            <a href="/pos-system" class="icon-btn"><i class="bi bi-arrow-left"></i></a>
+            <a href="/pos-system" class="back-btn"><i class="bi bi-arrow-left"></i></a>
             <span class="nav-title">My Cart</span>
+            <button class="fav-btn">
+                <i class="bi bi-heart-fill"></i>
+            </button>
         </div>
 
         <div id="cartMainContent">
             @if (!$cart || $cart->items->isEmpty())
-
-                <div class="empty-state desktop-only">
+                <div class="empty-state">
                     <img src="{{ asset('images/pos/Empty.png') }}" class="empty-state-image">
                     <h3 style="color: #ccc;">Your cart is Empty</h3>
                     <a href="/pos-system" class="empty-state-link">Continue Shopping</a>
                 </div>
-
-               <div class="empty-cart-mobile mobile-only">
-
-    <div class="item-count">0 items</div>
-
-    <img
-        src="{{ asset('images/pos/emptycart.png') }}"
-        alt="Empty cart"
-        class="empty-cart-illustration"
-    >
-
-    <h3 class="empty-title">Your cart is empty</h3>
-
-    <p class="empty-desc">
-        Looks like you haven’t added anything<br>
-        to your cart yet
-    </p>
-
-    <a href="/pos-system" class="shop-now-btn">
-        Shop now <i class="bi bi-chevron-right"></i>
-    </a>
-
-    <div class="empty-summary-card">
-        <div><span>Subtotal</span><span>$0</span></div>
-        <div><span>Discount</span><span>$0</span></div>
-        <div><span>Delivery Fee</span><span>$0</span></div>
-        <div><span>Estimated Tax</span><span>$0</span></div>
-
-        <hr>
-
-        <div class="total"><span>Total in USD</span><span>$0</span></div>
-        <div class="total"><span>Total in Riel</span><span>Riel 0</span></div>
-    </div>
-
-    <button class="checkout-disabled" disabled>
-        Checkout
-    </button>
-
-</div>
             @else
                 @php
                     $count = $cart->items->count();
@@ -655,16 +504,45 @@
                     </div>
                 </div>
 
-                {{-- Desktop checkout --}}
-                <button id="checkoutDesktopBtn" type="button" class="place-order-btn desktop-only">
-                    PLACE ORDER
-                </button>
-
-                {{-- Mobile checkout --}}
-                <button id="checkoutMobileBtn" type="button" class="place-order-btn mobile-only">
-                    CHECK OUT
-                </button>
+                <button id="checkoutBtn" class="place-order-btn">Place Order</button>
             @endif
+        </div>
+
+        {{-- EMPTY CART --}}
+        <div class="emptycart-container">
+
+            {{-- Items Count --}}
+            <div class="item-count">0 items</div>
+
+            {{-- Empty Illustration --}}
+            <img src="{{ asset('images/pos/emptycart.png') }}" alt="Empty cart" class="empty-cart-image">
+            <h3 class="empty-title">Your cart is empty</h3>
+            <p class="empty-desc">
+                Looks like you haven’t added anything<br>
+                to your cart yet
+            </p>
+
+            <a href="/pos-system/products" class="shop-now-btn">
+                Shop now
+                <i class="bi bi-chevron-right"></i>
+            </a>
+
+            {{-- Summary (Disabled) --}}
+            <div class="empty-summary">
+                <div class="summary-row"><span>Subtotal</span><span>$0</span></div>
+                <div class="summary-row"><span>Discount</span><span>$0</span></div>
+                <div class="summary-row"><span>Delivery Fee</span><span>$0</span></div>
+                <div class="summary-row"><span>Estimated Tax</span><span>$0</span></div>
+                <div class="divider"></div>
+                <div class="summary-row total"><span>Total in USD</span><span>$0</span></div>
+                <div class="summary-row total"><span>Total in Riel</span><span>Riel 0</span></div>
+            </div>
+
+            {{-- Checkout Disabled --}}
+            <button class="checkout-disabled" disabled>
+                Checkout
+            </button>
+
         </div>
 
         <div id="orderSuccessContent" style="display: none;">
@@ -679,6 +557,12 @@
 @endsection
 
 @push('scripts')
+    <script>
+        window.ASSETS = {
+            emptyCartImage: "{{ asset('images/pos/emptycart.png') }}",
+            shopUrl: "{{ url('/pos-system') }}"
+        };
+    </script>
     <script>
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         const cartMainContent = document.getElementById('cartMainContent');
@@ -722,6 +606,27 @@
                 <a href="/pos-system" class="empty-state-link">Continue Shopping</a>
             </div>
         `;
+        };
+        const renderEmptyStateMobile = () => {
+            cartMainContent.innerHTML = `
+        <div class="empty-state mobile-empty">
+
+            <img 
+                src="${window.ASSETS.emptyCartImage}" 
+                class="empty-cart-image" 
+                alt="Empty cart"
+            >
+
+            <h3>Your cart is empty</h3>
+            <p class="empty-desc">
+                Looks like you haven’t added anything to your cart yet
+            </p>
+
+            <a href="${window.ASSETS.shopUrl}" class="shop-now-btn">
+                Shop now
+            </a>
+        </div>
+    `;
         };
 
         const refreshCartSummary = async () => {
@@ -829,10 +734,16 @@
                 row.remove();
                 applyScrollClass();
                 await refreshCartSummary();
-
+                // inside remove-item success handler ONLY
                 if (document.querySelectorAll('.item-card').length === 0) {
-                    renderEmptyState();
+                    if (isMobileScreen()) {
+                        renderEmptyStateMobile();
+                    } else {
+                        renderEmptyState();
+                    }
                 }
+                ``
+
             }
         });
     </script>

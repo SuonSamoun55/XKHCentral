@@ -697,6 +697,9 @@ h4{
 .brand-name{
     display: none;
 }
+.mobile{
+    display: none;
+}
 
 @keyframes highlightPulse {
     0% {
@@ -739,6 +742,9 @@ h4{
         padding: 0;
         min-height: auto;
     }
+    .mobile{
+        display: block;
+    }
     .header-actions {
         background: #0cb0b9;
     display: flex;
@@ -757,11 +763,7 @@ h4{
         z-index: 100;
     }
     .header-top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 8px 8px 8px;
+display: none;
 }
 
     .top {

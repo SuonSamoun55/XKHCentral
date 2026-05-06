@@ -7,25 +7,27 @@
 @endpush
 
 @section('content')
-    <div class="page-wrap">
 
+    <div class="page-wrap">
         <main class="content-area">
+                            @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
 
             <div id="messageBox" class="message-box"></div>
-           <div class="top">
-    <div class="header-desktop">
-        @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Favorite Items'])
-    </div>
-
-    <div class="header-mobile">
+            <div class="top">
+                <div class="header-desktop">
+                    @include('ManagementSystemViews.UserViews.Layouts.header', [
+                        'title' => 'Favorite Items',
+                    ])
+                </div>
+                {{-- <div class="header-mobile">
         <h3>UMAH!</h3>
     </div>
 
     <div class="cart-box">
         <i class="bi bi-cart3"></i>
         <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
-    </div>
-</div>
+    </div> --}}
+            </div>
 
             <div id="messageBox" class="message-box"></div>
 

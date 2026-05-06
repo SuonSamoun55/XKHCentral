@@ -38,13 +38,9 @@
         }
 
         .content-area {
-            width: 100%;
-            max-width: 520px;
-            margin: 0 auto;
-            padding-left: 10px !important;
-            background: white;
-            box-shadow: none;
-            border-radius: 0;
+            height: 100%;
+            overflow: visible;
+
         }
 
         .category-header {
@@ -62,20 +58,21 @@
             margin-bottom: 6px;
         }
 
-      .category-title {
-    position: fixed;
-    top: 130px; /* header (70px) + search (~60px) */
-    left: 0;
-    width: 98%;
-    z-index: 30;
-    padding: 10px !important;
-    margin-left: 10px;
+        .category-title {
+            position: fixed;
+            top: 130px;
+            /* header (70px) + search (~60px) */
+            left: 0;
+            width: 98%;
+            z-index: 30;
+            padding: 10px !important;
+            margin-left: 10px;
 
-    font-size: 18px;
-    font-weight: 100;
-    background: #fff;
-    color: #9ca3af;
-}
+            font-size: 18px;
+            font-weight: 100;
+            background: #fff;
+            color: #9ca3af;
+        }
 
         .back-btn {
             width: 42px;
@@ -91,24 +88,20 @@
             box-shadow: 0 12px 20px rgba(16, 184, 195, 0.12);
         }
 
-        .search-box {
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%); /* keep it centered */
-
-    width: 96%;
-    z-index: 50;
-
+.search-box {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 
-    padding: 16px 18px;
-    border-radius: 16px;
-    background: #ffffff;
-    border: 1px solid var(--border);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    height: 44px;              /* 🔑 lock height */
+    padding: 0 12px;
+    border-radius: 12px;
+
+    max-width: 280px;          /* ✅ not full width */
+    box-sizing: border-box;
 }
+
+
 
         .search-box i {
             color: var(--muted);
@@ -122,6 +115,7 @@
             background: transparent;
             font-size: 15px;
             color: var(--text);
+
         }
 
         .categories-grid {
@@ -137,7 +131,7 @@
             padding: 16px;
             border-radius: 18px;
             height: 120px;
-            background: #f5f9ff;
+            background: #e9edf4;
             text-decoration: none;
             color: inherit;
             border: 1px solid #dbe7ff;
@@ -220,108 +214,88 @@
             color: var(--primary);
         }
 
-        .header-top-bar {
-            position: sticky;
-            top: 0;
-            
-            z-index: 100;
-            background: white;
 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
- padding-top: 20px;  
- padding-left: 10px;    
- padding-bottom: 40px;
-  }
 
-        .cart-box {
-            width: 46px;
-            height: 46px;
-            border-radius: 18px;
-            background: rgba(16, 184, 195, 0.12);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-        }
 
-        .cart-count {
-            position: absolute;
-            top: 16px;
-            right: 12px;
-            min-width: 20px;
-            height: 20px;
-            padding-left: 5px;
-            padding-top: 2px;
-            height: 22px;
-            background: var(--primary);
-            color: #fff;
-            border-radius: 999px;
-        }
+
+
         /* ✅ FORCE PAGE SCROLL (minimal fix) */
-/* ✅ FINAL SCROLL + STICKY FIX */
+        /* ✅ FINAL SCROLL + STICKY FIX */
 
-/* body does NOT scroll */
-html, body {
-    height: 100%;
-    overflow: hidden;
+        /* body does NOT scroll */
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* page-wrap stays layout-only */
+        .page-wrap {
+            flex: 1;
+            height: 100%;
+            max-height: 100vh;
+            overflow: visible;
+            background-color: white;
+            border-radius: 12px;
+            padding: 0px 12px;
+        }
+
+        /* ✅ ONLY content-area scrolls */
+        .content-area {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            
+    padding-top: 112px; /* cart-box (56px) + top bar (56px) */
+
+            /* smooth mobile scroll */
+        }
+.header-top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #f8f8f8;
+  padding: 10px;
+  border-radius: 4px;
 }
 
-/* page-wrap stays layout-only */
-.page-wrap {
-    overflow: hidden;
+.header-top-bar::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -16px;
+    height: 16px;
+    background: #ffffff;
+    pointer-events: none;
 }
-
-/* ✅ ONLY content-area scrolls */
-.content-area {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch; /* smooth mobile scroll */
-}
-
-/* ✅ sticky header stays locked */
-.h3 {
+.sticky-wrap {
     position: sticky;
-    top: 0;
-    z-index: 100;
-    background: white;
-    
- margin-top: -10px;
-    padding-top: 10px;
-   
-
+    top: 68px;
+    z-index: 1000;
+    background: #f8f8f8;
 }
 
+.header-top-bar {
+    position: relative; /* not sticky */
+}
 
-
+        /* ✅ sticky header stays locked */
     </style>
 @endpush
 
 @section('content')
     <div class="page-wrap">
         <main class="content-area">
+            @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
+<div class="sticky-wrap">
             <div class="header-top-bar">
-                {{-- @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'UMAH!']) --}}
-                <h3>UMAH!</h3>
-                @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
-            </div>
-            {{-- <div class="category-header">
-                <div>
-                    <div class="brand-name">UMAH!</div>
-                    
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="search" id="categorySearch" placeholder="Search categories" autocomplete="off">
                 </div>
-                <a href="{{ route('user.posinterface') }}" class="back-btn">
-                    <i class="bi bi-arrow-left"></i>
-                </a>
-            </div> --}}
-
-            <div class="search-box">
-                <i class="bi bi-search"></i>
-                <input type="search" id="categorySearch" placeholder="Search categories" autocomplete="off">
+                <p class="category-title">Categories</p>
             </div>
-            <p class="category-title">Categories</p>
-
+            </div>
             <div class="categories-grid" id="categoriesGrid">
                 @forelse ($categories as $category)
                     <a href="{{ route('user.pos.categories.products', ['category' => $category['code']]) }}"

@@ -232,6 +232,17 @@
 .toast.error {
     background: #ef4444;
 }
+  .logo-wrap{
+            display: none !important;
+        }
+    
+.cart {
+    margin-left: auto; /* ✅ pushes cart to the right */
+    padding-right: 10px;
+}
+.cart-boxM{
+    padding-top: 0px !important;
+}
 
         /* BOTTOM NAV */
     </style>
@@ -247,10 +258,8 @@
                     <i class="bi bi-arrow-left"></i>
                 </a>
 
-                <a href="{{ route('user.pos.cart') }}" class="cart-box">
-                    <i class="bi bi-cart3"></i>
-                    <span class="cart-count" id="cartCount">0</span>
-                </a>
+                        @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
+
             </div>
 
             <!-- IMAGE -->

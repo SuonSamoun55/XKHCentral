@@ -17,8 +17,7 @@
 
         .content-area {
             max-width: 430px;
-            margin: 0 auto;
-            padding: 0px !important;
+            padding: 0 !important ;
         }
 
         .products-page {
@@ -189,7 +188,7 @@
     background: #ffffff;
     padding-bottom: 8px;
     padding-left: 8px;
-    padding-right: 14px;
+    padding-right: 24px;
     padding-top: 14px;
 }
 
@@ -237,12 +236,23 @@
             justify-content: center;
             padding: 0;
         }
+        .logo-wrap{
+            display: none !important;
+        }
+    
+.cart {
+    margin-left: auto; /* ✅ pushes cart to the right */
+    padding-right: 10px;
+}
+
+
     </style>
 @endpush
 
 @section('content')
     <div class="page-wrap">
         <main class="content-area">
+
             <div class="products-page">
 
                 {{-- TOP BAR --}}
@@ -253,8 +263,8 @@
                         </a>
 
                         <div style="text-align:center;font-weight:700">Products</div>
+        @include('ManagementSystemViews/UserViews/Layouts/header_mobile')
 
-                        @include('ManagementSystemViews/UserViews/Layouts/header_mobile')
 
                     </div>
 

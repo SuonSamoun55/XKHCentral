@@ -9,9 +9,10 @@
 @section('content')
     <div class="page-wrap">
         <main class="content-area">
+         @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
+
             <div class="header">
                 <div class="header-top-bar">
-                    <div class="brand-name">UMAH!</div>
                     <h1 class="title">
                         Products
                     </h1>
