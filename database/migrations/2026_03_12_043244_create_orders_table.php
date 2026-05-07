@@ -32,6 +32,7 @@ return new class extends Migration
         $table->decimal('subtotal',18,2)->default(0);
         $table->decimal('discount_amount',18,2)->default(0);
         $table->decimal('total_amount',18,2)->default(0);
+        $table->decimal('amount_paid', 10, 2)->nullable()->after('total_amount');
 
         // 🔥 IMPORTANT for POS
         $table->string('location_code')->nullable();

@@ -10,6 +10,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\POSModel\Order;
+use App\Models\POSModel\OrderItem;
 
 class CartController extends Controller
 {
@@ -68,6 +70,18 @@ public function checkout()
         'taxAmount' => $totals['tax_amount'],
         'total' => $totals['total'],
         'itemCount' => $cart->items->sum('qty'),
+    ]);
+}
+    
+public function success(Request $request)
+{
+    $order = Order::where('id', $request->order)
+        ->where('user_id', Auth::id())
+        ->firstOrFail();
+
+    return view('POSViews.POSUserViews.POSorder_success', [
+        'orderNumber' => $order->order_no,
+        'amountPaid'  => $order->amount_paid,
     ]);
 }
 

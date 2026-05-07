@@ -9,17 +9,44 @@
 @section('content')
     <div class="page-wrap">
         <main class="content-area">
-         @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
+            @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
 
             <div class="header">
-                <div class="header-top-bar">
-                    <h1 class="title">
-                        Products
-                    </h1>
-                    <a href="{{ route('user.pos.cart') }}" class="cart-box">
-                        <i class="bi bi-cart3"></i>
-                        <span class="cart-count" id="cartCount">0</span>
-                    </a>
+                <div class="topbar">
+                    <div class="top">
+                        <h1 class="title">
+                            Products
+                        </h1>
+
+                        <a href="{{ route('user.pos.cart') }}" class="cart-box">
+                            <i class="bi bi-cart3"></i>
+                            <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
+                        </a>
+                    </div>
+
+                    <div class="search-area">
+                        <div class="search-wrapper">
+                            <div class="search-box">
+                                <i class="bi bi-search"></i>
+                                <input type="text" id="searchInput" placeholder="Search Product">
+                                <button type="button" id="searchSubmitBtn" class="search-submit-btn">
+                                    <i class="bi bi-send"></i>
+                                </button>
+                            </div>
+
+                            <div class="search-dropdown" id="searchDropdown">
+                                <div class="search-dropdown-left">
+                                    <div class="search-section-title">Your Searches</div>
+                                    <div id="searchSuggestions"></div>
+                                </div>
+
+                                <div class="search-dropdown-right">
+                                    <div class="search-section-title">Products</div>
+                                    <div id="searchPreviewProducts" class="search-preview-products"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="header-actions">
@@ -70,29 +97,7 @@
 
 
 
-                <div class="search-area">
-                    <div class="search-wrapper">
-                        <div class="search-box">
-                            <i class="bi bi-search"></i>
-                            <input type="text" id="searchInput" placeholder="Search Product">
-                            <button type="button" id="searchSubmitBtn" class="search-submit-btn">
-                                <i class="bi bi-send"></i>
-                            </button>
-                        </div>
-
-                        <div class="search-dropdown" id="searchDropdown">
-                            <div class="search-dropdown-left">
-                                <div class="search-section-title">Your Searches</div>
-                                <div id="searchSuggestions"></div>
-                            </div>
-
-                            <div class="search-dropdown-right">
-                                <div class="search-section-title">Products</div>
-                                <div id="searchPreviewProducts" class="search-preview-products"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+               
             </div>
 
             <div id="messageBox" class="message-box"></div>

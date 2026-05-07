@@ -232,7 +232,7 @@
         }
 
         .empty-state-link {
-            color: var(--primary-teal);
+            color: white;
             text-decoration: none;
             font-weight: bold;
         }
@@ -256,6 +256,33 @@
             max-width: 5rem;
             min-width: 4rem;
         }
+        .empty-description {
+    color: #666464;
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 25px;
+    margin-top: 10px;
+}
+.shopingBtn{
+   
+    padding: 12px;
+    border-radius: 12px;
+    background: #2dd4bf;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 15px;
+    border: none;
+}
+.bi-arrow-left{
+            width: 40px;
+        height: 40px;
+        border-radius: 50px;
+        background: #dee8ec;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+}
 
         .success-desc {
             color: #666;
@@ -540,6 +567,7 @@
     align-items: center;
     justify-content: center;
 }
+
         }
     </style>
 @endpush
@@ -557,7 +585,10 @@
                 <div class="empty-state desktop-only">
                     <img src="{{ asset('images/pos/Empty.png') }}" class="empty-state-image">
                     <h3 style="color: #ccc;">Your cart is Empty</h3>
+                    <p class="empty-description">Looks like you haven’t <br> added anything to your cart yet</p>
+                    <button class="shopingBtn">
                     <a href="/pos-system" class="empty-state-link">Continue Shopping</a>
+                    </button>
                 </div>
 
                <div class="empty-cart-mobile mobile-only">

@@ -54,7 +54,7 @@
 
     <div class="bottom-space"></div>
 
-    <button id="placeOrderBtn" class="place-order-btn" type="button">
+    <button id="placeOrderBtn" class="placeOrderBtn" type="button">
         Place Order
     </button>
 
@@ -74,11 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-    const placeBtn = document.getElementById('placeOrderBtn');
-    const checkout = document.getElementById('checkoutContent');
-   const processing = document.getElementById('processingScreen');
+    const placeBtn   = document.getElementById('placeOrderBtn');
+    const checkout   = document.getElementById('checkoutContent');
+    const processing = document.getElementById('processingScreen');
 
-    placeBtn.onclick = async () => {
+    placeBtn.addEventListener('click', async () => {
 
         placeBtn.disabled = true;
 
@@ -94,31 +94,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     'X-CSRF-TOKEN': csrfToken
                 },
                 body: JSON.stringify({
-                    currency: 'USD',
-                    factor: 1
+                    currency_code: 'USD',
+                    currency_factor: 1
                 })
             });
 
             const data = await res.json();
-            if (!data.success) throw new Error('failed');
 
-            // PULL‑DOWN COLOR CHANGE (this is the magic)
+            if (!data.success) {
+                throw new Error('Checkout failed');
+            }
+
+            // Optional animation
             setTimeout(() => {
                 processing.classList.add('pull-down');
-            }, 400);
+            }, 300);
 
-            // // Redirect after animation completes
+            // ✅ ✅ ✅ CORRECT REDIRECT
             setTimeout(() => {
-                window.location.href = '/pos-system/cart?success=1';
-            }, 1600);
+                window.location.href =
+                    `/pos-system/order-success?order=${data.order_id}`;
+            }, 1200);
 
-        } catch (err) {
+        } catch (error) {
             alert('Order failed. Please try again.');
-            placeBtn.disabled = false;
-            checkout.style.display = 'block';
-            processing.classList.add('hidden');
+            window.location.href = '/pos-system/cart';
         }
-    };
+    });
+
 });
 </script>
 
@@ -209,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
     height: 90px;
 }
 
-.place-order-btn {
+.placeOrderBtn {
     position: fixed;
     left: 0;
     bottom: 0;
