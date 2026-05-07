@@ -304,6 +304,9 @@
         justify-content: space-between;
 
     }
+    .top{
+        display: none !important;
+    }
 
     .sidebar-wrap {
         display: none !important;

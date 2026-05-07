@@ -134,7 +134,7 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::post('/pos-system/checkout', [OrderController::class, 'checkout'])->name('user.pos.checkout');
 
     Route::get('/pos-system/order-success', [OrderController::class, 'success'])->name('user.pos.checkout.success');
-    Route::get('/pos-system/order/{id}', [OrderController::class, 'detail'])->name('user.pos.order.detail');
+    Route::get('/pos-system/order-detail/{id}', [OrderController::class, 'detail'])->name('user.pos.order.detail');
     // Route::get('/pos-system/order-success', [OrderController::class, 'success']);
 
     Route::get('/favorites', [FavoriteController::class, 'index']);
