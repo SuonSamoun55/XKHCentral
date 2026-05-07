@@ -408,10 +408,10 @@
     }
 
     /* TOP BAR */
-    .top {
+    /* .top {
         display: flex !important;
         justify-content: space-between;
-    }
+    } */
 
     .logo span {
         color: #10b8c3;

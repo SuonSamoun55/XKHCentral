@@ -18,7 +18,8 @@
     background: white;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 25px;
+    padding-top: 28px;
+    padding-left: 10px;
     margin-bottom: 12px;
     width: 100%;
     box-sizing: border-box;
