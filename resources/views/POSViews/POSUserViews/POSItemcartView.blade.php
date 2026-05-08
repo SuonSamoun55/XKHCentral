@@ -29,7 +29,8 @@
 
         #cartMainContent {
             width: 100%;
-            height: auto;
+            height: 100vh;
+            overflow-y: auto;
             padding: 0 20% 1% 10%;
             display: flex;
             flex-direction: column;
@@ -316,11 +317,14 @@
                 padding: 0;
                 /* space for sticky bottom */
                 border-radius: 0;
+                height: 100vh;
+                overflow-y: auto;
             }
 
             #cartMainContent {
                 width: 100%;
-                height: auto;
+                height: 100vh;
+                overflow-y: auto;
                 padding: 0 !important;
                 display: flex;
                 flex-direction: column;

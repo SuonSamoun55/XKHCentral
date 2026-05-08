@@ -96,6 +96,7 @@
     padding: 16px;
     background: #fff;
     min-height: 100vh;
+    overflow-y: auto;
     min-width: 100%;
 }
 

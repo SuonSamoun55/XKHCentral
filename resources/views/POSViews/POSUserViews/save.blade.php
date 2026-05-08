@@ -1,794 +1,697 @@
-@extends('ManagementSystemViews.UserViews.Layouts.app')
+<!DOCTYPE html>
+<html>
 
-@section('title', 'POS Cart')
+<head>
+    <title>Profile Information</title>
 
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('css/POSsystem/cart.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="{{ asset('css/ManagementSystem/aside.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
-        :root {
-            --primary-teal: #00cad1;
-            --text-gray: #777;
-            --text-dark: #333;
-            --bg-light: white;
-        }
-
+        /* =========================
+           GLOBAL
+        ========================= */
         body {
-            background-color: #fff;
-            font-family: 'Inter', sans-serif;
-            color: var(--text-dark);
-        }
-
-        .cart-container {
-            width: 100%;
-            margin: 0 auto;
-            padding: 1% 2%;
-            background-color: var(--bg-light);
-            border-radius: 12px;
-            /* height:%; */
-        }
-
-        #cartMainContent {
-            width: 100%;
-            height: auto;
-            padding: 0 20% 1% 10%;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-
-        /* Header */
-        .cart-nav {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1%;
-        }
-
-        .back-btn {
-            background: #f5f5f5;
-            border-radius: 50%;
-            width: 3.5%;
-            aspect-ratio: 1 / 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            color: #333;
-            margin-right: 1.5%;
-            min-width: 2.1rem;
-            max-width: 2.6rem;
-        }
-
-        .nav-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--primary-teal);
-        }
-
-        /* --- Scroll Logic Classes --- */
-        .cart-list-wrapper {
-            padding: 0 4% 0 4%;
-            width: 100%;
-            height: auto;
-            min-height: 0;
-        }
-
-        /* If items > 5 */
-        .scroll-limit-5 {
-            max-height: min(60vh, 24rem);
-            overflow-y: auto;
-            padding-right: 1%;
-        }
-
-        /* If items > 10 */
-        .scroll-limit-10 {
-            max-height: min(56vh, 32rem);
-            overflow-y: auto;
-            padding-right: 1%;
-        }
-
-        /* Custom Scrollbar for better UI */
-        .scroll-limit-5::-webkit-scrollbar,
-        .scroll-limit-10::-webkit-scrollbar {
-            width: 0px;
-        }
-
-        .scroll-limit-5::-webkit-scrollbar-thumb,
-        .scroll-limit-10::-webkit-scrollbar-thumb {
-            background: #ddd;
-            border-radius: 10px;
-        }
-
-        /* Compact Item Row */
-        .item-card {
-            display: flex;
-            align-items: center;
-            gap: 2%;
-            padding: 1.6% 0;
-            border-bottom: 1px solid #f0f0f0;
-            position: relative;
-        }
-
-        .item-image {
-            width: 5%;
-            aspect-ratio: 1 / 1;
-            object-fit: cover;
-            border-radius: 10%;
-            flex-shrink: 0;
-            max-width: 6rem;
-        }
-
-        .item-details {
-            flex: 1;
-        }
-
-        .item-details h3 {
-            font-size: 12px;
-            /* margin: 0 0 8px 0;  */
-            font-weight: 600;
-        }
-
-        /* Compact Quantity Controls */
-        .qty-controls {
-            display: flex;
-            align-items: center;
-            gap: 6%;
-            background: #f5f5f5;
-            /* padding: 1% 3%; */
-            border-radius: 8px;
-            width: 10%;
-
-            justify-content: space-between;
-        }
-
-        .qty-btn {
-            border: none;
-            background: none;
-            font-size: 16px;
-            cursor: pointer;
-            color: #555;
+            background: #f1f5f9;
+            margin: 0;
             padding: 0;
         }
 
-        .qty-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .qty-val {
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .remove-icon {
-            position: absolute;
-            right: 0%;
-            top: 15%;
-            color: #ff5b5b;
-            font-size: 18px;
-            cursor: pointer;
-        }
-
-        /* Summary Section */
-        .summary-box {
-            background-color: #FAFEFF;
-            /* margin-top: 2%; */
-            padding: 2% 4% 0.5% 4%;
-            border-top: 1px solid #eee;
-        }
-
-        .summary-line {
+        .app-shell {
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 13px;
-            color: var(--text-gray);
+            min-height: 100vh;
         }
 
-        .summary-line.total-usd {
-            color: var(--text-dark);
-            font-weight: 600;
-            font-size: 12px;
-            /* margin-top: 10px; */
+        .page-wrap {
+            flex: 1;
+            width: 100%;
+            overflow-y: auto;
         }
-
-        .summary-line.total-riel {
-            font-weight: 600;
-            color: #000;
-            font-size: 12px;
-        }
-
-        /* Place Order Button */
-        .place-order-btn {
-            background: var(--primary-teal);
-            color: white;
-            border: none;
-            width: 30%;
-            padding: 1% 2%;
-            border-radius: 30px;
-            font-weight: bold;
-            font-size: 14px;
-            display: block;
-            margin: 0% auto 0;
-            cursor: pointer;
-            text-transform: uppercase;
-            box-shadow: 0 4px 12px rgba(0, 202, 209, 0.2);
-            transition: transform 0.2s;
-            margin-top: 1%;
-        }
-
-        .place-order-btn:active {
-            transform: scale(0.98);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 5% 0;
-        }
-
-        .empty-state-image {
-            width: 25%;
-            margin-bottom: 2%;
-            max-width: 10rem;
-        }
-
-        .empty-state-link {
-            color: var(--primary-teal);
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        #orderSuccessContent {
-            text-align: center;
-            padding-top: 4%;
-        }
-
-        .success-icon-circle {
-            background: var(--primary-teal);
-            width: 14%;
-            aspect-ratio: 1 / 1;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 2%;
-            color: white;
-            font-size: 2.2rem;
-            max-width: 5rem;
-            min-width: 4rem;
-        }
-
-        .success-desc {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .back-home-btn {
-            text-decoration: none;
-            margin-top: 2%;
-        }
-
-        .desktop-only {
-            display: block;
-        }
-
-        .mobile-only {
-            display: none;
-        }
-
-        .empty-cart-container {
-            display: none;
-        }
-
-        .emptycart-container {
-            display: none;
-        }
-
 
         /* =========================
-                       MOBILE CART UI REWRITE
-                       ========================= */
+           DESKTOP PROFILE
+        ========================= */
+        .profile-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 30px;
+        }
+
+        .mt-4 {
+            margin-top: 0 !important;
+        }
+
+        .profile-title {
+            color: #00a8a8;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .profile-subtitle {
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        .profile-avatar {
+            width: 82px;
+            height: 82px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .btn-save {
+            background: #00a8a8;
+            color: white;
+            border: none;
+            min-width: 120px;
+        }
+
+        .btn-save:hover {
+            background: #009090;
+            color: white;
+        }
+
+        .btn-cancel {
+            border: 1px solid #00a8a8;
+            color: #00a8a8;
+            min-width: 120px;
+        }
+
+        .btn-cancel:hover {
+            background: #e6f7f7;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            font-size: 13px;
+        }
+
+        /* =========================
+           ALERT
+        ========================= */
+        .alert-success {
+            width: 320px;
+            background: #ffffff !important;
+            color: #334155 !important;
+            border: none !important;
+            border-left: 4px solid #10b981 !important;
+            border-radius: 10px !important;
+            padding: 16px 20px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        /* =========================
+           MOBILE PROFILE
+        ========================= */
+        .mobile-profile,
+        .cart-boxM,
+        .mobile-bottom-nav {
+            display: none !important;
+        }
+
         @media (max-width: 768px) {
 
             body {
-                background: #f6f7f9;
-            }
-
-            /* Hide sidebar */
-            .sidebar,
-            .sidebar-wrap {
-                display: none !important;
-            }
-
-            #cartMainContent {
-                display: none !important;
-            }
-
-            .emptycart-container {
-                display: block;
-            }
-
-            /* Container */
-            .empty-cart-container {
-                display: block;
                 background: #ffffff;
+            }
+
+            /* Hide desktop */
+            .app-shell {
+                display: none !important;
+            }
+
+            .cart-boxM {
+                display: flex !important;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+                padding-bottom: 16px;
+                padding-top: 6px;
+                padding-left: 6px;
+                padding-right: 6px;
+                background: white;
+            }
+
+            /* Show mobile */
+            .mobile-profile {
+                display: block !important;
                 min-height: 100vh;
-                padding-bottom: 120px;
+                background: #ffffff;
+                max-width: 430px;
+                margin: auto;
+                padding: 18px;
             }
 
             /* Header */
-            .cart-nav {
+            .mobile-edit-header {
+                text-align: center;
+                margin-bottom: 28px;
+            }
+
+            .mobile-edit-header h4 {
+                font-size: 20px;
+                font-weight: 700;
+                color: #0f172a;
+                margin: 0;
+            }
+
+            /* Avatar */
+            .mobile-avatar-section {
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
-                padding: 14px;
-                font-weight: 600;
+                gap: 16px;
+                margin-bottom: 28px;
             }
 
-            .back-btn {
-                background: #F3F4F6;
-                border-radius: 10px;
-                padding: 8px;
-                color: #111827;
+            .mobile-avatar {
+                width: 82px;
+                height: 82px;
+                border-radius: 18px;
+                object-fit: cover;
             }
 
-            .fav-btn {
-                background: #E0F2F1;
-                color: #14B8A6;
-                border: none;
-                border-radius: 10px;
-                padding: 8px;
+            .mobile-photo-side {
+                flex: 1;
             }
 
-            /* Item count */
-            .item-count {
-                padding: 12px 16px;
-                font-size: 14px;
-                color: #374151;
-            }
-
-            /* Empty content */
-            .empty-cart-image {
-                display: block;
-                width: 220px;
-                margin: 30px auto 16px;
-            }
-
-            .empty-title {
-                text-align: center;
-                font-weight: 600;
-            }
-
-            .empty-desc {
-                text-align: center;
-                font-size: 13px;
-                color: #6B7280;
-                margin-bottom: 20px;
-            }
-
-            /* Shop button */
-            .shop-now-btn {
+            .mobile-change-photo {
                 display: inline-flex;
                 align-items: center;
-                gap: 6px;
-                background: #14B8A6;
-                color: white;
-                padding: 12px 18px;
-                border-radius: 12px;
-                text-decoration: none;
-                font-weight: 600;
-                margin: 0 134px 28px;
-            }
-
-            /* Summary box */
-            .empty-summary {
-
-                width: 104%;
-                position: fixed;
-                bottom: 40px;
-                left: -24px;
-                background: #1F7A85;
-                color: white;
-                padding-left: 16px;
-                padding-right: 16px;
-                margin: 20px 16px;
-            }
-
-            .summary-row {
-                display: flex;
-                justify-content: space-between;
+                justify-content: center;
+                height: 42px;
+                padding: 0 18px;
+                border: 1px solid #d1d5db;
+                border-radius: 10px;
+                background: white;
                 font-size: 13px;
-                border-bottom: none;
+                cursor: pointer;
             }
 
-            .summary-row.total {
+            .mobile-avatar-hint {
+                margin-top: 8px;
+                font-size: 11px;
+                color: #94a3b8;
+            }
+
+            /* Form */
+            .mobile-form {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .mobile-input label {
+                display: block;
+                font-size: 11px;
+                color: #94a3b8;
+                margin-bottom: 6px;
+                padding-left: 4px;
+                position: relative;
+                top: 24px;
+                left: 8px;
+            }
+
+            .mobile-input input,
+            .mobile-input-row select {
+                width: 100%;
+                height: 54px;
+                border-radius: 12px;
+                border: 1px solid #d1d5db;
+                background: #f1f5f9;
+                padding: 0 14px;
+                font-size: 14px;
+                outline: none;
+            }
+
+            .mobile-input-row {
+                display: flex;
+                gap: 12px;
+            }
+
+            .mobile-input-row select {
+                flex: 1;
+            }
+
+            .mobile-save-btn {
+                width: 100%;
+                height: 54px;
+                border: none;
+                border-radius: 14px;
+                background: #2bb0cc;
+                color: white;
+                font-size: 15px;
                 font-weight: 600;
+                margin-top: 10px;
             }
 
-            .divider {
-                height: 1px;
-                background: rgba(255, 255, 255, 0.3);
-                margin: 10px 0;
+            .mobile-save-btn:hover {
+                background: #2298b2;
             }
 
-            /* Checkout disabled */
-            .checkout-disabled {
+            .alert-success {
+                width: calc(100% - 30px) !important;
+                right: 15px !important;
+                top: 15px !important;
+            }
+
+            .mobile-select-box {
+                flex: 1;
+            }
+
+            .mobile-select-box label {
+                display: block;
+                font-size: 11px;
+                color: #94a3b8;
+                margin-bottom: 6px;
+                padding-left: 4px;
+                position: relative;
+                top: 24px;
+                left: 8px;
+            }
+
+            .mobile-bottom-nav {
                 position: fixed;
                 bottom: 0;
-                width: 110%;
-                background: #2EC4B6;
-                color: rgba(255, 255, 255, 0.6);
-                padding: 22px;
-                font-size: 16px;
-                font-weight: 600;
-                border: none;
-                margin-left: -100%;
+                left: 0;
+                right: 0;
+                height: 72px;
+                background: #ffffff;
+                display: flex;
+                align-items: center;
+                justify-content: space-around;
+                border-top-left-radius: 18px;
+                border-top-right-radius: 18px;
+                box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.08);
+                z-index: 1200;
             }
 
+            .mobile-status-select {
+                height: 42px;
+                border: none;
+                border-radius: 12px;
+                background: #fff;
+                padding: 0 14px;
+                font-size: 13px;
+                font-weight: 500;
+                color: #0f172a;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+                outline: none;
+                cursor: pointer;
+            }
 
+            .mobile-bottom-nav a {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                color: #64748b;
+                font-size: 11px;
+                text-decoration: none;
+            }
+
+            .mobile-bottom-nav a i {
+                font-size: 20px;
+                color: var(--primary);
+            }
+
+            .mobile-bottom-nav a.active {
+                color: #0f172a;
+            }
+
+            .mobile-bottom-nav a.active i {
+                color: var(--primary);
+            }
 
         }
     </style>
-@endpush
+</head>
 
-@section('content')
-    <div class="cart-container">
-        <div class="cart-nav">
-            <a href="/pos-system" class="back-btn"><i class="bi bi-arrow-left"></i></a>
-            <span class="nav-title">My Cart</span>
-            <button class="fav-btn">
-                <i class="bi bi-heart-fill"></i>
-            </button>
-        </div>
+<body>
 
-        <div id="cartMainContent">
-            @if (!$cart || $cart->items->isEmpty())
-                <div class="empty-state">
-                    <img src="{{ asset('images/pos/Empty.png') }}" class="empty-state-image">
-                    <h3 style="color: #ccc;">Your cart is Empty</h3>
-                    <a href="/pos-system" class="empty-state-link">Continue Shopping</a>
-                </div>
-            @else
-                @php
-                    $count = $cart->items->count();
-                    $scrollClass = '';
-                    if ($count > 10) {
-                        $scrollClass = 'scroll-limit-10';
-                    } elseif ($count > 5) {
-                        $scrollClass = 'scroll-limit-5';
-                    }
-                @endphp
+    {{-- =========================
+         DESKTOP SCREEN
+    ========================== --}}
+    @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
 
-                <div class="cart-list-wrapper {{ $scrollClass }}">
-                    @foreach ($cart->items as $cartItem)
-                        <div class="item-card" data-cart-item-id="{{ $cartItem->id }}" data-qty="{{ $cartItem->qty }}">
-                            <img src="{{ optional($cartItem->item)->image_url ?? asset('images/no-image.png') }}"
-                                class="item-image">
 
-                            <div class="item-details">
-                                <h3>{{ $cartItem->item_name }} (L)</h3>
-                                <div class="qty-controls">
-                                    <button class="qty-btn qty-update" data-id="{{ $cartItem->id }}"
-                                        data-action="minus">−</button>
-                                    <span class="qty-val">{{ $cartItem->qty }}</span>
-                                    <button class="qty-btn qty-update" data-id="{{ $cartItem->id }}"
-                                        data-action="plus">+</button>
+    <div class="app-shell" id="appShell">
+
+        {{-- Sidebar --}}
+
+        @include('ManagementSystemViews.UserViews.Layouts.aside')
+
+
+        <div class="page-wrap">
+
+            <div class="container mt-4">
+
+                <div class="profile-card">
+
+                    {{-- Success Message --}}
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+
+                            {{ session('success') }}
+
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+
+                        </div>
+                    @endif
+
+                    {{-- Header --}}
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+
+                        <div>
+
+                            <h4 class="profile-title">
+                                Profile Information
+                            </h4>
+
+                            <p class="profile-subtitle">
+                                Update your personal information and contact details
+                            </p>
+
+                        </div>
+
+                        <a href="{{ route('user.password.change') }}" class="btn btn-outline-secondary btn-sm">
+                            Change Password
+                        </a>
+
+                    </div>
+
+                    {{-- FORM --}}
+                    <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
+
+                        @csrf
+                        @method('PUT')
+
+                        {{-- Avatar --}}
+                        <div class="d-flex align-items-center gap-4 mb-4">
+
+                            @php
+                                $avatarUrl = auth()->user()->profile_image_display ?? 'https://via.placeholder.com/80';
+                            @endphp
+
+                            <img src="{{ $avatarUrl }}" class="profile-avatar" id="previewImage">
+
+                            <div>
+
+                                <label class="btn btn-light border">
+
+                                    Change Photo
+
+                                    <input type="file" name="avatar" hidden onchange="previewFile(event)">
+
+                                </label>
+
+                                <div class="text-muted small mt-1">
+                                    JPG, PNG or GIF. Max size 2MB
                                 </div>
+
                             </div>
 
-                            <i class="bi bi-x-circle remove-icon remove-item" data-id="{{ $cartItem->id }}"></i>
                         </div>
-                    @endforeach
+
+                        {{-- Name --}}
+                        <div class="mb-3">
+
+                            <label class="form-label">Name</label>
+
+                            <input type="text" name="name" class="form-control"
+                                value="{{ old('name', auth()->user()->name) }}">
+
+                        </div>
+
+                        {{-- Email + Phone --}}
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">Email</label>
+
+                                <input type="email" name="email" class="form-control"
+                                    value="{{ old('email', auth()->user()->email) }}">
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">Phone</label>
+
+                                <input type="text" name="phone" class="form-control"
+                                    value="{{ old('phone', auth()->user()->phone) }}">
+
+                            </div>
+
+                        </div>
+
+                        {{-- Date of Birth --}}
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                Date of Birth
+                            </label>
+
+                            <input type="date" name="dob" class="form-control"
+                                value="{{ old('dob', auth()->user()->dob) }}">
+
+                        </div>
+
+                        {{-- Location --}}
+                        <div class="mb-4">
+
+                            <label class="form-label">
+                                Location
+                            </label>
+
+                            <input type="text" name="location" class="form-control"
+                                value="{{ old('location', auth()->user()->location) }}">
+
+                        </div>
+
+                        {{-- Buttons --}}
+                        <div class="d-flex justify-content-center gap-3">
+
+                            <a href="{{ url()->previous() }}" class="btn btn-cancel">
+                                Cancel
+                            </a>
+
+                            <button type="submit" class="btn btn-save">
+                                Save
+                            </button>
+
+                        </div>
+
+                    </form>
+
                 </div>
 
-                <div class="summary-box">
-                    <div class="summary-line">
-                        <span>Subtotal</span>
-                        <span id="subtotalAmount">${{ number_format($subtotal, 2) }}</span>
-                    </div>
-                    <div class="summary-line">
-                        <span>Delivery</span>
-                        <span id="deliveryAmount">$0.00</span>
-                    </div>
-                    <div class="summary-line">
-                        <span>Estimated Tax <i class="bi bi-question-circle"></i></span>
-                        <span id="taxAmount">${{ number_format($taxAmount ?? 0, 2) }}</span>
-                    </div>
-
-                    <div class="summary-line total-usd">
-                        <span>Total in USD</span>
-                        <span id="totalUsd">${{ number_format($total, 2) }}</span>
-                    </div>
-                    <div class="summary-line total-riel">
-                        <span>Total in Khmer Riel</span>
-                        <span id="totalRiel">riel {{ number_format($total * 4100, 0) }}</span>
-                    </div>
-                </div>
-
-                <button id="checkoutBtn" class="place-order-btn">Place Order</button>
-            @endif
-        </div>
-
-        {{-- EMPTY CART --}}
-        <div class="emptycart-container">
-
-            {{-- Items Count --}}
-            <div class="item-count">0 items</div>
-
-            {{-- Empty Illustration --}}
-            <img src="{{ asset('images/pos/emptycart.png') }}" alt="Empty cart" class="empty-cart-image">
-            <h3 class="empty-title">Your cart is empty</h3>
-            <p class="empty-desc">
-                Looks like you haven’t added anything<br>
-                to your cart yet
-            </p>
-
-            <a href="/pos-system/products" class="shop-now-btn">
-                Shop now
-                <i class="bi bi-chevron-right"></i>
-            </a>
-
-            {{-- Summary (Disabled) --}}
-            <div class="empty-summary">
-                <div class="summary-row"><span>Subtotal</span><span>$0</span></div>
-                <div class="summary-row"><span>Discount</span><span>$0</span></div>
-                <div class="summary-row"><span>Delivery Fee</span><span>$0</span></div>
-                <div class="summary-row"><span>Estimated Tax</span><span>$0</span></div>
-                <div class="divider"></div>
-                <div class="summary-row total"><span>Total in USD</span><span>$0</span></div>
-                <div class="summary-row total"><span>Total in Riel</span><span>Riel 0</span></div>
             </div>
 
-            {{-- Checkout Disabled --}}
-            <button class="checkout-disabled" disabled>
-                Checkout
-            </button>
-
         </div>
 
-        <div id="orderSuccessContent" style="display: none;">
-            <div class="success-icon-circle">
-                <i class="bi bi-check-lg"></i>
-            </div>
-            <h2 style="color: #4DB37E;">Confirmed!</h2>
-            <p class="success-desc">Your order is being prepared.</p>
-            <a href="/pos-system" class="place-order-btn back-home-btn">Back Home</a>
-        </div>
     </div>
-@endsection
 
-@push('scripts')
-    <script>
-        window.ASSETS = {
-            emptyCartImage: "{{ asset('images/pos/emptycart.png') }}",
-            shopUrl: "{{ url('/pos-system') }}"
-        };
-    </script>
-    <script>
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        const cartMainContent = document.getElementById('cartMainContent');
-        const cartListWrapper = document.querySelector('.cart-list-wrapper');
-        const pendingQtyByItem = new Map();
-        const syncingItems = new Set();
-        const debounceTimerByItem = new Map();
-        const rielRate = 4100;
+    {{-- =========================
+         MOBILE SCREEN
+    ========================== --}}
+    <div class="mobile-profile">
 
-        const formatUsd = (value) =>
-            `$${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        const formatRiel = (value) => `riel ${Math.round(Number(value || 0)).toLocaleString('en-US')}`;
+        <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
 
-        const updateSummary = (summary) => {
-            const subtotalEl = document.getElementById('subtotalAmount');
-            const taxEl = document.getElementById('taxAmount');
-            const totalUsdEl = document.getElementById('totalUsd');
-            const totalRielEl = document.getElementById('totalRiel');
+            @csrf
+            @method('PUT')
 
-            if (!subtotalEl || !taxEl || !totalUsdEl || !totalRielEl || !summary) return;
-
-            subtotalEl.textContent = formatUsd(summary.subtotal);
-            taxEl.textContent = formatUsd(summary.tax_amount);
-            totalUsdEl.textContent = formatUsd(summary.total);
-            totalRielEl.textContent = formatRiel(summary.total * rielRate);
-        };
-
-        const applyScrollClass = () => {
-            if (!cartListWrapper) return;
-            const itemCount = document.querySelectorAll('.item-card').length;
-            cartListWrapper.classList.remove('scroll-limit-5', 'scroll-limit-10');
-            if (itemCount > 10) cartListWrapper.classList.add('scroll-limit-10');
-            else if (itemCount > 5) cartListWrapper.classList.add('scroll-limit-5');
-        };
-
-        const renderEmptyState = () => {
-            cartMainContent.innerHTML = `
-            <div class="empty-state">
-                <img src="{{ asset('images/pos/Empty.png') }}" class="empty-state-image">
-                <h3 style="color: #ccc;">Your cart is Empty</h3>
-                <a href="/pos-system" class="empty-state-link">Continue Shopping</a>
+            {{-- Header --}}
+            <div class="mobile-edit-header">
+                <h4>Edit Profile</h4>
             </div>
-        `;
-        };
-        const renderEmptyStateMobile = () => {
-            cartMainContent.innerHTML = `
-        <div class="empty-state mobile-empty">
 
-            <img 
-                src="${window.ASSETS.emptyCartImage}" 
-                class="empty-cart-image" 
-                alt="Empty cart"
-            >
+            {{-- Avatar --}}
+            <div class="mobile-avatar-section">
 
-            <h3>Your cart is empty</h3>
-            <p class="empty-desc">
-                Looks like you haven’t added anything to your cart yet
-            </p>
+                @php
+                    $avatarUrl = auth()->user()->profile_image_display ?? 'https://via.placeholder.com/120';
+                @endphp
 
-            <a href="${window.ASSETS.shopUrl}" class="shop-now-btn">
-                Shop now
-            </a>
-        </div>
-    `;
-        };
+                <img src="{{ $avatarUrl }}" class="mobile-avatar" id="mobilePreviewImage">
 
-        const refreshCartSummary = async () => {
-            const res = await fetch('/pos-system/cart/data', {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                }
-            });
-            if (!res.ok) return;
-            const data = await res.json();
-            if (!data.success) return;
-            updateSummary(data);
-        };
+                <div class="mobile-photo-side">
 
-        const setItemButtonsDisabled = (row, disabled) => {
-            row.querySelectorAll('.qty-update').forEach(btn => {
-                btn.disabled = disabled;
-            });
-        };
+                    <label class="mobile-change-photo">
 
-        const syncQty = async (id, row) => {
-            if (syncingItems.has(id)) return;
-            syncingItems.add(id);
-            setItemButtonsDisabled(row, true);
+                        Change Photo
 
-            try {
-                const qty = pendingQtyByItem.get(id);
-                const res = await fetch(`/pos-system/cart/update/${id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: JSON.stringify({
-                        qty
-                    })
-                });
+                        <input type="file" name="avatar" hidden onchange="previewFile(event)">
 
-                if (!res.ok) {
-                    throw new Error('Update failed');
-                }
+                    </label>
 
-                await refreshCartSummary();
+                    <div class="mobile-avatar-hint">
+                        JPG, PNG or GIF. Max size 2MB
+                    </div>
 
-                const latestQty = parseInt(row.dataset.qty, 10);
-                if (pendingQtyByItem.get(id) !== latestQty) {
-                    syncingItems.delete(id);
-                    setItemButtonsDisabled(row, false);
-                    return syncQty(id, row);
-                }
-            } catch (error) {
-                alert('Failed to update quantity. Please try again.');
-            } finally {
-                syncingItems.delete(id);
-                setItemButtonsDisabled(row, false);
-            }
-        };
+                </div>
 
-        // Update Quantity
-        document.querySelectorAll('.qty-update').forEach(btn => {
-            btn.onclick = async function() {
-                const id = this.dataset.id;
-                const row = this.closest('.item-card');
-                const qtyLabel = row.querySelector('.qty-val');
-                const currentQty = parseInt(qtyLabel.innerText, 10);
-                const newQty = this.dataset.action === 'plus' ? currentQty + 1 : currentQty - 1;
+            </div>
 
-                if (newQty < 1) return;
+            {{-- Form --}}
+            <div class="mobile-form">
 
-                qtyLabel.innerText = newQty;
-                row.dataset.qty = newQty;
-                pendingQtyByItem.set(id, newQty);
+                <div class="mobile-input">
 
-                const oldTimer = debounceTimerByItem.get(id);
-                if (oldTimer) clearTimeout(oldTimer);
+                    <label>Full name</label>
 
-                const timer = setTimeout(() => {
-                    syncQty(id, row);
-                }, 180);
-                debounceTimerByItem.set(id, timer);
-            }
-        });
+                    <input type="text" name="name" value="{{ old('name', auth()->user()->name) }}">
 
-        // Remove Item
-        document.querySelectorAll('.remove-item').forEach(btn => {
-            btn.onclick = async function() {
-                if (!confirm('Remove this item?')) return;
-                const row = this.closest('.item-card');
-                const res = await fetch(`/pos-system/cart/remove/${this.dataset.id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
-                });
+                </div>
 
-                if (!res.ok) {
-                    alert('Failed to remove item. Please try again.');
-                    return;
-                }
+                <div class="mobile-input">
 
-                row.remove();
-                applyScrollClass();
-                await refreshCartSummary();
-                // inside remove-item success handler ONLY
-                if (document.querySelectorAll('.item-card').length === 0) {
-                    if (isMobileScreen()) {
-                        renderEmptyStateMobile();
-                    } else {
-                        renderEmptyState();
-                    }
-                }
-                ``
+                    <label>Email</label>
 
-            }
-        });
-    </script>
+                    <input type="email" name="email" value="{{ old('email', auth()->user()->email) }}">
+
+                </div>
+
+                <div class="mobile-input">
+
+                    <label>Phone number</label>
+
+                    <input type="text" name="phone" value="{{ old('phone', auth()->user()->phone) }}">
+
+                </div>
+
+                <div class="mobile-input-row">
+
+                    <div class="mobile-select-box">
+                        <label>Country</label>
+
+                        <select>
+                            <option>United States</option>
+                            <option>Cambodia</option>
+                        </select>
+                    </div>
+
+                    <div class="mobile-select-box">
+                        <label>Gender</label>
+
+                        <select>
+                            <option>Female</option>
+                            <option>Male</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="mobile-input">
+
+                    <label>Address</label>
+
+                    <input type="text" name="location" value="{{ old('location', auth()->user()->location) }}">
+
+                </div>
+
+                <button type="submit" class="mobile-save-btn">
+                    SAVE
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+    <div class="mobile-bottom-nav">
+
+        {{-- HOME --}}
+        <a href="{{ route('user.posinterface') }}"
+            class="{{ request()->routeIs('user.posinterface') ? 'active' : '' }}">
+            <i class="bi bi-house-door-fill"></i>
+            <span>home</span>
+        </a>
+
+        {{-- PRODUCTS (categories + category products) --}}
+        <a href="{{ route('user.pos.categories') }}"
+            class="{{ request()->routeIs('user.pos.categories') || request()->routeIs('user.pos.categories.products') ? 'active' : '' }}">
+            <i class="bi bi-box-seam"></i>
+            <span>products</span>
+        </a>
+
+        {{-- WISHLIST --}}
+        <a href="{{ route('user.pos.favorites') }}"
+            class="{{ request()->routeIs('user.pos.favorites') ? 'active' : '' }}">
+            <i class="bi bi-heart"></i>
+            <span>wishlist</span>
+        </a>
+
+
+        {{-- USER --}}
+        <a href="{{ route('profile_mobile') }}" class="{{ request()->routeIs('profile_mobile') ? 'active' : '' }}">
+            <i class="bi bi-person"></i>
+            <span>user</span>
+        </a>
+    </div>
+
+
+    {{-- Scripts --}}
     <script>
-        /* ✅ DESKTOP */
-        const checkoutDesktopBtn = document.getElementById('checkoutDesktopBtn');
-        if (checkoutDesktopBtn) {
-            checkoutDesktopBtn.onclick = async function() {
-                try {
-                    checkoutDesktopBtn.disabled = true;
+        function previewFile(event) {
 
-                    const res = await fetch('/pos-system/checkout', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken // ✅ already defined
-                        },
-                        body: JSON.stringify({
-                            currency: 'USD',
-                            factor: 1
-                        })
-                    });
+            const reader = new FileReader();
 
-                    const data = await res.json();
+            reader.onload = function() {
 
-                    if (data.success) {
-                        document.getElementById('cartMainContent').style.display = 'none';
-                        document.getElementById('orderSuccessContent').style.display = 'block';
-                    } else {
-                        alert('Checkout failed');
-                    }
-                } catch (e) {
-                    alert('Error');
-                } finally {
-                    checkoutDesktopBtn.disabled = false;
+                const desktopImage = document.getElementById('previewImage');
+
+                if (desktopImage) {
+                    desktopImage.src = reader.result;
+                }
+
+                const mobileImage = document.getElementById('mobilePreviewImage');
+
+                if (mobileImage) {
+                    mobileImage.src = reader.result;
                 }
             };
+
+            reader.readAsDataURL(event.target.files[0]);
         }
 
-        /* ✅ MOBILE */
-        const checkoutMobileBtn = document.getElementById('checkoutMobileBtn');
-        if (checkoutMobileBtn) {
-            checkoutMobileBtn.onclick = function() {
-                window.location.href = '/pos-system/checkout';
-            };
-        }
+        // Auto close alert
+        document.addEventListener('DOMContentLoaded', function() {
+
+            const alertElement = document.querySelector('.alert-success');
+
+            if (alertElement) {
+
+                setTimeout(function() {
+
+                    alertElement.style.transition = 'opacity 0.35s ease';
+                    alertElement.style.opacity = '0';
+
+                    setTimeout(function() {
+
+                        if (alertElement.parentNode) {
+                            alertElement.parentNode.removeChild(alertElement);
+                        }
+
+                    }, 350);
+
+                }, 4000);
+            }
+        });
     </script>
-@endpush
+
+</body>
+
+</html>

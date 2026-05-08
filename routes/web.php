@@ -119,10 +119,18 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::get('/profile/change-password', [UserProfileController::class, 'showChangePasswordForm'])->name('user.password.change');
     Route::put('/profile/change-password', [UserProfileController::class, 'updatePassword'])->name('user.password.update');
 
+    
+    Route::get('/profile_mobile', [UserProfileController::class, 'index_mobile'])->name('profile_mobile');
+
+
     Route::get('/pos-system/order/download/{id}', [HistoryController::class, 'downloadInvoice'])->name('user.pos.order.download');
     Route::get('/pos-system/order/{id}', [HistoryController::class, 'show'])->name('user.pos.order.show');
     Route::post('/pos-system/order/{id}/cancel', [HistoryController::class, 'cancel'])->name('user.pos.order.cancel');
     Route::get('/pos-system/order-history', [HistoryController::class, 'history'])->name('user.pos.order.history');
+    
+Route::get('/pos-system/order-history-mobile', [HistoryController::class, 'historyMobile'])
+    ->name('user.pos.order.history.mobile');
+
 
     Route::get('/pos-system/cart', [CartController::class, 'index'])->name('user.pos.cart');
     Route::get('/pos-system/cart/data', [CartController::class, 'getCart'])->name('user.pos.cart.data');

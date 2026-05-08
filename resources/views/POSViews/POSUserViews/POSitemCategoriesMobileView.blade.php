@@ -88,18 +88,20 @@
             box-shadow: 0 12px 20px rgba(16, 184, 195, 0.12);
         }
 
-.search-box {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
 
-    height: 44px;              /* 🔑 lock height */
-    padding: 0 12px;
-    border-radius: 12px;
+            height: 44px;
+            /* 🔑 lock height */
+            padding: 0 12px;
+            border-radius: 12px;
 
-    max-width: 280px;          /* ✅ not full width */
-    box-sizing: border-box;
-}
+            max-width: 280px;
+            /* ✅ not full width */
+            box-sizing: border-box;
+        }
 
 
 
@@ -244,40 +246,44 @@
         .content-area {
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            
-    padding-top: 112px; /* cart-box (56px) + top bar (56px) */
+
+            padding-top: 112px;
+            /* cart-box (56px) + top bar (56px) */
 
             /* smooth mobile scroll */
         }
-.header-top-bar {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background-color: #f8f8f8;
-  padding: 10px;
-  border-radius: 4px;
-}
 
-.header-top-bar::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -16px;
-    height: 16px;
-    background: #ffffff;
-    pointer-events: none;
-}
-.sticky-wrap {
-    position: sticky;
-    top: 68px;
-    z-index: 1000;
-    background: #f8f8f8;
-}
+        .header-top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+        }
 
-.header-top-bar {
-    position: relative; /* not sticky */
-}
+        .header-top-bar::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -16px;
+            height: 16px;
+            background: #ffffff;
+            pointer-events: none;
+        }
+
+        .sticky-wrap {
+            position: sticky;
+            top: 68px;
+            z-index: 1000;
+            background: #f8f8f8;
+        }
+
+        .header-top-bar {
+            position: relative;
+            /* not sticky */
+        }
 
         /* ✅ sticky header stays locked */
     </style>
@@ -287,14 +293,14 @@
     <div class="page-wrap">
         <main class="content-area">
             @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
-<div class="sticky-wrap">
-            <div class="header-top-bar">
-                <div class="search-box">
-                    <i class="bi bi-search"></i>
-                    <input type="search" id="categorySearch" placeholder="Search categories" autocomplete="off">
+            <div class="sticky-wrap">
+                <div class="header-top-bar">
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="search" id="categorySearch" placeholder="Search categories" autocomplete="off">
+                    </div>
+                    <p class="category-title">Categories</p>
                 </div>
-                <p class="category-title">Categories</p>
-            </div>
             </div>
             <div class="categories-grid" id="categoriesGrid">
                 @forelse ($categories as $category)

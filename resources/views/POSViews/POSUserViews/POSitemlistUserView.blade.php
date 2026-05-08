@@ -50,7 +50,7 @@
                 </div>
 
                 <div class="header-actions">
-                    <a href="#" class="header-action-btn active">
+                    <a href="{{ route('user.pos.order.history.mobile') }}" class="header-action-btn active">
                         <i class="bi bi-bag-check"></i>
                         <span>Order</span>
                     </a>
@@ -97,7 +97,7 @@
 
 
 
-               
+
             </div>
 
             <div id="messageBox" class="message-box"></div>
@@ -208,13 +208,13 @@
                     <span>wishlist</span>
                 </a>
 
-                {{-- USER --}}
-                <a href="{{ route('user.notifications') }}"
-                    class="{{ request()->routeIs('user.notifications') ? 'active' : '' }}">
-                    <i class="bi bi-person"></i>
-                    <span>user</span>
-                </a>
-
+             
+{{-- USER --}}
+<a href="{{ route('profile_mobile') }}"
+   class="{{ request()->routeIs('profile_mobile') ? 'active' : '' }}">
+    <i class="bi bi-person"></i>
+    <span>user</span>
+</a>
             </div>
         </main>
     </div>
