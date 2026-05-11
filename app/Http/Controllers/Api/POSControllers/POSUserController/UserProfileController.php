@@ -66,7 +66,7 @@ public function index_mobile()
     {
         $user = Auth::user(); // optional, ready for later use
 
-        return view('POSViews.POSUserViews.POSprofile_mobile', compact('user'));
+        return view('POSViews.POSUserViews.mobile.POSprofile_mobile', compact('user'));
     }
 
 }

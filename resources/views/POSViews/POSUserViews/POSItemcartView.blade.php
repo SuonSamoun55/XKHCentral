@@ -257,33 +257,36 @@
             max-width: 5rem;
             min-width: 4rem;
         }
+
         .empty-description {
-    color: #666464;
-    font-size: 15px;
-    line-height: 1.6;
-    margin-bottom: 25px;
-    margin-top: 10px;
-}
-.shopingBtn{
-   
-    padding: 12px;
-    border-radius: 12px;
-    background: #2dd4bf;
-    color: #ffffff;
-    font-weight: 600;
-    font-size: 15px;
-    border: none;
-}
-.bi-arrow-left{
+            color: #666464;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            margin-top: 10px;
+        }
+
+        .shopingBtn {
+
+            padding: 12px;
+            border-radius: 12px;
+            background: #2dd4bf;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 15px;
+            border: none;
+        }
+
+        .bi-arrow-left {
             width: 40px;
-        height: 40px;
-        border-radius: 50px;
-        background: #dee8ec;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 10px;
-}
+            height: 40px;
+            border-radius: 50px;
+            background: #dee8ec;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
 
         .success-desc {
             color: #666;
@@ -305,8 +308,8 @@
 
 
         /* =========================
-                           MOBILE CART UI REWRITE
-                           ========================= */
+            MOBILE CART UI REWRITE
+        ========================= */
         @media (max-width: 768px) {
 
             body {
@@ -330,8 +333,6 @@
                 flex-direction: column;
                 min-height: 0;
             }
-
-
             /* Header */
             .cart-nav {
                 position: sticky;
@@ -406,8 +407,8 @@
             }
 
             /* =========================
-                               STICKY BOTTOM SUMMARY
-                               ========================= */
+                STICKY BOTTOM SUMMARY
+            ========================= */
             .summary-box {
                 position: fixed;
                 bottom: 8%;
@@ -461,116 +462,138 @@
             .mobile-only {
                 display: block !important;
             }
+            /* Mobile Empty Cart Layout */
+            .empty-cart-mobile {
+                padding: 16px;
+                text-align: center;
+
+                min-height: 100vh;
+                background: #fff;
+
+                /*
+     position: sticky;
+        bottom: 0;
+        background: #fff; */
+
+            }
+
+            .empty-cart-content {
+
+                padding: 16px;
+                padding-bottom: 220px;
+
+            }
+
+            .empty-cart-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 20;
+                background: #fff;
+            }
 
 
-        
-        /* Mobile Empty Cart Layout */
-.empty-cart-mobile {
-    padding: 16px;
-    text-align: center;
-}
+            /* Item count */
+            .empty-cart-mobile .item-count {
+                text-align: left;
+                font-size: 14px;
+                color: #374151;
+                margin-bottom: 20px;
+            }
 
-/* Item count */
-.empty-cart-mobile .item-count {
-    text-align: left;
-    font-size: 14px;
-    color: #374151;
-    margin-bottom: 20px;
-}
+            /* Illustration */
+            .empty-cart-illustration {
+                width: 240px;
+                max-width: 80%;
+                margin: 0 auto 24px;
+                display: block;
+            }
 
-/* Illustration */
-.empty-cart-illustration {
-    width: 240px;
-    max-width: 80%;
-    margin: 0 auto 24px;
-    display: block;
-}
+            /* Title */
+            .empty-title {
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 6px;
+            }
 
-/* Title */
-.empty-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 6px;
-}
+            /* Description */
+            .empty-desc {
+                font-size: 13px;
+                color: #6B7280;
+                margin-bottom: 20px;
+                line-height: 1.4;
+            }
 
-/* Description */
-.empty-desc {
-    font-size: 13px;
-    color: #6B7280;
-    margin-bottom: 20px;
-    line-height: 1.4;
-}
+            /* Shop Now button */
+            .shop-now-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                background: #14B8A6;
+                color: #ffffff;
+                padding: 12px 18px;
+                border-radius: 12px;
+                text-decoration: none;
+                font-weight: 600;
+                margin-bottom: 28px;
+            }
 
-/* Shop Now button */
-.shop-now-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: #14B8A6;
-    color: #ffffff;
-    padding: 12px 18px;
-    border-radius: 12px;
-    text-decoration: none;
-    font-weight: 600;
-    margin-bottom: 28px;
-}
+            /* Summary card */
+            .empty-summary-card {
 
-/* Summary card */
-.empty-summary-card {
-    width: calc(100% + 32px);
-    
- margin-left: -16px;
-    margin-right: -16px;
+                width: 100%;
+                background: #1F7A85;
+                color: #fff;
+                padding: 14px 16px;
+                font-size: 13px;
 
-    background: #1F7A85;
-    color: white;
-    padding: 16px;
-  border-radius: 0;  
-      font-size: 13px;
-    text-align: left;
-    position: relative;
-    top: 38px;
-}
 
-.empty-summary-card > div {
-    display: flex;
-    justify-content: space-between;
-    margin: 6px 0;
-}
+            }
 
-.empty-summary-card hr {
-    border: none;
-    height: 1px;
-    background: rgba(255,255,255,0.3);
-    margin: 12px 0;
-}
+            .empty-summary-card>div {
 
-.empty-summary-card .total {
-    font-weight: 600;
-}
+                display: flex;
+                justify-content: space-between;
+                line-height: 1.6;
 
-/* Disabled checkout */
-.checkout-disabled {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: #2EC4B6;
-    color: rgba(255,255,255,0.6);
-    padding: 22px;
-    font-size: 16px;
-    font-weight: 600;
-    border: none;
-}
-.icon-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    background: #d4eaf5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+            }
+
+            .empty-summary-card hr {
+
+                border: none;
+                border-top: 1px solid rgba(255, 255, 255, 0.3);
+                margin: 8px 0;
+
+            }
+
+            .empty-summary-card .total {
+                font-weight: 600;
+            }
+
+            /* Disabled checkout */
+            .checkout-disabled {
+
+                width: 100%;
+                border: none;
+                background: #2EC4B6;
+                color: #fff;
+                padding: 15px 0;
+                font-size: 15px;
+                border-radius: 0;
+                margin: 0;
+
+            }
+
+            .icon-btn {
+                width: 40px;
+                height: 40px;
+                border-radius: 12px;
+                background: #d4eaf5;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
 
         }
     </style>
@@ -591,48 +614,45 @@
                     <h3 style="color: #ccc;">Your cart is Empty</h3>
                     <p class="empty-description">Looks like you haven’t <br> added anything to your cart yet</p>
                     <button class="shopingBtn">
-                    <a href="/pos-system" class="empty-state-link">Continue Shopping</a>
+                        <a href="/pos-system" class="empty-state-link">Continue Shopping</a>
                     </button>
                 </div>
 
-               <div class="empty-cart-mobile mobile-only">
+                <div class="empty-cart-mobile mobile-only">
+                    <div class="empty-cart-content">
+                        <div class="item-count">0 items</div>
 
-    <div class="item-count">0 items</div>
+                        <img src="{{ asset('images/pos/image_16.png') }}" alt="Empty cart" class="empty-cart-illustration">
 
-    <img
-        src="{{ asset('images/pos/emptycart.png') }}"
-        alt="Empty cart"
-        class="empty-cart-illustration"
-    >
+                        <h3 class="empty-title">Your cart is empty</h3>
 
-    <h3 class="empty-title">Your cart is empty</h3>
+                        <p class="empty-desc">
+                            Looks like you haven’t added anything<br>
+                            to your cart yet
+                        </p>
 
-    <p class="empty-desc">
-        Looks like you haven’t added anything<br>
-        to your cart yet
-    </p>
+                        <a href="{{ route('user.pos.products') }}" class="shop-now-btn">
+                            Shop now <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
+                    <div class="empty-cart-footer">
+                        <div class="empty-summary-card">
+                            <div><span>Subtotal</span><span>$0</span></div>
+                            <div><span>Discount</span><span>$0</span></div>
+                            <div><span>Delivery Fee</span><span>$0</span></div>
+                            <div><span>Estimated Tax</span><span>$0</span></div>
 
-    <a href="/pos-system" class="shop-now-btn">
-        Shop now <i class="bi bi-chevron-right"></i>
-    </a>
+                            <hr>
 
-    <div class="empty-summary-card">
-        <div><span>Subtotal</span><span>$0</span></div>
-        <div><span>Discount</span><span>$0</span></div>
-        <div><span>Delivery Fee</span><span>$0</span></div>
-        <div><span>Estimated Tax</span><span>$0</span></div>
+                            <div class="total"><span>Total in USD</span><span>$0</span></div>
+                            <div class="total"><span>Total in Riel</span><span>Riel 0</span></div>
+                        </div>
 
-        <hr>
-
-        <div class="total"><span>Total in USD</span><span>$0</span></div>
-        <div class="total"><span>Total in Riel</span><span>Riel 0</span></div>
-    </div>
-
-    <button class="checkout-disabled" disabled>
-        Checkout
-    </button>
-
-</div>
+                        <button class="checkout-disabled" disabled>
+                            Checkout
+                        </button>
+                    </div>
+                </div>
             @else
                 @php
                     $count = $cart->items->count();

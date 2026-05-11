@@ -1,5 +1,6 @@
 @extends('ManagementSystemViews.UserViews.Layouts.app')
 
+
 @section('title', 'POS Favorites')
 
 @push('styles')
@@ -11,6 +12,7 @@
     <div class="page-wrap">
         <main class="content-area">
             @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
+            @include('ManagementSystemViews.UserViews.Layouts.footer')
 
              <div id="messageBox" class="message-box"></div>
             <div class="top">
@@ -129,30 +131,6 @@
                 </div>
             @endif
         </main>
-        <div class="mobile-bottom-nav">
-            <a href="{{ route('user.posinterface') }}"
-                class="{{ request()->routeIs('user.posinterface') ? 'active' : '' }}">
-                <i class="bi bi-house-door-fill"></i>
-                <span>home</span>
-            </a>
-
-            <a href="{{ route('user.pos.categories') }}"
-                class="{{ request()->routeIs('user.pos.categories*') ? 'active' : '' }}">
-                <i class="bi bi-box-seam"></i>
-                <span>products</span>
-            </a>
-
-            <a href="{{ route('user.pos.favorites') }}"
-                class="{{ request()->routeIs('user.pos.favorites') ? 'active' : '' }}">
-                <i class="bi bi-heart-fill"></i>
-                <span>wishlist</span>
-            </a>
-
-            <a href="{{ route('user.notifications') }}">
-                <i class="bi bi-person"></i>
-                <span>user</span>
-            </a>
-        </div>
     </div>
 @endsection
 

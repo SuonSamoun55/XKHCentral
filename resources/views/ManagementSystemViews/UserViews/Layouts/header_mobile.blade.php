@@ -1,9 +1,4 @@
-{{-- 
 
-      <div class="cart-box">
-          <i class="bi bi-cart3"></i>
-          <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
-      </div> --}}
 <div class="mobile">
 <header class="cart-boxM">
     <div class="logo-wrap">
@@ -33,7 +28,6 @@
     padding-top: 6px;
     padding-left: 6px;
     padding-right: 6px;
-    background: white;
 }
 
     /* Logo */
@@ -53,8 +47,26 @@
         position: relative;
         width: 46px;
         height: 46px;
-        padding: 8px;
     
+    }
+    .cart-count{
+    
+    position: absolute;
+    top: -6px !important;
+    right: -12px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 999px;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    line-height: 1;
+
     }
 
     /* Cart icon */

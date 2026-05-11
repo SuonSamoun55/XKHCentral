@@ -265,7 +265,7 @@ public function success(Request $request)
         return redirect('/pos-system/cart');
     }
 
-    return view('POSViews.POSUserViews.POSorder_success', [
+    return view('POSViews.POSUserViews.mobile.POSorder_success', [
         
         'orderId'     => $order->id,          // ✅ ADD THIS
         'orderNumber' => $order->order_no,
@@ -279,7 +279,7 @@ public function detail($id)
         ->where('user_id', Auth::id())
         ->firstOrFail();
 
-    return view('POSViews.POSUserViews.POSorder_detail', [
+    return view('POSViews.POSUserViews.mobile.POSorder_detail', [
         'order' => $order
     ]);
 }

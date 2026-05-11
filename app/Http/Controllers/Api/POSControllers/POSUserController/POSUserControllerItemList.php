@@ -85,7 +85,7 @@ class POSUserControllerItemList extends Controller
                 ];
             });
 
-        return view('POSViews.POSUserViews.POSitemCategoriesMobileView', compact('categories'));
+        return view('POSViews.POSUserViews.mobile.POSitemCategoriesMobileView', compact('categories'));
     }
 
     public function mobileCategoryProducts($category)
@@ -118,7 +118,7 @@ class POSUserControllerItemList extends Controller
         });
         
 
-        return view('POSViews.POSUserViews.POSitemCategoryProductsMobileView', compact('items', 'categoryTitle', 'categoryCode'));
+        return view('POSViews.POSUserViews.mobile.POSitemCategoryProductsMobileView', compact('items', 'categoryTitle', 'categoryCode'));
     }
     
     public function showProduct($id)
@@ -128,7 +128,7 @@ class POSUserControllerItemList extends Controller
     $recommendations = Item::where('id', '!=', $id)->take(4)->get();
 
     return view(
-        'POSViews.POSUserViews.POSdetail_mobile',
+        'POSViews.POSUserViews.mobile.POSdetail_mobile',
         compact('item', 'recommendations')
     );
 }
@@ -184,7 +184,7 @@ public function mobileProducts()
         });
 
     return view(
-        'POSViews.POSUserViews.POSItem_mobile',
+        'POSViews.POSUserViews.mobile.POSItem_mobile',
         compact('items', 'categories', 'favoriteIds')
     );
 }
@@ -234,7 +234,7 @@ public function index()
             ];
         });
 
-    return view('POSViews.POSUserViews.POSItem_mobile'
+    return view('POSViews.POSUserViews.mobile.POSItem_mobile'
 , compact(
         'items',
         'categories'

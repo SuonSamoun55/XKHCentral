@@ -111,7 +111,7 @@ class HistoryController extends Controller
 
 
     return view(
-        'POSViews.POSUserViews.POSHistoryMobileView',
+        'POSViews.POSUserViews.mobile.POSHistoryMobileView',
         compact(
             'orders',
             'allCount',

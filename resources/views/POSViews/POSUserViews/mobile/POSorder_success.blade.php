@@ -7,7 +7,7 @@
     {{-- Header --}}
     <div class="order-success-header">
         <span class="header-title">Order</span>
-        <a href="{{ url('/pos-system/products') }}" class="close-btn">
+        <a href="{{ route('user.posinterface') }}" class="close-btn">
             <i class="bi bi-x"></i>
         </a>
     </div>

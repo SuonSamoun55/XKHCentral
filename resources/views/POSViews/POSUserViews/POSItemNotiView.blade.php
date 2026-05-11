@@ -1,5 +1,4 @@
 @extends('ManagementSystemViews.UserViews.Layouts.app')
-
 @section('title', 'Notifications')
 
 @push('styles')
@@ -12,15 +11,14 @@
         <div class="header">
             {{-- MOBILE HEADER --}}
             <div class="mobile-notification-header">
+            <a href="{{ route('user.posinterface') }}" class="mn-btn">
 
-                <a href="{{ url()->previous() }}" class="mn-btn">
                     <i class="bi bi-arrow-left"></i>
                 </a>
 
                 <div class="mn-title">Notification</div>
 
-                <a href="{{ route('user.notifications') }}" class="mn-btn">
-                    <i class="bi bi-bell"></i>
+                <a href="#" class="mn-btnx">
                 </a>
 
             </div>
@@ -80,9 +78,14 @@
         </div>
         {{-- MOBILE TOP TABS --}}
         <div class="mobile-tabs">
-            <button class="mt-pill active">
-                <i class="bi bi-inbox"></i> Inbox
-            </button>
+       
+
+<a href="{{ route('user.notifications.mobile_inbox') }}"
+   class="mt-pill active">
+    <i class="bi bi-inbox"></i>
+    Inbox
+</a>
+       
 
             <button class="mt-icon"><i class="bi bi-pencil"></i></button>
             <button class="mt-icon"><i class="bi bi-archive"></i></button>
@@ -170,33 +173,7 @@
                 </div>
             @endforelse
         </div>
- <div class="mobile-bottom-nav">
-
-            <a href="{{ route('user.posinterface') }}"
-                class="{{ request()->routeIs('user.posinterface') ? 'active' : '' }}">
-                <i class="bi bi-house-door-fill"></i>
-                <span>home</span>
-            </a>
-
-            <a href="{{ route('user.pos.categories') }}"
-                class="{{ request()->routeIs('user.pos.categories*') ? 'active' : '' }}">
-                <i class="bi bi-box-seam"></i>
-                <span>products</span>
-            </a>
-
-            <a href="{{ route('user.pos.favorites') }}"
-                class="{{ request()->routeIs('user.pos.favorites') ? 'active' : '' }}">
-                <i class="bi bi-heart"></i>
-                <span>wishlist</span>
-            </a>
-
-            <a href="{{ route('user.notifications') }}"
-                class="{{ request()->routeIs('user.notifications') ? 'active' : '' }}">
-                <i class="bi bi-person"></i>
-                <span>user</span>
-            </a>
-
-        </div>
+    
         {{-- Pagination --}}
         <div class="pagination-container">
             @if ($notifications->hasPages())
@@ -204,31 +181,32 @@
             @endif
         </div>
         {{-- MOBILE PAGINATION --}}
-<div class="mobile-pagination">
+        <div class="mobile-pagination">
 
-    <div class="mp-left">
-        {{ $notifications->firstItem() }} –
-        {{ $notifications->lastItem() }}
-        of {{ $notifications->total() }} Pages
+            <div class="mp-left">
+                {{ $notifications->firstItem() }} –
+                {{ $notifications->lastItem() }}
+                of {{ $notifications->total() }} Pages
+            </div>
+
+            <div class="mp-center">
+                <span>The page</span>
+
+                <select onchange="location = this.value;">
+                    @for ($i = 1; $i <= $notifications->lastPage(); $i++)
+                        <option value="{{ $notifications->url($i) }}"
+                            {{ $notifications->currentPage() == $i ? 'selected' : '' }}>
+                            {{ $i }}
+                        </option>
+                    @endfor
+                </select>
+            </div>
+
+
+
+        </div>
     </div>
-
-    <div class="mp-center">
-        <span>The page</span>
-
-        <select onchange="location = this.value;">
-            @for ($i = 1; $i <= $notifications->lastPage(); $i++)
-                <option value="{{ $notifications->url($i) }}"
-                    {{ $notifications->currentPage() == $i ? 'selected' : '' }}>
-                    {{ $i }}
-                </option>
-            @endfor
-        </select>
-    </div>
-
-   
-
-</div>
-    </div>
+@include('ManagementSystemViews.UserViews.Layouts.footer')
 
     {{-- Notification Detail Modal --}}
     <div id="notificationModal" class="modal fade" tabindex="-1" aria-labelledby="notificationModalLabel"

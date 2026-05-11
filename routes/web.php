@@ -22,6 +22,8 @@ use App\Http\Controllers\Api\POSControllers\POSAdminController\StoreManagementCo
 use App\Http\Controllers\Api\POSControllers\POSAdminController\DiscountController;
 use App\Http\Controllers\Api\POSControllers\POSAdminController\UserController;
 use App\Http\Controllers\Api\POSControllers\POSAdminController\AdminProfileController;
+use App\Http\Controllers\Api\POSControllers\POSUserController\PolicyController;
+use App\Http\Controllers\Api\POSControllers\DatabaseNotification;
 
 
 
@@ -91,7 +93,7 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     ////////USER CONTROLLER
     Route::prefix('admin')->group(function () {
     Route::get('/users/{id}', [App\Http\Controllers\Api\POSControllers\POSAdminController\UserController::class, 'show'])->name('admin.users.show');
-});
+    });
     // ---------- POS User ----------
     Route::get('/pos-system', [POSUserControllerItemList::class, 'getItems'])->name('user.posinterface');
     Route::get('/pos-system/categories', [POSUserControllerItemList::class, 'mobileCategories'])->name('user.pos.categories');
@@ -122,14 +124,16 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     
     Route::get('/profile_mobile', [UserProfileController::class, 'index_mobile'])->name('profile_mobile');
 
+    
+    Route::get('/mobile/privacy-policy', [PolicyController::class, 'index'])->name('privacy_policy_mobile');
+
 
     Route::get('/pos-system/order/download/{id}', [HistoryController::class, 'downloadInvoice'])->name('user.pos.order.download');
     Route::get('/pos-system/order/{id}', [HistoryController::class, 'show'])->name('user.pos.order.show');
     Route::post('/pos-system/order/{id}/cancel', [HistoryController::class, 'cancel'])->name('user.pos.order.cancel');
     Route::get('/pos-system/order-history', [HistoryController::class, 'history'])->name('user.pos.order.history');
     
-Route::get('/pos-system/order-history-mobile', [HistoryController::class, 'historyMobile'])
-    ->name('user.pos.order.history.mobile');
+    Route::get('/pos-system/order-history-mobile', [HistoryController::class, 'historyMobile'])->name('user.pos.order.history.mobile');
 
 
     Route::get('/pos-system/cart', [CartController::class, 'index'])->name('user.pos.cart');
@@ -146,6 +150,15 @@ Route::get('/pos-system/order-history-mobile', [HistoryController::class, 'histo
     // Route::get('/pos-system/order-success', [OrderController::class, 'success']);
 
     Route::get('/favorites', [FavoriteController::class, 'index']);
+    Route::get('/pos-dashboard-mobile', function (){
+    return view('POSViews.POSUserViews.mobile.POS_mobile');
+    })->name('user.pos.dashboard_mobile');
+   
+Route::get(
+    '/notifications/mobile-inbox',
+    [NotificationController::class, 'mobileInbox']
+)->name('user.notifications.mobile_inbox');
+
 
     // ---------- Admin Notifications (Canonical) ----------
     Route::prefix('admin/notifications')->name('admin.notifications.')->group(function () {

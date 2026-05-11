@@ -10,6 +10,8 @@
     <div class="page-wrap">
         <main class="content-area">
             @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
+            @include('ManagementSystemViews.UserViews.Layouts.footer')
+
 
             <div class="header">
                 <div class="topbar">
@@ -54,10 +56,11 @@
                         <i class="bi bi-bag-check"></i>
                         <span>Order</span>
                     </a>
-                    <a href="{{ route('user.posinterface') }}" class="header-action-btn">
+                    <a href="{{ route('user.pos.dashboard_mobile') }}" class="header-action-btn">
                         <i class="bi bi-display"></i>
                         <span>POS System</span>
                     </a>
+
                     <a href="{{ route('user.notifications') }}" class="header-action-btn">
                         <i class="bi bi-bell"></i>
                         <span>Notification</span>
@@ -185,37 +188,7 @@
                 </div>
             @endif
 
-            <div class="mobile-bottom-nav">
 
-                {{-- HOME --}}
-                <a href="{{ route('user.posinterface') }}"
-                    class="{{ request()->routeIs('user.posinterface') ? 'active' : '' }}">
-                    <i class="bi bi-house-door-fill"></i>
-                    <span>home</span>
-                </a>
-
-                {{-- PRODUCTS (categories + category products) --}}
-                <a href="{{ route('user.pos.categories') }}"
-                    class="{{ request()->routeIs('user.pos.categories') || request()->routeIs('user.pos.categories.products') ? 'active' : '' }}">
-                    <i class="bi bi-box-seam"></i>
-                    <span>products</span>
-                </a>
-
-                {{-- WISHLIST --}}
-                <a href="{{ route('user.pos.favorites') }}"
-                    class="{{ request()->routeIs('user.pos.favorites') ? 'active' : '' }}">
-                    <i class="bi bi-heart"></i>
-                    <span>wishlist</span>
-                </a>
-
-             
-{{-- USER --}}
-<a href="{{ route('profile_mobile') }}"
-   class="{{ request()->routeIs('profile_mobile') ? 'active' : '' }}">
-    <i class="bi bi-person"></i>
-    <span>user</span>
-</a>
-            </div>
         </main>
     </div>
 @endsection
@@ -271,28 +244,28 @@
                 localStorage.setItem("pos_recent_searches", JSON.stringify(recentSearches));
             }
 
-            function showMessage(type, text) {
-                if (!els.messageBox) return;
+            // function showMessage(type, text) {
+            //     if (!els.messageBox) return;
 
-                const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill';
-                const title = type === 'success' ? 'Success!' : 'Error!';
+            //     const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill';
+            //     const title = type === 'success' ? 'Success!' : 'Error!';
 
-                els.messageBox.innerHTML = `
-                    <i class="bi ${iconClass} main-icon"></i>
-                    <div class="message-content">
-                        <strong>${title}</strong> ${text}
-                    </div>
-                    <button type="button" class="close-alert-btn" onclick="this.parentElement.classList.remove('show')">
-                        <i class="bi bi-x"></i>
-                    </button>
-                `;
+            //     els.messageBox.innerHTML = `
+            //         <i class="bi ${iconClass} main-icon"></i>
+            //         <div class="message-content">
+            //             <strong>${title}</strong> ${text}
+            //         </div>
+            //         <button type="button" class="close-alert-btn" onclick="this.parentElement.classList.remove('show')">
+            //             <i class="bi bi-x"></i>
+            //         </button>
+            //     `;
 
-                els.messageBox.className = `message-box ${type} show`;
+            //     els.messageBox.className = `message-box ${type} show`;
 
-                setTimeout(() => {
-                    els.messageBox.classList.remove('show');
-                }, 4000);
-            }
+            //     setTimeout(() => {
+            //         els.messageBox.classList.remove('show');
+            //     }, 4000);
+            // }
 
             function escapeHtml(text = "") {
                 const div = document.createElement("div");
@@ -697,4 +670,59 @@
             bindProductDetailNavigation();
         });
     </script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const addBtn = document.getElementById("addToCartBtn");
+        const cartCountEl = document.getElementById("cartCount");
+        const csrfToken = document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute("content");
+
+        if (!addBtn) return;
+
+        addBtn.addEventListener("click", async function() {
+            const itemId = this.dataset.id;
+
+            if (!itemId) {
+                alert("Item ID not found.");
+                return;
+            }
+
+            this.disabled = true;
+            this.querySelector(".add-cart-text").textContent = "Adding...";
+
+            try {
+                const response = await fetch("{{ route('user.pos.cart.add') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": csrfToken,
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        item_id: itemId,
+                        qty: 1
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (cartCountEl && data.cartCount !== undefined) {
+                        cartCountEl.textContent = data.cartCount;
+                    }
+                    showToast("success", data.message || "Added to cart successfully");
+                } else {
+                    showToast("error", data.message || "Failed to add to cart");
+                }
+            } catch (error) {
+                console.error(error);
+                showToast("error", "Something went wrong.");
+            } finally {
+                this.disabled = false;
+                this.querySelector(".add-cart-text").textContent = "Add to cart";
+            }
+        });
+    });
+</script>
 @endpush

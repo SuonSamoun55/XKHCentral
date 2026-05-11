@@ -6,7 +6,8 @@
 
     <!-- Header -->
     <div class="order-header">
-        <a href="{{ url('/pos-system/order-history') }}" class="back-btn">
+
+<a href="{{ url()->previous() }}" class="back-btn">
             <i class="bi bi-arrow-left"></i>
         </a>
         <h4>Order Detail</h4>

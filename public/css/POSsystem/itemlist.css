@@ -701,6 +701,7 @@ h4{
     display: none;
 }
 
+
 @keyframes highlightPulse {
     0% {
         transform: scale(1);
@@ -719,18 +720,57 @@ h4{
 .danger {
     color: red;
 }
+
+@media (min-width: 769px) {
+    .mobile-bottom-nav {
+        display: none !important;
+    }
+}
+
 /* =========================================================
    TRUE MOBILE PRODUCT UI (LIKE PROVIDED IMAGE)
    ========================================================= */
-@media (max-width: 576px) {
+@media (max-width: 768px) {
 
     /* ---- Remove desktop shell ---- */
-    .sidebar { display: none !important; }
+    .sidebar { display: none; }
 
     body {
-        background: #edf2f8 !important;
+        background: #edf2f8 ;
+    }
+   .mobile-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 70px;
+        background: #fff;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        border-top-left-radius: 18px;
+        border-top-right-radius: 18px;
+        box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08);
+        z-index: 999;
     }
 
+    .mobile-bottom-nav a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 11px;
+        color: #94a3b8;
+        text-decoration: none;
+    }
+
+    .mobile-bottom-nav a i {
+        font-size: 20px;
+    }
+
+    .mobile-bottom-nav a.active {
+        color: var(--primary);
+    }
     .page-wrap {
         min-height: 100vh;
         padding: 0;
@@ -1071,43 +1111,5 @@ h4{
         padding: 18px;
     }
 
-    .mobile-bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 72px;
-        background: #ffffff;
-        box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.08);
-        display: flex;
-        align-items: center;
-        justify-content: space-around;
-        border-top-left-radius: 18px;
-        border-top-right-radius: 18px;
-        z-index: 1200;
-    }
-
-    .mobile-bottom-nav a {
-        text-decoration: none;
-        color: #475569;
-        font-size: 11px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .mobile-bottom-nav a i {
-        font-size: 20px;
-        color: #10b8c3;
-    }
-
-    .mobile-bottom-nav a.active {
-        color: #0f172a;
-    }
-
-    .mobile-bottom-nav a.active i {
-        color: #10b8c3;
-    }
 }
 

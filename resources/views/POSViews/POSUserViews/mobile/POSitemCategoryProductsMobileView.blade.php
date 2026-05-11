@@ -1,5 +1,5 @@
 @extends('ManagementSystemViews.UserViews.Layouts.app')
-
+            @include('ManagementSystemViews.UserViews.Layouts.footer')
 @section('title', 'Category Products')
 
 @push('styles')
@@ -37,7 +37,7 @@
             /* 👈 important */
         }
 
-        .content-area {
+        /* .content-area {
             width: 100%;
             max-width: 520px;
             margin: 0 auto;
@@ -45,7 +45,7 @@
             background: transparent;
             box-shadow: none;
             border-radius: 0;
-        }
+        } */
 
         .category-header {
             display: flex;
@@ -56,7 +56,7 @@
             position: sticky;
             top: 0;
             background: var(--bg);
-            padding-top: 10px;
+            padding: 10px;
             z-index: 100;
 
         }
@@ -179,47 +179,6 @@
             color: var(--muted);
             box-shadow: var(--shadow);
         }
-
-        .mobile-bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 72px;
-            background: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: space-around;
-            border-top-left-radius: 18px;
-            border-top-right-radius: 18px;
-            box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.08);
-            z-index: 1200;
-        }
-
-        .mobile-bottom-nav a {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            color: #64748b;
-            font-size: 11px;
-            text-decoration: none;
-        }
-
-        .mobile-bottom-nav a i {
-            font-size: 20px;
-            color: var(--primary);
-        }
-
-        .mobile-bottom-nav a.active {
-            color: #0f172a;
-        }
-
-        .mobile-bottom-nav a.active i {
-            color: var(--primary);
-        }
-
         .hero-product {
             width: 100%;
             height: 200px;
@@ -314,36 +273,5 @@
             @endif
         </main>
 
-        <div class="mobile-bottom-nav">
-
-            {{-- HOME --}}
-            <a href="{{ route('user.posinterface') }}"
-                class="{{ request()->routeIs('user.posinterface') ? 'active' : '' }}">
-                <i class="bi bi-house-door-fill"></i>
-                <span>home</span>
-            </a>
-
-            {{-- PRODUCTS (categories + category products) --}}
-            <a href="{{ route('user.pos.categories') }}"
-                class="{{ request()->routeIs('user.pos.categories') || request()->routeIs('user.pos.categories.products') ? 'active' : '' }}">
-                <i class="bi bi-box-seam"></i>
-                <span>products</span>
-            </a>
-
-            {{-- WISHLIST --}}
-            <a href="{{ route('user.pos.favorites') }}"
-                class="{{ request()->routeIs('user.pos.favorites') ? 'active' : '' }}">
-                <i class="bi bi-heart"></i>
-                <span>wishlist</span>
-            </a>
-
-            {{-- USER --}}
-            <a href="{{ route('user.notifications') }}"
-                class="{{ request()->routeIs('user.notifications') ? 'active' : '' }}">
-                <i class="bi bi-person"></i>
-                <span>user</span>
-            </a>
-
-        </div>
     </div>
 @endsection

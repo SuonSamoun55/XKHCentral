@@ -6,7 +6,7 @@
 
     <div class="mobile-profile-page">
         @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
-
+            @include('ManagementSystemViews.UserViews.Layouts.footer')
 
         {{-- PROFILE AVATAR --}}
         <div class="profile-top">
@@ -34,7 +34,7 @@
 
 
             {{-- Privacy Policy --}}
-            <a href="#" class="profile-card">
+            <a href="{{ route('privacy_policy_mobile') }}" class="profile-card">
                 <i class="bi bi-shield-lock"></i>
                 <span>Privacy Policy</span>
             </a>
@@ -51,34 +51,6 @@
         </div>
 
     </div>
-    <div class="mobile-bottom-nav">
-
-        {{-- HOME --}}
-        <a href="{{ route('user.posinterface') }}" class="{{ request()->routeIs('user.posinterface') ? 'active' : '' }}">
-            <i class="bi bi-house-door-fill"></i>
-            <span>home</span>
-        </a>
-
-        {{-- PRODUCTS (categories + category products) --}}
-        <a href="{{ route('user.pos.categories') }}"
-            class="{{ request()->routeIs('user.pos.categories') || request()->routeIs('user.pos.categories.products') ? 'active' : '' }}">
-            <i class="bi bi-box-seam"></i>
-            <span>products</span>
-        </a>
-
-        {{-- WISHLIST --}}
-        <a href="{{ route('user.pos.favorites') }}" class="{{ request()->routeIs('user.pos.favorites') ? 'active' : '' }}">
-            <i class="bi bi-heart"></i>
-            <span>wishlist</span>
-        </a>
-
-
-        {{-- USER --}}
-        <a href="{{ route('profile_mobile') }}" class="{{ request()->routeIs('profile_mobile') ? 'active' : '' }}">
-            <i class="bi bi-person"></i>
-            <span>user</span>
-        </a>
-    </div>
 
 @endsection
 
@@ -93,22 +65,6 @@
             display: none;
         }
 
-        .mobile-bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 72px;
-            background: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: space-around;
-            border-top-left-radius: 18px;
-            border-top-right-radius: 18px;
-            box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.08);
-            z-index: 1200;
-        }
-
         .mobile-status-select {
             height: 42px;
             border: none;
@@ -121,30 +77,6 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             outline: none;
             cursor: pointer;
-        }
-
-        .mobile-bottom-nav a {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            color: #64748b;
-            font-size: 11px;
-            text-decoration: none;
-        }
-
-        .mobile-bottom-nav a i {
-            font-size: 20px;
-            color: var(--primary);
-        }
-
-        .mobile-bottom-nav a.active {
-            color: #0f172a;
-        }
-
-        .mobile-bottom-nav a.active i {
-            color: var(--primary);
         }
 
         .mobile-profile-page {

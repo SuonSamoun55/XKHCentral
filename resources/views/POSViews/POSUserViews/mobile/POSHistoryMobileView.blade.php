@@ -1,5 +1,5 @@
 @extends('ManagementSystemViews.UserViews.Layouts.app')
-
+@include('ManagementSystemViews.UserViews.Layouts.footer')
 @section('title', 'Order')
 
 @section('content')
@@ -35,11 +35,11 @@
         </form>
 
         {{-- FILTER --}}
-        <form method="GET" action="{{ route('user.pos.order.history.mobile') }}" class="filter-row">
+        {{-- <form method="GET" action="{{ route('user.pos.order.history.mobile') }}" class="filter-row">
 
-            <input type="hidden" name="search" value="{{ request('search') }}">
+            <input type="hidden" name="search" value="{{ request('search') }}"> --}}
 
-            <select name="status" class="mobile-status-select" onchange="this.form.submit()">
+            {{-- <select name="status" class="mobile-status-select" onchange="this.form.submit()">
 
                 <option value="all" {{ request('status', 'all') == 'all' ? 'selected' : '' }}>
                     <i class="bi bi-funnel"></i>
@@ -67,11 +67,26 @@
             <button type="button" class="export-btn">
                 Export
                 <i class="bi bi-download"></i>
-            </button>
+            </button> --}}
 
-            <input type="date" name="date" class="date-input" value="{{ request('date') }}"
+            {{-- <input type="date" name="date" class="date-input" value="{{ request('date') }}"
                 onchange="this.form.submit()">
-        </form>
+        </form> --}}
+
+        <form method="GET"
+      action="{{ route('user.pos.order.history.mobile') }}"
+      class="filter-row"
+      id="dateFilter"
+      style="display: none;">
+
+    <input type="hidden" name="search" value="{{ request('search') }}">
+
+    <input type="date"
+           name="date"
+           class="date-input"
+           value="{{ request('date') }}"
+           onchange="this.form.submit()">
+</form>
         {{-- STATUS TABS --}}
         <div class="status-tabs">
 
@@ -126,8 +141,14 @@
                                 #{{ $order->order_no }}
                             </span>
 
-                            <span class="order-total">
+                          
+                        </div>
+                        <div class="amoun">
+                              <span class="order-total">
                                 ${{ number_format($order->total_amount, 2) }}
+                            </span>
+                              <span class="status-badge {{ strtolower(str_replace(' ', '-', $order->status)) }}">
+                                {{ ucfirst($order->status) }}
                             </span>
                         </div>
 
@@ -143,10 +164,6 @@
                                 </span>
                             </div>
 
-                            <span class="status-badge {{ strtolower(str_replace(' ', '-', $order->status)) }}">
-                                {{ ucfirst($order->status) }}
-                            </span>
-
                         </div>
 
                     </div>
@@ -161,39 +178,29 @@
             @endforelse
 
         </div>
-        <div class="mobile-bottom-nav">
-
-            <a href="{{ route('user.posinterface') }}"
-                class="{{ request()->routeIs('user.posinterface') ? 'active' : '' }}">
-                <i class="bi bi-house-door-fill"></i>
-                <span>home</span>
-            </a>
-
-            <a href="{{ route('user.pos.categories') }}"
-                class="{{ request()->routeIs('user.pos.categories*') ? 'active' : '' }}">
-                <i class="bi bi-box-seam"></i>
-                <span>products</span>
-            </a>
-
-            <a href="{{ route('user.pos.favorites') }}"
-                class="{{ request()->routeIs('user.pos.favorites') ? 'active' : '' }}">
-                <i class="bi bi-heart"></i>
-                <span>wishlist</span>
-            </a>
-
-            <a href="{{ route('user.notifications') }}"
-                class="{{ request()->routeIs('user.notifications') ? 'active' : '' }}">
-                <i class="bi bi-person"></i>
-                <span>user</span>
-            </a>
-
-        </div>
         <div class="pagination-container">
             {{ $orders->links('vendor.pagination.custom-pos') }}
         </div>
     </div>
 @endsection
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggle = document.getElementById('switch');
+        const dateFilter = document.getElementById('dateFilter');
 
+        if (!toggle || !dateFilter) return;
+
+        if (toggle.checked) {
+            dateFilter.style.display = 'block';
+        }
+
+        toggle.addEventListener('change', function () {
+            dateFilter.style.display = this.checked ? 'block' : 'none';
+        });
+    });
+</script>
+@endpush
 
 <style>
     /* =========================
@@ -218,28 +225,13 @@
         }
 
         .status-badge {
-            min-width: 70px;
+            min-width: 0px;
             padding: 5px 10px;
             font-size: 10px;
         }
 
     }
 
-    .mobile-bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 72px;
-        background: #ffffff;
-        display: flex;
-        align-items: center;
-        justify-content: space-around;
-        border-top-left-radius: 18px;
-        border-top-right-radius: 18px;
-        box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.08);
-        z-index: 1200;
-    }
 
     .mobile-status-select {
         height: 42px;
@@ -254,31 +246,6 @@
         outline: none;
         cursor: pointer;
     }
-
-    .mobile-bottom-nav a {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        color: #64748b;
-        font-size: 11px;
-        text-decoration: none;
-    }
-
-    .mobile-bottom-nav a i {
-        font-size: 20px;
-        color: var(--primary);
-    }
-
-    .mobile-bottom-nav a.active {
-        color: #0f172a;
-    }
-
-    .mobile-bottom-nav a.active i {
-        color: var(--primary);
-    }
-
     .sidebar,
     .sidebar-wrap {
         display: none;
@@ -440,10 +407,24 @@
         margin-bottom: 18px;
     }
 
-    .filter-btn,
+    /* .filter-btn,
     .export-btn,
     .date-input {
         height: 42px;
+        border-radius: 12px;
+        border: 1px solid #dbe2ea;
+        background: #fff;
+        padding: 0 14px;
+        font-size: 12px;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    } */
+    .date-input {
+        height: 42px;
+        width: auto;
+        margin-left: auto;
         border-radius: 12px;
         border: 1px solid #dbe2ea;
         background: #fff;
@@ -461,7 +442,6 @@
     }
 
     .date-input {
-        width: 100%;
         outline: none;
     }
 
@@ -482,16 +462,16 @@
     }
 
     .status-pill {
+          height: 42px;
+        border-radius: 12px;
+        border: 1px solid #dbe2ea;
+        background: #fff;
+        padding: 0 14px;
+        font-size: 12px;
+        color: #111827;
         display: flex;
         align-items: center;
-        gap: 5px;
-        padding: 5px 10px;
-        border-radius: 30px;
-        text-decoration: none;
-        font-size: 12px;
-        white-space: nowrap;
-        border: 1px solid transparent;
-        font-weight: 500;
+        gap: 6px;
     }
 
     .status-pill span {
@@ -519,7 +499,7 @@
 
     /* pending */
     .status-pill.pending {
-        background: #eef4ff;
+        background: white;
         color: #3b82f6;
     }
 
@@ -529,8 +509,8 @@
 
     /* delivered */
     .status-pill.delivered {
-        background: #edfff3;
-        color: #16a34a;
+        background: white;
+        color: black;
     }
 
     .status-pill.delivered span {
@@ -539,7 +519,7 @@
 
     /* cancel */
     .status-pill.cancel {
-        background: #fff1f2;
+        background: white;
         color: #f43f5e;
     }
 
@@ -607,7 +587,8 @@
     }
 
     .order-top,
-    .order-bottom {
+    .order-bottom,
+    .amount {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -639,6 +620,7 @@
 ========================= */
 
     .date-wrapper {
+     
         display: flex;
         flex-direction: column;
         gap: 2px;
@@ -658,26 +640,25 @@
     /* =========================
    STATUS
 ========================= */
+.status-badge {
+    height: 34px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
 
-    .status-badge {
-        min-width: 90px;
-        height: 34px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        border-radius: 30px;
-
-        font-size: 11px;
-        font-weight: 700;
-
-        padding: 0 14px;
-    }
+    display: flex;              /* 🔥 required */
+    align-items: center;        /* vertical center */
+    justify-content: flex-end;  /* push content to right */
+    padding-right: 10px;        /* space from edge */
+}
 
     /* pending */
 
     .status-badge.pending {
+        margin-left: auto;
+        justify-content: center;
+        align-items: center;
+        width: 80px;
         background: #eff6ff;
         color: #2563eb;
         border: 1px solid #bfdbfe;
@@ -686,6 +667,10 @@
     /* delivered */
 
     .status-badge.delivered {
+          margin-left: auto;
+        justify-content: center;
+        align-items: center;
+        width: 80px;
         background: #ecfdf5;
         color: #16a34a;
         border: 1px solid #bbf7d0;
@@ -694,6 +679,10 @@
     /* cancelled */
 
     .status-badge.cancelled {
+          margin-left: auto;
+        justify-content: center;
+        align-items: center;
+        width: 80px;
         background: #fff1f2;
         color: #e11d48;
         border: 1px solid #fecdd3;
@@ -702,6 +691,10 @@
     /* on the way */
 
     .status-badge.on-the-way {
+          margin-left: auto;
+        justify-content: center;
+        align-items: center;
+        width: 80px;
         background: #fffbeb;
         color: #d97706;
         border: 1px solid #fde68a;

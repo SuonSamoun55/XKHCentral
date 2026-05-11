@@ -1,71 +1,64 @@
-@if ($paginator->hasPages())
-<nav class="desktop-pagination">
-    <ul class="pagination justify-content-center">
+ <div class="mobile-bottom-nav">
 
-        {{-- Previous --}}
-        <li class="page-item {{ $paginator->onFirstPage() ? 'disabled' : '' }}">
-            <a class="page-link" href="{{ $paginator->previousPageUrl() ?? '#' }}">
-                &lsaquo;
+            {{-- HOME --}}
+            <a href="{{ route('user.posinterface') }}"
+                class="{{ request()->routeIs('user.posinterface') ? 'active' : '' }}">
+                <i class="bi bi-house-door-fill"></i>
+                <span>home</span>
             </a>
-        </li>
 
-        @php
-            $current = $paginator->currentPage();
-            $last = $paginator->lastPage();
-            $start = max(1, $current - 2);
-            $end = min($last, $current + 2);
-
-            if ($current <= 3) {
-                $start = 1;
-                $end = min(5, $last);
-            }
-
-            if ($current > $last - 3) {
-                $start = max(1, $last - 4);
-                $end   = $last;
-            }
-        @endphp
-
-        {{-- Page Numbers (limit 5) --}}
-        @for ($page = $start; $page <= $end; $page++)
-            <li class="page-item {{ $page == $current ? 'active' : '' }}">
-                <a class="page-link" href="{{ $paginator->url($page) }}">
-                    {{ $page }}
-                </a>
-            </li>
-        @endfor
-
-        {{-- Next --}}
-        <li class="page-item {{ $paginator->hasMorePages() ? '' : 'disabled' }}">
-            <a class="page-link" href="{{ $paginator->nextPageUrl() ?? '#' }}">
-                &rsaquo;
+            {{-- PRODUCTS (categories + category products) --}}
+            <a href="{{ route('user.pos.categories') }}"
+                class="{{ request()->routeIs('user.pos.categories') || request()->routeIs('user.pos.categories.products') ? 'active' : '' }}">
+                <i class="bi bi-box-seam"></i>
+                <span>products</span>
             </a>
-        </li>
 
-    </ul>
-</nav>
-@endif
-<style>
-    .desktop-pagination .pagination {
-    gap: 6px;
-}
+            {{-- WISHLIST --}}
+            <a href="{{ route('user.pos.favorites') }}"
+                class="{{ request()->routeIs('user.pos.favorites') ? 'active' : '' }}">
+                <i class="bi bi-heart"></i>
+                <span>wishlist</span>
+            </a>
 
-.desktop-pagination .page-link {
-    min-width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    text-align: center;
-    font-weight: 500;
-}
+{{-- USER --}}
+<a href="{{ route('profile_mobile') }}"
+   class="{{ request()->routeIs('profile_mobile') ? 'active' : '' }}">
+    <i class="bi bi-person"></i>
+    <span>user</span>
+</a>
+        </div>
+        <style>
+ .mobile-bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 70px;
+        background: #fff;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        border-top-left-radius: 18px;
+        border-top-right-radius: 18px;
+        box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08);
+        z-index: 999;
+    }
 
-.desktop-pagination .page-item.active .page-link {
-    background: #0ea5e9;
-    border-color: #0ea5e9;
-    color: #fff;
-}
+    .mobile-bottom-nav a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 11px;
+        color: #94a3b8;
+        text-decoration: none;
+    }
 
-.desktop-pagination .page-item.disabled .page-link {
-    opacity: 0.4;
-}
+    .mobile-bottom-nav a i {
+        font-size: 20px;
+    }
 
+    .mobile-bottom-nav a.active {
+        color: var(--primary);
+    }
 </style>

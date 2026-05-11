@@ -63,7 +63,7 @@ public function checkout()
 
     $totals = $this->calculateCartTotals($cart);
 
-    return view('POSViews.POSUserViews.POSPlaceOrder_mobile', [
+    return view('POSViews.POSUserViews.mobile.POSPlaceOrder_mobile', [
         'cart' => $cart,
         'subtotal' => $totals['subtotal'],
         'discountAmount' => $totals['discount_amount'],
@@ -79,7 +79,7 @@ public function success(Request $request)
         ->where('user_id', Auth::id())
         ->firstOrFail();
 
-    return view('POSViews.POSUserViews.POSorder_success', [
+    return view('POSViews.POSUserViews.mobile.POSorder_success', [
         'orderNumber' => $order->order_no,
         'amountPaid'  => $order->amount_paid,
     ]);
