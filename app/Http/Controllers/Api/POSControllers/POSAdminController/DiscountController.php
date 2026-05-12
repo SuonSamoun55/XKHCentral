@@ -30,14 +30,10 @@ class DiscountController extends Controller
 
             $status = 'inactive';
 
-            if (($item->discount_amount ?? 0) > 0) {
-                if (!$start && !$end) {
-                    $status = 'forever';
-                } elseif ($end && $today->gt($end)) {
-                    $status = 'expired';
-                } else {
-                    $status = 'scheduled';
-                }
+            if ($end && $today->gt($end)) {
+                $status = 'expired';
+            } elseif (($item->discount_amount ?? 0) > 0) {
+                $status = (!$start && !$end) ? 'forever' : 'scheduled';
             }
 
             $item->discount_status = $status;

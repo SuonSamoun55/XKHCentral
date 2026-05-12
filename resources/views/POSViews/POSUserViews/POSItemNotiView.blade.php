@@ -72,6 +72,8 @@
                         data-message="{{ $notification->message }}"
                         data-id="{{ $notification->id }}" 
                         data-type="{{ $notification->type }}"
+                        data-email="{{ optional($notification->sender)->email ?? '' }}"
+                        data-company="{{ $notification->sender_name ?? optional($notification->sender)->name ?? 'Admin' }}"
                         style="cursor: pointer;" onclick="openNotificationDetail(this)">
                             
                         <div class="notification-content">
@@ -191,6 +193,45 @@
             const dateInput = document.getElementById('dateInput');
             const notificationCards = document.querySelectorAll('.notification-card');
 
+            function escapeHtml(text) {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return String(text ?? '').replace(/[&<>"']/g, m => map[m]);
+            }
+
+            function renderMessageHtml(text) {
+                const raw = String(text ?? '');
+
+                if (/<[a-z][\s\S]*>/i.test(raw)) {
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = raw;
+                    wrapper.querySelectorAll('a').forEach(anchor => {
+                        const href = (anchor.getAttribute('href') || '').trim();
+                        if (!/^(https?:\/\/|mailto:)/i.test(href)) {
+                            anchor.setAttribute('href', href ? `https://${href.replace(/^\/+/, '')}` : '#');
+                        }
+                        anchor.setAttribute('target', '_blank');
+                        anchor.setAttribute('rel', 'noopener noreferrer');
+                        anchor.style.color = '#2563eb';
+                        anchor.style.textDecoration = 'underline';
+                        anchor.style.wordBreak = 'break-word';
+                        anchor.addEventListener('click', event => event.stopPropagation());
+                    });
+                    return wrapper.innerHTML;
+                }
+
+                const escaped = escapeHtml(raw);
+                const linked = escaped.replace(/(https?:\/\/[^\s<]+)/gi, function(url) {
+                    return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#2563eb;text-decoration:underline;word-break:break-word;" onclick="event.stopPropagation();">${url}</a>`;
+                });
+                return linked.replace(/\r?\n/g, '<br>');
+            }
+
             // Open notification detail modal
             function openNotificationDetail(element) {
                 const title = element.dataset.title;
@@ -211,7 +252,7 @@
                 document.getElementById('notificationType').textContent = type;
                 document.getElementById('notificationDateDisplay').textContent = dateText;
                 document.getElementById('notificationTitleText').textContent = title;
-                document.getElementById('notificationMessageBody').textContent = message;
+                document.getElementById('notificationMessageBody').innerHTML = renderMessageHtml(message);
                 // Open modal
                 const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
                 modal.show();
@@ -356,18 +397,6 @@
                 }
                 searchSuggestions.classList.remove('active');
             }
-            // Escape HTML
-            function escapeHtml(text) {
-                const map = {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#039;'
-                };
-                return text.replace(/[&<>"']/g, m => map[m]);
-            }
-
             // Handle unread filter
             function filterUnread() {
                 const checkbox = document.getElementById('unreadFilter');

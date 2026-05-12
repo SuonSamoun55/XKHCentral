@@ -16,7 +16,7 @@ return new class extends Migration
         $existing = DB::table('users')->where('email', $email)->first();
 
         $payload = [
-            'name' => 'Extricate Support',
+            'name' => 'xtricate Support',
             'email' => $email,
             'password' => Hash::make($plainPassword),
             'role' => 'admin',
