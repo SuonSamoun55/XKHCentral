@@ -12,6 +12,9 @@
             border-radius: 14px;
             overflow: hidden;
         }
+        .mobile-chat-header{
+            display: none;
+        }
 
         .conversation-pane {
             width: 320px;
@@ -236,6 +239,271 @@
             .msg-row { max-width: 95%; }
             .emoji-panel { right: 76px; bottom: 64px; }
         }
+        /* ===================== */
+/* MOBILE CHAT UI */
+/* ===================== */
+@media (max-width: 768px) {
+    .sidebar,
+    .sidebar-wrap,
+    .message-header{
+        display: none;
+    }
+
+    /* Layout */
+   /* =============================== */
+/* MOBILE CHAT HEADER (iOS STYLE) */
+/* =============================== */
+.conversation-pane{
+    display: none;
+}
+    .message-pane {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+    }
+
+    /* Header */
+    .mobile-chat-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        height: 56px;
+        background: #fff;
+        border-bottom: 1px solid #eee;
+        padding: 28px 20px;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .back-btn {
+        font-size: 18px;
+        text-decoration: none;
+        color: #111;
+    }
+
+    .header-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .header-meta {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.1;
+    }
+
+    .header-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111;
+    }
+
+    .header-status {
+        font-size: 11px;
+        color: #16a34a;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        background: #16a34a;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+    }
+
+    .header-icon {
+        background: none;
+        border: none;
+        font-size: 18px;
+        color: #06b6d4;
+    }
+
+    /* Adjust message list due to fixed header */
+    .message-stream {
+        margin-top: 18px;
+        flex: 1;
+        overflow-y: auto;
+        background: #f8fafc;
+        padding: 12px;
+    }
+
+    /* Composer stays fixed */
+    .composer-wrap {
+        border-top: 1px solid #eee;
+        background: #fff;
+    }
+
+    .peer-name {
+        font-size: 16px;
+        font-weight: 600;
+        margin-left: 8px;
+    }
+
+    /* Message stream */
+    .message-stream {
+        flex: 1;
+        padding: 12px;
+        overflow-y: auto;
+        background: #f8fafc;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Message row */
+    .msg-row {
+        display: flex;
+        align-items: flex-end;
+        margin-bottom: 12px;
+        max-width: 100%;
+    }
+
+    .msg-row.other {
+        justify-content: flex-start;
+    }
+
+    .msg-row.mine {
+        justify-content: flex-end;
+        flex-direction: row-reverse;
+    }
+
+    /* Avatar */
+    .msg-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0 6px;
+    }
+
+    /* Bubble */
+    .msg-bubble {
+        max-width: 72%;
+        padding: 10px 12px;
+        border-radius: 16px;
+        font-size: 13px;
+        line-height: 1.4;
+        position: relative;
+        word-break: break-word;
+    }
+
+    /* Other bubble */
+    .msg-row.other .msg-bubble {
+        background: #f1f5f9;
+        color: #111;
+        border-bottom-left-radius: 4px;
+    }
+
+    /* Mine bubble */
+    .msg-row.mine .msg-bubble {
+        background: #06b6d4;
+        color: #fff;
+        border-bottom-right-radius: 4px;
+    }
+
+    /* Image message */
+    .msg-image {
+        max-width: 100%;
+        border-radius: 12px;
+        margin-bottom: 6px;
+    }
+
+    /* Audio */
+    .msg-audio {
+        width: 100%;
+        margin-bottom: 6px;
+    }
+
+    /* Icon / emoji */
+    .msg-icon-text {
+        font-size: 22px;
+    }
+
+    /* Time */
+    .msg-time {
+        display: block;
+        font-size: 10px;
+        margin-top: 4px;
+        opacity: 0.7;
+        text-align: right;
+    }
+
+    /* Composer */
+    .composer-wrap {
+        flex-shrink: 0;
+        border-top: 1px solid #eee;
+        background: #fff;
+        padding: 8px;
+    }
+
+    .composer {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .composer-input {
+        flex: 1;
+        border: none;
+        border-radius: 20px;
+        background: #f1f5f9;
+        padding: 10px 14px;
+        font-size: 14px;
+        outline: none;
+    }
+
+    .icon-btn {
+        background: none;
+        border: none;
+        font-size: 18px;
+        color: #06b6d4;
+        padding: 6px;
+    }
+
+    .send-btn {
+        background: #06b6d4;
+        color: #fff;
+        border: none;
+        border-radius: 16px;
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+
+ 
+
+    .emoji-item {
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+    }
+
+    .composer-hint {
+        font-size: 11px;
+        color: #888;
+        margin-top: 4px;
+        text-align: center;
+    }
+    
+}
+
     </style>
 @endpush
 
@@ -278,6 +546,32 @@
     </aside>
 
     <section class="message-pane">
+        <header class="mobile-chat-header">
+    <div class="header-left">
+       <a href="{{ route('user.notifications.mobile_inbox') }}" class="back-link">
+            <i class="bi bi-arrow-left"></i> 
+        </a>
+
+        <img src="{{ $activeContact->chat_avatar ?? asset('images/pos/Rectangle 2.png') }}"
+             class="header-avatar"
+             alt="Avatar">
+
+        <div class="header-meta">
+            <div class="header-name">
+                {{ $activeContact->name ?? 'User Chat' }}
+            </div>
+            <div class="header-status">
+                <span class="status-dot"></span> Online
+            </div>
+        </div>
+    </div>
+
+    <div class="header-right">
+        <button type="button" class="header-icon">
+            <i class="bi bi-search"></i>
+        </button>
+    </div>
+</header>
         <header class="message-header">
             <div class="peer-name">{{ $activeContact->name ?? 'User Chat' }}</div>
         </header>

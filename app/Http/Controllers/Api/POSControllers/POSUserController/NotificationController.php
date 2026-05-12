@@ -290,4 +290,42 @@ class NotificationController extends Controller
 
         return 'Admin';
     }
+
+    
+ 
+ public function mobileInbox()
+{
+    $userId = auth()->id();
+
+    // Get all notifications
+    $notifications = Notification::where('user_id', $userId)
+        ->orderByDesc('created_at')
+        ->get();
+
+    // Build contacts from notifications (grouped by sender)
+    $contacts = $notifications
+        ->groupBy('sender_id')
+        ->map(function ($items) {
+            $latest = $items->first();
+
+            return (object) [
+                'id' => $latest->sender_id,
+                'name' => $latest->sender_name ?? 'System',
+                'chat_avatar' => $latest->sender_profile_image_display
+                    ?? $latest->sender_profile_image
+                    ?? asset('images/pos/Rectangle 2.png'),
+                'last_message' => $latest->message,
+                'last_message_at' => $latest->created_at,
+                'unread_count' => $items->where('is_read', false)
+                    ->sum(fn ($n) => max(1, (int) ($n->unread_count ?? 1))),
+            ];
+        })
+        ->values();
+
+    return view(
+        'POSViews.POSUserViews.mobile.POSInbox_mobile',
+        compact('notifications', 'contacts')
+    );
+}
+
 }

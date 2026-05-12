@@ -139,11 +139,10 @@
         flex:1;
     }
 
-    .content-area{
-        width:100%;
-        padding: 0 20px 20px 0;
-       
-    }
+.content-area{
+    width:100%;
+    padding: 0 20px 20px 0;
+}
 
 
     .app-shell.collapsed .sidebar-wrap {
@@ -513,3 +512,10 @@
         height: 100vh;
         overflow-y: auto;
     }
+@media (max-width: 768px) {
+
+.content-area{
+    width:100%;
+    padding: 0px;
+}
+}

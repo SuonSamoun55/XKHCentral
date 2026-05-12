@@ -14,10 +14,12 @@
 <style>
    .top-bar {
     /* Existing Styles */
-    display: flex;
+    display: sticky;
+    background: white;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 25px;
+    padding-top: 28px;
+    padding-left: 10px;
     margin-bottom: 12px;
     width: 100%;
     box-sizing: border-box;
@@ -26,7 +28,7 @@
 
     /* REQUIRED Sticky Fixes */
     position: sticky;
-    top: 10px;                /* Sticks to very top */
+    top: 0;                /* Sticks to very top */
     z-index: 100;          /* High number to stay on top of products */
 }
     .page-title {
@@ -35,4 +37,11 @@
         color: var(--primary); /* Uses your aqua/teal color */
 
     }
+    
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 20px;
+        margin-left: -20px;
+    }
+}
 </style>

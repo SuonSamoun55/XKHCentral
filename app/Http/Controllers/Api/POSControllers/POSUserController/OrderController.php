@@ -150,7 +150,9 @@ class OrderController extends Controller
                 'subtotal'        => $subtotal,
                 'discount_amount' => $discountAmount,
                 'total_amount'    => $totalAmount,
+                'amount_paid'     => $totalAmount,   // ✅ ✅ ✅ CORRECT PLACE
                 'location_code'   => $locationCode,
+                'status'          => 'paid',          // ✅ (recommended after payment)
                 'status'          => 'pending',
                 'sync_status'     => 'pending',
                 'checked_out_at'  => now(),
@@ -247,7 +249,40 @@ class OrderController extends Controller
             ], 500);
         }
     }
+public function success(Request $request)
+{
+    $orderId = $request->query('order');
 
+    if (!$orderId) {
+        return redirect('/pos-system/cart');
+    }
+
+    $order = Order::where('id', $orderId)
+        ->where('user_id', Auth::id())
+        ->first();
+
+    if (!$order) {
+        return redirect('/pos-system/cart');
+    }
+
+    return view('POSViews.POSUserViews.mobile.POSorder_success', [
+        
+        'orderId'     => $order->id,          // ✅ ADD THIS
+        'orderNumber' => $order->order_no,
+        'amountPaid'  => $order->amount_paid,
+    ]);
+}
+public function detail($id)
+{
+    $order = Order::with('items.item')
+        ->where('id', $id)
+        ->where('user_id', Auth::id())
+        ->firstOrFail();
+
+    return view('POSViews.POSUserViews.mobile.POSorder_detail', [
+        'order' => $order
+    ]);
+}
     private function calculateLinePricing($item, int $qty): array
     {
         $unitPrice = (float) ($item->unit_price ?? 0);
@@ -298,4 +333,6 @@ class OrderController extends Controller
 
         return min(100, $discount);
     }
+
+
 }

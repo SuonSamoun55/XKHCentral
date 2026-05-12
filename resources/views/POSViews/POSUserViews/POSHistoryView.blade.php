@@ -60,8 +60,8 @@
 
                 <tbody id="orderTableBody">
                     @forelse($orders as $order)
-                        <tr class="order-row" data-order-no="{{ $order->order_no }}"
-                            data-status="{{ $order->status }}" data-customer="{{ $order->customer_no }}"
+                        <tr class="order-row" data-order-no="{{ $order->order_no }}" data-status="{{ $order->status }}"
+                            data-customer="{{ $order->customer_no }}"
                             data-detail-url="{{ route('user.pos.order.show', $order->id) }}">
 
                             <td><input type="checkbox"></td>
@@ -189,7 +189,9 @@
             orderRows.forEach((row) => {
                 row.style.cursor = 'pointer';
                 row.addEventListener('click', (e) => {
-                    if (e.target.closest('input[type="checkbox"], .btn-download, .btn-download *, .order-link')) {
+                    if (e.target.closest(
+                            'input[type="checkbox"], .btn-download, .btn-download *, .order-link'
+                            )) {
                         return;
                     }
                     const url = row.dataset.detailUrl;

@@ -9,6 +9,10 @@
 @section('content')
     <div class="page-wrap">
         <main class="content-area">
+            @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
+            @include('ManagementSystemViews.UserViews.Layouts.footer')
+
+
             <div class="header">
                 <div class="topbar">
                     <div class="top">
@@ -46,7 +50,59 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="header-actions">
+                    <a href="{{ route('user.pos.order.history.mobile') }}" class="header-action-btn active">
+                        <i class="bi bi-bag-check"></i>
+                        <span>Order</span>
+                    </a>
+                    <a href="{{ route('user.pos.dashboard_mobile') }}" class="header-action-btn">
+                        <i class="bi bi-display"></i>
+                        <span>POS System</span>
+                    </a>
+
+                    <a href="{{ route('user.notifications') }}" class="header-action-btn">
+                        <i class="bi bi-bell"></i>
+                        <span>Notification</span>
+                    </a>
+                </div>
+
+                <div class="hero-slider-wrapper">
+                    <div class="hero-slider">
+
+                        <div class="hero-card">
+                            <div class="hero-title">New collections is available!</div>
+                            <div class="hero-image">
+                                <img src="{{ asset('images/pos/Image.png') }}" alt="sofa">
+                            </div>
+                        </div>
+
+                        <div class="hero-card">
+                            <div class="hero-title">New collections is available!</div>
+                            <div class="hero-image">
+                                <img src="{{ asset('images/pos/Image.png') }}" alt="table">
+                            </div>
+                        </div>
+
+                        <div class="hero-card">
+                            <div class="hero-title">New collections is available!</div>
+                            <div class="hero-image">
+                                <img src="{{ asset('images/pos/Image.png') }}" alt="sofa">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <a href="#" class="hero-link">
+                    Learn more <i class="bi bi-arrow-right"></i>
+                </a>
+                <h4>Product</h4>
+
+
+
+
             </div>
+
             <div id="messageBox" class="message-box"></div>
 
             @if ($items->isEmpty())
@@ -63,7 +119,7 @@
                         @endphp
 
                         <div class="product-card product-item" data-id="{{ $item->id }}"
-                            data-detail-url="{{ route('user.pos.items.detail', $item->id) }}"
+                            data-detail-url="{{ route('user.pos.product.detail', $item->id) }}"
                             data-name="{{ strtolower($item->display_name ?? '') }}"
                             data-display-name="{{ $item->display_name ?? '' }}"
                             data-desc="{{ strtolower($descText ?? '') }}"
@@ -120,7 +176,7 @@
                                 </div>
 
                                 <button type="button" class="add-cart-btn mobile-action" data-id="{{ $item->id }}">
-                                    Add to cart
+                                    <span class="add-cart-text">Add to cart</span>
                                 </button>
                             </div>
                         </div>
@@ -132,11 +188,29 @@
                 </div>
             @endif
 
+
         </main>
     </div>
 @endsection
 
 @push('scripts')
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const slider = document.querySelector(".hero-slider");
+            const cards = document.querySelectorAll(".hero-card");
+
+            let index = 0;
+
+            setInterval(() => {
+                index++;
+                if (index >= cards.length) {
+                    index = 0;
+                }
+
+                slider.style.transform = `translateX(-${index * 100}%)`;
+            }, 3000);
+        });
+    </script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -170,28 +244,28 @@
                 localStorage.setItem("pos_recent_searches", JSON.stringify(recentSearches));
             }
 
-            function showMessage(type, text) {
-                if (!els.messageBox) return;
+            // function showMessage(type, text) {
+            //     if (!els.messageBox) return;
 
-                const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill';
-                const title = type === 'success' ? 'Success!' : 'Error!';
+            //     const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill';
+            //     const title = type === 'success' ? 'Success!' : 'Error!';
 
-                els.messageBox.innerHTML = `
-                    <i class="bi ${iconClass} main-icon"></i>
-                    <div class="message-content">
-                        <strong>${title}</strong> ${text}
-                    </div>
-                    <button type="button" class="close-alert-btn" onclick="this.parentElement.classList.remove('show')">
-                        <i class="bi bi-x"></i>
-                    </button>
-                `;
+            //     els.messageBox.innerHTML = `
+            //         <i class="bi ${iconClass} main-icon"></i>
+            //         <div class="message-content">
+            //             <strong>${title}</strong> ${text}
+            //         </div>
+            //         <button type="button" class="close-alert-btn" onclick="this.parentElement.classList.remove('show')">
+            //             <i class="bi bi-x"></i>
+            //         </button>
+            //     `;
 
-                els.messageBox.className = `message-box ${type} show`;
+            //     els.messageBox.className = `message-box ${type} show`;
 
-                setTimeout(() => {
-                    els.messageBox.classList.remove('show');
-                }, 4000);
-            }
+            //     setTimeout(() => {
+            //         els.messageBox.classList.remove('show');
+            //     }, 4000);
+            // }
 
             function escapeHtml(text = "") {
                 const div = document.createElement("div");
@@ -563,10 +637,21 @@
 
             function bindProductDetailNavigation() {
                 els.productCards.forEach(card => {
-                    card.style.cursor = "pointer";
 
                     card.addEventListener("click", (e) => {
-                        if (e.target.closest(".qty-btn, .add-cart-btn, .fav-btn, .search-preview-btn")) {
+
+                        // ✅ Ignore inner buttons (keep existing behavior)
+                        if (e.target.closest(
+                                ".qty-btn, .add-cart-btn, .fav-btn, .search-preview-btn"
+                            )) {
+                            return;
+                        }
+
+                        // ✅ MOBILE ONLY
+                        const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+                        if (!isMobile) {
+                            // ❌ Desktop / POS screen → do nothing
                             return;
                         }
 
@@ -577,7 +662,6 @@
                     });
                 });
             }
-
             bindSidebar();
             bindQuantityButtons();
             bindAddToCart();
@@ -586,4 +670,59 @@
             bindProductDetailNavigation();
         });
     </script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const addBtn = document.getElementById("addToCartBtn");
+        const cartCountEl = document.getElementById("cartCount");
+        const csrfToken = document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute("content");
+
+        if (!addBtn) return;
+
+        addBtn.addEventListener("click", async function() {
+            const itemId = this.dataset.id;
+
+            if (!itemId) {
+                alert("Item ID not found.");
+                return;
+            }
+
+            this.disabled = true;
+            this.querySelector(".add-cart-text").textContent = "Adding...";
+
+            try {
+                const response = await fetch("{{ route('user.pos.cart.add') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": csrfToken,
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        item_id: itemId,
+                        qty: 1
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (cartCountEl && data.cartCount !== undefined) {
+                        cartCountEl.textContent = data.cartCount;
+                    }
+                    showToast("success", data.message || "Added to cart successfully");
+                } else {
+                    showToast("error", data.message || "Failed to add to cart");
+                }
+            } catch (error) {
+                console.error(error);
+                showToast("error", "Something went wrong.");
+            } finally {
+                this.disabled = false;
+                this.querySelector(".add-cart-text").textContent = "Add to cart";
+            }
+        });
+    });
+</script>
 @endpush

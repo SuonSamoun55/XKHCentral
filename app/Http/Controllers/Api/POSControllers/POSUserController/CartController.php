@@ -10,6 +10,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\POSModel\Order;
+use App\Models\POSModel\OrderItem;
 
 class CartController extends Controller
 {
@@ -45,6 +47,42 @@ public function index()
         'total',
         'itemCount'
     ));
+}
+public function checkout()
+{
+    $user = Auth::user();
+
+    $cart = Cart::with('items.item')
+        ->where('user_id', $user->id)
+        ->where('status', 'active')
+        ->first();
+
+    if (!$cart || $cart->items->isEmpty()) {
+        return redirect('/pos-system/cart');
+    }
+
+    $totals = $this->calculateCartTotals($cart);
+
+    return view('POSViews.POSUserViews.mobile.POSPlaceOrder_mobile', [
+        'cart' => $cart,
+        'subtotal' => $totals['subtotal'],
+        'discountAmount' => $totals['discount_amount'],
+        'taxAmount' => $totals['tax_amount'],
+        'total' => $totals['total'],
+        'itemCount' => $cart->items->sum('qty'),
+    ]);
+}
+    
+public function success(Request $request)
+{
+    $order = Order::where('id', $request->order)
+        ->where('user_id', Auth::id())
+        ->firstOrFail();
+
+    return view('POSViews.POSUserViews.mobile.POSorder_success', [
+        'orderNumber' => $order->order_no,
+        'amountPaid'  => $order->amount_paid,
+    ]);
 }
 
     public function getCart()

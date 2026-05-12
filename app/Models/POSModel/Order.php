@@ -17,6 +17,7 @@ class Order extends Model
         'discount_amount',
         'total_amount',
         'location_code',
+        'amount_paid',
         'status',
         'sync_status',
         'bc_document_no',

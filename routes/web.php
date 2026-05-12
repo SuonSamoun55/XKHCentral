@@ -22,6 +22,8 @@ use App\Http\Controllers\Api\POSControllers\POSAdminController\StoreManagementCo
 use App\Http\Controllers\Api\POSControllers\POSAdminController\DiscountController;
 use App\Http\Controllers\Api\POSControllers\POSAdminController\UserController;
 use App\Http\Controllers\Api\POSControllers\POSAdminController\AdminProfileController;
+use App\Http\Controllers\Api\POSControllers\POSUserController\PolicyController;
+use App\Http\Controllers\Api\POSControllers\DatabaseNotification;
 
 
 
@@ -80,6 +82,7 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::post('/pos-admin/items/{id}/update-location', [ItemPosController::class, 'updateLocalItemLocation']);
     Route::get('/pos/items/{id}', [ItemPosController::class, 'detail'])->name('pos.items.detail');
     Route::get('/pos/items/{id}/json', [ItemPosController::class, 'showItem'])->name('pos.items.json');
+    Route::post('/pos/cart/add', [ItemPosController::class, 'addItemToCart'])->name('pos.cart.add');
 
     Route::get('/admin/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
     Route::post('/admin/orders/{id}/confirm', [AdminOrderController::class, 'confirm'])->name('admin.orders.confirm');
@@ -90,10 +93,16 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     ////////USER CONTROLLER
     Route::prefix('admin')->group(function () {
     Route::get('/users/{id}', [App\Http\Controllers\Api\POSControllers\POSAdminController\UserController::class, 'show'])->name('admin.users.show');
-});
+    });
     // ---------- POS User ----------
     Route::get('/pos-system', [POSUserControllerItemList::class, 'getItems'])->name('user.posinterface');
-    Route::get('/pos-system/items/{id}', [POSUserControllerItemList::class, 'detail'])->name('user.pos.items.detail');
+    Route::get('/pos-system/categories', [POSUserControllerItemList::class, 'mobileCategories'])->name('user.pos.categories');
+    Route::get('/pos-system/categories/{category}', [POSUserControllerItemList::class, 'mobileCategoryProducts'])->name('user.pos.categories.products');
+    Route::get('/pos-system/products', [POSUserControllerItemList::class, 'mobileProducts'])->name('user.pos.products');
+    Route::get('/pos/products/filter', [POSUserControllerItemList::class, 'filter'])->name('user.pos.products.filter');
+
+    Route::get('/pos-system/product/{id}', 
+    [POSUserControllerItemList::class, 'showProduct'])->name('user.pos.product.detail');
     Route::get('/pos-system/favorites', [FavoriteController::class, 'getFavorites'])->name('user.pos.favorites');
     Route::post('/pos-system/favorite-toggle', [FavoriteController::class, 'toggle'])->name('user.pos.favorite.toggle');
 
@@ -112,10 +121,20 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::get('/profile/change-password', [UserProfileController::class, 'showChangePasswordForm'])->name('user.password.change');
     Route::put('/profile/change-password', [UserProfileController::class, 'updatePassword'])->name('user.password.update');
 
+    
+    Route::get('/profile_mobile', [UserProfileController::class, 'index_mobile'])->name('profile_mobile');
+
+    
+    Route::get('/mobile/privacy-policy', [PolicyController::class, 'index'])->name('privacy_policy_mobile');
+
+
     Route::get('/pos-system/order/download/{id}', [HistoryController::class, 'downloadInvoice'])->name('user.pos.order.download');
     Route::get('/pos-system/order/{id}', [HistoryController::class, 'show'])->name('user.pos.order.show');
     Route::post('/pos-system/order/{id}/cancel', [HistoryController::class, 'cancel'])->name('user.pos.order.cancel');
     Route::get('/pos-system/order-history', [HistoryController::class, 'history'])->name('user.pos.order.history');
+    
+    Route::get('/pos-system/order-history-mobile', [HistoryController::class, 'historyMobile'])->name('user.pos.order.history.mobile');
+
 
     Route::get('/pos-system/cart', [CartController::class, 'index'])->name('user.pos.cart');
     Route::get('/pos-system/cart/data', [CartController::class, 'getCart'])->name('user.pos.cart.data');
@@ -123,9 +142,23 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::put('/pos-system/cart/update/{id}', [CartController::class, 'updateQty'])->name('user.pos.cart.update');
     Route::delete('/pos-system/cart/remove/{id}', [CartController::class, 'removeItem'])->name('user.pos.cart.remove');
     Route::delete('/pos-system/cart/clear', [CartController::class, 'clearCart'])->name('user.pos.cart.clear');
+    Route::get('/pos-system/checkout', [CartController::class, 'checkout'])->name('user.pos.checkout');
     Route::post('/pos-system/checkout', [OrderController::class, 'checkout'])->name('user.pos.checkout');
 
+    Route::get('/pos-system/order-success', [OrderController::class, 'success'])->name('user.pos.checkout.success');
+    Route::get('/pos-system/order-detail/{id}', [OrderController::class, 'detail'])->name('user.pos.order.detail');
+    // Route::get('/pos-system/order-success', [OrderController::class, 'success']);
+
     Route::get('/favorites', [FavoriteController::class, 'index']);
+    Route::get('/pos-dashboard-mobile', function (){
+    return view('POSViews.POSUserViews.mobile.POS_mobile');
+    })->name('user.pos.dashboard_mobile');
+   
+Route::get(
+    '/notifications/mobile-inbox',
+    [NotificationController::class, 'mobileInbox']
+)->name('user.notifications.mobile_inbox');
+
 
     // ---------- Admin Notifications (Canonical) ----------
     Route::prefix('admin/notifications')->name('admin.notifications.')->group(function () {
