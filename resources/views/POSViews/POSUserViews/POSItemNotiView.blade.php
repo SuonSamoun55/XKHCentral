@@ -201,9 +201,6 @@
                     @endfor
                 </select>
             </div>
-
-
-
         </div>
     </div>
 @include('ManagementSystemViews.UserViews.Layouts.footer')

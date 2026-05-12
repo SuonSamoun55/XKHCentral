@@ -126,8 +126,9 @@
 
             @if ($yesterday->isNotEmpty())
                 @foreach ($yesterday as $notification)
-                    @include('partials.row', ['notification' => $notification])
-                @endforeach
+@include('POSViews.POSUserViews.mobile.partials.row', [
+    'notification' => $notification
+])                @endforeach
             @else
                 <p class="empty-text">Yesterday no order</p>
             @endif

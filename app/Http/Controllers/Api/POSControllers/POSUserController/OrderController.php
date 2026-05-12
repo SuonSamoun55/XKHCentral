@@ -274,7 +274,7 @@ public function success(Request $request)
 }
 public function detail($id)
 {
-    $order = Order::with('items')
+    $order = Order::with('items.item')
         ->where('id', $id)
         ->where('user_id', Auth::id())
         ->firstOrFail();

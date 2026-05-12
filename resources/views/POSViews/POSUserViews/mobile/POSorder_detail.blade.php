@@ -39,7 +39,14 @@
 
     @foreach($order->items as $item)
     <div class="item-card">
-        <img src="{{ asset('images/pos/product-placeholder.png') }}" alt="item">
+
+ <img
+            src="{{ optional($item->item)->image_url 
+                    ? asset($item->item->image_url) 
+                    : asset('images/pos/product-placeholder.png') }}"
+            alt="{{ $item->item_name }}"
+        >
+
         <div class="item-info">
             <strong>{{ $item->item_name }}</strong>
             <p>Variant: default</p>

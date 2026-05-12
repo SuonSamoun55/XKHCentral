@@ -77,10 +77,12 @@ class HistoryController extends Controller
             return $query->whereDate('created_at', $request->date);
         })
 
-        ->with('items')
+        ->with('items.item')
         ->latest()
-        ->paginate($perPage)
-        ->appends($request->query());
+    
+->paginate($perPage)
+->withQueryString();
+
 
 
 
