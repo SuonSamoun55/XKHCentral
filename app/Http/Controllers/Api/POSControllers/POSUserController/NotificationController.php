@@ -93,6 +93,35 @@ class NotificationController extends Controller
             ->where('is_read', false)
             ->sum('unread_count');
 
+        $contacts = Notification::where('user_id', $user->id)
+            ->where('type', 'contact')
+            ->where('is_read', false)
+            ->count();
+
+        // ✅ ADDITIONAL CONTACT LIST (for All Contact UI)
+$contactList = Notification::where('user_id', $user->id)
+    ->with('sender')
+    ->orderByDesc('created_at')
+    ->get()
+    ->groupBy(function ($n) {
+        // ✅ Ensure Admin & System Support are separate
+        return $n->sender_id
+            ? 'user_' . $n->sender_id
+            : 'system_' . ($n->type ?? 'system');
+    })
+    ->map(function ($items) {
+        $latest = $items->first();
+
+        return (object) [
+            'id' => $latest->sender_id ?? 0,
+            'name' => $latest->sender_name ?? 'System Support',
+            'chat_avatar' => $this->getSenderImageDisplay($latest),
+            'last_message_at' => $latest->created_at,
+            'unread_count' => $items->where('is_read', false)->count(),
+        ];
+    })
+    ->values();
+
         return view('POSViews.POSUserViews.POSItemNotiView', compact(
             'notifications',
             'inboxCount',
@@ -100,7 +129,11 @@ class NotificationController extends Controller
             'archiveCount',
             'globalMessageCount',
             'unreadCount',
-            'tab'
+            'tab',
+            'contacts',
+            
+        'contactList'    // ✅ NEW collection
+
         ));
     }
 
@@ -324,6 +357,10 @@ class NotificationController extends Controller
 
     return view(
         'POSViews.POSUserViews.mobile.POSInbox_mobile',
+        compact('notifications', 'contacts')
+    );
+    return view(
+        'POSViews.POSUserViews.POSItemNotiView',
         compact('notifications', 'contacts')
     );
 }

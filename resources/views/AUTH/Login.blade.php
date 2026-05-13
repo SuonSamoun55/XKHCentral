@@ -95,12 +95,16 @@
                         <div class="mb-3">
                             <label class="login-label" for="email">Email address</label>
                             <input id="email" type="email" name="email" class="form-control login-input"
-                                value="{{ old('email') }}" required>
+                                value="{{ old('email') }}" 
+                                 placeholder="Enter your email address"
+                                 required>
                         </div>
 
                         <div class="mb-2">
                             <label class="login-label" for="password">Password</label>
-                            <input id="password" type="password" name="password" class="form-control login-input" required>
+                            <input id="password" type="password" name="password" class="form-control login-input"
+                             placeholder="Enter your password"
+                              required>
                         </div>
 
                         <div class="login-check-row">

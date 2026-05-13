@@ -1,3 +1,4 @@
+
 @extends('ManagementSystemViews.UserViews.Layouts.app')
 @section('title', 'Notifications')
 
@@ -11,7 +12,7 @@
         <div class="header">
             {{-- MOBILE HEADER --}}
             <div class="mobile-notification-header">
-            <a href="{{ route('user.posinterface') }}" class="mn-btn">
+                <a href="{{ route('user.posinterface') }}" class="mn-btn">
 
                     <i class="bi bi-arrow-left"></i>
                 </a>
@@ -78,18 +79,21 @@
         </div>
         {{-- MOBILE TOP TABS --}}
         <div class="mobile-tabs">
-       
 
-<a href="{{ route('user.notifications.mobile_inbox') }}"
-   class="mt-pill active">
-    <i class="bi bi-inbox"></i>
-    Inbox
-</a>
-       
 
-            <button class="mt-icon"><i class="bi bi-pencil"></i></button>
-            <button class="mt-icon"><i class="bi bi-archive"></i></button>
+            <a href="{{ route('user.notifications.mobile_inbox') }}" class="mt-pill active">
+                <i class="bi bi-inbox"></i>
+                Inbox
+            </a>
 
+
+            <button class="mt-icon" onclick="openNewMessage()">
+                <i class="bi bi-pencil"></i>
+            </button>
+
+           <button class="mt-icon" onclick="openAllContact()">
+                <i class="bi bi-archive"></i>
+            </button>
             <label class="mt-switch">
                 <input type="checkbox">
                 <span></span>
@@ -173,7 +177,7 @@
                 </div>
             @endforelse
         </div>
-    
+
         {{-- Pagination --}}
         <div class="pagination-container">
             @if ($notifications->hasPages())
@@ -203,7 +207,7 @@
             </div>
         </div>
     </div>
-@include('ManagementSystemViews.UserViews.Layouts.footer')
+    @include('ManagementSystemViews.UserViews.Layouts.footer')
 
     {{-- Notification Detail Modal --}}
     <div id="notificationModal" class="modal fade" tabindex="-1" aria-labelledby="notificationModalLabel"
@@ -252,10 +256,178 @@
         </div>
     </div>
 
+
+
+<!-- ALL CONTACT OVERLAY mobile screen------------------------------------------------>
+
+
+@php
+    $source = $notifications instanceof \Illuminate\Pagination\LengthAwarePaginator
+        ? $notifications->items()
+        : $notifications;
+
+    $contactsFromNotifications = collect($source)
+        ->filter(fn ($n) => is_object($n))
+        ->map(function ($n) {
+            return (object) [
+                'id' => $n->sender_id ?? 0,
+                'name' => $n->sender_name ?? 'System Support',
+                'chat_avatar' => $n->sender_profile_image_display
+                    ?? $n->sender_profile_image
+                    ?? asset('images/pos/Rectangle 2.png'),
+                'last_message_at' => $n->created_at,
+                'unread_count' => max(1, (int) ($n->unread_count ?? 1)),
+            ];
+        })
+        ->unique(function ($c) {
+            return $c->id ?: $c->name;
+        })
+        ->values();
+
+    $favoriteContacts = $contactsFromNotifications->take(6);
+@endphp
+
+<!-- ALL CONTACT OVERLAY -->
+<div id="allContactScreen" class="all-contact-screen">
+
+    <div class="contact-header">
+        <button class="back-btn" onclick="closeAllContact()">
+            <i class="bi bi-arrow-left"></i>
+        </button>
+        <h4>All Contact</h4>
+    </div>
+
+    <div class="contact-body">
+
+        <div class="favorite-section">
+            <p class="favorite-title">Favorite</p>
+            <div class="favorite-list">
+                @forelse($favoriteContacts as $contact)
+                    <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}"
+                       class="favorite-item"
+                       title="{{ $contact->name }}">
+                        <img src="{{ $contact->chat_avatar }}"
+                             onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
+                             alt="{{ $contact->name }}">
+                    </a>
+                @empty
+                    <div class="empty-text">No favorites yet</div>
+                @endforelse
+            </div>
+        </div>
+
+        <div class="ac-search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" id="acSearchInput" placeholder="Search"
+                   onkeyup="filterContactsList()">
+        </div>
+
+        <div class="ac-contact-list">
+            @forelse($contactsFromNotifications as $contact)
+                <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}"
+                   class="ac-contact-row"
+                   data-name="{{ strtolower($contact->name) }}">
+
+                    <div class="ac-contact-avatar">
+                        <img src="{{ $contact->chat_avatar }}"
+                             onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
+                             alt="{{ $contact->name }}">
+                    </div>
+
+                    <div class="ac-contact-info">
+                        <strong class="ac-contact-name">{{ $contact->name }}</strong>
+                        <span class="ac-contact-time">last seen recently</span>
+                    </div>
+
+                    @if($contact->unread_count > 0)
+                        <span class="ac-contact-badge">{{ $contact->unread_count }}</span>
+                    @endif
+                </a>
+            @empty
+                <div class="ac-empty-text">No contacts available</div>
+            @endforelse
+        </div>
+
+    </div>
+</div>
+
+<!-- NEW MESSAGE OVERLAY -->
+<div id="newMessageScreen" class="new-message-screen">
+
+    <div class="nm-header">
+        <button class="nm-back-btn" onclick="closeNewMessage()">
+            <i class="bi bi-arrow-left"></i>
+        </button>
+        <h4>New Message</h4>
+    </div>
+
+    <div class="nm-body">
+        
+        <!-- Quick Actions -->
+    <div class="nm-quick-actions">
+
+    <a href="#" class="nm-action-item">
+        <div class="nm-action-icon">
+<i class="bi bi-people-fill"></i>
+        </div>
+        <span>New Group</span>
+    </a>
+
+    <a href="#" class="nm-action-item">
+        <div class="nm-action-icon">
+<i class="bi bi-lock-fill"></i>
+        </div>
+        <span>New Secret Chat</span>
+    </a>
+
+    <a href="#" class="nm-action-item">
+        <div class="nm-action-icon">
+<i class="bi bi-chat-square-fill"></i>
+        </div>
+        <span>New Channel</span>
+    </a>
+
+</div>
+
+        <!-- Section Title -->
+        <p class="nm-section-title">Sorted by last seen time</p>
+
+        <!-- Contact List -->
+        <div class="nm-contact-list">
+            @forelse($contactList as $contact)
+                <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}"
+                   class="nm-contact-item">
+
+                    <div class="nm-contact-avatar">
+                        <img src="{{ $contact->chat_avatar }}"
+                             onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
+                             alt="{{ $contact->name }}">
+                        
+                        @if($contact->unread_count > 0)
+                            <span class="nm-contact-badge">
+                                {{ $contact->unread_count }}
+                            </span>
+                        @endif
+                    </div>
+
+                    <span class="nm-contact-name">
+                        {{ $contact->name }}
+                    </span>
+                </a>
+            @empty
+                <div class="nm-empty-text">No contacts available</div>
+            @endforelse
+        </div>
+
+    </div>
+</div>
+
 @endsection
+
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
         const searchInput = document.getElementById('searchInput');
         const searchSuggestions = document.getElementById('searchSuggestions');
@@ -460,5 +632,34 @@
                 document.getElementById('unreadFilter').checked = true;
             }
         });
+    </script>
+    <script>
+        function openAllContact() {
+            const screen = document.getElementById('allContactScreen');
+            if (screen) {
+                screen.classList.add('active');
+            }
+        }
+
+        function closeAllContact() {
+            const screen = document.getElementById('allContactScreen');
+            if (screen) {
+                screen.classList.remove('active');
+            }
+        }
+
+        function openNewMessage() {
+            const screen = document.getElementById('newMessageScreen');
+            if (screen) {
+                screen.classList.add('active');
+            }
+        }
+
+        function closeNewMessage() {
+            const screen = document.getElementById('newMessageScreen');
+            if (screen) {
+                screen.classList.remove('active');
+            }
+        }
     </script>
 @endpush
