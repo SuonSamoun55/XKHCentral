@@ -64,11 +64,11 @@
                 <div class="login-form-box">
                     <form method="POST" action="{{ route('logout') }}" class="logout-link">
                         @csrf
-                        <button class="logout-btn" type="submit" title="Logout">
+                        <a href="{{ route('logout') }}" class="nav-link">
                             <span class="nav-icon">
                                 <img src="{{ asset('images/pos/Vector.png') }}" alt="Logout Icon">
                             </span>
-                        </button>
+                        </a>
                     </form>
                     <img src="{{ asset('images/pos/image 14.png') }}" alt="second login image" class="login-form-image">
                     <h1 class="login-title">Account Login</h1>
@@ -159,7 +159,7 @@
                 if (currentSlide === 0) {
                     showSlide(1);
                 }
-            }, 5000);
+            }, 2000);
 
             // Handle next button clicks
             nextBtns.forEach(btn => {
