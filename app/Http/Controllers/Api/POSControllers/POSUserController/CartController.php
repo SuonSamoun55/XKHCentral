@@ -79,7 +79,7 @@ public function success(Request $request)
         ->where('user_id', Auth::id())
         ->firstOrFail();
 
-    return view('POSViews.POSUserViews.mobile.POSorder_success', [
+    return view('POSViews.POSUserViews.mobile.POSPlaceOrder_mobile', [
         'orderNumber' => $order->order_no,
         'amountPaid'  => $order->amount_paid,
     ]);

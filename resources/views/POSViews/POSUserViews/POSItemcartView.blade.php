@@ -936,3 +936,5 @@
         }
     </script>
 @endpush
+<!-- mobile screen page shopping item -->
+

@@ -1,5 +1,6 @@
 @extends('ManagementSystemViews.UserViews.Layouts.app')
 
+
 @section('title', 'Products')
 
 @push('styles')
@@ -17,7 +18,7 @@
 
         .content-area {
             max-width: 430px;
-            padding: 0 !important ;
+            padding: 0 !important;
         }
 
         .products-page {
@@ -52,8 +53,9 @@
             align-items: center;
             border: 1px solid #e5e7eb;
             border-radius: 14px;
-            padding: 10px 14px;
-            margin-top: 16px;
+            padding: 10px;
+            margin-top: -60px;
+
         }
 
         .search-box i {
@@ -179,24 +181,35 @@
         }
 
         /* ✅ Sticky header container */
-    .sticky-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 50;
-    background: #ffffff;
-    padding-bottom: 8px;
-    padding-left: 8px;
-    padding-right: 24px;
-    padding-top: 14px;
-}
+        .sticky-header {
+            position: sticky;
+            top: 68px;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            background: #ffffff;
+            padding-bottom: 8px;
+            padding-left: 8px;
+            padding-right: 24px;
+            padding-top: 20px;
+            display: grid;
+            gap: 12px;
+        }
 
         /* ✅ Prevent content jump */
         .sticky-header::after {
             content: '';
             display: block;
             height: 1px;
+        }
+
+        .sticky-header-row {
+            position: relative;
+            top: -84px;
+            display: grid;
+            grid-template-columns: 40px 1fr;
+            align-items: center;
+            gap: 12px;
         }
 
         .cart-btn {
@@ -222,10 +235,12 @@
             top: 0px;
             right: 4px;
         }
+
         #product-count {
             font-size: 12px;
             color: #6b7280;
         }
+
         .cart-box {
             width: 46px;
             height: 46px;
@@ -236,36 +251,33 @@
             justify-content: center;
             padding: 0;
         }
-        .logo-wrap{
+
+        .logo-wrap {
             display: none !important;
         }
-    
-.cart {
-    margin-left: auto; /* ✅ pushes cart to the right */
-    padding-right: 10px;
-}
 
-
+        .cart {
+            margin-left: auto;
+            /* ✅ pushes cart to the right */
+            padding-right: 10px;
+        }
     </style>
 @endpush
 
 @section('content')
     <div class="page-wrap">
         <main class="content-area">
+            @include('ManagementSystemViews/UserViews/Layouts/header_mobile')
 
             <div class="products-page">
 
                 {{-- TOP BAR --}}
                 <div class="sticky-header">
-                    <div class="top-bar">
+                    <div class="sticky-header-row">
                         <a href="{{ route('user.pos.favorites') }}" class="icon-btn">
                             <i class="bi bi-arrow-left"></i>
                         </a>
-
-                        <div style="text-align:center;font-weight:700">Products</div>
-        @include('ManagementSystemViews/UserViews/Layouts/header_mobile')
-
-
+                        <div style="text-align:center;font-weight:700; justify-self:center;">Products</div>
                     </div>
 
                     {{-- SEARCH --}}
@@ -302,8 +314,8 @@
 
                             {{-- IMAGE --}}
                             <div class="product-thumb">
-                                <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
-                                    alt="{{ $item->display_name }}" onerror="this.src='{{ asset('images/no-image.png') }}'">
+                                <img src="{{ $item->image_url ? $item->image_url : asset('images/no-image.png') }}"
+                                    alt="{{ $item->display_name }}">
                             </div>
 
                             {{-- FAVORITE --}}
@@ -420,45 +432,61 @@
             btn.querySelector('i').classList.toggle('text-danger');
         });
 
-        // ✅ ADD TO CART — THIS IS THE KEY FIX
-                   document.querySelectorAll(".add-cart-btn").forEach(button => {
-                button.addEventListener("click", function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const itemId = this.dataset.id;
-                    const card = this.closest(".product-card");
-                    const qty = parseInt(card.querySelector(".qty").innerText, 10) || 1;
-                    this.disabled = true;
+        // ✅ ADD TO CART — THIS is the mobile add button handler
+        document.querySelectorAll(".product-add").forEach(button => {
+            button.addEventListener("click", function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const itemId = this.dataset.itemId;
+                const card = this.closest(".product-card");
+                const qtyEl = card.querySelector(".qty");
+                const qty = qtyEl ? parseInt(qtyEl.innerText, 10) || 1 : 1;
+                this.style.pointerEvents = "none";
 
-                    fetch("{{ route('user.pos.cart.add') }}", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": csrfToken
-                            },
-                            body: JSON.stringify({
-                                item_id: itemId,
-                                qty: qty
-                            })
+                fetch("{{ route('user.pos.cart.add') }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": csrf
+                        },
+                        body: JSON.stringify({
+                            item_id: itemId,
+                            qty: qty
                         })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success && cartCount) {
-                                cartCount.innerText = data.cartCount;
-                            }
-                            if (data.success && typeof window.showAppToast === "function") {
-                                window.showAppToast("Added to cart successfully.", "success");
-                            }
-                        })
-                        .catch(() => {
-                            if (typeof window.showAppToast === "function") {
-                                window.showAppToast("Failed to add item to cart.", "error");
-                            }
-                        })
-                        .finally(() => {
-                            this.disabled = false;
-                        });
-                });
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && productCount) {
+                            productCount.innerText = `${data.cartCount ?? 0} products`;
+                        }
+                        if (data.success && typeof window.showAppToast === "function") {
+                            window.showAppToast("Added to cart successfully.", "success");
+                        }
+                    })
+                    .catch(() => {
+                        if (typeof window.showAppToast === "function") {
+                            window.showAppToast("Failed to add item to cart.", "error");
+                        }
+                    })
+                    .finally(() => {
+                        this.style.pointerEvents = "auto";
+                    });
             });
+        });
     });
+</script>
+<script>
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+
+    function handleScreenChange(e) {
+        if (e.matches) {
+            window.location.href = "{{ route('user.pos.cart') }}";
+        }
+    }
+
+    // Run on load
+    handleScreenChange(mediaQuery);
+
+    // Listen for screen change
+    mediaQuery.addEventListener('change', handleScreenChange);
 </script>
