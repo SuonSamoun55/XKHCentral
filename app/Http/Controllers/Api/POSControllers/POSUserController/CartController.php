@@ -63,13 +63,14 @@ public function checkout()
 
     $totals = $this->calculateCartTotals($cart);
 
-    return view('POSViews.POSUserViews.mobile.POSPlaceOrder_mobile', [
+    return view('POSViews.POSUserViews.POSItemcartView', [
         'cart' => $cart,
         'subtotal' => $totals['subtotal'],
         'discountAmount' => $totals['discount_amount'],
         'taxAmount' => $totals['tax_amount'],
         'total' => $totals['total'],
         'itemCount' => $cart->items->sum('qty'),
+        'showCheckout' => true,
     ]);
 }
     

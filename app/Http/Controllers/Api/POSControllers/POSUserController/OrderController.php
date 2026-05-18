@@ -230,6 +230,7 @@ class OrderController extends Controller
                 'message'  => 'Checkout successful.',
                 'order_id' => $order->id,
                 'order_no' => $order->order_no,
+                'total'    => $totalAmount,
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -279,8 +280,34 @@ public function detail($id)
         ->where('user_id', Auth::id())
         ->firstOrFail();
 
-    return view('POSViews.POSUserViews.mobile.POSorder_detail', [
-        'order' => $order
+    $cart = Cart::with('items.item')
+        ->where('user_id', Auth::id())
+        ->where('status', 'active')
+        ->first();
+
+    $subtotal = 0;
+    $discountAmount = 0;
+    $taxAmount = 0;
+    $total = 0;
+    $itemCount = 0;
+
+    if ($cart && $cart->items->count()) {
+        $itemCount = $cart->items->sum('qty');
+        foreach ($cart->items as $cartItem) {
+            $subtotal += $cartItem->line_total;
+        }
+        $total = $subtotal;
+    }
+
+    return view('POSViews.POSUserViews.POSItemcartView', [
+        'cart' => $cart,
+        'subtotal' => $subtotal,
+        'discountAmount' => $discountAmount,
+        'taxAmount' => $taxAmount,
+        'total' => $total,
+        'itemCount' => $itemCount,
+        'showOrderDetail' => true,
+        'orderDetail' => $order,
     ]);
 }
     private function calculateLinePricing($item, int $qty): array

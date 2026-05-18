@@ -423,6 +423,12 @@
                     cartCountEl.classList.toggle("is-empty", nextCount <= 0);
                 }
 
+                const asideCartCountEl = document.getElementById("asideCartCount");
+                if (asideCartCountEl && data.cartCount !== undefined) {
+                    asideCartCountEl.textContent = data.cartCount;
+                    asideCartCountEl.classList.toggle("is-empty", data.cartCount <= 0);
+                }
+
                 this.innerHTML = 'Added!';
                 
                 setTimeout(() => {

@@ -459,6 +459,11 @@
                         if (data.success && productCount) {
                             productCount.innerText = `${data.cartCount ?? 0} products`;
                         }
+                        const asideCartCount = document.getElementById("asideCartCount");
+                        if (data.success && asideCartCount && data.cartCount !== undefined) {
+                            asideCartCount.innerText = data.cartCount;
+                            asideCartCount.classList.toggle("is-empty", data.cartCount <= 0);
+                        }
                         if (data.success && typeof window.showAppToast === "function") {
                             window.showAppToast("Added to cart successfully.", "success");
                         }

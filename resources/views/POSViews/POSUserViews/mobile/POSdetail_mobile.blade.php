@@ -433,6 +433,11 @@ function showToast(type, message) {
                     if (cartCountEl && data.cartCount !== undefined) {
                         cartCountEl.textContent = data.cartCount;
                     }
+                    const asideCartCountEl = document.getElementById("asideCartCount");
+                    if (asideCartCountEl && data.cartCount !== undefined) {
+                        asideCartCountEl.textContent = data.cartCount;
+                        asideCartCountEl.classList.toggle("is-empty", data.cartCount <= 0);
+                    }
                     showToast("success", data.message || "Added to cart successfully");
                 } else {
                     showToast("error", data.message || "Failed to add to cart");

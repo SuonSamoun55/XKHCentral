@@ -223,6 +223,7 @@
                 navButtons: document.querySelectorAll(".nav-btn"),
 
                 cartCount: document.getElementById("cartCount"),
+                asideCartCount: document.getElementById("asideCartCount"),
                 messageBox: document.getElementById("messageBox"),
 
                 searchInput: document.getElementById("searchInput"),
@@ -244,28 +245,28 @@
                 localStorage.setItem("pos_recent_searches", JSON.stringify(recentSearches));
             }
 
-            // function showMessage(type, text) {
-            //     if (!els.messageBox) return;
+            function showMessage(type, text) {
+                if (!els.messageBox) return;
 
-            //     const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill';
-            //     const title = type === 'success' ? 'Success!' : 'Error!';
+                const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill';
+                const title = type === 'success' ? 'Success!' : 'Error!';
 
-            //     els.messageBox.innerHTML = `
-            //         <i class="bi ${iconClass} main-icon"></i>
-            //         <div class="message-content">
-            //             <strong>${title}</strong> ${text}
-            //         </div>
-            //         <button type="button" class="close-alert-btn" onclick="this.parentElement.classList.remove('show')">
-            //             <i class="bi bi-x"></i>
-            //         </button>
-            //     `;
+                els.messageBox.innerHTML = `
+                    <i class="bi ${iconClass} main-icon"></i>
+                    <div class="message-content">
+                        <strong>${title}</strong> ${text}
+                    </div>
+                    <button type="button" class="close-alert-btn" onclick="this.parentElement.classList.remove('show')">
+                        <i class="bi bi-x"></i>
+                    </button>
+                `;
 
-            //     els.messageBox.className = `message-box ${type} show`;
+                els.messageBox.className = `message-box ${type} show`;
 
-            //     setTimeout(() => {
-            //         els.messageBox.classList.remove('show');
-            //     }, 4000);
-            // }
+                setTimeout(() => {
+                    els.messageBox.classList.remove('show');
+                }, 4000);
+            }
 
             function escapeHtml(text = "") {
                 const div = document.createElement("div");
@@ -537,6 +538,10 @@
                                 if (els.cartCount && data.cartCount !== undefined) {
                                     els.cartCount.textContent = data.cartCount;
                                 }
+                                if (els.asideCartCount && data.cartCount !== undefined) {
+                                    els.asideCartCount.textContent = data.cartCount;
+                                    els.asideCartCount.classList.toggle("is-empty", data.cartCount <= 0);
+                                }
 
                                 if (qtyEl) qtyEl.textContent = "1";
                                 showMessage("success", data.message ||
@@ -710,6 +715,11 @@
                 if (data.success) {
                     if (cartCountEl && data.cartCount !== undefined) {
                         cartCountEl.textContent = data.cartCount;
+                    }
+                    const asideCartCountEl = document.getElementById("asideCartCount");
+                    if (asideCartCountEl && data.cartCount !== undefined) {
+                        asideCartCountEl.textContent = data.cartCount;
+                        asideCartCountEl.classList.toggle("is-empty", data.cartCount <= 0);
                     }
                     showToast("success", data.message || "Added to cart successfully");
                 } else {
