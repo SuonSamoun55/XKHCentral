@@ -30,12 +30,17 @@ html, body {
 
 .page-wrap {
     background: #f7fafc;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    min-height: 100vh;
+    position: relative;
 }
 
 /* ===================== CONTENT ===================== */
 .product-detail {
-    min-height: 100vh;
-    padding-bottom: 120px; /* space for fixed add-to-cart */
+    min-height: calc(100vh - 60px);
+    padding-bottom: 160px; /* space for fixed add-to-cart */
+    overflow-y: auto;
 }
 
 /* ===================== TOP BAR ===================== */
@@ -384,14 +389,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
-<script>
-function showToast(type, message) {
-    const toast = document.getElementById("toast");
-    toast.textContent = message;
-    toast.className = `toast show ${type}`;
-    setTimeout(() => toast.className = "toast", 2500);
-}
-</script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const addBtn = document.getElementById("addToCartBtn");

@@ -24,6 +24,7 @@
             padding: 1% 2%;
             background-color: var(--bg-light);
             border-radius: 12px;
+            
             /* height:%; */
         }
 
@@ -320,17 +321,23 @@
                 /* space for sticky bottom */
                 border-radius: 0;
                 height: 100vh;
-                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                position: relative;
             }
 
             #cartMainContent {
                 width: 100%;
-                height: 100vh;
-                overflow-y: auto;
+                flex: 1 1 auto;
+                overflow-y: visible;
+                overflow-x: hidden;
                 padding: 0 !important;
+                padding-bottom: 260px;
                 display: flex;
                 flex-direction: column;
                 min-height: 0;
+                -webkit-overflow-scrolling: touch;
             }
             /* Header */
             .cart-nav {
@@ -349,6 +356,13 @@
             .cart-list-wrapper {
                 padding: 0;
                 margin-top: 8px;
+                flex: 1 1 auto;
+                overflow-y: auto;
+                min-height: 0;
+            }
+
+            .cart-list-wrapper::-webkit-scrollbar {
+                width: 0;
             }
 
             /* Each item becomes a CARD */
@@ -461,22 +475,17 @@
             .empty-cart-mobile {
                 padding: 16px;
                 text-align: center;
-
-                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                min-height: auto;
                 background: #fff;
-
-                /*
-     position: sticky;
-        bottom: 0;
-        background: #fff; */
-
             }
 
             .empty-cart-content {
-
                 padding: 16px;
-                padding-bottom: 220px;
-
+                padding-bottom: 280px;
+                flex: 1 1 auto;
+                overflow: hidden;
             }
 
             .empty-cart-footer {
@@ -1165,7 +1174,7 @@
         <div class="checkout-container" id="checkoutContent" style="display:none;">
 
             <div class="checkout-nav">
-                <a href="javascript:void(0);" onclick="hideCheckout()" class="icon-btn">
+            <a href="javascript:history.back()" class="icon-btn">
                     <i class="bi bi-arrow-left"></i>
                 </a>
                 <span class="nav-title">Checkout</span>
