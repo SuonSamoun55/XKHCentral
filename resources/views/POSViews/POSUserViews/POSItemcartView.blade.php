@@ -16,6 +16,28 @@
             background-color: #fff;
             font-family: 'Inter', sans-serif;
             color: var(--text-dark);
+            height: auto;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            touch-action: pan-y;
+        }
+
+        #appShell,
+        .app-shell {
+            height: auto !important;
+            min-height: 100vh;
+            overflow-y: auto !important;
+            position: relative !important;
+            display: flex !important;
+        }
+
+        .page-wrap {
+            background: #f6f7f9;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            min-height: 100vh;
+            position: relative;
+            width: 100%;
         }
 
         .cart-container {
@@ -321,23 +343,17 @@
                 /* space for sticky bottom */
                 border-radius: 0;
                 height: 100vh;
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-                position: relative;
+                overflow-y: auto;
             }
 
             #cartMainContent {
                 width: 100%;
-                flex: 1 1 auto;
-                overflow-y: visible;
-                overflow-x: hidden;
+                height: 100vh;
+                overflow-y: auto;
                 padding: 0 !important;
-                padding-bottom: 260px;
                 display: flex;
                 flex-direction: column;
                 min-height: 0;
-                -webkit-overflow-scrolling: touch;
             }
             /* Header */
             .cart-nav {
@@ -353,12 +369,11 @@
             }
 
             /* Cart list spacing */
-            .cart-list-wrapper {
-                padding: 0;
-                margin-top: 8px;
-                flex: 1 1 auto;
-                overflow-y: auto;
-                min-height: 0;
+               .cart-list-wrapper {
+                 max-height: calc(100vh - 260px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+
             }
 
             .cart-list-wrapper::-webkit-scrollbar {
@@ -460,8 +475,8 @@
             /* Hide scrollbar for clean mobile feel */
             .scroll-limit-5,
             .scroll-limit-10 {
-                max-height: none;
-                overflow: visible;
+            overflow-y: auto;
+
             }
 
             .desktop-only {
@@ -611,7 +626,6 @@
     .checkout-nav {
         display: flex;
         align-items: center;
-        gap: 100px;
         font-weight: 600;
         padding-bottom: 18px;
     }
@@ -737,7 +751,6 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        overflow: hidden;
     }
 
     /* hidden state */
@@ -884,7 +897,6 @@
     background: #f8f9fc;
     border: 1px solid #d9dfef;
     border-radius: 10px;
-    overflow: hidden;
     margin-top: 20px;
 }
 
@@ -946,7 +958,9 @@
         display: none;
     }
     .app-shell{
-        display: none;
+        display: flex !important;
+        overflow-y: auto !important;
+        position: relative !important;
     }
     .order-detail-container {
     padding: 16px;
@@ -1049,8 +1063,9 @@
 @endpush
 
 @section('content')
-    <div class="cart-container">
-        <div class="cart-nav">
+    <div class="page-wrap">
+        <div class="cart-container">
+            <div class="cart-nav">
             <a href="/pos-system" class="icon-btn"><i class="bi bi-arrow-left"></i></a>
             <span class="nav-title">My Cart</span>
         </div>
@@ -1134,6 +1149,7 @@
                         </div>
                     @endforeach
                 </div>
+
 
                 <div class="summary-box">
                     <div class="summary-line">
@@ -1356,6 +1372,7 @@
             <p class="process-text">Processing your order…</p>
         </div>
     </div>
+</div>
 @endsection
 
 @push('scripts')

@@ -1,693 +1,940 @@
 @extends('ManagementSystemViews.UserViews.Layouts.app')
 
-@section('title', 'POS User Item List')
+@section('title', 'POS Cart')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/POSsystem/itemlist.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/POSsystem/cart.css') }}">
+    <style>
+        :root {
+            --primary-teal: #00cad1;
+            --text-gray: #777;
+            --text-dark: #333;
+            --bg-light: white;
+        }
+
+        body {
+            background-color: #fff;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+        }
+
+        .cart-container {
+            width: 100%;
+            margin: 0 auto;
+            padding: 1% 2%;
+            background-color: var(--bg-light);
+            border-radius: 12px;
+            /* height:%; */
+        }
+
+        #cartMainContent {
+            width: 100%;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 0 20% 1% 10%;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        /* Header */
+        .cart-nav {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1%;
+        }
+
+        .back-btn {
+            background: #f5f5f5;
+            border-radius: 50%;
+            width: 3.5%;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #333;
+            margin-right: 1.5%;
+            min-width: 2.1rem;
+            max-width: 2.6rem;
+        }
+
+        .nav-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary-teal);
+        }
+
+        /* --- Scroll Logic Classes --- */
+        .cart-list-wrapper {
+            padding: 0 4% 0 4%;
+            width: 100%;
+            height: auto;
+            min-height: 0;
+        }
+
+        /* If items > 5 */
+        .scroll-limit-5 {
+            max-height: min(60vh, 24rem);
+            overflow-y: auto;
+            padding-right: 1%;
+        }
+
+        /* If items > 10 */
+        .scroll-limit-10 {
+            max-height: min(56vh, 32rem);
+            overflow-y: auto;
+            padding-right: 1%;
+        }
+
+        /* Custom Scrollbar for better UI */
+        .scroll-limit-5::-webkit-scrollbar,
+        .scroll-limit-10::-webkit-scrollbar {
+            width: 0px;
+        }
+
+        .scroll-limit-5::-webkit-scrollbar-thumb,
+        .scroll-limit-10::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 10px;
+        }
+
+        /* Compact Item Row */
+        .item-card {
+            display: flex;
+            align-items: center;
+            gap: 2%;
+            padding: 1.6% 0;
+            border-bottom: 1px solid #f0f0f0;
+            position: relative;
+        }
+
+        .item-image {
+            width: 5%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 10%;
+            flex-shrink: 0;
+            max-width: 6rem;
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-details h3 {
+            font-size: 12px;
+            /* margin: 0 0 8px 0;  */
+            font-weight: 600;
+        }
+
+        /* Compact Quantity Controls */
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 6%;
+            background: #f5f5f5;
+            /* padding: 1% 3%; */
+            border-radius: 8px;
+            width: 10%;
+
+            justify-content: space-between;
+        }
+
+        .qty-btn {
+            border: none;
+            background: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: #555;
+            padding: 0;
+        }
+
+        .qty-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .qty-val {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .remove-icon {
+            position: absolute;
+            right: 0%;
+            top: 15%;
+            color: #ff5b5b;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* Summary Section */
+        .summary-box {
+            background-color: #FAFEFF;
+            /* margin-top: 2%; */
+            padding: 2% 4% 0.5% 4%;
+            border-top: 1px solid #eee;
+        }
+
+        .summary-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--text-gray);
+        }
+
+        .summary-line.total-usd {
+            color: var(--text-dark);
+            font-weight: 600;
+            font-size: 12px;
+            /* margin-top: 10px; */
+        }
+
+        .summary-line.total-riel {
+            font-weight: 600;
+            color: #000;
+            font-size: 12px;
+        }
+
+        /* Place Order Button */
+        .place-order-btn {
+            background: var(--primary-teal);
+            color: white;
+            border: none;
+            width: 30%;
+            padding: 1% 2%;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 14px;
+            display: block;
+            margin: 0% auto 0;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 12px rgba(0, 202, 209, 0.2);
+            transition: transform 0.2s;
+            margin-top: 1%;
+        }
+
+        .place-order-btn:active {
+            transform: scale(0.98);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 5% 0;
+        }
+
+        .empty-state-image {
+            width: 25%;
+            margin-bottom: 2%;
+            max-width: 10rem;
+        }
+
+        .empty-state-link {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        #orderSuccessContent {
+            text-align: center;
+            padding-top: 4%;
+        }
+
+        .success-icon-circle {
+            background: var(--primary-teal);
+            width: 14%;
+            aspect-ratio: 1 / 1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2%;
+            color: white;
+            font-size: 2.2rem;
+            max-width: 5rem;
+            min-width: 4rem;
+        }
+
+        .empty-description {
+            color: #666464;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            margin-top: 10px;
+        }
+
+        .shopingBtn {
+
+            padding: 12px;
+            border-radius: 12px;
+            background: #2dd4bf;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 15px;
+            border: none;
+        }
+
+        .bi-arrow-left {
+            width: 40px;
+            height: 40px;
+            border-radius: 50px;
+            background: #dee8ec;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+
+        .success-desc {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .back-home-btn {
+            text-decoration: none;
+            margin-top: 2%;
+        }
+
+        .desktop-only {
+            display: block;
+        }
+
+        .mobile-only {
+            display: none;
+        }
+
+
+        /* =========================
+            MOBILE CART UI REWRITE
+        ========================= */
+        @media (max-width: 768px) {
+
+            body {
+                background: #f6f7f9;
+            }
+
+            .cart-container {
+                padding: 0;
+                /* space for sticky bottom */
+                border-radius: 0;
+                height: 100vh;
+                overflow-y: auto;
+            }
+
+            #cartMainContent {
+                width: 100%;
+                height: 100vh;
+                overflow-y: auto;
+                padding: 0 !important;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+            }
+            /* Header */
+            .cart-nav {
+                position: sticky;
+                top: 0;
+                z-index: 50;
+                background: #fff;
+                padding: 8px;
+            }
+
+            .nav-title {
+                font-size: 16px;
+                font-weight: 600;
+                text-align: center;
+                flex: 1;
+                color: #000;
+            }
+
+            /* Cart list spacing */
+            .cart-list-wrapper {
+                padding: 0;
+                margin-top: 8px;
+            }
+
+            /* Each item becomes a CARD */
+            .item-card {
+                background: #f1f5f9;
+                border-radius: 14px;
+                padding: 12px;
+                margin-bottom: 12px;
+                border: none;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+                gap: 12px;
+            }
+
+            .item-image {
+                width: 80px;
+                height: 80px;
+                border-radius: 12px;
+                object-fit: contain;
+                background: #f1f5f9;
+            }
+
+            .item-details h3 {
+                font-size: 14px;
+                margin-bottom: 6px;
+            }
+
+            /* Quantity controls – touch friendly */
+            .qty-controls {
+                width: 120px;
+                height: 36px;
+                background: #eef2f7;
+                border-radius: 999px;
+                padding: 0 8px;
+            }
+
+            .qty-btn {
+                font-size: 18px;
+                width: 28px;
+                height: 28px;
+            }
+
+            .qty-val {
+                font-size: 14px;
+            }
+
+            /* Remove icon */
+            .remove-icon {
+                top: 10px;
+                right: 10px;
+                font-size: 20px;
+            }
+
+            /* =========================
+                STICKY BOTTOM SUMMARY
+            ========================= */
+            .summary-box {
+                position: fixed;
+                bottom: 8%;
+                left: 0;
+                right: 0;
+                z-index: 100;
+                background: #1f7a85;
+                /* teal like screenshot */
+                color: #fff;
+                padding: 12px 16px 16px;
+                border-radius: 16px 16px 0 0;
+            }
+
+            .summary-line {
+                font-size: 13px;
+                color: rgba(255, 255, 255, 0.85);
+            }
+
+            .summary-line.total-usd,
+            .summary-line.total-riel {
+                color: #fff;
+                font-size: 14px;
+            }
+
+            /* Checkout button */
+            .place-order-btn {
+                width: 100%;
+                background: #2fd4c7;
+                /* margin-top: 100%; */
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 34px;
+                font-size: 15px;
+                border-radius: 14px;
+                box-shadow: none;
+            }
+
+            /* Hide scrollbar for clean mobile feel */
+            .scroll-limit-5,
+            .scroll-limit-10 {
+                max-height: none;
+                overflow: visible;
+            }
+
+            .desktop-only {
+                display: none !important;
+            }
+
+            .mobile-only {
+                display: block !important;
+            }
+            /* Mobile Empty Cart Layout */
+            .empty-cart-mobile {
+                padding: 16px;
+                text-align: center;
+
+                min-height: 100vh;
+                background: #fff;
+
+                /*
+     position: sticky;
+        bottom: 0;
+        background: #fff; */
+
+            }
+
+            .empty-cart-content {
+
+                padding: 16px;
+                padding-bottom: 220px;
+
+            }
+
+            .empty-cart-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 20;
+                background: #fff;
+            }
+
+
+            /* Item count */
+            .empty-cart-mobile .item-count {
+                text-align: left;
+                font-size: 14px;
+                color: #374151;
+                margin-bottom: 20px;
+            }
+
+            /* Illustration */
+            .empty-cart-illustration {
+                width: 240px;
+                max-width: 80%;
+                margin: 0 auto 24px;
+                display: block;
+            }
+
+            /* Title */
+            .empty-title {
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 6px;
+            }
+
+            /* Description */
+            .empty-desc {
+                font-size: 13px;
+                color: #6B7280;
+                margin-bottom: 20px;
+                line-height: 1.4;
+            }
+
+            /* Shop Now button */
+            .shop-now-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                background: #14B8A6;
+                color: #ffffff;
+                padding: 12px 18px;
+                border-radius: 12px;
+                text-decoration: none;
+                font-weight: 600;
+                margin-bottom: 28px;
+            }
+
+            /* Summary card */
+            .empty-summary-card {
+
+                width: 100%;
+                background: #1F7A85;
+                color: #fff;
+                padding: 14px 16px;
+                font-size: 13px;
+
+
+            }
+
+            .empty-summary-card>div {
+
+                display: flex;
+                justify-content: space-between;
+                line-height: 1.6;
+
+            }
+
+            .empty-summary-card hr {
+
+                border: none;
+                border-top: 1px solid rgba(255, 255, 255, 0.3);
+                margin: 8px 0;
+
+            }
+
+            .empty-summary-card .total {
+                font-weight: 600;
+            }
+
+            /* Disabled checkout */
+            .checkout-disabled {
+
+                width: 100%;
+                border: none;
+                background: #2EC4B6;
+                color: #fff;
+                padding: 15px 0;
+                font-size: 15px;
+                border-radius: 0;
+                margin: 0;
+
+            }
+
+            .icon-btn {
+                width: 40px;
+                height: 40px;
+                border-radius: 12px;
+                background: #d4eaf5;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+        }
+    </style>
 @endpush
 
 @section('content')
-    <div class="page-wrap">
-        <main class="content-area">
-            <div class="header">
-                <div class="topbar">
-                    <div class="top">
-                        <h1 class="title">
-                            Products
-                        </h1>
+    <div class="cart-container">
+        <div class="cart-nav">
+            <a href="/pos-system" class="icon-btn"><i class="bi bi-arrow-left"></i></a>
+            <span class="nav-title">My Cart</span>
+        </div>
 
-                        <a href="{{ route('user.pos.cart') }}" class="cart-box">
-                            <i class="bi bi-cart3"></i>
-                            <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
+        <div id="cartMainContent">
+            @if (!$cart || $cart->items->isEmpty())
+
+                <div class="empty-state desktop-only">
+                    <img src="{{ asset('images/pos/Empty.png') }}" class="empty-state-image">
+                    <h3 style="color: #ccc;">Your cart is Empty</h3>
+                    <p class="empty-description">Looks like you haven’t <br> added anything to your cart yet</p>
+                    <button class="shopingBtn">
+                        <a href="/pos-system" class="empty-state-link">Continue Shopping</a>
+                    </button>
+                </div>
+
+                <div class="empty-cart-mobile mobile-only">
+                    <div class="empty-cart-content">
+                        <div class="item-count">0 items</div>
+
+                        <img src="{{ asset('images/pos/image_16.png') }}" alt="Empty cart" class="empty-cart-illustration">
+
+                        <h3 class="empty-title">Your cart is empty</h3>
+
+                        <p class="empty-desc">
+                            Looks like you haven’t added anything<br>
+                            to your cart yet
+                        </p>
+
+                        <a href="{{ route('user.pos.products') }}" class="shop-now-btn">
+                            Shop now <i class="bi bi-chevron-right"></i>
                         </a>
                     </div>
+                    <div class="empty-cart-footer">
+                        <div class="empty-summary-card">
+                            <div><span>Subtotal</span><span>$0</span></div>
+                            <div><span>Discount</span><span>$0</span></div>
+                            <div><span>Delivery Fee</span><span>$0</span></div>
+                            <div><span>Estimated Tax</span><span>$0</span></div>
 
-                    <div class="search-area">
-                        <div class="search-wrapper">
-                            <div class="search-box">
-                                <i class="bi bi-search"></i>
-                                <input type="text" id="searchInput" placeholder="Search Product">
-                                <button type="button" id="searchSubmitBtn" class="search-submit-btn">
-                                    <i class="bi bi-send"></i>
-                                </button>
-                            </div>
+                            <hr>
 
-                            <div class="search-dropdown" id="searchDropdown">
-                                <div class="search-dropdown-left">
-                                    <div class="search-section-title">Your Searches</div>
-                                    <div id="searchSuggestions"></div>
-                                </div>
-
-                                <div class="search-dropdown-right">
-                                    <div class="search-section-title">Products</div>
-                                    <div id="searchPreviewProducts" class="search-preview-products"></div>
-                                </div>
-                            </div>
+                            <div class="total"><span>Total in USD</span><span>$0</span></div>
+                            <div class="total"><span>Total in Riel</span><span>Riel 0</span></div>
                         </div>
+
+                        <button class="checkout-disabled" disabled>
+                            Checkout
+                        </button>
                     </div>
                 </div>
-            </div>
-            <div id="messageBox" class="message-box"></div>
-
-            @if ($items->isEmpty())
-                <div class="empty-box">No items found.</div>
             @else
-                <div class="products-grid" id="productsGrid">
-                    @foreach ($items as $item)
-                        @php
-                            $normalPrice = (float) ($item->unit_price ?? 0);
-                            $discountPercent = (float) ($item->effective_discount_percent ?? 0);
-                            $salePrice = (float) ($item->final_price ?? $normalPrice);
-                            $oldPrice = $discountPercent > 0 ? $normalPrice : 0;
-                            $descText = $item->short_description ?? '';
-                        @endphp
+                @php
+                    $count = $cart->items->count();
+                    $scrollClass = '';
+                    if ($count > 10) {
+                        $scrollClass = 'scroll-limit-10';
+                    } elseif ($count > 5) {
+                        $scrollClass = 'scroll-limit-5';
+                    }
+                @endphp
 
-                        <div class="product-card product-item" data-id="{{ $item->id }}"
-                            data-detail-url="{{ route('user.pos.items.detail', $item->id) }}"
-                            data-name="{{ strtolower($item->display_name ?? '') }}"
-                            data-display-name="{{ $item->display_name ?? '' }}"
-                            data-desc="{{ strtolower($descText ?? '') }}"
-                            data-uom="{{ strtolower($item->base_unit_of_measure_code ?? '') }}"
-                            data-category="{{ strtolower($item->item_category_code ?? '') }}"
-                            data-price="{{ number_format($salePrice, 2, '.', '') }}"
-                            data-image="{{ $item->image_url ?: asset('images/no-image.png') }}">
+                <div class="cart-list-wrapper {{ $scrollClass }}">
+                    @foreach ($cart->items as $cartItem)
+                        <div class="item-card" data-cart-item-id="{{ $cartItem->id }}" data-qty="{{ $cartItem->qty }}">
+                            <img src="{{ optional($cartItem->item)->image_url ?? asset('images/no-image.png') }}"
+                                class="item-image">
 
-                            <div class="product-img-box">
-                                @if ($discountPercent > 0)
-                                    <div class="discount-badge">
-                                        SAVE {{ rtrim(rtrim(number_format($discountPercent, 2), '0'), '.') }} %
-                                    </div>
-                                @endif
-
-                                <button class="fav-btn" data-item-id="{{ $item->id }}">
-                                    <i
-                                        class="bi {{ in_array($item->id, $favoriteIds) ? 'bi-heart-fill text-danger' : 'bi-heart' }}"></i>
-                                </button>
-
-                                <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
-                                    alt="{{ $item->display_name ?? 'No Name' }}" loading="lazy"
-                                    onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
+                            <div class="item-details">
+                                <h3>{{ $cartItem->item_name }} (L)</h3>
+                                <div class="qty-controls">
+                                    <button class="qty-btn qty-update" data-id="{{ $cartItem->id }}"
+                                        data-action="minus">−</button>
+                                    <span class="qty-val">{{ $cartItem->qty }}</span>
+                                    <button class="qty-btn qty-update" data-id="{{ $cartItem->id }}"
+                                        data-action="plus">+</button>
+                                </div>
                             </div>
 
-                            <div class="product-info">
-                                <div class="product-title">
-                                    {{ $item->display_name ?: 'No Name' }}
-                                </div>
-
-                                {{-- <div class="product-desc">
-                                        {{ $descText }}
-                                    </div> --}}
-
-                                <div class="price-row {{ $oldPrice > $salePrice ? 'has-discount' : 'no-discount' }}">
-                                    <div class="old-price">
-                                        @if ($oldPrice > $salePrice)
-                                            ${{ number_format($oldPrice, 2) }}
-                                        @endif
-                                    </div>
-
-                                    <div class="new-price">
-                                        ${{ number_format($salePrice, 2) }}
-                                    </div>
-                                </div>
-
-                                <div class="qty-section">
-                                    <span class="qty-label">Quantity:</span>
-                                    <div class="qty-box">
-                                        <button type="button" class="qty-btn minus">−</button>
-                                        <span class="qty">1</span>
-                                        <button type="button" class="qty-btn plus">+</button>
-                                    </div>
-                                </div>
-
-                                <button type="button" class="add-cart-btn mobile-action" data-id="{{ $item->id }}">
-                                    Add to cart
-                                </button>
-                            </div>
+                            <i class="bi bi-x-circle remove-icon remove-item" data-id="{{ $cartItem->id }}"></i>
                         </div>
                     @endforeach
                 </div>
 
-                <div id="noSearchResult" class="empty-box" style="display:none; margin-top:16px;">
-                    No matching products found.
-                </div>
-            @endif
+                <div class="summary-box">
+                    <div class="summary-line">
+                        <span>Subtotal</span>
+                        <span id="subtotalAmount">${{ number_format($subtotal, 2) }}</span>
+                    </div>
+                    <div class="summary-line">
+                        <span>Delivery</span>
+                        <span id="deliveryAmount">$0.00</span>
+                    </div>
+                    <div class="summary-line">
+                        <span>Estimated Tax <i class="bi bi-question-circle"></i></span>
+                        <span id="taxAmount">${{ number_format($taxAmount ?? 0, 2) }}</span>
+                    </div>
 
-        </main>
+                    <div class="summary-line total-usd">
+                        <span>Total in USD</span>
+                        <span id="totalUsd">${{ number_format($total, 2) }}</span>
+                    </div>
+                    <div class="summary-line total-riel">
+                        <span>Total in Khmer Riel</span>
+                        <span id="totalRiel">riel {{ number_format($total * 4100, 0) }}</span>
+                    </div>
+                </div>
+
+                {{-- Desktop checkout --}}
+                <button id="checkoutDesktopBtn" type="button" class="place-order-btn desktop-only">
+                    PLACE ORDER
+                </button>
+
+                {{-- Mobile checkout --}}
+                <button id="checkoutMobileBtn" type="button" class="place-order-btn mobile-only">
+                    CHECK OUT
+                </button>
+            @endif
+        </div>
+
+        <div id="orderSuccessContent" style="display: none;">
+            <div class="success-icon-circle">
+                <i class="bi bi-check-lg"></i>
+            </div>
+            <h2 style="color: #4DB37E;">Confirmed!</h2>
+            <p class="success-desc">Your order is being prepared.</p>
+            <a href="/pos-system" class="place-order-btn back-home-btn">Back Home</a>
+        </div>
     </div>
 @endsection
 
 @push('scripts')
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const cartMainContent = document.getElementById('cartMainContent');
+        const cartListWrapper = document.querySelector('.cart-list-wrapper');
+        const pendingQtyByItem = new Map();
+        const syncingItems = new Set();
+        const debounceTimerByItem = new Map();
+        const rielRate = 4100;
 
-            const els = {
-                appShell: document.getElementById("appShell"),
-                collapseHandle: document.getElementById("collapseHandle"),
-                settingsBtn: document.getElementById("settingsBtn"),
-                settingsBox: document.getElementById("settingsBox"),
-                navButtons: document.querySelectorAll(".nav-btn"),
+        const formatUsd = (value) =>
+            `$${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const formatRiel = (value) => `riel ${Math.round(Number(value || 0)).toLocaleString('en-US')}`;
 
-                cartCount: document.getElementById("cartCount"),
-                messageBox: document.getElementById("messageBox"),
+        const updateSummary = (summary) => {
+            const subtotalEl = document.getElementById('subtotalAmount');
+            const taxEl = document.getElementById('taxAmount');
+            const totalUsdEl = document.getElementById('totalUsd');
+            const totalRielEl = document.getElementById('totalRiel');
 
-                searchInput: document.getElementById("searchInput"),
-                searchDropdown: document.getElementById("searchDropdown"),
-                searchSuggestions: document.getElementById("searchSuggestions"),
-                searchPreviewProducts: document.getElementById("searchPreviewProducts"),
-                searchWrapper: document.querySelector(".search-wrapper"),
-                noSearchResult: document.getElementById("noSearchResult"),
+            if (!subtotalEl || !taxEl || !totalUsdEl || !totalRielEl || !summary) return;
 
-                productCards: [...document.querySelectorAll(".product-card")],
-                favButtons: [...document.querySelectorAll(".fav-btn")]
-            };
+            subtotalEl.textContent = formatUsd(summary.subtotal);
+            taxEl.textContent = formatUsd(summary.tax_amount);
+            totalUsdEl.textContent = formatUsd(summary.total);
+            totalRielEl.textContent = formatRiel(summary.total * rielRate);
+        };
 
-            let recentSearches = JSON.parse(localStorage.getItem("pos_recent_searches")) || [
-                "premium beef", "beef steak", "meat"
-            ];
+        const applyScrollClass = () => {
+            if (!cartListWrapper) return;
+            const itemCount = document.querySelectorAll('.item-card').length;
+            cartListWrapper.classList.remove('scroll-limit-5', 'scroll-limit-10');
+            if (itemCount > 10) cartListWrapper.classList.add('scroll-limit-10');
+            else if (itemCount > 5) cartListWrapper.classList.add('scroll-limit-5');
+        };
 
-            function saveSearchHistory() {
-                localStorage.setItem("pos_recent_searches", JSON.stringify(recentSearches));
-            }
+        const renderEmptyState = () => {
+            cartMainContent.innerHTML = `
+            <div class="empty-state">
+                <img src="{{ asset('images/pos/Empty.png') }}" class="empty-state-image">
+                <h3 style="color: #ccc;">Your cart is Empty</h3>
+                <a href="/pos-system" class="empty-state-link">Continue Shopping</a>
+            </div>
+        `;
+        };
 
-            function showMessage(type, text) {
-                if (!els.messageBox) return;
+        const refreshCartSummary = async () => {
+            const res = await fetch('/pos-system/cart/data', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!data.success) return;
+            updateSummary(data);
+        };
 
-                const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill';
-                const title = type === 'success' ? 'Success!' : 'Error!';
+        const setItemButtonsDisabled = (row, disabled) => {
+            row.querySelectorAll('.qty-update').forEach(btn => {
+                btn.disabled = disabled;
+            });
+        };
 
-                els.messageBox.innerHTML = `
-                    <i class="bi ${iconClass} main-icon"></i>
-                    <div class="message-content">
-                        <strong>${title}</strong> ${text}
-                    </div>
-                    <button type="button" class="close-alert-btn" onclick="this.parentElement.classList.remove('show')">
-                        <i class="bi bi-x"></i>
-                    </button>
-                `;
+        const syncQty = async (id, row) => {
+            if (syncingItems.has(id)) return;
+            syncingItems.add(id);
+            setItemButtonsDisabled(row, true);
 
-                els.messageBox.className = `message-box ${type} show`;
-
-                setTimeout(() => {
-                    els.messageBox.classList.remove('show');
-                }, 4000);
-            }
-
-            function escapeHtml(text = "") {
-                const div = document.createElement("div");
-                div.textContent = text;
-                return div.innerHTML;
-            }
-
-            function getCardData(card) {
-                return {
-                    id: card.dataset.id || "",
-                    name: (card.dataset.name || "").toLowerCase(),
-                    displayName: card.dataset.displayName || card.querySelector(".product-title")?.textContent
-                        ?.trim() || "No Name",
-                    desc: (card.dataset.desc || "").toLowerCase(),
-                    category: (card.dataset.category || "").toLowerCase(),
-                    uom: (card.dataset.uom || "").toLowerCase(),
-                    price: card.dataset.price || "0.00",
-                    image: card.dataset.image || card.querySelector("img")?.src || ""
-                };
-            }
-
-            function matchCard(card, keyword) {
-                const text = keyword.trim().toLowerCase();
-                if (!text) return true;
-
-                const data = getCardData(card);
-
-                return [
-                    data.name,
-                    data.displayName.toLowerCase(),
-                    data.desc,
-                    data.category,
-                    data.uom
-                ].some(value => value.includes(text));
-            }
-
-            function filterProducts(keyword = "") {
-                let visibleCount = 0;
-
-                els.productCards.forEach(card => {
-                    const matched = matchCard(card, keyword);
-                    card.style.display = matched ? "" : "none";
-                    if (matched) visibleCount++;
+            try {
+                const qty = pendingQtyByItem.get(id);
+                const res = await fetch(`/pos-system/cart/update/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        qty
+                    })
                 });
 
-                if (els.noSearchResult) {
-                    els.noSearchResult.style.display = visibleCount ? "none" : "block";
-                }
-            }
-
-            function getMatchedCards(keyword) {
-                if (!keyword.trim()) return [];
-                return els.productCards.filter(card => matchCard(card, keyword));
-            }
-
-            function addRecentSearch(keyword) {
-                const value = keyword.trim().toLowerCase();
-                if (!value) return;
-
-                recentSearches = recentSearches.filter(item => item !== value);
-                recentSearches.unshift(value);
-                recentSearches = recentSearches.slice(0, 8);
-
-                saveSearchHistory();
-            }
-
-            function closeSearchDropdown() {
-                els.searchDropdown?.classList.remove("show");
-            }
-
-            function openSearchDropdown() {
-                els.searchDropdown?.classList.add("show");
-            }
-
-            function removeRecentSearch(keyword) {
-                recentSearches = recentSearches.filter(item => item !== keyword);
-                localStorage.setItem("pos_recent_searches", JSON.stringify(recentSearches));
-                renderSearchPanel(els.searchInput.value);
-            }
-
-            function renderSuggestions(keyword) {
-                if (!els.searchSuggestions) return;
-
-                const text = keyword.trim().toLowerCase();
-                let suggestions = text ?
-                    recentSearches.filter(item => item.includes(text)) :
-                    recentSearches;
-
-                if (!suggestions.length) {
-                    els.searchSuggestions.innerHTML = `<div class="search-empty">No search history</div>`;
-                    return;
+                if (!res.ok) {
+                    throw new Error('Update failed');
                 }
 
-                els.searchSuggestions.innerHTML = suggestions.map(item => `
-                    <div class="search-suggestion-item" data-value="${escapeHtml(item)}">
-                        <div class="search-suggestion-left">
-                            <i class="bi bi-clock-history"></i>
-                            <span>${escapeHtml(item)}</span>
-                        </div>
-                        <div class="search-item-actions">
-                            <button type="button" class="delete-history-btn" data-value="${escapeHtml(item)}">
-                                <i class="bi bi-x"></i>
-                            </button>
-                        </div>
-                    </div>
-                `).join("");
+                await refreshCartSummary();
 
-                els.searchSuggestions.querySelectorAll(".search-suggestion-item").forEach(item => {
-                    item.addEventListener("click", (e) => {
-                        if (e.target.closest('.delete-history-btn')) return;
-
-                        const value = item.dataset.value || "";
-                        els.searchInput.value = value;
-                        addRecentSearch(value);
-                        filterProducts(value);
-                        renderSearchPanel(value);
-                    });
-                });
-
-                els.searchSuggestions.querySelectorAll(".delete-history-btn").forEach(btn => {
-                    btn.addEventListener("click", (e) => {
-                        e.stopPropagation();
-                        const valueToDelete = btn.dataset.value;
-                        removeRecentSearch(valueToDelete);
-                    });
-                });
-            }
-
-            function renderPreviewProducts(keyword) {
-                if (!els.searchPreviewProducts) return;
-
-                const matchedCards = getMatchedCards(keyword);
-
-                if (!matchedCards.length) {
-                    els.searchPreviewProducts.innerHTML = `<div class="search-empty">No product found</div>`;
-                    return;
+                const latestQty = parseInt(row.dataset.qty, 10);
+                if (pendingQtyByItem.get(id) !== latestQty) {
+                    syncingItems.delete(id);
+                    setItemButtonsDisabled(row, false);
+                    return syncQty(id, row);
                 }
-
-                els.searchPreviewProducts.innerHTML = matchedCards.slice(0, 3).map(card => {
-                    const data = getCardData(card);
-                    return `
-                        <div class="search-preview-card" data-id="${escapeHtml(data.id)}">
-                            <img src="${escapeHtml(data.image)}" alt="${escapeHtml(data.displayName)}">
-                            <div class="search-preview-info">
-                                <div class="search-preview-name">${escapeHtml(data.displayName)}</div>
-                                <div class="search-preview-price">$${escapeHtml(data.price)}</div>
-                                <button type="button" class="search-preview-btn">View</button>
-                            </div>
-                        </div>
-                    `;
-                }).join("");
-
-                els.searchPreviewProducts.querySelectorAll(".search-preview-card").forEach(preview => {
-                    preview.querySelector(".search-preview-btn")?.addEventListener("click", () => {
-                        const id = preview.dataset.id;
-                        const card = els.productCards.find(item => item.dataset.id === id);
-                        if (!card) return;
-
-                        filterProducts(keyword);
-                        closeSearchDropdown();
-
-                        card.scrollIntoView({
-                            behavior: "smooth",
-                            block: "center"
-                        });
-
-                        card.classList.add("highlight-product");
-                        setTimeout(() => card.classList.remove("highlight-product"), 1500);
-                    });
-                });
+            } catch (error) {
+                alert('Failed to update quantity. Please try again.');
+            } finally {
+                syncingItems.delete(id);
+                setItemButtonsDisabled(row, false);
             }
+        };
 
-            function renderSearchPanel(keyword) {
-                const value = keyword.trim();
+        // Update Quantity
+        document.querySelectorAll('.qty-update').forEach(btn => {
+            btn.onclick = async function() {
+                const id = this.dataset.id;
+                const row = this.closest('.item-card');
+                const qtyLabel = row.querySelector('.qty-val');
+                const currentQty = parseInt(qtyLabel.innerText, 10);
+                const newQty = this.dataset.action === 'plus' ? currentQty + 1 : currentQty - 1;
 
-                renderSuggestions(value);
+                if (newQty < 1) return;
 
-                if (value) {
-                    renderPreviewProducts(value);
-                    filterProducts(value);
-                } else {
-                    if (els.searchPreviewProducts) {
-                        els.searchPreviewProducts.innerHTML =
-                            `<div class="search-empty">Start typing to find products...</div>`;
-                    }
-                    filterProducts("");
-                }
+                qtyLabel.innerText = newQty;
+                row.dataset.qty = newQty;
+                pendingQtyByItem.set(id, newQty);
 
-                openSearchDropdown();
+                const oldTimer = debounceTimerByItem.get(id);
+                if (oldTimer) clearTimeout(oldTimer);
+
+                const timer = setTimeout(() => {
+                    syncQty(id, row);
+                }, 180);
+                debounceTimerByItem.set(id, timer);
             }
-
-            function bindSidebar() {
-                try {
-                    if (els.settingsBtn && els.settingsBox) {
-                        els.settingsBtn.addEventListener("click", (e) => {
-                            e.preventDefault();
-                            if (els.appShell?.classList.contains("collapsed")) return;
-                            els.settingsBox.classList.toggle("open");
-                        });
-                    }
-
-                    if (els.navButtons && els.navButtons.length > 0) {
-                        els.navButtons.forEach(button => {
-                            button.addEventListener("click", () => {
-                                els.navButtons.forEach(btn => btn.classList.remove("active"));
-                                button.classList.add("active");
-                            });
-                        });
-                    }
-                } catch (error) {
-                    console.error("Sidebar Error:", error);
-                }
-            }
-
-            function bindQuantityButtons() {
-                els.productCards.forEach(card => {
-                    const plusBtn = card.querySelector(".plus");
-                    const minusBtn = card.querySelector(".minus");
-                    const qtyEl = card.querySelector(".qty");
-
-                    plusBtn?.addEventListener("click", () => {
-                        const qty = parseInt(qtyEl?.textContent || "0", 10) + 1;
-                        if (qtyEl) qtyEl.textContent = qty;
-                    });
-
-                    minusBtn?.addEventListener("click", () => {
-                        const currentQty = parseInt(qtyEl?.textContent || "0", 10);
-                        if (currentQty > 1 && qtyEl) {
-                            qtyEl.textContent = currentQty - 1;
-                        }
-                    });
-                });
-            }
-
-            function bindAddToCart() {
-                els.productCards.forEach(card => {
-                    const addBtn = card.querySelector(".add-cart-btn");
-                    const qtyEl = card.querySelector(".qty");
-
-                    addBtn?.addEventListener("click", async function() {
-                        const itemId = this.dataset.id || card.dataset.id;
-                        const qty = parseInt(qtyEl?.textContent || "0", 10);
-
-                        if (!itemId) {
-                            showMessage("error", "Item ID not found.");
-                            return;
-                        }
-
-                        this.disabled = true;
-                        this.textContent = "Adding...";
-
-                        try {
-                            const response = await fetch("{{ route('user.pos.cart.add') }}", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "X-CSRF-TOKEN": csrfToken,
-                                    "Accept": "application/json"
-                                },
-                                body: JSON.stringify({
-                                    item_id: itemId,
-                                    qty: qty
-                                })
-                            });
-
-                            const data = await response.json();
-
-                            if (data.success) {
-                                if (els.cartCount && data.cartCount !== undefined) {
-                                    els.cartCount.textContent = data.cartCount;
-                                }
-
-                                if (qtyEl) qtyEl.textContent = "1";
-                                showMessage("success", data.message ||
-                                    "Added to cart successfully.");
-                            } else {
-                                showMessage("error", data.message || "Failed to add to cart.");
-                            }
-                        } catch (error) {
-                            console.error(error);
-                            showMessage("error", "Something went wrong.");
-                        } finally {
-                            this.disabled = false;
-                            this.textContent = "Add to cart";
-                        }
-                    });
-                });
-            }
-
-            function bindFavoriteButtons() {
-                els.favButtons.forEach(button => {
-                    button.addEventListener("click", async function() {
-                        const itemId = this.dataset.itemId;
-                        const icon = this.querySelector("i");
-
-                        if (!itemId) return;
-
-                        try {
-                            const response = await fetch(
-                                "{{ route('user.pos.favorite.toggle') }}", {
-                                    method: "POST",
-                                    headers: {
-                                        "Content-Type": "application/json",
-                                        "X-CSRF-TOKEN": csrfToken,
-                                        "Accept": "application/json"
-                                    },
-                                    body: JSON.stringify({
-                                        item_id: itemId
-                                    })
-                                });
-
-                            const data = await response.json();
-
-                            if (!icon) return;
-
-                            if (data.favorited) {
-                                icon.classList.remove("bi-heart");
-                                icon.classList.add("bi-heart-fill", "text-danger");
-                            } else {
-                                icon.classList.remove("bi-heart-fill", "text-danger");
-                                icon.classList.add("bi-heart");
-                            }
-                        } catch (error) {
-                            console.error(error);
-                            showMessage("error", "Favorite update failed.");
-                        }
-                    });
-                });
-            }
-
-            function bindSearch() {
-                if (!els.searchInput) return;
-
-                els.searchInput.addEventListener("focus", () => {
-                    renderSearchPanel(els.searchInput.value);
-                });
-
-                els.searchInput.addEventListener("input", e => {
-                    renderSearchPanel(e.target.value);
-                });
-
-                els.searchInput.addEventListener("keydown", e => {
-                    if (e.key === "Enter") {
-                        const value = e.target.value.trim();
-                        if (value) {
-                            addRecentSearch(value);
-                            closeSearchDropdown();
-                        }
-                    }
-                });
-
-                document.getElementById("searchSubmitBtn")?.addEventListener("click", () => {
-                    const value = els.searchInput.value.trim();
-                    if (value) {
-                        addRecentSearch(value);
-                        filterProducts(value);
-                        closeSearchDropdown();
-                    }
-                });
-
-                document.addEventListener("click", e => {
-                    if (els.collapseHandle?.contains(e.target)) return;
-
-                    if (!els.searchWrapper?.contains(e.target)) {
-                        closeSearchDropdown();
-                    }
-                });
-            }
-
-            function bindProductDetailNavigation() {
-                els.productCards.forEach(card => {
-                    card.style.cursor = "pointer";
-
-                    card.addEventListener("click", (e) => {
-                        if (e.target.closest(".qty-btn, .add-cart-btn, .fav-btn, .search-preview-btn")) {
-                            return;
-                        }
-
-                        const detailUrl = card.dataset.detailUrl;
-                        if (!detailUrl) return;
-
-                        window.location.href = detailUrl;
-                    });
-                });
-            }
-
-            bindSidebar();
-            bindQuantityButtons();
-            bindAddToCart();
-            bindFavoriteButtons();
-            bindSearch();
-            bindProductDetailNavigation();
         });
+
+        // Remove Item
+        document.querySelectorAll('.remove-item').forEach(btn => {
+            btn.onclick = async function() {
+                if (!confirm('Remove this item?')) return;
+                const row = this.closest('.item-card');
+                const res = await fetch(`/pos-system/cart/remove/${this.dataset.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+
+                if (!res.ok) {
+                    alert('Failed to remove item. Please try again.');
+                    return;
+                }
+
+                row.remove();
+                applyScrollClass();
+                await refreshCartSummary();
+
+                if (document.querySelectorAll('.item-card').length === 0) {
+                    renderEmptyState();
+                }
+            }
+        });
+    </script>
+    <script>
+        /* ✅ DESKTOP */
+        const checkoutDesktopBtn = document.getElementById('checkoutDesktopBtn');
+        if (checkoutDesktopBtn) {
+            checkoutDesktopBtn.onclick = async function() {
+                try {
+                    checkoutDesktopBtn.disabled = true;
+
+                    const res = await fetch('/pos-system/checkout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken // ✅ already defined
+                        },
+                        body: JSON.stringify({
+                            currency: 'USD',
+                            factor: 1
+                        })
+                    });
+
+                    const data = await res.json();
+
+                    if (data.success) {
+                        document.getElementById('cartMainContent').style.display = 'none';
+                        document.getElementById('orderSuccessContent').style.display = 'block';
+                    } else {
+                        alert('Checkout failed');
+                    }
+                } catch (e) {
+                    alert('Error');
+                } finally {
+                    checkoutDesktopBtn.disabled = false;
+                }
+            };
+        }
+
+        /* ✅ MOBILE */
+        const checkoutMobileBtn = document.getElementById('checkoutMobileBtn');
+        if (checkoutMobileBtn) {
+            checkoutMobileBtn.onclick = function() {
+                window.location.href = '/pos-system/checkout';
+            };
+        }
     </script>
 @endpush
 
 
-
-
-thunh mess bored mess sleepy mess tired mess 
- hungry mess pressure mess stress mess
-  stuck mess confused mess lazzy mess
-   anxious mess toxic mess sad mess lonely mess
-    disappointed mess crazy mess guilty mess ashamed mess
-     hopeless mess helpless mess worthless mess insecure mess
-      jealous mess resentful mess bitter mess cynical mess
-       pessimistic mess negative mess critical mess
-        judgmental mess sarcastic mess passive-aggressive mess
-         defensive mess argumentative mess confrontational mess
-          aggressive mess violent mess abusive mess
-           manipulative mess controlling mess toxic mess
-            code mess
-             messy code mess
-              spaghetti code mess
-               unmaintainable code mess
-                unreadable code mess
-                 buggy code mess
-                  inefficient code mess
-                   slow code mess
-                    memory leak code mess
-                     security vulnerability code mess
-                      technical debt code mess
-                       legacy code mess
-                        deprecated code mess
-                         untested code mess
-                          unrefactored code mess
-                           hardcoded values code mess
-                            magic numbers code mess
-                             copy-pasted code mess
-                              duplicate code mess
-                               tightly coupled code mess
-                                poorly documented code mess 
-                                 over-engineered code mess
-                                  under-engineered code mess
-                                   overcomplicated code mess
-                                    undercomplicated code mess
-                                     unoptimized code mess
-                                      premature optimization code mess
-                                       micro-optimization code mess
-                                        macro-optimization code mess
-                                         optimization without profiling code mess
-                                          optimization without testing code mess
-                                           optimization without measuring code mess
-                                            optimization without understanding code mess
-                                             optimization without considering trade-offs code mess
-                                              optimization without considering maintainability code mess
-                                               optimization without considering readability code mess
-                                                optimization without considering scalability code mess
-                                                 optimization without considering security code mess
-                                                  optimization without considering performance code mess
-                                                   optimization without considering reliability code mess
-                                                    optimization without considering usability code mess
-                                                     optimization without considering user experience code mess
-                                                      optimization without considering accessibility code mess
-                                                       optimization without considering internationalization code mess
-                                                        optimization without considering localization code mess
-                                                         optimization without considering documentation code mess
-                                                          optimization without considering testing code mess
-                                                           optimization without considering debugging code mess
-                                                            optimization without considering logging code mess
-                                                             optimization without considering monitoring code mess
-                                                              optimization without considering error handling code mess
-                                                               optimization without considering monitoring code mess
-                                                                optimization without considering error handling code mess
-                                                                 optimization without considering logging code mess
-                                                                  optimization without considering monitoring code mess
-                                                                   optimization without considering error handling code mess
-                                                                    optimization without considering monitoring code mess
-                                                                     optimization without considering error handling code mess
-                                                                      optimization without considering monitoring code mess     
-                                                                       optimization without considering error handling code mess    
-                                                                        optimization without considering monitoring code mess     
-                                                                         optimization without considering error handling code mess    
-                                                                          optimization without considering monitoring code mess     
-                                                                           optimization without considering error handling code mess    
-                                                                            optimization without considering monitoring code mess     
-                                                                             optimization without considering error handling code mess    
-                                                                              optimization without considering monitoring code mess     
-                                                                               optimization without considering error handling code mess    
-                                                                                optimization without considering monitoring code mess     
-                                                                                 optimization without considering error handling code mess    
-                                                                                  optimization without considering monitoring code mess     
-                                                                                   optimization without considering error handling code mess    
-                                                                                    optimization without considering monitoring code mess     
-                                                                                     optimization without considering error handling code mess    
-                                                                                      optimization without considering monitoring code mess     
-                                                                                       optimization without considering error handling code mess    
-                                                                                        optimization without considering monitoring code mess     
-                                                                                         optimization without considering error handling code mess    
-                                                                                          optimization without considering monitoring code mess     
-                                                                                           optimization without considering error handling code mess    
-                                                                                            optimization without considering monitoring code mess     
-                                                                                             optimization without considering error handling code mess    
-                                                                                              optimization without considering monitoring code mess     
-                                                                                               optimization without considering error handling code mess    
-                                                                                                optimization without considering monitoring code mess     
-                                                                                                 optimization without considering error handling code mess    
-                                                                                                  optimization without considering monitoring code mess     
-                                                                                                   optimization without considering error handling code mess
