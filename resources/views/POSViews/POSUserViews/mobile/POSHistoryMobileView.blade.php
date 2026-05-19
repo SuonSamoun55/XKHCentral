@@ -122,9 +122,6 @@
         <div class="pagination-container">
             {{ $orders->links('vendor.pagination.custom-pos') }}
         </div>
-   
-
-
         <div class="mobile-pagination">
             <div class="mp-left">
                 {{ $orders->firstItem() }} –
@@ -146,24 +143,39 @@
         </div>
     </div>
     @endsection
-    @push('scripts')
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const toggle = document.getElementById('switch');
-                const dateFilter = document.getElementById('dateFilter');
+  @push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
 
-                if (!toggle || !dateFilter) return;
+        // Redirect to desktop page if screen >= 768px
+        function checkScreenSize() {
+            if (window.innerWidth >= 768) {
+                window.location.href = "/pos-system/order-history";
+            }
+        }
 
-                if (toggle.checked) {
-                    dateFilter.style.display = 'block';
-                }
+        // Run when page loads
+        checkScreenSize();
 
-                toggle.addEventListener('change', function() {
-                    dateFilter.style.display = this.checked ? 'block' : 'none';
-                });
-            });
-        </script>
-    @endpush
+        // Run when screen resizes
+        window.addEventListener('resize', checkScreenSize);
+
+        // Your existing toggle logic
+        const toggle = document.getElementById('switch');
+        const dateFilter = document.getElementById('dateFilter');
+
+        if (!toggle || !dateFilter) return;
+
+        if (toggle.checked) {
+            dateFilter.style.display = 'block';
+        }
+
+        toggle.addEventListener('change', function () {
+            dateFilter.style.display = this.checked ? 'block' : 'none';
+        });
+    });
+</script>
+@endpush
 
     <style>
         /* =========================

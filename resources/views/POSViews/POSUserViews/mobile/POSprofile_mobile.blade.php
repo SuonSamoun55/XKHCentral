@@ -52,6 +52,20 @@
 
     </div>
 
+    <script>
+    // Redirect to desktop profile page if screen >= 768px
+    function checkDesktopScreen() {
+        if (window.innerWidth >= 768) {
+            window.location.href = "/profile";
+        }
+    }
+
+    // Run when page loads
+    checkDesktopScreen();
+
+    // Run when resizing screen
+    window.addEventListener('resize', checkDesktopScreen);
+</script>
 @endsection
 
 
