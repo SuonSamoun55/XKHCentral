@@ -299,6 +299,15 @@
     .mobile-bottom-nav {
         display: flex;
     }
+    .page-wrap {
+    flex: 1;
+    height: 100%;
+    max-height: 100vh;
+    overflow: visible;
+    background-color: white;
+    border-radius: 12px;
+    padding: 0;
+}
 
     .top .cart-box {
         display: flex;
