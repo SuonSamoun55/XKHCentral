@@ -11,13 +11,8 @@
                 <a href="{{ route('user.posinterface') }}" class="header-btn">
                     <i class="bi bi-arrow-left"></i>
                 </a>
+                @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
 
-                <h4 class="page-title">Order</h4>
-
-                <a href="{{ route('user.pos.cart') }}" class="header-btn cart-btn">
-                    <i class="bi bi-cart3"></i>
-                    <span class="cart-badge">0</span>
-                </a>
             </div>
 
             {{-- SEARCH --}}
@@ -130,16 +125,30 @@
             </div>
 
 
-            <div class="mp-center">
-                <span>Page</span>
-                <select onchange="location = this.value;">
-                    @for ($i = 1; $i <= $orders->lastPage(); $i++)
-                        <option value="{{ $orders->url($i) }}" {{ $orders->currentPage() == $i ? 'selected' : '' }}>
-                            {{ $i }}
-                        </option>
-                    @endfor
-                </select>
-            </div>
+           <div class="mp-center">
+
+    {{-- PREVIOUS --}}
+    @if ($orders->onFirstPage())
+        <button class="mp-btn disabled">‹</button>
+    @else
+        <a href="{{ $orders->previousPageUrl() }}" class="mp-btn">‹</a>
+    @endif
+
+    {{-- CURRENT PAGE --}}
+    <span class="mp-page">
+        {{ $orders->currentPage() }}
+        /
+        {{ $orders->lastPage() }}
+    </span>
+
+    {{-- NEXT --}}
+    @if ($orders->hasMorePages())
+        <a href="{{ $orders->nextPageUrl() }}" class="mp-btn">›</a>
+    @else
+        <button class="mp-btn disabled">›</button>
+    @endif
+
+</div>
         </div>
     </div>
     @endsection
@@ -183,7 +192,13 @@
 ========================= */
 
         @media (max-width: 768px) {
-
+            .logo-wrap{
+                display: none;
+            }
+            .cart-boxM{
+                display:flex;
+                justify-content: flex-end;
+            }
 
             .mobile-order-wrapper {
 
@@ -367,6 +382,7 @@
             }
 
             .header-btn {
+                position: relative;
                 width: 44px;
                 height: 44px;
                 border-radius: 14px;
@@ -376,7 +392,6 @@
                 justify-content: center;
                 text-decoration: none;
                 color: #1e293b;
-                position: relative;
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
             }
 
@@ -805,6 +820,37 @@
       font-size: 11px;
       color: #475569;
   }
+  .mp-center{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+}
+
+.mp-btn{
+    width:32px;
+    height:32px;
+    border:none;
+    border-radius:8px;
+    background:#1da1f2;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-decoration:none;
+    font-size:18px;
+    cursor:pointer;
+}
+
+.mp-btn.disabled{
+    opacity:0.5;
+    pointer-events:none;
+}
+
+.mp-page{
+    font-size:14px;
+    font-weight:600;
+}
         }
 
             /* =========================

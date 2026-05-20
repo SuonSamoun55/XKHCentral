@@ -7,8 +7,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\BcCustomer;
+use App\Models\MagamentSystemModel\ChatMessage;
 use App\Models\Role;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
@@ -141,5 +143,20 @@ class User extends Authenticatable
             $q->whereNull('last_seen_at')
               ->orWhere('last_seen_at', '<', now()->subDays($days));
         });
+    }
+
+    public function sentMessages(): HasMany
+    {
+        return $this->hasMany(ChatMessage::class, 'sender_id');
+    }
+
+    public function receivedMessages(): HasMany
+    {
+        return $this->hasMany(ChatMessage::class, 'receiver_id');
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->sentMessages();
     }
 }

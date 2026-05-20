@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Models\User;
 
 class NotificationController extends Controller
 {
@@ -97,6 +98,12 @@ class NotificationController extends Controller
             ->where('type', 'contact')
             ->where('is_read', false)
             ->count();
+
+            $contacts = User::withCount([
+    'messages as unread_count' => function ($query) {
+        $query->where('is_read', 0);
+    }
+])->get();
 
         // ✅ ADDITIONAL CONTACT LIST (for All Contact UI)
 $contactList = Notification::where('user_id', $user->id)

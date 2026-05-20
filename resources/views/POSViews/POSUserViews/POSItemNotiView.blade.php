@@ -193,18 +193,30 @@
                 of {{ $notifications->total() }} Pages
             </div>
 
-            <div class="mp-center">
-                <span>The page</span>
+           <div class="mp-center">
 
-                <select onchange="location = this.value;">
-                    @for ($i = 1; $i <= $notifications->lastPage(); $i++)
-                        <option value="{{ $notifications->url($i) }}"
-                            {{ $notifications->currentPage() == $i ? 'selected' : '' }}>
-                            {{ $i }}
-                        </option>
-                    @endfor
-                </select>
-            </div>
+    {{-- PREVIOUS --}}
+    @if ($notifications->onFirstPage())
+        <button class="mp-btn disabled">‹</button>
+    @else
+        <a href="{{ $notifications->previousPageUrl() }}" class="mp-btn">‹</a>
+    @endif
+
+    {{-- CURRENT PAGE --}}
+    <span class="mp-page">
+        {{ $notifications->currentPage() }}
+        /
+        {{ $notifications->lastPage() }}
+    </span>
+
+    {{-- NEXT --}}
+    @if ($notifications->hasMorePages())
+        <a href="{{ $notifications->nextPageUrl() }}" class="mp-btn">›</a>
+    @else
+        <button class="mp-btn disabled">›</button>
+    @endif
+
+</div>
         </div>
     </div>
     @include('ManagementSystemViews.UserViews.Layouts.footer')
@@ -302,15 +314,16 @@
         <div class="favorite-section">
             <p class="favorite-title">Favorite</p>
             <div class="favorite-list">
-                @forelse($favoriteContacts as $contact)
-                    <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}"
-                       class="favorite-item"
-                       title="{{ $contact->name }}">
-                        <img src="{{ $contact->chat_avatar }}"
-                             onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
-                             alt="{{ $contact->name }}">
-                    </a>
-                @empty
+               @forelse($contacts as $contact)
+                        <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}" class="recent-item">
+
+                            <div class="recent-avatar-wrap">
+                                <img src="{{ $contact->chat_avatar ?? asset('images/pos/Rectangle 2.png') }}"
+                                    onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
+                                    alt="{{ $contact->name }}">
+                            </div>
+                        </a>
+                    @empty
                     <div class="empty-text">No favorites yet</div>
                 @endforelse
             </div>
@@ -323,29 +336,22 @@
         </div>
 
         <div class="ac-contact-list">
-            @forelse($contactsFromNotifications as $contact)
-                <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}"
-                   class="ac-contact-row"
-                   data-name="{{ strtolower($contact->name) }}">
+            @forelse($contacts as $contact)
+                        <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}" class="recent-item">
 
-                    <div class="ac-contact-avatar">
-                        <img src="{{ $contact->chat_avatar }}"
-                             onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
-                             alt="{{ $contact->name }}">
-                    </div>
+                            <div class="recent-avatar-wrap">
+                                <img src="{{ $contact->chat_avatar ?? asset('images/pos/Rectangle 2.png') }}"
+                                    onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
+                                    alt="{{ $contact->name }}">
+                            </div>
 
-                    <div class="ac-contact-info">
-                        <strong class="ac-contact-name">{{ $contact->name }}</strong>
-                        <span class="ac-contact-time">last seen recently</span>
-                    </div>
-
-                    @if($contact->unread_count > 0)
-                        <span class="ac-contact-badge">{{ $contact->unread_count }}</span>
-                    @endif
-                </a>
-            @empty
-                <div class="ac-empty-text">No contacts available</div>
-            @endforelse
+                            <span class="recent-name">
+                                {{ \Illuminate\Support\Str::limit($contact->name, 8) }}
+                            </span>
+                        </a>
+                    @empty
+                    <div class="empty-text">No favorites yet</div>
+                @endforelse
         </div>
 
     </div>
