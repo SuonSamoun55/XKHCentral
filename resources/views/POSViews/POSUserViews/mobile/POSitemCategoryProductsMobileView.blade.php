@@ -275,3 +275,24 @@
 
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // Redirect to desktop POS page
+        function checkDesktopScreen() {
+            if (window.innerWidth >= 768) {
+                window.location.href = "/pos-system";
+            }
+        }
+
+        // Check when page loads
+        checkDesktopScreen();
+
+        // Check when resizing screen
+        window.addEventListener('resize', checkDesktopScreen);
+
+    });
+</script>
+@endpush
