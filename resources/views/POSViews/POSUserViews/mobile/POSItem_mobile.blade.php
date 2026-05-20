@@ -481,17 +481,17 @@
     });
 </script>
 <script>
-    const mediaQuery = window.matchMedia("(min-width: 1024px)");
-
-    function handleScreenChange(e) {
-        if (e.matches) {
-            window.location.href = "{{ route('user.pos.cart') }}";
+document.addEventListener("DOMContentLoaded", function () {
+    function checkScreenAndRedirect() {
+        if (window.innerWidth >= 768) {
+            window.location.href = "/pos-system";
         }
     }
 
-    // Run on load
-    handleScreenChange(mediaQuery);
+    // Run once on load
+    checkScreenAndRedirect();
 
-    // Listen for screen change
-    mediaQuery.addEventListener('change', handleScreenChange);
+    // Run again when screen resizes
+    window.addEventListener("resize", checkScreenAndRedirect);
+});
 </script>

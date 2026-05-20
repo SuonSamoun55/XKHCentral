@@ -462,3 +462,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 2500);
     }
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    function checkScreenAndRedirect() {
+        if (window.innerWidth >= 768) {
+            window.location.href = "/pos-system";
+        }
+    }
+
+    // Run once on load
+    checkScreenAndRedirect();
+
+    // Run again when screen resizes
+    window.addEventListener("resize", checkScreenAndRedirect);
+});
+</script>
