@@ -95,7 +95,7 @@
                 <i class="bi bi-archive"></i>
             </button>
             <label class="mt-switch">
-                <input type="checkbox">
+                <input type="checkbox" id="mobileUnreadFilter" onchange="filterUnreadMobile()">
                 <span></span>
             </label>
         </div>
@@ -630,8 +630,26 @@
             const params = new URLSearchParams(window.location.search);
             if (params.get('unread') === 'true') {
                 document.getElementById('unreadFilter').checked = true;
+                const mobileUnreadFilter = document.getElementById('mobileUnreadFilter');
+                if (mobileUnreadFilter) {
+                    mobileUnreadFilter.checked = true;
+                }
             }
         });
+
+        // Mobile unread filter handler
+        function filterUnreadMobile() {
+            const checkbox = document.getElementById('mobileUnreadFilter');
+            const currentUrl = new URL(window.location);
+
+            if (checkbox.checked) {
+                currentUrl.searchParams.set('unread', 'true');
+            } else {
+                currentUrl.searchParams.delete('unread');
+            }
+
+            window.location.href = currentUrl.toString();
+        }
     </script>
     <script>
         function openAllContact() {
