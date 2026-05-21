@@ -193,30 +193,18 @@
                 of {{ $notifications->total() }} Pages
             </div>
 
-           <div class="mp-center">
+            <div class="mp-center">
+                <span>The page</span>
 
-    {{-- PREVIOUS --}}
-    @if ($notifications->onFirstPage())
-        <button class="mp-btn disabled">‹</button>
-    @else
-        <a href="{{ $notifications->previousPageUrl() }}" class="mp-btn">‹</a>
-    @endif
-
-    {{-- CURRENT PAGE --}}
-    <span class="mp-page">
-        {{ $notifications->currentPage() }}
-        /
-        {{ $notifications->lastPage() }}
-    </span>
-
-    {{-- NEXT --}}
-    @if ($notifications->hasMorePages())
-        <a href="{{ $notifications->nextPageUrl() }}" class="mp-btn">›</a>
-    @else
-        <button class="mp-btn disabled">›</button>
-    @endif
-
-</div>
+                <select onchange="location = this.value;">
+                    @for ($i = 1; $i <= $notifications->lastPage(); $i++)
+                        <option value="{{ $notifications->url($i) }}"
+                            {{ $notifications->currentPage() == $i ? 'selected' : '' }}>
+                            {{ $i }}
+                        </option>
+                    @endfor
+                </select>
+            </div>
         </div>
     </div>
     @include('ManagementSystemViews.UserViews.Layouts.footer')
@@ -302,67 +290,65 @@
 <!-- ALL CONTACT OVERLAY -->
 <div id="allContactScreen" class="all-contact-screen">
 
-  <div class="inbox-page">
-
-    {{-- Header --}}
-    <div class="inbox-header">
-        <a href="{{ route('user.notifications') }}" class="back-btn">
+    <div class="contact-header">
+        <button class="back-btn" onclick="closeAllContact()">
             <i class="bi bi-arrow-left"></i>
-        </a>
+        </button>
         <h4>All Contact</h4>
     </div>
 
-    <div class="inbox-scroll">
+    <div class="contact-body">
 
-        {{-- FAVORITE / RECENT --}}
         <div class="favorite-section">
-            <p class="section-title">Favorite</p>
-
+            <p class="favorite-title">Favorite</p>
             <div class="favorite-list">
-                @forelse($contacts as $contact)
-<a href="{{ route('user.notifications.mobile_show', $contact->id) }}">
-                        <div class="favorite-avatar-wrap">
-                            <img src="{{ $contact->chat_avatar ?? asset('images/pos/Rectangle 2.png') }}"
-                                onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'">
-                        </div>
-
+                @forelse($favoriteContacts as $contact)
+                    <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}"
+                       class="favorite-item"
+                       title="{{ $contact->name }}">
+                        <img src="{{ $contact->chat_avatar }}"
+                             onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
+                             alt="{{ $contact->name }}">
                     </a>
                 @empty
-                    <div class="empty-text">No contacts</div>
+                    <div class="empty-text">No favorites yet</div>
                 @endforelse
             </div>
         </div>
 
-        {{-- CONTACT LIST (like image UI) --}}
-        <div class="contact-section">
-            <p class="section-title">Contacts</p>
+        <div class="ac-search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" id="acSearchInput" placeholder="Search"
+                   onkeyup="filterContactsList()">
+        </div>
 
-            @forelse($contacts as $contact)
-                <a href="{{ route('user.notifications.mobile_show', $contact->id) }}" class="contact-item">
+        <div class="ac-contact-list">
+            @forelse($contactsFromNotifications as $contact)
+                <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}"
+                   class="ac-contact-row"
+                   data-name="{{ strtolower($contact->name) }}">
 
-                    <div class="contact-avatar">
-                        <img src="{{ $contact->chat_avatar ?? asset('images/pos/Rectangle 2.png') }}"
-                            onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'">
+                    <div class="ac-contact-avatar">
+                        <img src="{{ $contact->chat_avatar }}"
+                             onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
+                             alt="{{ $contact->name }}">
                     </div>
 
-                    <div class="contact-info">
-                        <div class="contact-name">
-                            {{ $contact->name }}
-                        </div>
-
-                        <div class="contact-status">
-                            last seen recently
-                        </div>
+                    <div class="ac-contact-info">
+                        <strong class="ac-contact-name">{{ $contact->name }}</strong>
+                        <span class="ac-contact-time">last seen recently</span>
                     </div>
 
+                    @if($contact->unread_count > 0)
+                        <span class="ac-contact-badge">{{ $contact->unread_count }}</span>
+                    @endif
                 </a>
             @empty
-                <div class="empty-text">No contacts found</div>
+                <div class="ac-empty-text">No contacts available</div>
             @endforelse
         </div>
 
     </div>
-</div>
 </div>
 
 <!-- NEW MESSAGE OVERLAY -->
@@ -409,8 +395,9 @@
         <!-- Contact List -->
         <div class="nm-contact-list">
             @forelse($contactList as $contact)
-                <a href="{{ url('/notifications/' . $contact->id) }}"
-                       class="nm-contact-item">
+                <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}"
+                   class="nm-contact-item">
+
                     <div class="nm-contact-avatar">
                         <img src="{{ $contact->chat_avatar }}"
                              onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
