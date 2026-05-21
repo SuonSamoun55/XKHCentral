@@ -158,6 +158,39 @@
             justify-content: center;
         }
 
+        .toast {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            max-width: calc(100% - 32px);
+            padding: 14px 18px;
+            background: #10b8c3;
+            color: #fff;
+            border-radius: 16px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            pointer-events: none;
+            z-index: 9999;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .toast.success {
+            background: #10b8c3;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
         /* FAVORITE */
         .fav-btn {
             position: absolute;
@@ -306,6 +339,8 @@
                     {{ $items->count() }} products
                 </div>
 
+                <div id="toast" class="toast" aria-live="polite" aria-atomic="true" role="status"></div>
+
                 {{-- PRODUCTS --}}
                 <div class="products-list">
                     @foreach ($items as $item)
@@ -432,66 +467,102 @@
             btn.querySelector('i').classList.toggle('text-danger');
         });
 
-        // ✅ ADD TO CART — THIS is the mobile add button handler
-        document.querySelectorAll(".product-add").forEach(button => {
-            button.addEventListener("click", function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                const itemId = this.dataset.itemId;
-                const card = this.closest(".product-card");
-                const qtyEl = card.querySelector(".qty");
-                const qty = qtyEl ? parseInt(qtyEl.innerText, 10) || 1 : 1;
-                this.style.pointerEvents = "none";
+        function showToast(type, message) {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
 
-                fetch("{{ route('user.pos.cart.add') }}", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": csrf
-                        },
-                        body: JSON.stringify({
-                            item_id: itemId,
-                            qty: qty
-                        })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success && productCount) {
-                            productCount.innerText = `${data.cartCount ?? 0} products`;
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+
+            clearTimeout(toast._hideTimeout);
+            toast._hideTimeout = setTimeout(() => {
+                toast.className = 'toast';
+            }, 2800);
+        }
+
+        window.showAppToast = showToast;
+
+        // ✅ ADD TO CART — THIS is the mobile add button handler
+        // ✅ ADD TO CART
+        function bindAddToCart() {
+
+            document.querySelectorAll(".product-add").forEach(button => {
+
+                button.addEventListener("click", async function(e) {
+
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const itemId = this.dataset.itemId;
+
+                    if (!itemId) {
+                        alert("Item ID not found.");
+                        return;
+                    }
+
+                    this.style.pointerEvents = "none";
+
+                    try {
+
+                        const response = await fetch("{{ route('user.pos.cart.add') }}", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": csrf,
+                                "Accept": "application/json"
+                            },
+                            body: JSON.stringify({
+                                item_id: itemId,
+                                qty: 1
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+
+                            // UPDATE CART COUNT
+                            const cartCount = document.getElementById("cartCount");
+
+                            if (cartCount && data.cartCount !== undefined) {
+                                cartCount.innerText = data.cartCount;
+                            }
+
+                            showToast("success", data.message || "Added to cart successfully.");
+                        } else {
+                            showToast("error", data.message || "Failed to add to cart.");
                         }
-                        const asideCartCount = document.getElementById("asideCartCount");
-                        if (data.success && asideCartCount && data.cartCount !== undefined) {
-                            asideCartCount.innerText = data.cartCount;
-                            asideCartCount.classList.toggle("is-empty", data.cartCount <= 0);
-                        }
-                        if (data.success && typeof window.showAppToast === "function") {
-                            window.showAppToast("Added to cart successfully.", "success");
-                        }
-                    })
-                    .catch(() => {
-                        if (typeof window.showAppToast === "function") {
-                            window.showAppToast("Failed to add item to cart.", "error");
-                        }
-                    })
-                    .finally(() => {
+
+                    } catch (error) {
+
+                        console.error(error);
+
+                        showToast("error", "Something went wrong.");
+
+                    } finally {
+
                         this.style.pointerEvents = "auto";
-                    });
+                    }
+                });
             });
-        });
+        }
+
+        // RUN FUNCTION
+        bindAddToCart();
     });
 </script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    function checkScreenAndRedirect() {
-        if (window.innerWidth >= 768) {
-            window.location.href = "/pos-system";
+    document.addEventListener("DOMContentLoaded", function() {
+        function checkScreenAndRedirect() {
+            if (window.innerWidth >= 768) {
+                window.location.href = "/pos-system";
+            }
         }
-    }
 
-    // Run once on load
-    checkScreenAndRedirect();
+        // Run once on load
+        checkScreenAndRedirect();
 
-    // Run again when screen resizes
-    window.addEventListener("resize", checkScreenAndRedirect);
-});
+        // Run again when screen resizes
+        window.addEventListener("resize", checkScreenAndRedirect);
+    });
 </script>

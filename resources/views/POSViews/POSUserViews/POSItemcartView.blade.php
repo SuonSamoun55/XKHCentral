@@ -369,6 +369,41 @@
 @endsection
 
 @push('scripts')
+
+<script>
+    const handleDesktopScreenRedirect = () => {
+
+        // MOBILE CHECKOUT SCREEN
+        const isCheckoutOpen =
+            checkoutContent &&
+            checkoutContent.style.display === 'block';
+
+        // MOBILE SUCCESS SCREEN
+        const isSuccessOpen =
+            successContent &&
+            !successContent.classList.contains('hidden-success');
+
+        // MOBILE ORDER DETAIL SCREEN
+        const isOrderDetailOpen =
+            orderDetailPage &&
+            !orderDetailPage.classList.contains('hidden-order-detail');
+
+        // IF DESKTOP SCREEN
+        if (
+            window.innerWidth >= 768 &&
+            (isCheckoutOpen || isSuccessOpen || isOrderDetailOpen)
+        ) {
+            window.location.href = "{{ route('user.pos.cart') }}";
+        }
+    };
+
+    // RUN WHEN RESIZE
+    window.addEventListener('resize', handleDesktopScreenRedirect);
+
+    // RUN ON PAGE LOAD
+    handleDesktopScreenRedirect();
+</script>
+
     <script>
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         const cartMainContent = document.getElementById('cartMainContent');
@@ -408,18 +443,6 @@
             if (itemCount > 10) cartListWrapper.classList.add('scroll-limit-10');
             else if (itemCount > 5) cartListWrapper.classList.add('scroll-limit-5');
         };
-
-        const handleDesktopSuccessRedirect = () => {
-            const hasMobileViewOpen = (successContent && !successContent.classList.contains('hidden-success')) ||
-                (orderDetailPage && !orderDetailPage.classList.contains('hidden-order-detail'));
-
-            if (window.innerWidth >= 768 && hasMobileViewOpen) {
-                window.location.href = "{{ route('user.pos.cart') }}";
-            }
-        };
-
-        window.addEventListener('resize', handleDesktopSuccessRedirect);
-        handleDesktopSuccessRedirect();
 
         if (showOrderDetail && orderDetailPage) {
             if (window.innerWidth >= 768) {
