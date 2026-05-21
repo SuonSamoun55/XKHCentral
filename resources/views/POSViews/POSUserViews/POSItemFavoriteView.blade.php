@@ -19,8 +19,10 @@
                 @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Favorite Items'])
 
                 <div class="cart-box">
+                <a href="{{ route('user.pos.cart') }}" class="cart-box">
                     <i class="bi bi-cart3"></i>
                     <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
+                </a>
                 </div>
             </div>
 
