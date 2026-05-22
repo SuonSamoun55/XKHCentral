@@ -3,284 +3,312 @@
 @section('title', 'POS Cart')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/POSsystem/cart.css') }}">  
+    <link rel="stylesheet" href="{{ asset('css/POSsystem/cart.css') }}">
 @endpush
 
 @section('content')
-   <div class="page-wrap">
-    <div class="cart-container">
-
-        <!-- =========================
-            TOP NAVIGATION (CART HEADER)
-        ========================== -->
-        <div class="cart-nav">
-            <a href="/pos-system" class="icon-btn"><i class="bi bi-arrow-left"></i></a>
-            <span class="nav-title">My Cart</span>
-        </div>
-
-        <div id="cartMainContent">
+    <div class="page-wrap">
+        <div class="cart-container">
 
             <!-- =========================
-                SCREEN 1: EMPTY CART STATE (DESKTOP + MOBILE)
-            ========================== -->
-            @if (!$cart || $cart->items->isEmpty())
-
-                <!-- ===== DESKTOP EMPTY CART ===== -->
-                <div class="empty-state desktop-only">
-                    <img src="{{ asset('images/pos/Empty.png') }}" class="empty-state-image">
-                    <h3 style="color: #ccc;">Your cart is Empty</h3>
-                    <p class="empty-description">Looks like you haven’t <br> added anything to your cart yet</p>
-                    <button class="shopingBtn">
-                        <a href="/pos-system" class="empty-state-link">Continue Shopping</a>
-                    </button>
-                </div>
-
-                <!-- ===== MOBILE EMPTY CART ===== -->
-                <div class="empty-cart-mobile mobile-only">
-                    <div class="empty-cart-content">
-                        <div class="item-count">0 items</div>
-
-                        <img src="{{ asset('images/pos/image_16.png') }}" alt="Empty cart"
-                            class="empty-cart-illustration">
-
-                        <h3 class="empty-title">Your cart is empty</h3>
-
-                        <p class="empty-desc">
-                            Looks like you haven’t added anything<br>
-                            to your cart yet
-                        </p>
-
-                        <a href="{{ route('user.pos.products') }}" class="shop-now-btn">
-                            Shop now <i class="bi bi-chevron-right"></i>
-                        </a>
-                    </div>
-
-                    <div class="empty-cart-footer">
-                        <div class="empty-summary-card">
-                            <div><span>Subtotal</span><span>$0</span></div>
-                            <div><span>Discount</span><span>$0</span></div>
-                            <div><span>Delivery Fee</span><span>$0</span></div>
-                            <div><span>Estimated Tax</span><span>$0</span></div>
-
-                            <hr>
-
-                            <div class="total"><span>Total in USD</span><span>$0</span></div>
-                            <div class="total"><span>Total in Riel</span><span>Riel 0</span></div>
-                        </div>
-
-                        <button class="checkout-disabled" disabled>
-                            Checkout
-                        </button>
-                    </div>
-                </div>
-
-            @else
-
-                <!-- =========================
-                    SCREEN 2: CART WITH ITEMS DESKTOP + MOBILE
+                    TOP NAVIGATION (CART HEADER)
                 ========================== -->
-
-                @php
-                    $count = $cart->items->count();
-                    $scrollClass = '';
-                    if ($count > 10) {
-                        $scrollClass = 'scroll-limit-10';
-                    } elseif ($count > 5) {
-                        $scrollClass = 'scroll-limit-5';
-                    }
-                @endphp
-
-                <!-- CART ITEM LIST -->
-                <div class="cart-list-wrapper {{ $scrollClass }}">
-                    @foreach ($cart->items as $cartItem)
-
-                        <!-- SINGLE CART ITEM -->
-                        <div class="item-card"
-                            data-cart-item-id="{{ $cartItem->id }}"
-                            data-qty="{{ $cartItem->qty }}">
-
-                            <img src="{{ optional($cartItem->item)->image_url ?? asset('images/no-image.png') }}"
-                                class="item-image">
-
-                            <div class="item-details">
-                                <h3>{{ $cartItem->item_name }} (L)</h3>
-
-                                <div class="qty-controls">
-                                    <button class="qty-btn qty-update"
-                                        data-id="{{ $cartItem->id }}"
-                                        data-action="minus">−</button>
-
-                                    <span class="qty-val">{{ $cartItem->qty }}</span>
-
-                                    <button class="qty-btn qty-update"
-                                        data-id="{{ $cartItem->id }}"
-                                        data-action="plus">+</button>
-                                </div>
-                            </div>
-
-                            <i class="bi bi-x-circle remove-icon remove-item"
-                                data-id="{{ $cartItem->id }}"></i>
-                        </div>
-                    @endforeach
-                </div>
-
-                <!-- CART SUMMARY BOX -->
-                <div class="summary-box">
-                    <div class="summary-line">
-                        <span>Subtotal</span>
-                        <span id="subtotalAmount">${{ number_format($subtotal, 2) }}</span>
-                    </div>
-
-                    <div class="summary-line">
-                        <span>Delivery</span>
-                        <span id="deliveryAmount">$0.00</span>
-                    </div>
-
-                    <div class="summary-line">
-                        <span>Estimated Tax <i class="bi bi-question-circle"></i></span>
-                        <span id="taxAmount">${{ number_format($taxAmount ?? 0, 2) }}</span>
-                    </div>
-
-                    <div class="summary-line total-usd">
-                        <span>Total in USD</span>
-                        <span id="totalUsd">${{ number_format($total, 2) }}</span>
-                    </div>
-
-                    <div class="summary-line total-riel">
-                        <span>Total in Khmer Riel</span>
-                        <span id="totalRiel">riel {{ number_format($total * 4100, 0) }}</span>
-                    </div>
-                </div>
-
-                <!-- DESKTOP CHECKOUT BUTTON -->
-                <button id="checkoutDesktopBtn" type="button" class="place-order-btn desktop-only">
-                    PLACE ORDER
-                </button>
-
-                <!-- MOBILE CHECKOUT BUTTON -->
-                <button id="checkoutMobileBtn" type="button" class="place-order-btn mobile-only">
-                    CHECK OUT
-                </button>
-
-            @endif
-        </div>
-
-        <!-- =========================
-            SCREEN 3: CHECKOUT PAGE MOBILE SCREEN ONLY
-        ========================== -->
-        <div class="checkout-container" id="checkoutContent" style="display:none;">
-
-            <div class="checkout-nav">
-                <a href="javascript:history.back()" class="icon-btn">
-                    <i class="bi bi-arrow-left"></i>
-                </a>
-                <span class="nav-title">Checkout</span>
+            <div class="cart-nav">
+                <a href="/pos-system" class="icon-btn"><i class="bi bi-arrow-left"></i></a>
+                <span class="nav-title">My Cart</span>
             </div>
 
-            <!-- ITEMS IN CHECKOUT -->
-            <div class="checkout-section">
-                <h4 class="section-title">Items</h4>
+            <div id="cartMainContent">
 
-                @if ($cart && $cart->items->isNotEmpty())
-                    @foreach ($cart->items as $cartItem)
-                        <div class="checkout-item-card">
-                            <img src="{{ optional($cartItem->item)->image_url ?? asset('images/no-image.png') }}">
+                <!-- =========================
+                        SCREEN 1: EMPTY CART STATE (DESKTOP + MOBILE)
+                    ========================== -->
+                @if (!$cart || $cart->items->isEmpty())
 
-                            <div class="item-content">
-                                <div class="item-top">
-                                    <strong>{{ $cartItem->item_name }}</strong>
-                                    <span class="item-price">
-                                        ${{ number_format($cartItem->price * $cartItem->qty, 0) }}
-                                    </span>
+                    <!-- ===== DESKTOP EMPTY CART ===== -->
+                    <div class="empty-state desktop-only">
+                        <img src="{{ asset('images/pos/Empty.png') }}" class="empty-state-image">
+                        <h3 style="color: #ccc;">Your cart is Empty</h3>
+                        <p class="empty-description">Looks like you haven’t <br> added anything to your cart yet</p>
+                        <button class="shopingBtn">
+                            <a href="/pos-system" class="empty-state-link">Continue Shopping</a>
+                        </button>
+                    </div>
+
+                    <!-- ===== MOBILE EMPTY CART ===== -->
+                    <div class="empty-cart-mobile mobile-only">
+                        <div class="empty-cart-content">
+                            <div class="item-count">0 items</div>
+
+                            <img src="{{ asset('images/pos/image_16.png') }}" alt="Empty cart"
+                                class="empty-cart-illustration">
+
+                            <h3 class="empty-title">Your cart is empty</h3>
+
+                            <p class="empty-desc">
+                                Looks like you haven’t added anything<br>
+                                to your cart yet
+                            </p>
+
+                            <a href="{{ route('user.pos.products') }}" class="shop-now-btn">
+                                Shop now <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </div>
+
+                        <div class="empty-cart-footer">
+                            <div class="empty-summary-card">
+                                <div><span>Subtotal</span><span>$0</span></div>
+                                <div><span>Discount</span><span>$0</span></div>
+                                <div><span>Delivery Fee</span><span>$0</span></div>
+                                <div><span>Estimated Tax</span><span>$0</span></div>
+
+                                <hr>
+
+                                <div class="total"><span>Total in USD</span><span>$0</span></div>
+                                <div class="total"><span>Total in Riel</span><span>Riel 0</span></div>
+                            </div>
+
+                            <button class="checkout-disabled" disabled>
+                                Checkout
+                            </button>
+                        </div>
+                    </div>
+                @else
+                    <!-- =========================
+                            SCREEN 2: CART WITH ITEMS DESKTOP + MOBILE
+                        ========================== -->
+
+                    @php
+                        $count = $cart->items->count();
+                        $scrollClass = '';
+                        if ($count > 10) {
+                            $scrollClass = 'scroll-limit-10';
+                        } elseif ($count > 5) {
+                            $scrollClass = 'scroll-limit-5';
+                        }
+                    @endphp
+
+                    <!-- CART ITEM LIST -->
+                    <div class="cart-list-wrapper {{ $scrollClass }}">
+                        @foreach ($cart->items as $cartItem)
+                            <!-- SINGLE CART ITEM -->
+                            <div class="item-card" data-cart-item-id="{{ $cartItem->id }}" data-qty="{{ $cartItem->qty }}">
+
+                                <img src="{{ optional($cartItem->item)->image_url ?? asset('images/no-image.png') }}"
+                                    class="item-image">
+
+                                <div class="item-details">
+                                    <h3>{{ $cartItem->item_name }} (L)</h3>
+
+                                    <div class="qty-controls">
+                                        <button class="qty-btn qty-update" data-id="{{ $cartItem->id }}"
+                                            data-action="minus">−</button>
+
+                                        <span class="qty-val">{{ $cartItem->qty }}</span>
+
+                                        <button class="qty-btn qty-update" data-id="{{ $cartItem->id }}"
+                                            data-action="plus">+</button>
+                                    </div>
                                 </div>
 
-                                <div class="item-meta">Variant: {{ $cartItem->variant ?? 'default' }}</div>
-                                <div class="item-meta">x{{ $cartItem->qty }}</div>
+                                <i class="bi bi-x-circle remove-icon remove-item" data-id="{{ $cartItem->id }}"></i>
                             </div>
+                        @endforeach
+                    </div>
+
+                    <!-- CART SUMMARY BOX -->
+                    <div class="summary-box">
+                        <div class="summary-line">
+                            <span>Subtotal</span>
+                            <span id="subtotalAmount">${{ number_format($subtotal, 2) }}</span>
                         </div>
-                    @endforeach
-                @else
-                    <p class="text-muted">No items in the cart.</p>
+
+                        <div class="summary-line">
+                            <span>Delivery</span>
+                            <span id="deliveryAmount">$0.00</span>
+                        </div>
+
+                        <div class="summary-line">
+                            <span>Estimated Tax <i class="bi bi-question-circle"></i></span>
+                            <span id="taxAmount">${{ number_format($taxAmount ?? 0, 2) }}</span>
+                        </div>
+
+                        <div class="summary-line total-usd">
+                            <span>Total in USD</span>
+                            <span id="totalUsd">${{ number_format($total, 2) }}</span>
+                        </div>
+
+                        <div class="summary-line total-riel">
+                            <span>Total in Khmer Riel</span>
+                            <span id="totalRiel">riel {{ number_format($total * 4100, 0) }}</span>
+                        </div>
+                    </div>
+
+                    <!---------------------------- DESKTOP CHECKOUT BUTTON -->
+                    <button id="checkoutDesktopBtn" type="button" class="place-order-btn desktop-only">
+                        PLACE ORDER
+                    </button>
+
+                    <!-- MOBILE CHECKOUT BUTTON -->
+                    <button id="checkoutMobileBtn" type="button" class="place-order-btn mobile-only">
+                        CHECK OUT
+                    </button>
+
                 @endif
             </div>
 
-            <!-- PAYMENT SUMMARY -->
-            <div class="checkout-section payment-box">
-                <h4 class="section-title">Payment</h4>
+            <!-- =========================order success======================== -->
 
-                <div class="payment-row"><span>Subtotal</span><span>${{ number_format($subtotal, 2) }}</span></div>
-                <div class="payment-row"><span>Discount</span><span>$0</span></div>
-                <div class="payment-row"><span>Delivery Fee</span><span>$0</span></div>
-                <div class="payment-row"><span>Estimated Tax</span><span>${{ number_format($taxAmount, 2) }}</span></div>
+<div id="orderSuccessContent" class="success-container" style="display: none;">
 
-                <div class="divider"></div>
+                <div class="success-card">
 
-                <div class="payment-row total">
-                    <span>Total in USD</span>
-                    <span>${{ number_format($total, 2) }}</span>
-                </div>
+                    <!-- ICON -->
+                    <div class="empty-cart">
+                        <img src="{{ asset('images/pos/Group.png') }}" alt="success image">
+                    </div>
 
-                <div class="payment-row riel">
-                    <span>Total in Riel</span>
-                    <span>riel {{ number_format($total * 4100, 0) }}</span>
+                    <!-- TITLE -->
+                    <h2 class="success-title">
+                        Your Order is Confirmed !
+                    </h2>
+
+                    <!-- DESCRIPTION -->
+                    <p class="success-text">
+                        Your order is being packed and will arrive soon.<br>
+                        Fruits and veggies coming right up!
+                    </p>
+
+                    <!-- BUTTON -->
+                    <a href="{{ route('user.pos.order.history') }}" class="btn-track">
+                        Track Order
+                    </a>
+
+                    <!-- LINK -->
+                    <a href="/pos-system" class="btn-home">
+                        Back to home
+                    </a>
+
                 </div>
             </div>
 
-            <div class="bottom-space"></div>
+            <!-- =========================
+                    SCREEN 3: CHECKOUT PAGE MOBILE SCREEN ONLY
+                ========================== -->
+            <div class="checkout-container" id="checkoutContent" style="display:none;">
 
-            <button id="placeOrderBtn" class="placeOrderBtn" type="button">
-                Place Order
-            </button>
-        </div>
+                <div class="checkout-nav">
+                    <a href="javascript:history.back()" class="icon-btn">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <span class="nav-title">Checkout</span>
+                </div>
 
-        <!-- =========================
-            SCREEN 4: ORDER SUCCESS MOBILE SCREEN
-        ========================== -->
-        <div class="order-success-wrapper hidden-success" id="successContent">
+                <!-- ITEMS IN CHECKOUT -->
+                <div class="checkout-section">
+                    <h4 class="section-title">Items</h4>
 
-            <div class="order-success-header">
-                <span class="header-title">Order</span>
-                <a href="{{ route('user.posinterface') }}" class="close-btn">
-                    <i class="bi bi-x"></i>
+                    @if ($cart && $cart->items->isNotEmpty())
+                        @foreach ($cart->items as $cartItem)
+                            <div class="checkout-item-card">
+                                <img src="{{ optional($cartItem->item)->image_url ?? asset('images/no-image.png') }}">
+
+                                <div class="item-content">
+                                    <div class="item-top">
+                                        <strong>{{ $cartItem->item_name }}</strong>
+                                        <span class="item-price">
+                                            ${{ number_format($cartItem->price * $cartItem->qty, 0) }}
+                                        </span>
+                                    </div>
+
+                                    <div class="item-meta">Variant: {{ $cartItem->variant ?? 'default' }}</div>
+                                    <div class="item-meta">x{{ $cartItem->qty }}</div>
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <p class="text-muted">No items in the cart.</p>
+                    @endif
+                </div>
+
+                <!-- PAYMENT SUMMARY -->
+                <div class="checkout-section payment-box">
+                    <h4 class="section-title">Payment</h4>
+
+                    <div class="payment-row"><span>Subtotal</span><span>${{ number_format($subtotal, 2) }}</span></div>
+                    <div class="payment-row"><span>Discount</span><span>$0</span></div>
+                    <div class="payment-row"><span>Delivery Fee</span><span>$0</span></div>
+                    <div class="payment-row"><span>Estimated Tax</span><span>${{ number_format($taxAmount, 2) }}</span>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="payment-row total">
+                        <span>Total in USD</span>
+                        <span>${{ number_format($total, 2) }}</span>
+                    </div>
+
+                    <div class="payment-row riel">
+                        <span>Total in Riel</span>
+                        <span>riel {{ number_format($total * 4100, 0) }}</span>
+                    </div>
+                </div>
+
+                <div class="bottom-space"></div>
+
+                <button id="placeOrderBtn" class="placeOrderBtn" type="button">
+                    Place Order
+                </button>
+            </div>
+
+            <!-- =========================
+                    SCREEN 4: ORDER SUCCESS MOBILE SCREEN
+                ========================== -->
+            <div class="order-success-wrapper hidden-success" id="successContent">
+
+                <div class="order-success-header">
+                    <span class="header-title">Order</span>
+                    <a href="{{ route('user.posinterface') }}" class="close-btn">
+                        <i class="bi bi-x"></i>
+                    </a>
+                </div>
+
+                <div class="success-illustration">
+                    <img src="{{ asset('images/pos/emptycart.png') }}" class="empty-cart-illustration">
+                </div>
+
+                <h2 class="success-title">Your order has been placed!</h2>
+
+                <p class="success-desc">
+                    The order will be forwarded to the seller.<br>
+                    Please check status of your order in the order list.
+                </p>
+
+                <div class="order-detail-card">
+                    <div class="order-detail-header">
+                        <h4>Order detail</h4>
+                    </div>
+
+                    <div class="detail-row">
+                        <span>Order number</span>
+                        <strong id="orderNumber">#{{ $orderNumber ?? 'JKL4522A' }}</strong>
+                    </div>
+
+                    <div class="detail-row">
+                        <span>Amount paid</span>
+                        <strong id="amountPaid">{{ $amountPaid ?? 'None' }}</strong>
+                    </div>
+                </div>
+
+                <a id="orderDetailBtn" href="#" class="primary-btn">
+                    Check order
                 </a>
             </div>
 
-            <div class="success-illustration">
-                <img src="{{ asset('images/pos/emptycart.png') }}" class="empty-cart-illustration">
-            </div>
-
-            <h2 class="success-title">Your order has been placed!</h2>
-
-            <p class="success-desc">
-                The order will be forwarded to the seller.<br>
-                Please check status of your order in the order list.
-            </p>
-
-            <div class="order-detail-card">
-                <div class="order-detail-header">
-                    <h4>Order detail</h4>
-                </div>
-
-                <div class="detail-row">
-                    <span>Order number</span>
-                    <strong id="orderNumber">#{{ $orderNumber ?? 'JKL4522A' }}</strong>
-                </div>
-
-                <div class="detail-row">
-                    <span>Amount paid</span>
-                    <strong id="amountPaid">{{ $amountPaid ?? 'None' }}</strong>
-                </div>
-            </div>
-
-            <a id="orderDetailBtn" href="#" class="primary-btn">
-                Check order
-            </a>
-        </div>
-
-        <!-- =========================
-            SCREEN 5: ORDER DETAIL (MOBILE)
-        ========================== -->
-                   <div id="orderDetailPage" class="order-detail-page hidden-order-detail mobile-only">
+            <!-- =========================
+                    SCREEN 5: ORDER DETAIL (MOBILE)
+                ========================== -->
+            <div id="orderDetailPage" class="order-detail-page hidden-order-detail mobile-only">
                 <div class="order-header">
                     <a href="{{ url()->previous() }}" class="back-btn">
                         <i class="bi bi-arrow-left"></i>
@@ -355,54 +383,53 @@
             </div>
 
 
-        <!-- =========================
-            SCREEN 6: PROCESSING OVERLAY MOBILE
-        ========================== -->
-        <div id="processingScreen" class="process-screen hidden">
-            <div class="process-color-overlay"></div>
-            <img src="{{ asset('images/pos/checkout.png') }}" class="process-image">
-            <p class="process-text">Processing your order…</p>
-        </div>
+            <!-- =========================
+                    SCREEN 6: PROCESSING OVERLAY MOBILE
+                ========================== -->
+            <div id="processingScreen" class="process-screen hidden">
+                <div class="process-color-overlay"></div>
+                <img src="{{ asset('images/pos/checkout.png') }}" class="process-image">
+                <p class="process-text">Processing your order…</p>
+            </div>
 
+        </div>
     </div>
-</div>
 @endsection
 
 @push('scripts')
+    <script>
+        const handleDesktopScreenRedirect = () => {
 
-<script>
-    const handleDesktopScreenRedirect = () => {
+            // MOBILE CHECKOUT SCREEN
+            const isCheckoutOpen =
+                checkoutContent &&
+                checkoutContent.style.display === 'block';
 
-        // MOBILE CHECKOUT SCREEN
-        const isCheckoutOpen =
-            checkoutContent &&
-            checkoutContent.style.display === 'block';
+            // MOBILE SUCCESS SCREEN
+            const isSuccessOpen =
+                successContent &&
+                !successContent.classList.contains('hidden-success');
 
-        // MOBILE SUCCESS SCREEN
-        const isSuccessOpen =
-            successContent &&
-            !successContent.classList.contains('hidden-success');
+            // MOBILE ORDER DETAIL SCREEN
+            const isOrderDetailOpen =
+                orderDetailPage &&
+                !orderDetailPage.classList.contains('hidden-order-detail');
 
-        // MOBILE ORDER DETAIL SCREEN
-        const isOrderDetailOpen =
-            orderDetailPage &&
-            !orderDetailPage.classList.contains('hidden-order-detail');
+            // IF DESKTOP SCREEN
+            if (
+                window.innerWidth >= 768 &&
+                (isCheckoutOpen || isSuccessOpen || isOrderDetailOpen)
+            ) {
+                window.location.href = "{{ route('user.pos.cart') }}";
+            }
+        };
 
-        // IF DESKTOP SCREEN
-        if (
-            window.innerWidth >= 768 &&
-            (isCheckoutOpen || isSuccessOpen || isOrderDetailOpen)
-        ) {
-            window.location.href = "{{ route('user.pos.cart') }}";
-        }
-    };
+        // RUN WHEN RESIZE
+        window.addEventListener('resize', handleDesktopScreenRedirect);
 
-    // RUN WHEN RESIZE
-    window.addEventListener('resize', handleDesktopScreenRedirect);
-
-    // RUN ON PAGE LOAD
-    handleDesktopScreenRedirect();
-</script>
+        // RUN ON PAGE LOAD
+        handleDesktopScreenRedirect();
+    </script>
 
     <script>
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -578,7 +605,7 @@
                 }
             }
         });
-   
+
         /* ✅ DESKTOP */
         const checkoutDesktopBtn = document.getElementById('checkoutDesktopBtn');
         if (checkoutDesktopBtn) {
@@ -601,8 +628,26 @@
                     const data = await res.json();
 
                     if (data.success) {
-                        // For desktop, redirect back to cart page
-                        window.location.href = "{{ route('user.pos.cart') }}";
+
+                        // ✅ Hide cart
+                        cartMainContent.style.display = 'none';
+
+                        // ✅ Show success
+                        const successBlock = document.getElementById('orderSuccessContent');
+                        if (successBlock) {
+                            successBlock.style.display = 'block';
+                        }
+
+                        // ✅ Hide button
+                        checkoutDesktopBtn.style.display = 'none';
+
+                        // ✅ Scroll to top (VERY IMPORTANT)
+                        window.scrollTo(0, 0);
+
+                        // ✅ Redirect after 20 sec
+                        setTimeout(() => {
+                            window.location.href = "{{ route('user.pos.cart') }}";
+                        }, 20000);
                     } else {
                         alert('Checkout failed');
                     }
