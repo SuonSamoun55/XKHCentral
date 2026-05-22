@@ -51,6 +51,7 @@
                     <tr>
                         <th width="50"><input type="checkbox"></th>
                         <th>Order</th>
+                        <th></th>
                         <th>Date</th>
                         <th>Total</th>
                         <th>Status</th>
@@ -70,8 +71,14 @@
                                 <a href="{{ route('user.pos.order.show', $order->id) }}"
                                     class="order-link">#{{ $order->order_no }}</a>
                             </td>
-
                             <td>
+                                  <div class="order-image">
+                                    <img src="{{ optional($order->items->first()->item)->image_url ?? asset('images/pos/default-food.png') }}"
+                                        alt="">
+                                </div>
+                            </td>
+                            <td>
+                                
                                 <div class="date-text">
                                     {{ optional($order->created_at)->format('M d, Y') }}
                                 </div>
@@ -115,6 +122,20 @@
 @push('scripts')
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+
+            // Redirect to mobile page if screen < 768px
+            function checkMobileScreen() {
+                if (window.innerWidth < 768) {
+                    window.location.href = "/pos-system/order-history-mobile";
+                }
+            }
+
+            // Run on page load
+            checkMobileScreen();
+
+            // Run when resizing screen
+            window.addEventListener('resize', checkMobileScreen);
+
             const searchInput = document.getElementById('orderSearchInput');
             const searchSuggestions = document.getElementById('orderSuggestions');
             const orderRows = document.querySelectorAll('.order-row');
@@ -141,10 +162,10 @@
 
                 if (filtered.length > 0) {
                     searchSuggestions.innerHTML = filtered.slice(0, 5).map((order) => `
-                        <div class="suggestion-item" onclick="selectOrderSuggestion('${order.orderNo}')">
-                            <strong>#${order.orderNo}</strong> - <small>${order.status}</small>
-                        </div>
-                    `).join('');
+                    <div class="suggestion-item" onclick="selectOrderSuggestion('${order.orderNo}')">
+                        <strong>#${order.orderNo}</strong> - <small>${order.status}</small>
+                    </div>
+                `).join('');
                     searchSuggestions.classList.add('active');
                 } else {
                     searchSuggestions.classList.remove('active');
@@ -191,7 +212,7 @@
                 row.addEventListener('click', (e) => {
                     if (e.target.closest(
                             'input[type="checkbox"], .btn-download, .btn-download *, .order-link'
-                            )) {
+                        )) {
                         return;
                     }
                     const url = row.dataset.detailUrl;

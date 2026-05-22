@@ -278,22 +278,37 @@
 @endsection
 
 @push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('categorySearch');
-            const cards = Array.from(document.querySelectorAll('.category-card'));
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
 
-            if (!searchInput || !cards.length) {
-                return;
+        // Redirect to desktop POS page if screen >= 768px
+        function checkDesktopScreen() {
+            if (window.innerWidth >= 768) {
+                window.location.href = "/pos-system";
             }
+        }
 
-            searchInput.addEventListener('input', function() {
-                const query = this.value.trim().toLowerCase();
-                cards.forEach(card => {
-                    const title = card.dataset.title || '';
-                    card.style.display = title.includes(query) ? 'flex' : 'none';
-                });
+        // Run when page loads
+        checkDesktopScreen();
+
+        // Run when resizing screen
+        window.addEventListener('resize', checkDesktopScreen);
+
+        const searchInput = document.getElementById('categorySearch');
+        const cards = Array.from(document.querySelectorAll('.category-card'));
+
+        if (!searchInput || !cards.length) {
+            return;
+        }
+
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
+
+            cards.forEach(card => {
+                const title = card.dataset.title || '';
+                card.style.display = title.includes(query) ? 'flex' : 'none';
             });
         });
-    </script>
+    });
+</script>
 @endpush

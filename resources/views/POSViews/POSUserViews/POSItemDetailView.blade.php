@@ -339,6 +339,21 @@
 
 @push('scripts')
 <script>
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+
+    function handleScreenChange(e) {
+        if (e.matches) {
+            window.location.href = "{{ route('user.pos.cart') }}";
+        }
+    }
+
+    // Run on load
+    handleScreenChange(mediaQuery);
+
+    // Listen for screen change
+    mediaQuery.addEventListener('change', handleScreenChange);
+</script>
+<script>
     document.addEventListener("DOMContentLoaded", function () {
         const btn = document.getElementById("detailAddToCartBtn");
         const cartCountEl = document.getElementById("detailCartCount");
@@ -408,6 +423,12 @@
                     cartCountEl.classList.toggle("is-empty", nextCount <= 0);
                 }
 
+                const asideCartCountEl = document.getElementById("asideCartCount");
+                if (asideCartCountEl && data.cartCount !== undefined) {
+                    asideCartCountEl.textContent = data.cartCount;
+                    asideCartCountEl.classList.toggle("is-empty", data.cartCount <= 0);
+                }
+
                 this.innerHTML = 'Added!';
                 
                 setTimeout(() => {
@@ -428,3 +449,4 @@
     });
 </script>
 @endpush
+

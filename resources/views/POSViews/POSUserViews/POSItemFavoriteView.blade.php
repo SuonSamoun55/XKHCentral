@@ -5,6 +5,36 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/POSsystem/favorite.css') }}">
+    <style>
+        .toast {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            max-width: calc(100% - 32px);
+            padding: 14px 18px;
+            background: #10b8c3;
+            color: #fff;
+            border-radius: 16px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            pointer-events: none;
+            z-index: 9999;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -15,17 +45,22 @@
             @include('ManagementSystemViews.UserViews.Layouts.footer')
 
              <div id="messageBox" class="message-box"></div>
+            <div id="toast" class="toast" aria-live="polite" aria-atomic="true" role="status"></div>
             <div class="top">
                 @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Favorite Items'])
 
                 <div class="cart-box">
+                <a href="{{ route('user.pos.cart') }}" class="cart-box">
                     <i class="bi bi-cart3"></i>
                     <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
+                </a>
                 </div>
             </div>
 
 
                 <div id="messageBox" class="message-box"></div>
+
+<!-------If favorite is empty show empty state----------------->
 
             @if ($favorites->isEmpty())
                 <div class="empty-box">No favorite items found.</div>
@@ -76,6 +111,9 @@
                     </div>
                 </div>
             @else
+
+            <!---------------end of empty state----------------->
+
                 <div class="products-grid" id="productsGrid">
                     @foreach ($favorites as $item)
                         @php
@@ -141,6 +179,21 @@
             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
             const productsGrid = document.getElementById("productsGrid");
             const messageBox = document.getElementById("messageBox");
+            const toast = document.getElementById("toast");
+
+            function showToast(type, message) {
+                if (!toast) return;
+
+                toast.textContent = message;
+                toast.className = `toast show ${type}`;
+
+                clearTimeout(toast._hideTimeout);
+                toast._hideTimeout = setTimeout(() => {
+                    toast.className = 'toast';
+                }, 2800);
+            }
+
+            window.showAppToast = showToast;
 
             const ensureEmptyState = () => {
                 if (!productsGrid) return;
@@ -176,17 +229,22 @@
                         })
                         .then(res => res.json())
                         .then(data => {
-                            if (data.success && cartCount) {
-                                cartCount.innerText = data.cartCount;
-                            }
-                            if (data.success && typeof window.showAppToast === "function") {
-                                window.showAppToast("Added to cart successfully.", "success");
+                            if (data.success) {
+                                if (cartCount) {
+                                    cartCount.innerText = data.cartCount;
+                                }
+                                const asideCartCount = document.getElementById("asideCartCount");
+                                if (asideCartCount && data.cartCount !== undefined) {
+                                    asideCartCount.innerText = data.cartCount;
+                                    asideCartCount.classList.toggle("is-empty", data.cartCount <= 0);
+                                }
+                                showToast("success", data.message || "Added to cart successfully.");
+                            } else {
+                                showToast("error", data.message || "Failed to add item to cart.");
                             }
                         })
                         .catch(() => {
-                            if (typeof window.showAppToast === "function") {
-                                window.showAppToast("Failed to add item to cart.", "error");
-                            }
+                            showToast("error", "Failed to add item to cart.");
                         })
                         .finally(() => {
                             this.disabled = false;

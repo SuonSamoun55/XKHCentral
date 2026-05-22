@@ -95,7 +95,7 @@
                 <i class="bi bi-archive"></i>
             </button>
             <label class="mt-switch">
-                <input type="checkbox">
+                <input type="checkbox" id="mobileUnreadFilter" onchange="filterUnreadMobile()">
                 <span></span>
             </label>
         </div>
@@ -262,27 +262,9 @@
 
 
 @php
-    $source = $notifications instanceof \Illuminate\Pagination\LengthAwarePaginator
-        ? $notifications->items()
-        : $notifications;
-
-    $contactsFromNotifications = collect($source)
-        ->filter(fn ($n) => is_object($n))
-        ->map(function ($n) {
-            return (object) [
-                'id' => $n->sender_id ?? 0,
-                'name' => $n->sender_name ?? 'System Support',
-                'chat_avatar' => $n->sender_profile_image_display
-                    ?? $n->sender_profile_image
-                    ?? asset('images/pos/Rectangle 2.png'),
-                'last_message_at' => $n->created_at,
-                'unread_count' => max(1, (int) ($n->unread_count ?? 1)),
-            ];
-        })
-        ->unique(function ($c) {
-            return $c->id ?: $c->name;
-        })
-        ->values();
+    $contactsFromNotifications = isset($contactList)
+        ? collect($contactList)
+        : collect([]);
 
     $favoriteContacts = $contactsFromNotifications->take(6);
 @endphp
@@ -324,7 +306,8 @@
 
         <div class="ac-contact-list">
             @forelse($contactsFromNotifications as $contact)
-                <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}"
+<a href="{{ route('contact.show_mobile', ['id' => $contact->id]) }}"
+   class="ac-contact-row"
                    class="ac-contact-row"
                    data-name="{{ strtolower($contact->name) }}">
 
@@ -630,8 +613,26 @@
             const params = new URLSearchParams(window.location.search);
             if (params.get('unread') === 'true') {
                 document.getElementById('unreadFilter').checked = true;
+                const mobileUnreadFilter = document.getElementById('mobileUnreadFilter');
+                if (mobileUnreadFilter) {
+                    mobileUnreadFilter.checked = true;
+                }
             }
         });
+
+        // Mobile unread filter handler
+        function filterUnreadMobile() {
+            const checkbox = document.getElementById('mobileUnreadFilter');
+            const currentUrl = new URL(window.location);
+
+            if (checkbox.checked) {
+                currentUrl.searchParams.set('unread', 'true');
+            } else {
+                currentUrl.searchParams.delete('unread');
+            }
+
+            window.location.href = currentUrl.toString();
+        }
     </script>
     <script>
         function openAllContact() {

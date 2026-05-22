@@ -431,21 +431,149 @@
     .mobile-nav {
     display: none;
 }
+/* ======================================
+   TABLET (MATCH YOUR IMAGE EXACTLY)
+======================================== */
+/* ======================================
+   TABLET LAYOUT (iPad / 768px–1200px)
+======================================== */
+@media (max-width: 1200px) {
 
-    @media (max-width: 1180px) {
-      .dashboard-grid {
-        grid-template-columns: 1fr 1fr;
-        grid-template-areas:
-          "hero1 hero2"
-          "hero3 hero3"
-          "recent recent"
-          "report report"
-          "stats stats"
-          "summary summary"
-          "notify notify";
-      }
-    }
 
+ html,
+  body {
+    height: auto ;
+    overflow: auto ;
+  }
+
+  .app-shell {
+    height: auto;
+  }
+
+  .content-scroll {
+    height: auto ;   /* ✅ FIX */
+    overflow: visible ; /* ✅ FIX */
+  }
+
+
+  /* MAIN GRID (3 columns layout) */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-areas:
+      "hero1 hero2 hero3"
+      "recent recent report"
+      "stats  stats  stats"
+      "summary summary notify";
+    gap: 16px;
+  }
+
+  /* =========================
+     TOP HERO CARDS (3 cards)
+  ==========================*/
+  .hero-card:nth-child(1) { grid-area: hero1; }
+  .hero-card:nth-child(2) { grid-area: hero2; }
+  .hero-card:nth-child(3) { grid-area: hero3; }
+
+  .hero-card {
+    min-height: 170px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* Center images inside cards */
+  .pos-product,
+  .Orders,
+  .pos-system {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+  }
+
+  .pos-product img,
+  .Orders img,
+  .pos-system img {
+    max-width: 80%;
+    max-height: 100px;
+    object-fit: contain;
+  }
+
+  /* =========================
+     RECENT + REPORT
+  ==========================*/
+  .recent-card {
+    grid-area: recent;
+    min-height: 320px;
+  }
+
+  .report-card {
+    grid-area: report;
+    min-height: 320px;
+  }
+
+  .chart-box {
+    height: 220px;
+  }
+
+  /* =========================
+     STATS (3 small cards row)
+  ==========================*/
+  .mini-stats {
+    grid-area: stats;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .mini-card {
+    min-height: 110px;
+  }
+
+  /* =========================
+     BOTTOM SECTION
+  ==========================*/
+  .summary-card {
+    grid-area: summary;
+    height: 50vh;
+  }
+
+  .summary-card .order-list {
+    max-height: 350px;
+  }
+
+  .notification-card {
+    grid-area: notify;
+    min-height: 200px;
+  }
+
+  /* =========================
+     TEXT + UI SCALE
+  ==========================*/
+  .hero-title,
+  .report-title {
+    font-size: 18px;
+  }
+
+  .card h3 {
+    font-size: 18px;
+  }
+
+  .order-name {
+    font-size: 14px;
+  }
+
+  .order-sub {
+    font-size: 12px;
+  }
+
+  .card {
+    padding: 18px;
+  }
+
+}
     @media (max-width: 760px) {
       html,
       body {
@@ -475,8 +603,6 @@
         grid-template-columns: 1fr;
       }
     }
-
-
 /* Mobile Navigation */
 .mobile-nav {
     display: none;

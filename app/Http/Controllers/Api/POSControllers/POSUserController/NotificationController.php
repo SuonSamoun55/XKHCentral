@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Models\User;
 
 class NotificationController extends Controller
 {
@@ -98,16 +99,23 @@ class NotificationController extends Controller
             ->where('is_read', false)
             ->count();
 
+            $contacts = User::withCount([
+    'messages as unread_count' => function ($query) {
+        $query->where('is_read', 0);
+    }
+])->get();
+
         // ✅ ADDITIONAL CONTACT LIST (for All Contact UI)
 $contactList = Notification::where('user_id', $user->id)
     ->with('sender')
     ->orderByDesc('created_at')
     ->get()
     ->groupBy(function ($n) {
-        // ✅ Ensure Admin & System Support are separate
-        return $n->sender_id
-            ? 'user_' . $n->sender_id
-            : 'system_' . ($n->type ?? 'system');
+        if ($n->sender_id !== null) {
+            return 'user_' . $n->sender_id;
+        }
+
+        return 'sender_' . md5(strtolower(trim($n->sender_name ?? ($n->type ?? 'system'))));
     })
     ->map(function ($items) {
         $latest = $items->first();
@@ -337,12 +345,18 @@ $contactList = Notification::where('user_id', $user->id)
 
     // Build contacts from notifications (grouped by sender)
     $contacts = $notifications
-        ->groupBy('sender_id')
+        ->groupBy(function ($n) {
+            if ($n->sender_id !== null) {
+                return 'user_' . $n->sender_id;
+            }
+
+            return 'sender_' . md5(strtolower(trim($n->sender_name ?? ($n->type ?? 'system'))));
+        })
         ->map(function ($items) {
             $latest = $items->first();
 
             return (object) [
-                'id' => $latest->sender_id,
+                'id' => $latest->sender_id ?? 0,
                 'name' => $latest->sender_name ?? 'System',
                 'chat_avatar' => $latest->sender_profile_image_display
                     ?? $latest->sender_profile_image
@@ -363,6 +377,12 @@ $contactList = Notification::where('user_id', $user->id)
         'POSViews.POSUserViews.POSItemNotiView',
         compact('notifications', 'contacts')
     );
+}
+public function show_mobile($id)
+{
+    $contact = User::findOrFail($id);
+
+    return view('POSViews.POSUserViews.mobile.contact_detail', compact('contact'));
 }
 
 }

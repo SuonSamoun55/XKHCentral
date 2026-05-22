@@ -1,5 +1,6 @@
 @extends('ManagementSystemViews.UserViews.Layouts.app')
 
+
 @section('title', 'Products')
 
 @push('styles')
@@ -17,7 +18,7 @@
 
         .content-area {
             max-width: 430px;
-            padding: 0 !important ;
+            padding: 0 !important;
         }
 
         .products-page {
@@ -52,8 +53,9 @@
             align-items: center;
             border: 1px solid #e5e7eb;
             border-radius: 14px;
-            padding: 10px 14px;
-            margin-top: 16px;
+            padding: 10px;
+            margin-top: -60px;
+
         }
 
         .search-box i {
@@ -156,6 +158,39 @@
             justify-content: center;
         }
 
+        .toast {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            max-width: calc(100% - 32px);
+            padding: 14px 18px;
+            background: #10b8c3;
+            color: #fff;
+            border-radius: 16px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            pointer-events: none;
+            z-index: 9999;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .toast.success {
+            background: #10b8c3;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
         /* FAVORITE */
         .fav-btn {
             position: absolute;
@@ -179,24 +214,35 @@
         }
 
         /* ✅ Sticky header container */
-    .sticky-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 50;
-    background: #ffffff;
-    padding-bottom: 8px;
-    padding-left: 8px;
-    padding-right: 24px;
-    padding-top: 14px;
-}
+        .sticky-header {
+            position: sticky;
+            top: 68px;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            background: #ffffff;
+            padding-bottom: 8px;
+            padding-left: 8px;
+            padding-right: 24px;
+            padding-top: 20px;
+            display: grid;
+            gap: 12px;
+        }
 
         /* ✅ Prevent content jump */
         .sticky-header::after {
             content: '';
             display: block;
             height: 1px;
+        }
+
+        .sticky-header-row {
+            position: relative;
+            top: -84px;
+            display: grid;
+            grid-template-columns: 40px 1fr;
+            align-items: center;
+            gap: 12px;
         }
 
         .cart-btn {
@@ -222,10 +268,12 @@
             top: 0px;
             right: 4px;
         }
+
         #product-count {
             font-size: 12px;
             color: #6b7280;
         }
+
         .cart-box {
             width: 46px;
             height: 46px;
@@ -236,36 +284,33 @@
             justify-content: center;
             padding: 0;
         }
-        .logo-wrap{
+
+        .logo-wrap {
             display: none !important;
         }
-    
-.cart {
-    margin-left: auto; /* ✅ pushes cart to the right */
-    padding-right: 10px;
-}
 
-
+        .cart {
+            margin-left: auto;
+            /* ✅ pushes cart to the right */
+            padding-right: 10px;
+        }
     </style>
 @endpush
 
 @section('content')
     <div class="page-wrap">
         <main class="content-area">
+            @include('ManagementSystemViews/UserViews/Layouts/header_mobile')
 
             <div class="products-page">
 
                 {{-- TOP BAR --}}
                 <div class="sticky-header">
-                    <div class="top-bar">
+                    <div class="sticky-header-row">
                         <a href="{{ route('user.pos.favorites') }}" class="icon-btn">
                             <i class="bi bi-arrow-left"></i>
                         </a>
-
-                        <div style="text-align:center;font-weight:700">Products</div>
-        @include('ManagementSystemViews/UserViews/Layouts/header_mobile')
-
-
+                        <div style="text-align:center;font-weight:700; justify-self:center;">Products</div>
                     </div>
 
                     {{-- SEARCH --}}
@@ -294,6 +339,8 @@
                     {{ $items->count() }} products
                 </div>
 
+                <div id="toast" class="toast" aria-live="polite" aria-atomic="true" role="status"></div>
+
                 {{-- PRODUCTS --}}
                 <div class="products-list">
                     @foreach ($items as $item)
@@ -302,8 +349,8 @@
 
                             {{-- IMAGE --}}
                             <div class="product-thumb">
-                                <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
-                                    alt="{{ $item->display_name }}" onerror="this.src='{{ asset('images/no-image.png') }}'">
+                                <img src="{{ $item->image_url ? $item->image_url : asset('images/no-image.png') }}"
+                                    alt="{{ $item->display_name }}">
                             </div>
 
                             {{-- FAVORITE --}}
@@ -420,46 +467,102 @@
             btn.querySelector('i').classList.toggle('text-danger');
         });
 
-        // ✅ ADD TO CART — THIS IS THE KEY FIX
-                   document.querySelectorAll(".add-cart-btn").forEach(button => {
-                button.addEventListener("click", function(e) {
+        function showToast(type, message) {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+
+            clearTimeout(toast._hideTimeout);
+            toast._hideTimeout = setTimeout(() => {
+                toast.className = 'toast';
+            }, 2800);
+        }
+
+        window.showAppToast = showToast;
+
+        // ✅ ADD TO CART — THIS is the mobile add button handler
+        // ✅ ADD TO CART
+        function bindAddToCart() {
+
+            document.querySelectorAll(".product-add").forEach(button => {
+
+                button.addEventListener("click", async function(e) {
+
                     e.preventDefault();
                     e.stopPropagation();
-                    const itemId = this.dataset.id;
-                    const card = this.closest(".product-card");
-                    const qty = parseInt(card.querySelector(".qty").innerText, 10) || 1;
-                    this.disabled = true;
 
-                    fetch("{{ route('user.pos.cart.add') }}", {
+                    const itemId = this.dataset.itemId;
+
+                    if (!itemId) {
+                        alert("Item ID not found.");
+                        return;
+                    }
+
+                    this.style.pointerEvents = "none";
+
+                    try {
+
+                        const response = await fetch("{{ route('user.pos.cart.add') }}", {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": csrfToken
+                                "X-CSRF-TOKEN": csrf,
+                                "Accept": "application/json"
                             },
                             body: JSON.stringify({
                                 item_id: itemId,
-                                qty: qty
+                                qty: 1
                             })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success && cartCount) {
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+
+                            // UPDATE CART COUNT
+                            const cartCount = document.getElementById("cartCount");
+
+                            if (cartCount && data.cartCount !== undefined) {
                                 cartCount.innerText = data.cartCount;
                             }
-                            if (data.success && typeof window.showAppToast === "function") {
-                                window.showAppToast("Added to cart successfully.", "success");
-                            }
-                        })
-                        .catch(() => {
-                            if (typeof window.showAppToast === "function") {
-                                window.showAppToast("Failed to add item to cart.", "error");
-                            }
-                        })
-                        .finally(() => {
-                            this.disabled = false;
-                        });
+
+                            showToast("success", data.message || "Added to cart successfully.");
+                        } else {
+                            showToast("error", data.message || "Failed to add to cart.");
+                        }
+
+                    } catch (error) {
+
+                        console.error(error);
+
+                        showToast("error", "Something went wrong.");
+
+                    } finally {
+
+                        this.style.pointerEvents = "auto";
+                    }
                 });
             });
-            
+        }
+
+        // RUN FUNCTION
+        bindAddToCart();
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        function checkScreenAndRedirect() {
+            if (window.innerWidth >= 768) {
+                window.location.href = "/pos-system";
+            }
+        }
+
+        // Run once on load
+        checkScreenAndRedirect();
+
+        // Run again when screen resizes
+        window.addEventListener("resize", checkScreenAndRedirect);
     });
 </script>

@@ -4,6 +4,29 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/POSsystem/itemlist.css') }}">
+    <style>
+        .toast {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 2000;
+            padding: 12px 16px;
+            border-radius: 14px;
+            color: #fff;
+            background: #111827;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            transform: translateY(-10px);
+        }
+        .toast.show {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+        .toast.success { background: #10b8c3; }
+        .toast.error { background: #ef4444; }
+    </style>
 @endpush
 
 @section('content')
@@ -11,8 +34,6 @@
         <main class="content-area">
             @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
             @include('ManagementSystemViews.UserViews.Layouts.footer')
-
-
             <div class="header">
                 <div class="topbar">
                     <div class="top">
@@ -22,7 +43,7 @@
 
                         <a href="{{ route('user.pos.cart') }}" class="cart-box">
                             <i class="bi bi-cart3"></i>
-                            <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
+                            <span class="cart-count" id="desktopCartCount">{{ (int) ($cartCount ?? 0) }}</span>
                         </a>
                     </div>
 
@@ -97,13 +118,10 @@
                     Learn more <i class="bi bi-arrow-right"></i>
                 </a>
                 <h4>Product</h4>
-
-
-
-
             </div>
 
             <div id="messageBox" class="message-box"></div>
+            <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
 
             @if ($items->isEmpty())
                 <div class="empty-box">No items found.</div>
@@ -222,7 +240,9 @@
                 settingsBox: document.getElementById("settingsBox"),
                 navButtons: document.querySelectorAll(".nav-btn"),
 
-                cartCount: document.getElementById("cartCount"),
+                cartCount: document.getElementById("desktopCartCount"),
+                mobileCartCount: document.getElementById("cartCount"),
+                asideCartCount: document.getElementById("asideCartCount"),
                 messageBox: document.getElementById("messageBox"),
 
                 searchInput: document.getElementById("searchInput"),
@@ -244,28 +264,40 @@
                 localStorage.setItem("pos_recent_searches", JSON.stringify(recentSearches));
             }
 
-            // function showMessage(type, text) {
-            //     if (!els.messageBox) return;
+            function showMessage(type, text) {
+                if (!els.messageBox) return;
 
-            //     const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill';
-            //     const title = type === 'success' ? 'Success!' : 'Error!';
+                const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill';
+                const title = type === 'success' ? 'Success!' : 'Error!';
 
-            //     els.messageBox.innerHTML = `
-            //         <i class="bi ${iconClass} main-icon"></i>
-            //         <div class="message-content">
-            //             <strong>${title}</strong> ${text}
-            //         </div>
-            //         <button type="button" class="close-alert-btn" onclick="this.parentElement.classList.remove('show')">
-            //             <i class="bi bi-x"></i>
-            //         </button>
-            //     `;
+                els.messageBox.innerHTML = `
+                    <i class="bi ${iconClass} main-icon"></i>
+                    <div class="message-content">
+                        <strong>${title}</strong> ${text}
+                    </div>
+                    <button type="button" class="close-alert-btn" onclick="this.parentElement.classList.remove('show')">
+                        <i class="bi bi-x"></i>
+                    </button>
+                `;
 
-            //     els.messageBox.className = `message-box ${type} show`;
+                els.messageBox.className = `message-box ${type} show`;
 
-            //     setTimeout(() => {
-            //         els.messageBox.classList.remove('show');
-            //     }, 4000);
-            // }
+                setTimeout(() => {
+                    els.messageBox.classList.remove('show');
+                }, 4000);
+            }
+
+            function showToast(type, text) {
+                const toastEl = document.getElementById('toast');
+                if (!toastEl) return;
+
+                toastEl.textContent = text;
+                toastEl.className = `toast show ${type}`;
+
+                setTimeout(() => {
+                    toastEl.className = 'toast';
+                }, 2500);
+            }
 
             function escapeHtml(text = "") {
                 const div = document.createElement("div");
@@ -537,12 +569,19 @@
                                 if (els.cartCount && data.cartCount !== undefined) {
                                     els.cartCount.textContent = data.cartCount;
                                 }
+                                if (els.mobileCartCount && data.cartCount !== undefined) {
+                                    els.mobileCartCount.textContent = data.cartCount;
+                                }
+                                if (els.asideCartCount && data.cartCount !== undefined) {
+                                    els.asideCartCount.textContent = data.cartCount;
+                                    els.asideCartCount.classList.toggle("is-empty", data
+                                        .cartCount <= 0);
+                                }
 
                                 if (qtyEl) qtyEl.textContent = "1";
-                                showMessage("success", data.message ||
-                                    "Added to cart successfully.");
+                                showToast("success", data.message || "Added to cart successfully.");
                             } else {
-                                showMessage("error", data.message || "Failed to add to cart.");
+                                showToast("error", data.message || "Failed to add to cart.");
                             }
                         } catch (error) {
                             console.error(error);
@@ -671,58 +710,63 @@
         });
     </script>
     <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const addBtn = document.getElementById("addToCartBtn");
-        const cartCountEl = document.getElementById("cartCount");
-        const csrfToken = document
-            .querySelector('meta[name="csrf-token"]')
-            ?.getAttribute("content");
+        document.addEventListener("DOMContentLoaded", function() {
+            const addBtn = document.getElementById("addToCartBtn");
+            const cartCountEl = document.getElementById("cartCount");
+            const csrfToken = document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute("content");
 
-        if (!addBtn) return;
+            if (!addBtn) return;
 
-        addBtn.addEventListener("click", async function() {
-            const itemId = this.dataset.id;
+            addBtn.addEventListener("click", async function() {
+                const itemId = this.dataset.id;
 
-            if (!itemId) {
-                alert("Item ID not found.");
-                return;
-            }
-
-            this.disabled = true;
-            this.querySelector(".add-cart-text").textContent = "Adding...";
-
-            try {
-                const response = await fetch("{{ route('user.pos.cart.add') }}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": csrfToken,
-                        "Accept": "application/json"
-                    },
-                    body: JSON.stringify({
-                        item_id: itemId,
-                        qty: 1
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    if (cartCountEl && data.cartCount !== undefined) {
-                        cartCountEl.textContent = data.cartCount;
-                    }
-                    showToast("success", data.message || "Added to cart successfully");
-                } else {
-                    showToast("error", data.message || "Failed to add to cart");
+                if (!itemId) {
+                    alert("Item ID not found.");
+                    return;
                 }
-            } catch (error) {
-                console.error(error);
-                showToast("error", "Something went wrong.");
-            } finally {
-                this.disabled = false;
-                this.querySelector(".add-cart-text").textContent = "Add to cart";
-            }
+
+                this.disabled = true;
+                this.querySelector(".add-cart-text").textContent = "Adding...";
+
+                try {
+                    const response = await fetch("{{ route('user.pos.cart.add') }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": csrfToken,
+                            "Accept": "application/json"
+                        },
+                        body: JSON.stringify({
+                            item_id: itemId,
+                            qty: 1
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        if (cartCountEl && data.cartCount !== undefined) {
+                            cartCountEl.textContent = data.cartCount;
+                        }
+                        const asideCartCountEl = document.getElementById("asideCartCount");
+                        if (asideCartCountEl && data.cartCount !== undefined) {
+                            asideCartCountEl.textContent = data.cartCount;
+                            asideCartCountEl.classList.toggle("is-empty", data.cartCount <= 0);
+                        }
+                        showToast("success", data.message || "Added to cart successfully");
+                    } else {
+                        showToast("error", data.message || "Failed to add to cart");
+                    }
+                } catch (error) {
+                    console.error(error);
+                    showToast("error", "Something went wrong.");
+                } finally {
+                    this.disabled = false;
+                    this.querySelector(".add-cart-text").textContent = "Add to cart";
+                }
+            });
         });
-    });
-</script>
+    </script>
 @endpush

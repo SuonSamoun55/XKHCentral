@@ -18,7 +18,7 @@
 
     /* Title */
     .history-title {
-        padding: 20px 0px 10px 0px;
+        padding: 20px 20px 20px 0px;
         color: #00a8a8;
         font-weight: 600;
     }
@@ -343,4 +343,21 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     justify-content: center;
      /* overflow: hidden;  */
     padding:  0;
+}
+@media (max-width: 1200px)
+{
+    .order-image img{
+        position: relative;
+        left: 20px;
+        width: 50px;
+        height: 50px;
+    }
+    .order-link{
+        
+
+ display: inline-block;
+  max-width: 100px;
+  word-break: break-all;
+
+    }
 }

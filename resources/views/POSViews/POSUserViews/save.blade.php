@@ -1,332 +1,271 @@
 @extends('ManagementSystemViews.UserViews.Layouts.app')
 
-@section('title', 'Product Detail')
+@section('title', 'POS Cart')
 
 @push('styles')
-<style>
-:root {
-    --primary: #10b8c3;
-}
+    <link rel="stylesheet" href="{{ asset('css/POSsystem/cart.css') }}">
+    <style>
+        .icon-wrapper {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 30px;
+        }
 
-/* ===================== GLOBAL ===================== */
-html, body {
-    height: 100%;
-    overflow-y: auto;
-}
+        .check-circle {
+            background: #00cad1;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 70px;
+        }
 
-.sidebar-wrap {
-    display: none !important;
-}
+        .text-confirmed {
+            color: #4DB37E;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
 
-.page-wrap {
-    background: #f7fafc;
-}
+        .text-main,
+        .text-sub {
+            color: #555;
+            font-size: 16px;
+            margin: 5px 0;
+        }
 
-/* ===================== CONTENT ===================== */
-.product-detail {
-    min-height: 100vh;
-    padding-bottom: 120px; /* space for fixed add-to-cart */
-}
+        .btn-track {
+            background: #00cad1;
+            color: white !important;
+            padding: 14px 80px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            width: 250px;
+        }
 
-/* ===================== TOP BAR ===================== */
-.top-bar {
-    display: flex;
-    justify-content: space-between;
-    padding: 12px;
-}
+        .btn-home {
+            color: #00cad1;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 15px;
+        }
 
-.icon-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    background: #d4eaf5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+        .dot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
 
-/* ===================== IMAGE ===================== */
-.product-image {
-    text-align: center;
-    margin-top: 10px;
-}
+        .d1 {
+            background: #FFD700;
+            top: 10px;
+            left: 0;
+        }
 
-.product-image img {
-    width: 80%;
-    max-height: 220px;
-    object-fit: contain;
-}
+        .d2 {
+            background: #FF69B4;
+            bottom: 20px;
+            right: -10px;
+        }
 
-/* ===================== INFO ===================== */
-.product-info-box {
-    background: #fff;
-    border-radius: 20px;
-    padding: 16px;
-    margin-top: 12px;
-}
-
-.badge {
-    background: var(--primary);
-    color: #fff;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-}
-
-.product-header {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 12px;
-}
-
-.product-title {
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.product-price {
-    font-size: 20px;
-    font-weight: 800;
-}
-
-.product-stock {
-    font-size: 13px;
-    color: #6b7280;
-    margin-top: 4px;
-}
-
-/* ===================== COLOR (FAKE UI) ===================== */
-.color-options {
-    display: flex;
-    gap: 10px;
-    padding: 10px;
-}
-
-.color-dot {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 2px solid transparent;
-}
-
-.color-dot.active {
-    border-color: var(--primary);
-}
-
-/* ===================== RECOMMEND ===================== */
-.recommend-section {
-    margin-top: 16px;
-}
-
-.recommend-header {
-    font-size: 14px;
-    font-weight: 600;
-    padding: 0 10px;
-}
-
-/* small icons list */
-.recommend-list {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    padding: 10px;
-}
-
-.rec-card {
-    background: #fff;
-    border-radius: 14px;
-    padding: 10px;
-    text-align: center;
-}
-
-.rec-card img {
-    width: 60%;
-    height: 40px;
-    object-fit: contain;
-}
-
-/* main recommendation (2 columns) */
-.recommend-list1 {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    padding: 10px;
-}
-
-.rec-card1 {
-    background: #fff;
-    border-radius: 14px;
-    padding: 10px;
-    text-align: center;
-}
-
-.rec-card1 img {
-    width: 100%;
-    height: 100px;
-    object-fit: contain;
-}
-
-.rec-title {
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.rec-price {
-    font-size: 14px;
-    font-weight: 700;
-}
-
-/* ===================== ADD TO CART ===================== */
-.add-cart-btn {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    padding: 22px;
-    font-size: 16px;
-    z-index: 1000;
-}
-
-/* ===================== TOAST ===================== */
-.toast {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #111827;
-    color: #fff;
-    padding: 14px 18px;
-    border-radius: 12px;
-    font-size: 14px;
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.3s ease;
-    z-index: 9999;
-}
-
-.toast.show {
-    opacity: 1;
-}
-
-.toast.success {
-    background: #10b8c3;
-}
-
-.toast.error {
-    background: #ef4444;
-}
-
-/* header tweaks */
-.logo-wrap {
-    display: none !important;
-}
-
-.cart {
-    margin-left: auto;
-}
-</style>
+        .d3 {
+            background: #7B68EE;
+            top: 40px;
+            right: 0;
+        }
+    </style>
 @endpush
 
 @section('content')
-<div class="page-wrap">
-    <div class="product-detail">
+    <div class="page-wrap">
+        <main class="content-area">
+            <div id="cartMainContent">
+                <div class="cart-header">
+                    @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Cart'])
+                </div>
 
-        {{-- TOP BAR --}}
-        <div class="top-bar">
-            <a href="{{ url()->previous() }}" class="icon-btn">
-                <i class="bi bi-arrow-left"></i>
-            </a>
-            @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
-        </div>
-
-        {{-- IMAGE --}}
-        <div class="product-image">
-            <img src="{{ $item->image_url ?? asset('images/no-image.png') }}">
-        </div>
-
-        {{-- INFO --}}
-        <div class="product-info-box">
-            <div class="badge">Table</div>
-
-            <div class="product-header">
-                <div class="product-title">{{ $item->display_name }}</div>
-                <div class="product-price">$ {{ number_format($item->unit_price,0) }}</div>
-            </div>
-
-            <div class="product-stock">
-                stock: {{ $item->inventory ?? 0 }} unit
-            </div>
-        </div>
-
-        {{-- COLOR (FAKE) --}}
-        <div class="recommend-section">
-            <div class="recommend-header"><span>Color</span></div>
-            <div class="color-options">
-                <div class="color-dot active" style="background:#000"></div>
-                <div class="color-dot" style="background:#fff;border:1px solid #ccc"></div>
-                <div class="color-dot" style="background:#ef4444"></div>
-                <div class="color-dot" style="background:#3b82f6"></div>
-                <div class="color-dot" style="background:#22c55e"></div>
-            </div>
-        </div>
-
-        {{-- SMALL RECOMMEND --}}
-        <div class="recommend-section">
-            <div class="recommend-header"><span>Styles</span></div>
-            <div class="recommend-list">
-                @foreach ($recommendations as $rec)
-                    <div class="rec-card">
-                        <img src="{{ $rec->image_url }}">
-                        <div class="rec-title">{{ $rec->display_name }}</div>
-                        <div class="rec-price">$ {{ number_format($rec->unit_price,0) }}</div>
+                @if (!$cart || $cart->items->isEmpty())
+                    <div class="empty-cart">
+                        <div class="empty-cart">
+                            <img src="{{ asset('images/pos/Empty.png') }}" class="empty-image">
+                        </div>
+                        <div class="empty-title">Your cart is Empty</div>
+                        <div class="empty-text">Add something to make me happy..!!</div>
+                        <a href="/pos-system" class="continue-btn">Continue Shopping</a>
                     </div>
-                @endforeach
-            </div>
-        </div>
-
-        {{-- MAIN RECOMMEND --}}
-        <div class="recommend-section">
-            <div class="recommend-header"><span>Recommendation</span></div>
-            <div class="recommend-list1">
-                @foreach ($recommendations as $rec)
-                    <div class="rec-card1">
-                        <img src="{{ $rec->image_url }}">
-                        <div class="rec-title">{{ $rec->display_name }}</div>
-                        <div class="rec-price">$ {{ number_format($rec->unit_price,0) }}</div>
+                @else
+                    <div class="cart-list">
+                        @foreach ($cart->items as $cartItem)
+                            <div class="cart-row">
+                                <div class="cart-image">
+                                    <img src="{{ optional($cartItem->item)->image_url ?? asset('images/no-image.png') }}">
+                                </div>
+                                <div>
+                                    <div class="cart-name">{{ $cartItem->item_name }}</div>
+                                    <div class="cart-uom">
+                                        {{ optional($cartItem->item)->base_unit_of_measure_code ?? 'PCS' }}</div>
+                                    <div class="cart-price">${{ number_format($cartItem->unit_price, 2) }}</div>
+                                </div>
+                                <div class="cart-actions">
+                                    <button class="remove-btn remove-item" data-id="{{ $cartItem->id }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    <div class="qty-box">
+                                        <button class="qty-btn minus qty-update" data-id="{{ $cartItem->id }}"
+                                            data-action="minus">-</button>
+                                        <div class="qty-number">{{ $cartItem->qty }}</div>
+                                        <button class="qty-btn plus qty-update" data-id="{{ $cartItem->id }}"
+                                            data-action="plus">+</button>
+                                    </div>
+                                </div>
+                                <div class="line-total">${{ number_format($cartItem->line_total, 2) }}</div>
+                            </div>
+                        @endforeach
                     </div>
-                @endforeach
-            </div>
-        </div>
 
-        {{-- ADD TO CART --}}
-        <button type="button" class="add-cart-btn" id="addToCartBtn" data-id="{{ $item->id }}">
-            Add to cart
-        </button>
+                    <div class="summary">
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <strong>${{ number_format($subtotal, 2) }}</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Discount</span>
+                            <strong>- ${{ number_format($discountAmount ?? 0, 2) }}</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Tax</span>
+                            <strong>${{ number_format($taxAmount ?? 0, 2) }}</strong>
+                        </div>
+                        <div class="summary-row summary-total">
+                            <span>Total</span>
+                            <strong>${{ number_format($total, 2) }}</strong>
+                        </div>
+                        <button id="checkoutBtn" class="checkout-btn">Go to Checkout</button>
+                    </div>
+                @endif
+            </div>
+
+            <div id="orderSuccessContent" class="success-container">
+
+                <div class="success-card">
+
+                    <!-- ICON -->
+                    <div class="empty-cart">
+                        <img src="{{ asset('images/pos/Group.png') }}" alt="success image">
+                    </div>
+
+                    <!-- TITLE -->
+                    <h2 class="success-title">
+                        Your Order is Confirmed !
+                    </h2>
+
+                    <!-- DESCRIPTION -->
+                    <p class="success-text">
+                        Your order is being packed and will arrive soon.<br>
+                        Fruits and veggies coming right up!
+                    </p>
+
+                    <!-- BUTTON -->
+                    <a href="{{ route('user.pos.order.history') }}" class="btn-track">
+                        Track Order
+                    </a>
+
+                    <!-- LINK -->
+                    <a href="/pos-system" class="btn-home">
+                        Back to home
+                    </a>
+
+                </div>
+            </div>
+
+        </main>
     </div>
-
-    <div class="toast" id="toast"></div>
-</div>
 @endsection
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll(".color-dot").forEach(dot => {
-        dot.addEventListener("click", () => {
-            document.querySelectorAll(".color-dot").forEach(d => d.classList.remove("active"));
-            dot.classList.add("active");
-        });
-    });
-});
-</script>
+@push('scripts')
+    <script>
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-<script>
-function showToast(type, message) {
-    const toast = document.getElementById("toast");
-    toast.textContent = message;
-    toast.className = `toast show ${type}`;
-    setTimeout(() => toast.className = "toast", 2500);
-}
-</script>
+        async function updateQty(id, qty) {
+            await fetch(`/pos-system/cart/update/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    qty
+                })
+            });
+            location.reload();
+        }
+
+        document.querySelectorAll('.qty-update').forEach(btn => {
+            btn.onclick = function() {
+                let row = this.closest('.cart-row');
+                let qty = parseInt(row.querySelector('.qty-number').innerText);
+                if (this.dataset.action === 'minus') {
+                    if (qty > 1) qty--;
+                } else {
+                    qty++;
+                }
+                updateQty(this.dataset.id, qty);
+            }
+        });
+
+        document.querySelectorAll('.remove-item').forEach(btn => {
+            btn.onclick = async function() {
+                await fetch(`/pos-system/cart/remove/${this.dataset.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+                location.reload();
+            }
+        });
+
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        if (checkoutBtn) {
+            checkoutBtn.onclick = async function() {
+                let currency = prompt("Choose currency (USD or KHR)", "USD");
+                if (!currency) return;
+                currency = currency.toUpperCase();
+
+                let factor = 1;
+                if (currency === "KHR") {
+                    factor = prompt("Enter KHR rate example 4100", "4100");
+                    if (!factor) return;
+                }
+
+                let res = await fetch('/pos-system/checkout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        currency: currency,
+                        factor: factor
+                    })
+                });
+
+                let data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('cartMainContent').style.display = 'none';
+                    document.getElementById('orderSuccessContent').style.display = 'block';
+                } else {
+                    alert(data.message || 'Checkout failed');
+                }
+            }
+        }
+    </script>
+@endpush
