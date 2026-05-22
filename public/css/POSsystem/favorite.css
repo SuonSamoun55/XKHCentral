@@ -284,8 +284,27 @@
 .header-desktop {
     display: block;
 }
+@media (max-width: 1200px) {
+.top {
+    display: flex;
+    background: white;
+    justify-content: space-between;
+    align-items: center;
+    height: 5%;
 
+}
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    justify-content: start;
+    align-content: start;
+    padding: 20px 10px 40px 10px;
+    overflow: scroll;
+    height: 100%;
+}
 
+}
 
 @media (min-width: 769px) {
     .mobile-bottom-nav {

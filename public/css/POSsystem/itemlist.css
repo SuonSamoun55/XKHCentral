@@ -721,6 +721,19 @@ h4{
     color: red;
 }
 
+@media(max-width: 1200px) {
+    .products-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    align-items: start;
+    padding: 0px 10px;
+    overflow-y: auto;
+    height: 80%;
+    
+}
+}
+
 @media (min-width: 769px) {
     .mobile-bottom-nav {
         display: none !important;

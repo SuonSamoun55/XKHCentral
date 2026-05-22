@@ -51,6 +51,7 @@
                     <tr>
                         <th width="50"><input type="checkbox"></th>
                         <th>Order</th>
+                        <th></th>
                         <th>Date</th>
                         <th>Total</th>
                         <th>Status</th>
@@ -70,8 +71,14 @@
                                 <a href="{{ route('user.pos.order.show', $order->id) }}"
                                     class="order-link">#{{ $order->order_no }}</a>
                             </td>
-
                             <td>
+                                  <div class="order-image">
+                                    <img src="{{ optional($order->items->first()->item)->image_url ?? asset('images/pos/default-food.png') }}"
+                                        alt="">
+                                </div>
+                            </td>
+                            <td>
+                                
                                 <div class="date-text">
                                     {{ optional($order->created_at)->format('M d, Y') }}
                                 </div>
@@ -114,106 +121,106 @@
 
 @push('scripts')
     <script>
-    document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function() {
 
-        // Redirect to mobile page if screen < 768px
-        function checkMobileScreen() {
-            if (window.innerWidth < 768) {
-                window.location.href = "/pos-system/order-history-mobile";
-            }
-        }
-
-        // Run on page load
-        checkMobileScreen();
-
-        // Run when resizing screen
-        window.addEventListener('resize', checkMobileScreen);
-
-        const searchInput = document.getElementById('orderSearchInput');
-        const searchSuggestions = document.getElementById('orderSuggestions');
-        const orderRows = document.querySelectorAll('.order-row');
-
-        const allOrders = Array.from(orderRows).map(row => ({
-            orderNo: row.dataset.orderNo || '',
-            status: row.dataset.status || '',
-            element: row
-        }));
-
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.trim().toLowerCase();
-
-            if (searchTerm.length === 0) {
-                searchSuggestions.classList.remove('active');
-                orderRows.forEach(row => row.style.display = '');
-                return;
+            // Redirect to mobile page if screen < 768px
+            function checkMobileScreen() {
+                if (window.innerWidth < 768) {
+                    window.location.href = "/pos-system/order-history-mobile";
+                }
             }
 
-            const filtered = allOrders.filter(order =>
-                order.orderNo.toLowerCase().includes(searchTerm) ||
-                order.status.toLowerCase().includes(searchTerm)
-            );
+            // Run on page load
+            checkMobileScreen();
 
-            if (filtered.length > 0) {
-                searchSuggestions.innerHTML = filtered.slice(0, 5).map((order) => `
+            // Run when resizing screen
+            window.addEventListener('resize', checkMobileScreen);
+
+            const searchInput = document.getElementById('orderSearchInput');
+            const searchSuggestions = document.getElementById('orderSuggestions');
+            const orderRows = document.querySelectorAll('.order-row');
+
+            const allOrders = Array.from(orderRows).map(row => ({
+                orderNo: row.dataset.orderNo || '',
+                status: row.dataset.status || '',
+                element: row
+            }));
+
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.trim().toLowerCase();
+
+                if (searchTerm.length === 0) {
+                    searchSuggestions.classList.remove('active');
+                    orderRows.forEach(row => row.style.display = '');
+                    return;
+                }
+
+                const filtered = allOrders.filter(order =>
+                    order.orderNo.toLowerCase().includes(searchTerm) ||
+                    order.status.toLowerCase().includes(searchTerm)
+                );
+
+                if (filtered.length > 0) {
+                    searchSuggestions.innerHTML = filtered.slice(0, 5).map((order) => `
                     <div class="suggestion-item" onclick="selectOrderSuggestion('${order.orderNo}')">
                         <strong>#${order.orderNo}</strong> - <small>${order.status}</small>
                     </div>
                 `).join('');
-                searchSuggestions.classList.add('active');
-            } else {
-                searchSuggestions.classList.remove('active');
-            }
-
-            orderRows.forEach(row => {
-                const isMatch = filtered.some(f => f.element === row);
-                row.style.display = isMatch ? '' : 'none';
-            });
-        });
-
-        window.selectOrderSuggestion = function(orderNo) {
-            searchInput.value = orderNo;
-
-            orderRows.forEach(row => {
-                row.style.display = (row.dataset.orderNo === orderNo) ? '' : 'none';
-            });
-
-            searchSuggestions.classList.remove('active');
-        };
-
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const term = this.value.trim().toLowerCase();
+                    searchSuggestions.classList.add('active');
+                } else {
+                    searchSuggestions.classList.remove('active');
+                }
 
                 orderRows.forEach(row => {
-                    const match = row.dataset.orderNo.toLowerCase().includes(term) ||
-                        row.dataset.status.toLowerCase().includes(term);
-                    row.style.display = match ? '' : 'none';
+                    const isMatch = filtered.some(f => f.element === row);
+                    row.style.display = isMatch ? '' : 'none';
                 });
-                searchSuggestions.classList.remove('active');
-            }
-        });
+            });
 
-        document.addEventListener('click', (e) => {
-            if (!searchInput.contains(e.target) && !searchSuggestions.contains(e.target)) {
-                searchSuggestions.classList.remove('active');
-            }
-        });
+            window.selectOrderSuggestion = function(orderNo) {
+                searchInput.value = orderNo;
 
-        orderRows.forEach((row) => {
-            row.style.cursor = 'pointer';
-            row.addEventListener('click', (e) => {
-                if (e.target.closest(
-                        'input[type="checkbox"], .btn-download, .btn-download *, .order-link'
-                    )) {
-                    return;
-                }
-                const url = row.dataset.detailUrl;
-                if (url) {
-                    window.location.href = url;
+                orderRows.forEach(row => {
+                    row.style.display = (row.dataset.orderNo === orderNo) ? '' : 'none';
+                });
+
+                searchSuggestions.classList.remove('active');
+            };
+
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const term = this.value.trim().toLowerCase();
+
+                    orderRows.forEach(row => {
+                        const match = row.dataset.orderNo.toLowerCase().includes(term) ||
+                            row.dataset.status.toLowerCase().includes(term);
+                        row.style.display = match ? '' : 'none';
+                    });
+                    searchSuggestions.classList.remove('active');
                 }
             });
+
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !searchSuggestions.contains(e.target)) {
+                    searchSuggestions.classList.remove('active');
+                }
+            });
+
+            orderRows.forEach((row) => {
+                row.style.cursor = 'pointer';
+                row.addEventListener('click', (e) => {
+                    if (e.target.closest(
+                            'input[type="checkbox"], .btn-download, .btn-download *, .order-link'
+                        )) {
+                        return;
+                    }
+                    const url = row.dataset.detailUrl;
+                    if (url) {
+                        window.location.href = url;
+                    }
+                });
+            });
         });
-    });
-</script>
+    </script>
 @endpush

@@ -382,7 +382,7 @@
 
             setTimeout(() => {
                 if (item.parentElement) item.remove();
-            }, 32000);
+            }, 3000);
         }
 
         function escapeHtml(text) {
