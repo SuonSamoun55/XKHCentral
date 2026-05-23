@@ -25,8 +25,8 @@ use App\Http\Controllers\Api\POSControllers\POSAdminController\AdminProfileContr
 use App\Http\Controllers\Api\POSControllers\POSUserController\PolicyController;
 use App\Http\Controllers\Api\POSControllers\DatabaseNotification;
 
-
-
+Route::view('/test-ui', 'POSViews.POSUserViews.TestUI')
+    ->name('user.pos.test_ui');
 // Route::get('/store-management', [StoreManagementController::class, 'index'])->name('store.management.index');
 // ================= AUTH =================
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');

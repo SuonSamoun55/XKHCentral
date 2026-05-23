@@ -1,4 +1,3 @@
-
 @extends('ManagementSystemViews.UserViews.Layouts.app')
 @section('title', 'Notifications')
 
@@ -9,45 +8,74 @@
 
 @section('content')
     <div class="page-wrap">
-        <div class="header">
-            {{-- MOBILE HEADER --}}
-            <div class="mobile-notification-header">
-                <a href="{{ route('user.posinterface') }}" class="mn-btn">
+        <div class="main-content">
+            <div class="header">
+                {{-- MOBILE HEADER --}}
+                <div class="mobile-notification-header">
+                    <a href="{{ route('user.posinterface') }}" class="mn-btn">
 
-                    <i class="bi bi-arrow-left"></i>
-                </a>
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
 
-                <div class="mn-title">Notification</div>
+                    <div class="mn-title">Notification</div>
 
-                <a href="#" class="mn-btnx">
-                </a>
+                    <a href="#" class="mn-btnx">
+                    </a>
 
-            </div>
-
-            <div class="notification-header">
-                <h2>Notification</h2>
-                <a href="{{ route('user.chat.index') }}" class="btn btn-sm btn-info text-white ms-2">Message Admin</a>
-            </div>
-
-            {{-- Search and Date --}}
-            <div class="search-date-container">
-                <div class="search-box">
-                    <i class="bi bi-search"></i>
-                    <input type="text" id="searchInput" class="form-control" placeholder="Search..."
-                        value="{{ request('search') }}" autocomplete="off">
-                    <div class="search-suggestions" id="searchSuggestions"></div>
                 </div>
 
-                <div class="date-filter-wrapper">
-                    <label for="dateInput" class="floating-label">Date</label>
-                    <input type="date" name="date" id="dateInput" value="{{ request('date') }}"
-                        onchange="this.form.submit()">
+                <div class="notification-header">
+                    <h2>Notification</h2>
+                    <a href="{{ route('user.chat.index') }}" class="btn btn-sm btn-info text-white ms-2">Message Admin</a>
+                </div>
 
-                    <img src="{{ asset('images/pos/icon.png') }}" class="calendar-custom-img" alt="calendar">
+                {{-- Search and Date --}}
+                <div class="search-date-container">
+                    {{-- <div class="search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search..."
+                            value="{{ request('search') }}" autocomplete="off">
+                        <div class="search-suggestions" id="searchSuggestions"></div>
+                    </div> --}}
+
+                      <div class="top-actions">
+                            <span class="inbox-label">
+                                <i class="bi bi-chat-left"></i> Inbox
+                            </span>
+
+                            <button class="btn-send">
+                                <i class="bi bi-send"></i> Send Message
+                            </button>
+                        </div>
+
+                    <div class="date-filter-wrapper">
+                        <label for="dateInput" class="floating-label">Date</label>
+                        <input type="date" name="date" id="dateInput" value="{{ request('date') }}"
+                            onchange="this.form.submit()">
+
+                        <img src="{{ asset('images/pos/icon.png') }}" class="calendar-custom-img" alt="calendar">
+                    </div>
+                </div>
+
+                {{-- Tabs --}}
+                <div class="tabs">
+                    <div class="tab active" data-tab="orderNotification">
+                        <i class="bi bi-house-door-fill"></i>
+                        Order Notification
+                    </div>
+
+                    <div class="tab" data-tab="userContact">
+                        <i class="bi bi-calendar-event"></i>
+                        User Contact
+                    </div>
+
+                    <div class="tab" data-tab="outOfStock">
+                        <i class="bi bi-bell"></i>
+                        Out of Stock Alert
+                        <span class="badge-new">1 new</span>
+                    </div>
                 </div>
             </div>
-
-            {{-- Tabs --}}
             <div class="tabs-section">
                 <div class="tabs-list">
                     <a href="{{ route('user.notifications', ['tab' => 'inbox']) }}"
@@ -76,134 +104,286 @@
                     <input type="checkbox" id="unreadFilter" onchange="filterUnread()">
                 </label>
             </div>
-        </div>
-        {{-- MOBILE TOP TABS --}}
-        <div class="mobile-tabs">
+            {{-- MOBILE TOP TABS --}}
+            <div class="mobile-tabs">
+                <a href="{{ route('user.notifications.mobile_inbox') }}" class="mt-pill active">
+                    <i class="bi bi-inbox"></i>
+                    Inbox
+                </a>
+                <button class="mt-icon" onclick="openNewMessage()">
+                    <i class="bi bi-pencil"></i>
+                </button>
 
-
-            <a href="{{ route('user.notifications.mobile_inbox') }}" class="mt-pill active">
-                <i class="bi bi-inbox"></i>
-                Inbox
-            </a>
-
-
-            <button class="mt-icon" onclick="openNewMessage()">
-                <i class="bi bi-pencil"></i>
-            </button>
-
-           <button class="mt-icon" onclick="openAllContact()">
-                <i class="bi bi-archive"></i>
-            </button>
-            <label class="mt-switch">
-                <input type="checkbox" id="mobileUnreadFilter" onchange="filterUnreadMobile()">
-                <span></span>
-            </label>
-        </div>
-
-        <div class="mobile-filter-row">
-
-            <div class="mf-date">
-                <i class="bi bi-calendar3"></i>
-                <input type="date" id="mobileDateInput" value="{{ request('date') }}"
-                    onchange="
-            document.getElementById('dateInput').value = this.value;
-            document.getElementById('dateInput').dispatchEvent(new Event('change'));
-        ">
+                <button class="mt-icon" onclick="openAllContact()">
+                    <i class="bi bi-archive"></i>
+                </button>
+                <label class="mt-switch">
+                    <input type="checkbox" id="mobileUnreadFilter" onchange="filterUnreadMobile()">
+                    <span></span>
+                </label>
             </div>
 
+            <div class="mobile-filter-row">
 
-        </div>
-        <div class="mobile-sub-tabs">
-            <span class="active">Order Notification ({{ $inboxCount }})</span>
-            <span>Out of Stock Alert ({{ $spamCount }})</span>
-        </div>
+                <div class="mf-date">
+                    <i class="bi bi-calendar3"></i>
+                    <input type="date" id="mobileDateInput" value="{{ request('date') }}"
+                        onchange="
+            document.getElementById('dateInput').value = this.value;
+            document.getElementById('dateInput').dispatchEvent(new Event('change'));
+         ">
+                </div>
 
-        {{-- Notification List --}}
-        <div class="notification-list">
-            @forelse($notifications as $notification)
-                <div class="notification-card {{ !$notification->is_read ? 'unread' : '' }}"
-                    data-title="{{ $notification->title }}" data-message="{{ $notification->message }}"
-                    data-message="{{ $notification->message }}" data-id="{{ $notification->id }}"
-                    data-type="{{ $notification->type }}" style="cursor: pointer;" onclick="openNotificationDetail(this)">
 
-                    <div class="notification-content">
-                        <div class="avatar">
-                            <img src="{{ $notification->sender_profile_image_display ?? asset('images/pos/Rectangle 2.png') }}"
-                                alt="Sender" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
-                                onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'">
+            </div>
+            <div class="mobile-sub-tabs">
+                <span class="active">Order Notification ({{ $inboxCount }})</span>
+                <span>Out of Stock Alert ({{ $spamCount }})</span>
+            </div>
+
+            {{-- Notification List --}}
+            {{-- <div class="notification-table" > --}}
+            <div id="orderNotification" class="tab-content">
+
+                <div class="notification-table">
+
+                    @forelse($notifications as $notification)
+                        <div class="table-row {{ !$notification->is_read ? 'selected' : '' }}"
+                            data-title="{{ $notification->title }}" data-message="{{ $notification->message }}"
+                            data-id="{{ $notification->id }}" data-type="{{ $notification->type }}"
+                            style="cursor:pointer;" onclick="openNotificationDetail(this)">
+
+                            {{-- LEFT --}}
+                            <div class="row-left">
+
+                                <input type="checkbox">
+
+                                <i class="bi bi-star"></i>
+
+                                <span class="tag">
+
+                                    @if ($notification->type === 'admin_message')
+                                        <i class="bi bi-shield-check"></i>
+                                    @elseif ($notification->type === 'global_message')
+                                        <i class="bi bi-globe"></i>
+                                    @else
+                                        <i class="bi bi-bell"></i>
+                                    @endif
+
+                                </span>
+
+                                <span class="status">
+
+                                    @if ($notification->type === 'admin_message')
+                                        Admin Message
+                                    @elseif ($notification->type === 'global_message')
+                                        Global Message
+                                    @else
+                                        status
+                                    @endif
+
+                                </span>
+
+                            </div>
+
+                            {{-- CENTER --}}
+                            <div class="row-center">
+
+                                <strong>{{ $notification->title }}</strong>
+
+                                —
+
+                                {{ Str::limit($notification->message, 90) }}
+
+                                @if (str_contains(strtolower($notification->message), 'attachment'))
+                                    <a href="{{ route('user.notifications.show', $notification->id) }}"
+                                        onclick="event.stopPropagation();" style="color:#10c4d4; font-weight:600;">
+                                        attachment
+                                    </a>
+                                @endif
+
+                            </div>
+
+                            {{-- RIGHT --}}
+                            <div class="row-right">
+
+                                {{ $notification->created_at->format('M d') }}
+
+                            </div>
+
                         </div>
 
-                        <div class="notification-text">
+                    @empty
 
-                            {{-- Show ADMIN badge only for admin-sent notifications --}}
-                            @if ($notification->type === 'admin_message' || $notification->type === 'global_message')
-                                <span
-                                    class="badge-admin">{{ $notification->type === 'global_message' ? 'GLOBAL' : 'ADMIN' }}</span>
-                            @endif
+                        <div class="empty-state">
 
-                            <div class="notification-title">
-                                {{ $notification->title }}
+                            <i class="bi bi-inbox"></i>
+
+                            <p>You have no notifications yet.</p>
+
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!------------Order Contact List-------------->
+
+            {{-- USER CONTACT PAGE --}}
+            <div id="userContact" class="tab-content" style="display:none;">
+
+                <div class="notif-page">
+
+
+                    <!-- MAIN LAYOUT -->
+                    <div class="notif-layout">
+
+                        <!-- LEFT PANEL -->
+                        <div class="notif-left">
+
+                            <input type="text" class="search-input" placeholder="Search username...">
+
+                            <p class="section-title">CONTACT</p>
+
+                            <div class="contact-list">
+
+                                <div class="contact active">
+                                    <img src="https://i.pravatar.cc/100">
+
+                                    <div>
+                                        <strong>Cody Fisher</strong>
+                                        <small>Last connect 8 minutes ago</small>
+                                    </div>
+
+                                    <span class="badge">3</span>
+                                </div>
+
+                                <div class="contact">
+                                    <img src="https://i.pravatar.cc/101">
+
+                                    <div>
+                                        <strong>Ralph Edwards</strong>
+                                        <small>Last connect 8 minutes ago</small>
+                                    </div>
+                                </div>
+
+                                <div class="contact">
+                                    <img src="https://i.pravatar.cc/102">
+
+                                    <div>
+                                        <strong>Esther Howard</strong>
+                                        <small>Last connect 8 minutes ago</small>
+                                    </div>
+                                </div>
+
                             </div>
 
-                            <div class="notification-meta">
-                                {{ $notification->created_at->format('D d/m/Y') }}
-                                <span style="margin: 0 8px;">{{ $notification->created_at->format('h:i A') }}</span>
+                        </div>
+
+                        <!-- RIGHT PANEL -->
+                        <div class="notif-right">
+
+                            <div class="profile">
+
+                                <img src="https://i.pravatar.cc/120" class="profile-img">
+
+                                <h4>Cody Fisher</h4>
+
                             </div>
 
-                            @if (str_contains(strtolower($notification->message), 'attachment'))
-                                <a href="{{ route('user.notifications.show', $notification->id) }}"
-                                    class="notification-attachment" onclick="event.stopPropagation();">
-                                    attachment
-                                </a>
-                            @endif
+                            <div class="settings">
 
-                            @if (!$notification->is_read)
-                                <form action="{{ route('user.notifications.read', $notification->id) }}" method="POST"
-                                    style="display: inline;" onclick="event.stopPropagation();">
-                                    @csrf
-                                </form>
-                            @endif
+                                <div class="row-item">
+                                    <span>
+                                        <i class="bi bi-bell"></i>
+                                        Notifications
+                                    </span>
+
+                                    <strong>No</strong>
+                                </div>
+
+                                <div class="row-item">
+                                    <span>
+                                        <i class="bi bi-download"></i>
+                                        Save to Downloads
+                                    </span>
+
+                                    <strong>Default</strong>
+                                </div>
+
+                                <div class="row-item">
+                                    <span>
+                                        <i class="bi bi-person"></i>
+                                        Contact Details
+                                    </span>
+                                </div>
+
+                                <div class="details">
+
+                                    <p>
+                                        <strong>Phone Number</strong><br>
+                                        +1 (605) 655 2777
+                                    </p>
+
+                                    <p>
+                                        <strong>Email</strong><br>
+                                        sample@email.com
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+            <div id="outOfStock" class="tab-content" style="display:none;">
+
+                <div class="notification-table">
+
+                    <div class="table-row">
+                        <div class="row-left">
+                            Out Of Stock Alert Content
                         </div>
                     </div>
 
-                    @if (!$notification->is_read)
-                        <div class="notification-badge">{{ max(1, (int) ($notification->unread_count ?? 1)) }}</div>
-                    @endif
                 </div>
-            @empty
-                <div class="empty-state">
-                    <i class="bi bi-inbox"></i>
-                    <p>You have no notifications yet.</p>
-                </div>
-            @endforelse
-        </div>
 
-        {{-- Pagination --}}
-        <div class="pagination-container">
-            @if ($notifications->hasPages())
-                {{ $notifications->links('vendor.pagination.custom-pos') }}
-            @endif
-        </div>
-        {{-- MOBILE PAGINATION --}}
-        <div class="mobile-pagination">
-
-            <div class="mp-left">
-                {{ $notifications->firstItem() }} –
-                {{ $notifications->lastItem() }}
-                of {{ $notifications->total() }} Pages
             </div>
 
-            <div class="mp-center">
-                <span>The page</span>
+            <!------------End of Order Contact List-------------->
 
-                <select onchange="location = this.value;">
-                    @for ($i = 1; $i <= $notifications->lastPage(); $i++)
-                        <option value="{{ $notifications->url($i) }}"
-                            {{ $notifications->currentPage() == $i ? 'selected' : '' }}>
-                            {{ $i }}
-                        </option>
-                    @endfor
-                </select>
+
+            {{-- Pagination --}}
+            <div class="pagination-container">
+                @if ($notifications->hasPages())
+                    {{ $notifications->links('vendor.pagination.custom-pos') }}
+                @endif
+            </div>
+            {{-- MOBILE PAGINATION --}}
+            <div class="mobile-pagination">
+
+                <div class="mp-left">
+                    {{ $notifications->firstItem() }} –
+                    {{ $notifications->lastItem() }}
+                    of {{ $notifications->total() }} Pages
+                </div>
+
+                <div class="mp-center">
+                    <span>The page</span>
+
+                    <select onchange="location = this.value;">
+                        @for ($i = 1; $i <= $notifications->lastPage(); $i++)
+                            <option value="{{ $notifications->url($i) }}"
+                                {{ $notifications->currentPage() == $i ? 'selected' : '' }}>
+                                {{ $i }}
+                            </option>
+                        @endfor
+                    </select>
+                </div>
             </div>
         </div>
     </div>
@@ -258,152 +438,145 @@
 
 
 
-<!-- ALL CONTACT OVERLAY mobile screen------------------------------------------------>
+    <!-- ALL CONTACT OVERLAY mobile screen------------------------------------------------>
 
 
-@php
-    $contactsFromNotifications = isset($contactList)
-        ? collect($contactList)
-        : collect([]);
+    @php
+        $contactsFromNotifications = isset($contactList) ? collect($contactList) : collect([]);
 
-    $favoriteContacts = $contactsFromNotifications->take(6);
-@endphp
+        $favoriteContacts = $contactsFromNotifications->take(6);
+    @endphp
 
-<!-- ALL CONTACT OVERLAY -->
-<div id="allContactScreen" class="all-contact-screen">
+    <!-- ALL CONTACT OVERLAY -->
+    <div id="allContactScreen" class="all-contact-screen">
 
-    <div class="contact-header">
-        <button class="back-btn" onclick="closeAllContact()">
-            <i class="bi bi-arrow-left"></i>
-        </button>
-        <h4>All Contact</h4>
-    </div>
+        <div class="contact-header">
+            <button class="back-btn" onclick="closeAllContact()">
+                <i class="bi bi-arrow-left"></i>
+            </button>
+            <h4>All Contact</h4>
+        </div>
 
-    <div class="contact-body">
+        <div class="contact-body">
 
-        <div class="favorite-section">
-            <p class="favorite-title">Favorite</p>
-            <div class="favorite-list">
-                @forelse($favoriteContacts as $contact)
-                    <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}"
-                       class="favorite-item"
-                       title="{{ $contact->name }}">
-                        <img src="{{ $contact->chat_avatar }}"
-                             onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
-                             alt="{{ $contact->name }}">
+            <div class="favorite-section">
+                <p class="favorite-title">Favorite</p>
+                <div class="favorite-list">
+                    @forelse($favoriteContacts as $contact)
+                        <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}" class="favorite-item"
+                            title="{{ $contact->name }}">
+                            <img src="{{ $contact->chat_avatar }}"
+                                onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
+                                alt="{{ $contact->name }}">
+                        </a>
+                    @empty
+                        <div class="empty-text">No favorites yet</div>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="ac-search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" id="acSearchInput" placeholder="Search" onkeyup="filterContactsList()">
+            </div>
+
+            <div class="ac-contact-list">
+                @forelse($contactsFromNotifications as $contact)
+                    <a href="{{ route('contact.show_mobile', ['id' => $contact->id]) }}" class="ac-contact-row"
+                        class="ac-contact-row" data-name="{{ strtolower($contact->name) }}">
+
+                        <div class="ac-contact-avatar">
+                            <img src="{{ $contact->chat_avatar }}"
+                                onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
+                                alt="{{ $contact->name }}">
+                        </div>
+
+                        <div class="ac-contact-info">
+                            <strong class="ac-contact-name">{{ $contact->name }}</strong>
+                            <span class="ac-contact-time">last seen recently</span>
+                        </div>
+
+                        @if ($contact->unread_count > 0)
+                            <span class="ac-contact-badge">{{ $contact->unread_count }}</span>
+                        @endif
                     </a>
                 @empty
-                    <div class="empty-text">No favorites yet</div>
+                    <div class="ac-empty-text">No contacts available</div>
                 @endforelse
             </div>
+
+        </div>
+    </div>
+
+    <!-- NEW MESSAGE OVERLAY -->
+    <div id="newMessageScreen" class="new-message-screen">
+
+        <div class="nm-header">
+            <button class="nm-back-btn" onclick="closeNewMessage()">
+                <i class="bi bi-arrow-left"></i>
+            </button>
+            <h4>New Message</h4>
         </div>
 
-        <div class="ac-search-box">
-            <i class="bi bi-search"></i>
-            <input type="text" id="acSearchInput" placeholder="Search"
-                   onkeyup="filterContactsList()">
-        </div>
+        <div class="nm-body">
 
-        <div class="ac-contact-list">
-            @forelse($contactsFromNotifications as $contact)
-<a href="{{ route('contact.show_mobile', ['id' => $contact->id]) }}"
-   class="ac-contact-row"
-                   class="ac-contact-row"
-                   data-name="{{ strtolower($contact->name) }}">
+            <!-- Quick Actions -->
+            <div class="nm-quick-actions">
 
-                    <div class="ac-contact-avatar">
-                        <img src="{{ $contact->chat_avatar }}"
-                             onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
-                             alt="{{ $contact->name }}">
+                <a href="#" class="nm-action-item">
+                    <div class="nm-action-icon">
+                        <i class="bi bi-people-fill"></i>
                     </div>
-
-                    <div class="ac-contact-info">
-                        <strong class="ac-contact-name">{{ $contact->name }}</strong>
-                        <span class="ac-contact-time">last seen recently</span>
-                    </div>
-
-                    @if($contact->unread_count > 0)
-                        <span class="ac-contact-badge">{{ $contact->unread_count }}</span>
-                    @endif
+                    <span>New Group</span>
                 </a>
-            @empty
-                <div class="ac-empty-text">No contacts available</div>
-            @endforelse
-        </div>
 
-    </div>
-</div>
-
-<!-- NEW MESSAGE OVERLAY -->
-<div id="newMessageScreen" class="new-message-screen">
-
-    <div class="nm-header">
-        <button class="nm-back-btn" onclick="closeNewMessage()">
-            <i class="bi bi-arrow-left"></i>
-        </button>
-        <h4>New Message</h4>
-    </div>
-
-    <div class="nm-body">
-        
-        <!-- Quick Actions -->
-    <div class="nm-quick-actions">
-
-    <a href="#" class="nm-action-item">
-        <div class="nm-action-icon">
-<i class="bi bi-people-fill"></i>
-        </div>
-        <span>New Group</span>
-    </a>
-
-    <a href="#" class="nm-action-item">
-        <div class="nm-action-icon">
-<i class="bi bi-lock-fill"></i>
-        </div>
-        <span>New Secret Chat</span>
-    </a>
-
-    <a href="#" class="nm-action-item">
-        <div class="nm-action-icon">
-<i class="bi bi-chat-square-fill"></i>
-        </div>
-        <span>New Channel</span>
-    </a>
-
-</div>
-
-        <!-- Section Title -->
-        <p class="nm-section-title">Sorted by last seen time</p>
-
-        <!-- Contact List -->
-        <div class="nm-contact-list">
-            @forelse($contactList as $contact)
-                <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}"
-                   class="nm-contact-item">
-
-                    <div class="nm-contact-avatar">
-                        <img src="{{ $contact->chat_avatar }}"
-                             onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
-                             alt="{{ $contact->name }}">
-                        
-                        @if($contact->unread_count > 0)
-                            <span class="nm-contact-badge">
-                                {{ $contact->unread_count }}
-                            </span>
-                        @endif
+                <a href="#" class="nm-action-item">
+                    <div class="nm-action-icon">
+                        <i class="bi bi-lock-fill"></i>
                     </div>
-
-                    <span class="nm-contact-name">
-                        {{ $contact->name }}
-                    </span>
+                    <span>New Secret Chat</span>
                 </a>
-            @empty
-                <div class="nm-empty-text">No contacts available</div>
-            @endforelse
-        </div>
 
+                <a href="#" class="nm-action-item">
+                    <div class="nm-action-icon">
+                        <i class="bi bi-chat-square-fill"></i>
+                    </div>
+                    <span>New Channel</span>
+                </a>
+
+            </div>
+
+            <!-- Section Title -->
+            <p class="nm-section-title">Sorted by last seen time</p>
+
+            <!-- Contact List -->
+            <div class="nm-contact-list">
+                @forelse($contactList as $contact)
+                    <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}" class="nm-contact-item">
+
+                        <div class="nm-contact-avatar">
+                            <img src="{{ $contact->chat_avatar }}"
+                                onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
+                                alt="{{ $contact->name }}">
+
+                            @if ($contact->unread_count > 0)
+                                <span class="nm-contact-badge">
+                                    {{ $contact->unread_count }}
+                                </span>
+                            @endif
+                        </div>
+
+                        <span class="nm-contact-name">
+                            {{ $contact->name }}
+                        </span>
+                    </a>
+                @empty
+                    <div class="nm-empty-text">No contacts available</div>
+                @endforelse
+            </div>
+
+        </div>
     </div>
-</div>
 
 @endsection
 
@@ -411,6 +584,37 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+    <script>
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+
+            tab.addEventListener('click', function() {
+
+                // REMOVE ACTIVE
+                tabs.forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                // HIDE ALL CONTENTS
+                tabContents.forEach(content => {
+                    content.style.display = 'none';
+                });
+
+                // ACTIVE CURRENT TAB
+                this.classList.add('active');
+
+                // GET TARGET
+                const target = this.getAttribute('data-tab');
+
+                // SHOW TARGET CONTENT
+                document.getElementById(target).style.display = 'block';
+
+            });
+
+        });
+    </script>
     <script>
         const searchInput = document.getElementById('searchInput');
         const searchSuggestions = document.getElementById('searchSuggestions');
