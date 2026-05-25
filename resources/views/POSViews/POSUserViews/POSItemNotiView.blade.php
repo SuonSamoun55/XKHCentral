@@ -74,6 +74,10 @@
                         Out of Stock Alert
                         <span class="badge-new">1 new</span>
                     </div>
+                    <div class="tab" data-tab="globalMessage">
+                        <i class="bi bi-globe"></i>
+                        Global Message
+                    </div>
                 </div>
             </div>
             <div class="tabs-section">
@@ -145,7 +149,7 @@
             <div id="orderNotification" class="tab-content">
 
                 <div class="notification-table">
-                    <div class="notification-list">
+                    <div class="notification-lists">
 
                         @forelse($notifications as $notification)
                             <div class="table-row {{ !$notification->is_read ? 'selected' : '' }}"
@@ -162,13 +166,12 @@
 
                                     <span class="tag">
 
-                                        @if ($notification->type === 'admin_message')
-                                            <i class="bi bi-shield-check"></i>
-                                        @elseif ($notification->type === 'global_message')
-                                            <i class="bi bi-globe"></i>
-                                        @else
-                                            <i class="bi bi-bell"></i>
-                                        @endif
+                                       <div class="avatar">
+                                <img src="{{ $notification->sender_profile_image_display ?? asset('images/pos/Rectangle 2.png') }}"
+                                    alt="Sender"
+                                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
+                                    onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'">
+                            </div>
 
                                     </span>
 
@@ -222,6 +225,67 @@
                 </div>
             </div>
 
+            <div class="notification-list">
+                @forelse($notifications as $notification)
+                    <div class="notification-card {{ !$notification->is_read ? 'unread' : '' }}"
+                        data-title="{{ $notification->title }}" data-message="{{ $notification->message }}"
+                        data-message="{{ $notification->message }}" data-id="{{ $notification->id }}"
+                        data-type="{{ $notification->type }}" style="cursor: pointer;"
+                        onclick="openNotificationDetail(this)">
+
+                        <div class="notification-content">
+                            <div class="avatar">
+                                <img src="{{ $notification->sender_profile_image_display ?? asset('images/pos/Rectangle 2.png') }}"
+                                    alt="Sender"
+                                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
+                                    onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'">
+                            </div>
+
+                            <div class="notification-text">
+
+                                {{-- Show ADMIN badge only for admin-sent notifications --}}
+                                @if ($notification->type === 'admin_message' || $notification->type === 'global_message')
+                                    <span
+                                        class="badge-admin">{{ $notification->type === 'global_message' ? 'GLOBAL' : 'ADMIN' }}</span>
+                                @endif
+
+                                <div class="notification-title">
+                                    {{ $notification->title }}
+                                </div>
+
+                                <div class="notification-meta">
+                                    {{ $notification->created_at->format('D d/m/Y') }}
+                                    <span style="margin: 0 8px;">{{ $notification->created_at->format('h:i A') }}</span>
+                                </div>
+
+                                @if (str_contains(strtolower($notification->message), 'attachment'))
+                                    <a href="{{ route('user.notifications.show', $notification->id) }}"
+                                        class="notification-attachment" onclick="event.stopPropagation();">
+                                        attachment
+                                    </a>
+                                @endif
+
+                                @if (!$notification->is_read)
+                                    <form action="{{ route('user.notifications.read', $notification->id) }}"
+                                        method="POST" style="display: inline;" onclick="event.stopPropagation();">
+                                        @csrf
+                                    </form>
+                                @endif
+                            </div>
+                        </div>
+
+                        @if (!$notification->is_read)
+                            <div class="notification-badge">{{ max(1, (int) ($notification->unread_count ?? 1)) }}</div>
+                        @endif
+                    </div>
+                @empty
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>You have no notifications yet.</p>
+                    </div>
+                @endforelse
+            </div>
+
             <!------------Order Contact List-------------->
 
             {{-- USER CONTACT PAGE --}}
@@ -242,32 +306,29 @@
 
                             <div class="contact-list">
 
-                               @forelse($contactList as $contact)
-    <div class="contact"
-        data-name="{{ $contact->name }}"
-        data-avatar="{{ $contact->chat_avatar }}"
-        data-phone="{{ $contact->phone }}"
-        data-email="{{ $contact->email }}"
-    >
+                                @forelse($contactList as $contact)
+                                    <div class="contact" data-name="{{ $contact->name }}"
+                                        data-avatar="{{ $contact->chat_avatar }}" data-phone="{{ $contact->phone }}"
+                                        data-email="{{ $contact->email }}">
 
-        <img src="{{ $contact->chat_avatar }}"
-            onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
-            alt="{{ $contact->name }}">
+                                        <img src="{{ $contact->chat_avatar }}"
+                                            onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
+                                            alt="{{ $contact->name }}">
 
-        <div>
-            <strong>{{ $contact->name }}</strong>
-            <small>last seen recently</small>
-        </div>
+                                        <div>
+                                            <strong>{{ $contact->name }}</strong>
+                                            <small>last seen recently</small>
+                                        </div>
 
-        @if ($contact->unread_count > 0)
-            <span class="badge">{{ $contact->unread_count }}</span>
-        @endif
-    </div>
-@empty
-    <div class="ac-empty-text">
-        No contacts available
-    </div>
-@endforelse
+                                        @if ($contact->unread_count > 0)
+                                            <span class="badge">{{ $contact->unread_count }}</span>
+                                        @endif
+                                    </div>
+                                @empty
+                                    <div class="ac-empty-text">
+                                        No contacts available
+                                    </div>
+                                @endforelse
                             </div>
                         </div>
                         <div class="notif-right">
@@ -359,10 +420,9 @@
                 </div>
 
                 <!------------End of Order Contact List-------------->
-
-
                 {{-- Pagination --}}
-                <div class="pagination-container">
+            </div>
+              <div class="pagination-container">
                     @if ($notifications->hasPages())
                         {{ $notifications->links('vendor.pagination.custom-pos') }}
                     @endif
@@ -389,7 +449,6 @@
                         </select>
                     </div>
                 </div>
-            </div>
         </div>
         @include('ManagementSystemViews.UserViews.Layouts.footer')
 
@@ -615,31 +674,31 @@
 
             });
         </script>
-      <script>
-document.addEventListener("DOMContentLoaded", function () {
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
 
-    const contacts = document.querySelectorAll(".contact");
+                const contacts = document.querySelectorAll(".contact");
 
-    contacts.forEach(contact => {
-        contact.addEventListener("click", function () {
+                contacts.forEach(contact => {
+                    contact.addEventListener("click", function() {
 
-            // Get data from clicked contact
-            let name = this.dataset.name;
-            let avatar = this.dataset.avatar;
-            let phone = this.dataset.phone;
-            let email = this.dataset.email;
+                        // Get data from clicked contact
+                        let name = this.dataset.name;
+                        let avatar = this.dataset.avatar;
+                        let phone = this.dataset.phone;
+                        let email = this.dataset.email;
 
-            // Update RIGHT PANEL
-            document.getElementById("profileName").innerText = name;
-            document.getElementById("profileImage").src = avatar;
-            document.getElementById("profilePhone").innerText = phone;
-            document.getElementById("profileEmail").innerText = email;
+                        // Update RIGHT PANEL
+                        document.getElementById("profileName").innerText = name;
+                        document.getElementById("profileImage").src = avatar;
+                        document.getElementById("profilePhone").innerText = phone;
+                        document.getElementById("profileEmail").innerText = email;
 
-        });
-    });
+                    });
+                });
 
-});
-</script>
+            });
+        </script>
         <script>
             const searchInput = document.getElementById('searchInput');
             const searchSuggestions = document.getElementById('searchSuggestions');

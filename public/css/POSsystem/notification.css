@@ -705,6 +705,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .tab-content{
     width:100%;
 }
+
 .notif-page{
     width:100%;
     background:#fff;
@@ -721,6 +722,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     .mobile-bottom-nav {
         display: none !important;
     }
+    .notification-list{
+    display: none;
+}
 }
 
 /* =====================================================
@@ -739,10 +743,15 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     .checkboxs{
         display:none;
     }
+    .notification-lists{
+        display:none;
+    }
     .tag, .status, .bi-star{
         display:none;
     }
-   
+    .tab-content{
+        display:none;
+    }
     
    .mobile-bottom-nav {
         display: flex;
