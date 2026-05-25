@@ -10,6 +10,8 @@
     <div class="page-wrap">
         <div class="main-content">
             <div class="header">
+
+
                 {{-- MOBILE HEADER --}}
                 <div class="mobile-notification-header">
                     <a href="{{ route('user.posinterface') }}" class="mn-btn">
@@ -39,9 +41,9 @@
                     </div> --}}
 
                     <div class="top-actions">
-                        <span class="inbox-label">
+                        <a href="{{ route('user.chat.index') }}" class="inbox-label">
                             <i class="bi bi-chat-left"></i> Inbox
-                        </span>
+                        </a>
 
                         <button class="btn-send">
                             <i class="bi bi-send"></i> Send Message
@@ -80,8 +82,8 @@
                     </div>
                 </div>
             </div>
-            <div class="tabs-section">
-                <div class="tabs-list">
+            {{-- <div class="tabs-section"> --}}
+                {{-- <div class="tabs-list">
                     <a href="{{ route('user.notifications', ['tab' => 'inbox']) }}"
                         class="tab-item {{ $tab === 'inbox' ? 'active' : '' }}">
                         Inbox <span class="tab-badge">{{ $inboxCount }}</span>
@@ -101,17 +103,16 @@
                         class="tab-item {{ $tab === 'global_message' ? 'active' : '' }}">
                         Global Message <span class="tab-badge">{{ $globalMessageCount }}</span>
                     </a>
-                </div>
+                </div> --}}
 
-                <label class="unread-toggle">
+                {{-- <label class="unread-toggle">
                     <span>Unreads</span>
                     <input type="checkbox" id="unreadFilter" onchange="filterUnread()">
-                </label>
-            </div>
+                </label> --}}
+            {{-- </div> --}}
             {{-- MOBILE TOP TABS --}}
             <div class="mobile-tabs">
-                <a href="{{ route('user.notifications.mobile_inbox') }}" class="mt-pill active">
-                    <i class="bi bi-inbox"></i>
+<a href="{{ route('user.notifications') }}" class="mt-pill active">                    <i class="bi bi-inbox"></i>
                     Inbox
                 </a>
                 <button class="mt-icon" onclick="openNewMessage()">
@@ -125,6 +126,7 @@
                     <input type="checkbox" id="mobileUnreadFilter" onchange="filterUnreadMobile()">
                     <span></span>
                 </label>
+
             </div>
 
             <div class="mobile-filter-row">
@@ -144,7 +146,7 @@
                 <span class="active">Order Notification ({{ $inboxCount }})</span>
                 <span>Out of Stock Alert ({{ $spamCount }})</span>
             </div>
-
+            <!------------ Notification List desktop------------------------------->
             {{-- Notification List --}}
             <div id="orderNotification" class="tab-content">
 
@@ -166,12 +168,12 @@
 
                                     <span class="tag">
 
-                                       <div class="avatar">
-                                <img src="{{ $notification->sender_profile_image_display ?? asset('images/pos/Rectangle 2.png') }}"
-                                    alt="Sender"
-                                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
-                                    onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'">
-                            </div>
+                                        <div class="avatar">
+                                            <img src="{{ $notification->sender_profile_image_display ?? asset('images/pos/Rectangle 2.png') }}"
+                                                alt="Sender"
+                                                style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
+                                                onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'">
+                                        </div>
 
                                     </span>
 
@@ -182,7 +184,9 @@
                                         @elseif ($notification->type === 'global_message')
                                             Global Message
                                         @else
-                                            <strong>{{ $notification->title }}</strong>
+                                            <strong class="{{ !$notification->is_read ? 'fw-bold' : '' }}">
+                                                {{ $notification->title }}
+                                            </strong>
                                         @endif
 
                                     </span>
@@ -224,7 +228,7 @@
                     </div>
                 </div>
             </div>
-
+            <!------------Mobile Notification List-------------->
             <div class="notification-list">
                 @forelse($notifications as $notification)
                     <div class="notification-card {{ !$notification->is_read ? 'unread' : '' }}"
@@ -285,8 +289,13 @@
                     </div>
                 @endforelse
             </div>
+            <div class="pagination-container" id="paginationContainer">
+                @if ($notifications->hasPages())
+                    {{ $notifications->links('vendor.pagination.custom-pos') }}
+                @endif
+            </div>
 
-            <!------------Order Contact List-------------->
+            <!------------Order Contact List desktop-------------->
 
             {{-- USER CONTACT PAGE --}}
             <div id="userContact" class="tab-content" style="display:none;">
@@ -422,33 +431,29 @@
                 <!------------End of Order Contact List-------------->
                 {{-- Pagination --}}
             </div>
-              <div class="pagination-container">
-                    @if ($notifications->hasPages())
-                        {{ $notifications->links('vendor.pagination.custom-pos') }}
-                    @endif
+
+            {{-- MOBILE PAGINATION --}}
+            <div class="mobile-pagination">
+
+                <div class="mp-left">
+                    {{ $notifications->firstItem() }} –
+                    {{ $notifications->lastItem() }}
+                    of {{ $notifications->total() }} Pages
                 </div>
-                {{-- MOBILE PAGINATION --}}
-                <div class="mobile-pagination">
 
-                    <div class="mp-left">
-                        {{ $notifications->firstItem() }} –
-                        {{ $notifications->lastItem() }}
-                        of {{ $notifications->total() }} Pages
-                    </div>
+                <div class="mp-center">
+                    <span>The page</span>
 
-                    <div class="mp-center">
-                        <span>The page</span>
-
-                        <select onchange="location = this.value;">
-                            @for ($i = 1; $i <= $notifications->lastPage(); $i++)
-                                <option value="{{ $notifications->url($i) }}"
-                                    {{ $notifications->currentPage() == $i ? 'selected' : '' }}>
-                                    {{ $i }}
-                                </option>
-                            @endfor
-                        </select>
-                    </div>
+                    <select onchange="location = this.value;">
+                        @for ($i = 1; $i <= $notifications->lastPage(); $i++)
+                            <option value="{{ $notifications->url($i) }}"
+                                {{ $notifications->currentPage() == $i ? 'selected' : '' }}>
+                                {{ $i }}
+                            </option>
+                        @endfor
+                    </select>
                 </div>
+            </div>
         </div>
         @include('ManagementSystemViews.UserViews.Layouts.footer')
 
@@ -646,29 +651,34 @@
         <script>
             const tabs = document.querySelectorAll('.tab');
             const tabContents = document.querySelectorAll('.tab-content');
+            const pagination = document.getElementById('paginationContainer');
 
             tabs.forEach(tab => {
 
                 tab.addEventListener('click', function() {
 
                     // REMOVE ACTIVE
-                    tabs.forEach(item => {
-                        item.classList.remove('active');
-                    });
+                    tabs.forEach(item => item.classList.remove('active'));
 
                     // HIDE ALL CONTENTS
                     tabContents.forEach(content => {
                         content.style.display = 'none';
                     });
 
-                    // ACTIVE CURRENT TAB
+                    // ACTIVATE CURRENT TAB
                     this.classList.add('active');
 
-                    // GET TARGET
                     const target = this.getAttribute('data-tab');
 
-                    // SHOW TARGET CONTENT
+                    // SHOW CONTENT
                     document.getElementById(target).style.display = 'block';
+
+                    // ✅ ✅ CONTROL PAGINATION VISIBILITY
+                    if (target === 'orderNotification') {
+                        pagination.style.display = 'block';
+                    } else {
+                        pagination.style.display = 'none';
+                    }
 
                 });
 
@@ -707,6 +717,7 @@
 
             // Open notification detail modal
             function openNotificationDetail(element) {
+                const row = element.closest('.table-row, .notification-card');
                 const title = element.dataset.title;
                 const message = element.dataset.message;
                 const notificationId = element.dataset.id;
@@ -731,19 +742,36 @@
                 modal.show();
 
                 // Mark as read if not already read
-                if (element.classList.contains('unread')) {
+
+                if (row.classList.contains('unread') || row.classList.contains('selected')) {
+
                     fetch(`/pos-system/notifications/${notificationId}/read`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ||
-                                '{{ csrf_token() }}',
-                            'Content-Type': 'application/json',
-                        }
-                    }).then(() => {
-                        element.classList.remove('unread');
-                        const badge = element.querySelector('.notification-badge');
-                        if (badge) badge.remove();
-                    }).catch(err => console.error('Error marking as read:', err));
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ||
+                                    '{{ csrf_token() }}',
+                                'Content-Type': 'application/json',
+                            }
+                        })
+
+                        .then(() => {
+
+                            // ✅ Remove desktop highlight
+                            row.classList.remove('selected');
+
+                            // ✅ Remove mobile highlight
+                            row.classList.remove('unread');
+
+                            // ✅ Remove badge
+                            const badge = row.querySelector('.notification-badge');
+                            if (badge) badge.remove();
+
+                            // ✅ Remove bold (desktop)
+                            const strong = row.querySelector('strong');
+                            if (strong) strong.classList.remove('fw-bold');
+
+
+                        }).catch(err => console.error('Error marking as read:', err));
                 }
             }
 
@@ -883,44 +911,37 @@
             }
 
             // Handle unread filter
-            function filterUnread() {
-                const checkbox = document.getElementById('unreadFilter');
-                const currentUrl = new URL(window.location);
+            // ✅ Handle unread toggle (ONLY MOBILE NOW)
+           function filterUnreadMobile() {
 
-                if (checkbox.checked) {
-                    currentUrl.searchParams.set('unread', 'true');
-                } else {
-                    currentUrl.searchParams.delete('unread');
-                }
+    const checkbox = document.getElementById('mobileUnreadFilter');
+    let url = new URL(window.location.href);
 
-                window.location.href = currentUrl.toString();
-            }
+    if (checkbox.checked) {
+        url.searchParams.set('unread', 'true');
+    } else {
+        url.searchParams.delete('unread');
+    }
 
-            // Check unread filter on page load
-            window.addEventListener('load', function() {
+    // ✅ KEEP CURRENT PAGE + TAB
+    url.searchParams.set('tab', 'inbox');
+
+    window.location.href = url.toString();
+}
+
+
+            // ✅ Restore toggle state on page load
+            document.addEventListener('DOMContentLoaded', function() {
+
                 const params = new URLSearchParams(window.location.search);
-                if (params.get('unread') === 'true') {
-                    document.getElementById('unreadFilter').checked = true;
-                    const mobileUnreadFilter = document.getElementById('mobileUnreadFilter');
-                    if (mobileUnreadFilter) {
-                        mobileUnreadFilter.checked = true;
-                    }
+                const isUnread = params.get('unread') === 'true';
+
+                const mobileUnreadFilter = document.getElementById('mobileUnreadFilter');
+                if (mobileUnreadFilter) {
+                    mobileUnreadFilter.checked = isUnread;
                 }
+
             });
-
-            // Mobile unread filter handler
-            function filterUnreadMobile() {
-                const checkbox = document.getElementById('mobileUnreadFilter');
-                const currentUrl = new URL(window.location);
-
-                if (checkbox.checked) {
-                    currentUrl.searchParams.set('unread', 'true');
-                } else {
-                    currentUrl.searchParams.delete('unread');
-                }
-
-                window.location.href = currentUrl.toString();
-            }
         </script>
         <script>
             function openAllContact() {

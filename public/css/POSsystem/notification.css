@@ -716,6 +716,29 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     grid-template-columns: 320px 1fr;
     gap: 20px;
 }
+.table-row.selected {
+    background-color: #eaf6ff; /* light blue highlight */
+    font-weight: 600;
+}
+
+.notification-card.unread {
+    background-color: #eaf6ff;
+    border-left: 4px solid #10c4d4;
+}
+
+.table-row.selected .status strong {
+    color: #000;
+}
+
+.table-row:not(.selected) {
+    opacity: 0.8;
+}
+.inbox-label {
+    cursor: pointer;
+    display: inline-block;
+    text-decoration: none;
+    color: inherit;
+}
 
     
 @media (min-width: 769px) {
