@@ -126,6 +126,9 @@ $contactList = Notification::where('user_id', $user->id)
             'chat_avatar' => $this->getSenderImageDisplay($latest),
             'last_message_at' => $latest->created_at,
             'unread_count' => $items->where('is_read', false)->count(),
+            'phone' => optional($latest->sender)->phone,
+            'email' => optional($latest->sender)->email,
+
         ];
     })
     ->values();

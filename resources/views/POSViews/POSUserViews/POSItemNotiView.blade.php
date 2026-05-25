@@ -38,15 +38,15 @@
                         <div class="search-suggestions" id="searchSuggestions"></div>
                     </div> --}}
 
-                      <div class="top-actions">
-                            <span class="inbox-label">
-                                <i class="bi bi-chat-left"></i> Inbox
-                            </span>
+                    <div class="top-actions">
+                        <span class="inbox-label">
+                            <i class="bi bi-chat-left"></i> Inbox
+                        </span>
 
-                            <button class="btn-send">
-                                <i class="bi bi-send"></i> Send Message
-                            </button>
-                        </div>
+                        <button class="btn-send">
+                            <i class="bi bi-send"></i> Send Message
+                        </button>
+                    </div>
 
                     <div class="date-filter-wrapper">
                         <label for="dateInput" class="floating-label">Date</label>
@@ -142,87 +142,83 @@
             </div>
 
             {{-- Notification List --}}
-            {{-- <div class="notification-table" > --}}
             <div id="orderNotification" class="tab-content">
 
                 <div class="notification-table">
+                    <div class="notification-list">
 
-                    @forelse($notifications as $notification)
-                        <div class="table-row {{ !$notification->is_read ? 'selected' : '' }}"
-                            data-title="{{ $notification->title }}" data-message="{{ $notification->message }}"
-                            data-id="{{ $notification->id }}" data-type="{{ $notification->type }}"
-                            style="cursor:pointer;" onclick="openNotificationDetail(this)">
+                        @forelse($notifications as $notification)
+                            <div class="table-row {{ !$notification->is_read ? 'selected' : '' }}"
+                                data-title="{{ $notification->title }}" data-message="{{ $notification->message }}"
+                                data-id="{{ $notification->id }}" data-type="{{ $notification->type }}"
+                                style="cursor:pointer;" onclick="openNotificationDetail(this)">
 
-                            {{-- LEFT --}}
-                            <div class="row-left">
+                                {{-- LEFT --}}
+                                <div class="row-left">
 
-                                <input type="checkbox">
+                                    <input type="checkbox" class="checkboxs">
 
-                                <i class="bi bi-star"></i>
+                                    <i class="bi bi-star" class="checkboxs"></i>
 
-                                <span class="tag">
+                                    <span class="tag">
 
-                                    @if ($notification->type === 'admin_message')
-                                        <i class="bi bi-shield-check"></i>
-                                    @elseif ($notification->type === 'global_message')
-                                        <i class="bi bi-globe"></i>
-                                    @else
-                                        <i class="bi bi-bell"></i>
+                                        @if ($notification->type === 'admin_message')
+                                            <i class="bi bi-shield-check"></i>
+                                        @elseif ($notification->type === 'global_message')
+                                            <i class="bi bi-globe"></i>
+                                        @else
+                                            <i class="bi bi-bell"></i>
+                                        @endif
+
+                                    </span>
+
+                                    <span class="status">
+
+                                        @if ($notification->type === 'admin_message')
+                                            Admin Message
+                                        @elseif ($notification->type === 'global_message')
+                                            Global Message
+                                        @else
+                                            <strong>{{ $notification->title }}</strong>
+                                        @endif
+
+                                    </span>
+
+                                </div>
+
+                                {{-- CENTER --}}
+                                <div class="row-center">
+                                    {{ Str::limit($notification->message, 90) }}
+
+                                    @if (str_contains(strtolower($notification->message), 'attachment'))
+                                        <a href="{{ route('user.notifications.show', $notification->id) }}"
+                                            onclick="event.stopPropagation();" style="color:#10c4d4; font-weight:600;">
+                                            attachment
+                                        </a>
                                     @endif
 
-                                </span>
+                                </div>
 
-                                <span class="status">
+                                {{-- RIGHT --}}
+                                <div class="row-right">
 
-                                    @if ($notification->type === 'admin_message')
-                                        Admin Message
-                                    @elseif ($notification->type === 'global_message')
-                                        Global Message
-                                    @else
-                                        status
-                                    @endif
+                                    {{ $notification->created_at->format('M d') }}
 
-                                </span>
+                                </div>
 
                             </div>
 
-                            {{-- CENTER --}}
-                            <div class="row-center">
+                        @empty
 
-                                <strong>{{ $notification->title }}</strong>
+                            <div class="empty-state">
 
-                                —
+                                <i class="bi bi-inbox"></i>
 
-                                {{ Str::limit($notification->message, 90) }}
-
-                                @if (str_contains(strtolower($notification->message), 'attachment'))
-                                    <a href="{{ route('user.notifications.show', $notification->id) }}"
-                                        onclick="event.stopPropagation();" style="color:#10c4d4; font-weight:600;">
-                                        attachment
-                                    </a>
-                                @endif
+                                <p>You have no notifications yet.</p>
 
                             </div>
-
-                            {{-- RIGHT --}}
-                            <div class="row-right">
-
-                                {{ $notification->created_at->format('M d') }}
-
-                            </div>
-
-                        </div>
-
-                    @empty
-
-                        <div class="empty-state">
-
-                            <i class="bi bi-inbox"></i>
-
-                            <p>You have no notifications yet.</p>
-
-                        </div>
-                    @endforelse
+                        @endforelse
+                    </div>
                 </div>
             </div>
 
@@ -246,456 +242,485 @@
 
                             <div class="contact-list">
 
-                                <div class="contact active">
-                                    <img src="https://i.pravatar.cc/100">
+                               @forelse($contactList as $contact)
+    <div class="contact"
+        data-name="{{ $contact->name }}"
+        data-avatar="{{ $contact->chat_avatar }}"
+        data-phone="{{ $contact->phone }}"
+        data-email="{{ $contact->email }}"
+    >
 
-                                    <div>
-                                        <strong>Cody Fisher</strong>
-                                        <small>Last connect 8 minutes ago</small>
-                                    </div>
+        <img src="{{ $contact->chat_avatar }}"
+            onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
+            alt="{{ $contact->name }}">
 
-                                    <span class="badge">3</span>
-                                </div>
+        <div>
+            <strong>{{ $contact->name }}</strong>
+            <small>last seen recently</small>
+        </div>
 
-                                <div class="contact">
-                                    <img src="https://i.pravatar.cc/101">
-
-                                    <div>
-                                        <strong>Ralph Edwards</strong>
-                                        <small>Last connect 8 minutes ago</small>
-                                    </div>
-                                </div>
-
-                                <div class="contact">
-                                    <img src="https://i.pravatar.cc/102">
-
-                                    <div>
-                                        <strong>Esther Howard</strong>
-                                        <small>Last connect 8 minutes ago</small>
-                                    </div>
-                                </div>
-
+        @if ($contact->unread_count > 0)
+            <span class="badge">{{ $contact->unread_count }}</span>
+        @endif
+    </div>
+@empty
+    <div class="ac-empty-text">
+        No contacts available
+    </div>
+@endforelse
                             </div>
-
                         </div>
-
-                        <!-- RIGHT PANEL -->
                         <div class="notif-right">
 
                             <div class="profile">
 
-                                <img src="https://i.pravatar.cc/120" class="profile-img">
+                                <img src="{{ $contactList->first()->chat_avatar ?? asset('images/pos/Rectangle 2.png') }}"
+                                    class="profile-img" id="profileImage">
 
-                                <h4>Cody Fisher</h4>
+                                <h4 id="profileName">
+                                    {{ $contactList->first()->name ?? 'No User' }}
+                                </h4>
 
                             </div>
 
                             <div class="settings">
 
                                 <div class="row-item">
+
                                     <span>
                                         <i class="bi bi-bell"></i>
                                         Notifications
                                     </span>
 
                                     <strong>No</strong>
+
                                 </div>
 
                                 <div class="row-item">
+
                                     <span>
                                         <i class="bi bi-download"></i>
                                         Save to Downloads
                                     </span>
 
                                     <strong>Default</strong>
+
                                 </div>
 
                                 <div class="row-item">
+
                                     <span>
                                         <i class="bi bi-person"></i>
                                         Contact Details
                                     </span>
+
                                 </div>
 
                                 <div class="details">
 
                                     <p>
+
                                         <strong>Phone Number</strong><br>
-                                        +1 (605) 655 2777
+
+                                        <span id="profilePhone">
+                                            {{ $contactList->first()->phone ?? '+1 (605) 655 2777' }}
+                                        </span>
+
                                     </p>
 
                                     <p>
+
                                         <strong>Email</strong><br>
-                                        sample@email.com
+
+                                        <span id="profileEmail">
+                                            {{ $contactList->first()->email ?? 'sample@email.com' }}
+                                        </span>
+
                                     </p>
 
                                 </div>
 
                             </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="outOfStock" class="tab-content" style="display:none;">
 
+                    <div class="notification-table">
+
+                        <div class="table-row">
+                            <div class="row-left">
+                                Out Of Stock Alert Content
+                            </div>
                         </div>
 
                     </div>
 
                 </div>
 
+                <!------------End of Order Contact List-------------->
+
+
+                {{-- Pagination --}}
+                <div class="pagination-container">
+                    @if ($notifications->hasPages())
+                        {{ $notifications->links('vendor.pagination.custom-pos') }}
+                    @endif
+                </div>
+                {{-- MOBILE PAGINATION --}}
+                <div class="mobile-pagination">
+
+                    <div class="mp-left">
+                        {{ $notifications->firstItem() }} –
+                        {{ $notifications->lastItem() }}
+                        of {{ $notifications->total() }} Pages
+                    </div>
+
+                    <div class="mp-center">
+                        <span>The page</span>
+
+                        <select onchange="location = this.value;">
+                            @for ($i = 1; $i <= $notifications->lastPage(); $i++)
+                                <option value="{{ $notifications->url($i) }}"
+                                    {{ $notifications->currentPage() == $i ? 'selected' : '' }}>
+                                    {{ $i }}
+                                </option>
+                            @endfor
+                        </select>
+                    </div>
+                </div>
             </div>
-            <div id="outOfStock" class="tab-content" style="display:none;">
+        </div>
+        @include('ManagementSystemViews.UserViews.Layouts.footer')
 
-                <div class="notification-table">
-
-                    <div class="table-row">
-                        <div class="row-left">
-                            Out Of Stock Alert Content
+        {{-- Notification Detail Modal --}}
+        <div id="notificationModal" class="modal fade" tabindex="-1" aria-labelledby="notificationModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="notification-detail-card">
+                    <div class="detail-header">
+                        <div class="avatar-circle">
+                            <i class="bi bi-person-fill" style="font-size: 30px; color: #94a3b8;"></i>
+                        </div>
+                        <div class="company-info">
+                            <div class="name" id="notificationCompanyName">Trey Research</div>
+                            <div class="email" id="notificationUserEmail">mary.kumm@contoso.com</div>
+                            <div class="status-badge">Read</div>
                         </div>
                     </div>
 
-                </div>
-
-            </div>
-
-            <!------------End of Order Contact List-------------->
-
-
-            {{-- Pagination --}}
-            <div class="pagination-container">
-                @if ($notifications->hasPages())
-                    {{ $notifications->links('vendor.pagination.custom-pos') }}
-                @endif
-            </div>
-            {{-- MOBILE PAGINATION --}}
-            <div class="mobile-pagination">
-
-                <div class="mp-left">
-                    {{ $notifications->firstItem() }} –
-                    {{ $notifications->lastItem() }}
-                    of {{ $notifications->total() }} Pages
-                </div>
-
-                <div class="mp-center">
-                    <span>The page</span>
-
-                    <select onchange="location = this.value;">
-                        @for ($i = 1; $i <= $notifications->lastPage(); $i++)
-                            <option value="{{ $notifications->url($i) }}"
-                                {{ $notifications->currentPage() == $i ? 'selected' : '' }}>
-                                {{ $i }}
-                            </option>
-                        @endfor
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
-    @include('ManagementSystemViews.UserViews.Layouts.footer')
-
-    {{-- Notification Detail Modal --}}
-    <div id="notificationModal" class="modal fade" tabindex="-1" aria-labelledby="notificationModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="notification-detail-card">
-                <div class="detail-header">
-                    <div class="avatar-circle">
-                        <i class="bi bi-person-fill" style="font-size: 30px; color: #94a3b8;"></i>
+                    <div class="info-grid">
+                        <div>
+                            <div class="info-label">Type</div>
+                            <div class="info-value" id="notificationType">order</div>
+                        </div>
+                        <div>
+                            <div class="info-label">Date</div>
+                            <div class="info-value" id="notificationDateDisplay">Fri 10/04/2026 02:03 PM</div>
+                        </div>
                     </div>
-                    <div class="company-info">
-                        <div class="name" id="notificationCompanyName">Trey Research</div>
-                        <div class="email" id="notificationUserEmail">mary.kumm@contoso.com</div>
-                        <div class="status-badge">Read</div>
-                    </div>
-                </div>
 
-                <div class="info-grid">
+                    <div class="mb-4">
+                        <div class="info-label">Title</div>
+                        <div class="info-value" id="notificationTitleText">Order Confirmed</div>
+                    </div>
+
                     <div>
-                        <div class="info-label">Type</div>
-                        <div class="info-value" id="notificationType">order</div>
+                        <div class="info-label">Message</div>
+                        <div class="message-box" id="notificationMessageBody">
+                            Your order ORD-20260404092306-0XVQ has been confirmed and stored in Sales Order.
+                        </div>
                     </div>
-                    <div>
-                        <div class="info-label">Date</div>
-                        <div class="info-value" id="notificationDateDisplay">Fri 10/04/2026 02:03 PM</div>
+
+                    <div class="detail-footer">
+                        <button type="button" class="btn-back" data-bs-dismiss="modal">Back to List</button>
+                        <button type="button" class="btn-delete" id="deleteNotificationBtn">Delete</button>
                     </div>
-                </div>
-
-                <div class="mb-4">
-                    <div class="info-label">Title</div>
-                    <div class="info-value" id="notificationTitleText">Order Confirmed</div>
-                </div>
-
-                <div>
-                    <div class="info-label">Message</div>
-                    <div class="message-box" id="notificationMessageBody">
-                        Your order ORD-20260404092306-0XVQ has been confirmed and stored in Sales Order.
-                    </div>
-                </div>
-
-                <div class="detail-footer">
-                    <button type="button" class="btn-back" data-bs-dismiss="modal">Back to List</button>
-                    <button type="button" class="btn-delete" id="deleteNotificationBtn">Delete</button>
                 </div>
             </div>
         </div>
-    </div>
+        <!-- ALL CONTACT OVERLAY mobile screen------------------------------------------------>
 
 
+        @php
+            $contactsFromNotifications = isset($contactList) ? collect($contactList) : collect([]);
 
-    <!-- ALL CONTACT OVERLAY mobile screen------------------------------------------------>
+            $favoriteContacts = $contactsFromNotifications->take(6);
+        @endphp
 
+        <!-- ALL CONTACT OVERLAY -->
+        <div id="allContactScreen" class="all-contact-screen">
 
-    @php
-        $contactsFromNotifications = isset($contactList) ? collect($contactList) : collect([]);
+            <div class="contact-header">
+                <button class="back-btn" onclick="closeAllContact()">
+                    <i class="bi bi-arrow-left"></i>
+                </button>
+                <h4>All Contact</h4>
+            </div>
 
-        $favoriteContacts = $contactsFromNotifications->take(6);
-    @endphp
+            <div class="contact-body">
 
-    <!-- ALL CONTACT OVERLAY -->
-    <div id="allContactScreen" class="all-contact-screen">
+                <div class="favorite-section">
+                    <p class="favorite-title">Favorite</p>
+                    <div class="favorite-list">
+                        @forelse($favoriteContacts as $contact)
+                            <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}" class="favorite-item"
+                                title="{{ $contact->name }}">
+                                <img src="{{ $contact->chat_avatar }}"
+                                    onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
+                                    alt="{{ $contact->name }}">
+                            </a>
+                        @empty
+                            <div class="empty-text">No favorites yet</div>
+                        @endforelse
+                    </div>
+                </div>
 
-        <div class="contact-header">
-            <button class="back-btn" onclick="closeAllContact()">
-                <i class="bi bi-arrow-left"></i>
-            </button>
-            <h4>All Contact</h4>
-        </div>
+                <div class="ac-search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="acSearchInput" placeholder="Search" onkeyup="filterContactsList()">
+                </div>
 
-        <div class="contact-body">
+                <div class="ac-contact-list">
+                    @forelse($contactsFromNotifications as $contact)
+                        <a href="{{ route('contact.show_mobile', ['id' => $contact->id]) }}" class="ac-contact-row"
+                            class="ac-contact-row" data-name="{{ strtolower($contact->name) }}">
 
-            <div class="favorite-section">
-                <p class="favorite-title">Favorite</p>
-                <div class="favorite-list">
-                    @forelse($favoriteContacts as $contact)
-                        <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}" class="favorite-item"
-                            title="{{ $contact->name }}">
-                            <img src="{{ $contact->chat_avatar }}"
-                                onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
-                                alt="{{ $contact->name }}">
+                            <div class="ac-contact-avatar">
+                                <img src="{{ $contact->chat_avatar }}"
+                                    onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
+                                    alt="{{ $contact->name }}">
+                            </div>
+
+                            <div class="ac-contact-info">
+                                <strong class="ac-contact-name">{{ $contact->name }}</strong>
+                                <span class="ac-contact-time">last seen recently</span>
+                            </div>
+
+                            @if ($contact->unread_count > 0)
+                                <span class="ac-contact-badge">{{ $contact->unread_count }}</span>
+                            @endif
                         </a>
                     @empty
-                        <div class="empty-text">No favorites yet</div>
+                        <div class="ac-empty-text">No contacts available</div>
                     @endforelse
                 </div>
             </div>
+        </div>
 
-            <div class="ac-search-box">
-                <i class="bi bi-search"></i>
-                <input type="text" id="acSearchInput" placeholder="Search" onkeyup="filterContactsList()">
+        <!-- NEW MESSAGE OVERLAY -->
+        <div id="newMessageScreen" class="new-message-screen">
+
+            <div class="nm-header">
+                <button class="nm-back-btn" onclick="closeNewMessage()">
+                    <i class="bi bi-arrow-left"></i>
+                </button>
+                <h4>New Message</h4>
             </div>
 
-            <div class="ac-contact-list">
-                @forelse($contactsFromNotifications as $contact)
-                    <a href="{{ route('contact.show_mobile', ['id' => $contact->id]) }}" class="ac-contact-row"
-                        class="ac-contact-row" data-name="{{ strtolower($contact->name) }}">
+            <div class="nm-body">
 
-                        <div class="ac-contact-avatar">
-                            <img src="{{ $contact->chat_avatar }}"
-                                onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
-                                alt="{{ $contact->name }}">
+                <!-- Quick Actions -->
+                <div class="nm-quick-actions">
+
+                    <a href="#" class="nm-action-item">
+                        <div class="nm-action-icon">
+                            <i class="bi bi-people-fill"></i>
                         </div>
-
-                        <div class="ac-contact-info">
-                            <strong class="ac-contact-name">{{ $contact->name }}</strong>
-                            <span class="ac-contact-time">last seen recently</span>
-                        </div>
-
-                        @if ($contact->unread_count > 0)
-                            <span class="ac-contact-badge">{{ $contact->unread_count }}</span>
-                        @endif
+                        <span>New Group</span>
                     </a>
-                @empty
-                    <div class="ac-empty-text">No contacts available</div>
-                @endforelse
-            </div>
 
-        </div>
-    </div>
-
-    <!-- NEW MESSAGE OVERLAY -->
-    <div id="newMessageScreen" class="new-message-screen">
-
-        <div class="nm-header">
-            <button class="nm-back-btn" onclick="closeNewMessage()">
-                <i class="bi bi-arrow-left"></i>
-            </button>
-            <h4>New Message</h4>
-        </div>
-
-        <div class="nm-body">
-
-            <!-- Quick Actions -->
-            <div class="nm-quick-actions">
-
-                <a href="#" class="nm-action-item">
-                    <div class="nm-action-icon">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
-                    <span>New Group</span>
-                </a>
-
-                <a href="#" class="nm-action-item">
-                    <div class="nm-action-icon">
-                        <i class="bi bi-lock-fill"></i>
-                    </div>
-                    <span>New Secret Chat</span>
-                </a>
-
-                <a href="#" class="nm-action-item">
-                    <div class="nm-action-icon">
-                        <i class="bi bi-chat-square-fill"></i>
-                    </div>
-                    <span>New Channel</span>
-                </a>
-
-            </div>
-
-            <!-- Section Title -->
-            <p class="nm-section-title">Sorted by last seen time</p>
-
-            <!-- Contact List -->
-            <div class="nm-contact-list">
-                @forelse($contactList as $contact)
-                    <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}" class="nm-contact-item">
-
-                        <div class="nm-contact-avatar">
-                            <img src="{{ $contact->chat_avatar }}"
-                                onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
-                                alt="{{ $contact->name }}">
-
-                            @if ($contact->unread_count > 0)
-                                <span class="nm-contact-badge">
-                                    {{ $contact->unread_count }}
-                                </span>
-                            @endif
+                    <a href="#" class="nm-action-item">
+                        <div class="nm-action-icon">
+                            <i class="bi bi-lock-fill"></i>
                         </div>
-
-                        <span class="nm-contact-name">
-                            {{ $contact->name }}
-                        </span>
+                        <span>New Secret Chat</span>
                     </a>
-                @empty
-                    <div class="nm-empty-text">No contacts available</div>
-                @endforelse
+
+                    <a href="#" class="nm-action-item">
+                        <div class="nm-action-icon">
+                            <i class="bi bi-chat-square-fill"></i>
+                        </div>
+                        <span>New Channel</span>
+                    </a>
+
+                </div>
+
+                <!-- Section Title -->
+                <p class="nm-section-title">Sorted by last seen time</p>
+
+                <!-- Contact List -->
+                <div class="nm-contact-list">
+                    @forelse($contactList as $contact)
+                        <a href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}" class="nm-contact-item">
+
+                            <div class="nm-contact-avatar">
+                                <img src="{{ $contact->chat_avatar }}"
+                                    onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
+                                    alt="{{ $contact->name }}">
+
+                                @if ($contact->unread_count > 0)
+                                    <span class="nm-contact-badge">
+                                        {{ $contact->unread_count }}
+                                    </span>
+                                @endif
+                            </div>
+
+                            <span class="nm-contact-name">
+                                {{ $contact->name }}
+                            </span>
+                        </a>
+                    @empty
+                        <div class="nm-empty-text">No contacts available</div>
+                    @endforelse
+                </div>
+
             </div>
-
         </div>
-    </div>
 
-@endsection
+    @endsection
 
 
-@push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-        const tabs = document.querySelectorAll('.tab');
-        const tabContents = document.querySelectorAll('.tab-content');
+        <script>
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
 
-        tabs.forEach(tab => {
+            tabs.forEach(tab => {
 
-            tab.addEventListener('click', function() {
+                tab.addEventListener('click', function() {
 
-                // REMOVE ACTIVE
-                tabs.forEach(item => {
-                    item.classList.remove('active');
+                    // REMOVE ACTIVE
+                    tabs.forEach(item => {
+                        item.classList.remove('active');
+                    });
+
+                    // HIDE ALL CONTENTS
+                    tabContents.forEach(content => {
+                        content.style.display = 'none';
+                    });
+
+                    // ACTIVE CURRENT TAB
+                    this.classList.add('active');
+
+                    // GET TARGET
+                    const target = this.getAttribute('data-tab');
+
+                    // SHOW TARGET CONTENT
+                    document.getElementById(target).style.display = 'block';
+
                 });
-
-                // HIDE ALL CONTENTS
-                tabContents.forEach(content => {
-                    content.style.display = 'none';
-                });
-
-                // ACTIVE CURRENT TAB
-                this.classList.add('active');
-
-                // GET TARGET
-                const target = this.getAttribute('data-tab');
-
-                // SHOW TARGET CONTENT
-                document.getElementById(target).style.display = 'block';
 
             });
+        </script>
+      <script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const contacts = document.querySelectorAll(".contact");
+
+    contacts.forEach(contact => {
+        contact.addEventListener("click", function () {
+
+            // Get data from clicked contact
+            let name = this.dataset.name;
+            let avatar = this.dataset.avatar;
+            let phone = this.dataset.phone;
+            let email = this.dataset.email;
+
+            // Update RIGHT PANEL
+            document.getElementById("profileName").innerText = name;
+            document.getElementById("profileImage").src = avatar;
+            document.getElementById("profilePhone").innerText = phone;
+            document.getElementById("profileEmail").innerText = email;
 
         });
-    </script>
-    <script>
-        const searchInput = document.getElementById('searchInput');
-        const searchSuggestions = document.getElementById('searchSuggestions');
-        const dateInput = document.getElementById('dateInput');
-        const notificationCards = document.querySelectorAll('.notification-card');
+    });
 
-        // Open notification detail modal
-        function openNotificationDetail(element) {
-            const title = element.dataset.title;
-            const message = element.dataset.message;
-            const notificationId = element.dataset.id;
-            // Extracting new data attributes (make sure these are in your HTML)
-            const type = element.dataset.type || 'order';
-            const email = element.dataset.email || '';
-            const company = element.dataset.company || '';
+});
+</script>
+        <script>
+            const searchInput = document.getElementById('searchInput');
+            const searchSuggestions = document.getElementById('searchSuggestions');
+            const dateInput = document.getElementById('dateInput');
+            const notificationCards = document.querySelectorAll('.notification-card');
 
-            // Get the date from the element
-            const metaElement = element.querySelector('.notification-meta');
-            const dateText = metaElement ? metaElement.textContent.trim() : new Date().toLocaleDateString();
+            // Open notification detail modal
+            function openNotificationDetail(element) {
+                const title = element.dataset.title;
+                const message = element.dataset.message;
+                const notificationId = element.dataset.id;
+                // Extracting new data attributes (make sure these are in your HTML)
+                const type = element.dataset.type || 'order';
+                const email = element.dataset.email || '';
+                const company = element.dataset.company || '';
 
-            // 3. Populate the NEW Modern UI IDs
-            document.getElementById('notificationCompanyName').textContent = company;
-            document.getElementById('notificationUserEmail').textContent = email;
-            document.getElementById('notificationType').textContent = type;
-            document.getElementById('notificationDateDisplay').textContent = dateText;
-            document.getElementById('notificationTitleText').textContent = title;
-            document.getElementById('notificationMessageBody').textContent = message;
-            // Open modal
-            const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
-            modal.show();
+                // Get the date from the element
+                const metaElement = element.querySelector('.notification-meta');
+                const dateText = metaElement ? metaElement.textContent.trim() : new Date().toLocaleDateString();
 
-            // Mark as read if not already read
-            if (element.classList.contains('unread')) {
-                fetch(`/pos-system/notifications/${notificationId}/read`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ||
-                            '{{ csrf_token() }}',
-                        'Content-Type': 'application/json',
-                    }
-                }).then(() => {
-                    element.classList.remove('unread');
-                    const badge = element.querySelector('.notification-badge');
-                    if (badge) badge.remove();
-                }).catch(err => console.error('Error marking as read:', err));
-            }
-        }
+                // 3. Populate the NEW Modern UI IDs
+                document.getElementById('notificationCompanyName').textContent = company;
+                document.getElementById('notificationUserEmail').textContent = email;
+                document.getElementById('notificationType').textContent = type;
+                document.getElementById('notificationDateDisplay').textContent = dateText;
+                document.getElementById('notificationTitleText').textContent = title;
+                document.getElementById('notificationMessageBody').textContent = message;
+                // Open modal
+                const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
+                modal.show();
 
-        // Get all notifications for autocomplete
-        const allNotifications = Array.from(notificationCards).map(card => ({
-            title: card.dataset.title,
-            message: card.dataset.message,
-            element: card
-        }));
-
-        // Live search with suggestions
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.trim().toLowerCase();
-
-            if (searchTerm.length === 0) {
-                searchSuggestions.classList.remove('active');
-                showAllNotifications();
-                return;
+                // Mark as read if not already read
+                if (element.classList.contains('unread')) {
+                    fetch(`/pos-system/notifications/${notificationId}/read`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ||
+                                '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                        }
+                    }).then(() => {
+                        element.classList.remove('unread');
+                        const badge = element.querySelector('.notification-badge');
+                        if (badge) badge.remove();
+                    }).catch(err => console.error('Error marking as read:', err));
+                }
             }
 
-            // Filter notifications
-            const filtered = allNotifications.filter(notif =>
-                notif.title.toLowerCase().includes(searchTerm) ||
-                notif.message.toLowerCase().includes(searchTerm)
-            );
+            // Get all notifications for autocomplete
+            const allNotifications = Array.from(notificationCards).map(card => ({
+                title: card.dataset.title,
+                message: card.dataset.message,
+                element: card
+            }));
 
-            if (filtered.length === 0) {
-                searchSuggestions.innerHTML =
-                    '<div class="suggestion-item" style="color: #999;">No results found</div>';
-                searchSuggestions.classList.add('active');
-                hideAllNotifications();
-                return;
-            }
+            // Live search with suggestions
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.trim().toLowerCase();
 
-            // Show suggestions
-            searchSuggestions.innerHTML = filtered.map((notif, index) => `
+                if (searchTerm.length === 0) {
+                    searchSuggestions.classList.remove('active');
+                    showAllNotifications();
+                    return;
+                }
+
+                // Filter notifications
+                const filtered = allNotifications.filter(notif =>
+                    notif.title.toLowerCase().includes(searchTerm) ||
+                    notif.message.toLowerCase().includes(searchTerm)
+                );
+
+                if (filtered.length === 0) {
+                    searchSuggestions.innerHTML =
+                        '<div class="suggestion-item" style="color: #999;">No results found</div>';
+                    searchSuggestions.classList.add('active');
+                    hideAllNotifications();
+                    return;
+                }
+
+                // Show suggestions
+                searchSuggestions.innerHTML = filtered.map((notif, index) => `
                 <div class="suggestion-item" onclick="selectSuggestion('${index}')">
                     <strong>${escapeHtml(notif.title)}</strong>
                     <br>
@@ -703,168 +728,168 @@
                 </div>
             `).join('');
 
-            searchSuggestions.classList.add('active');
+                searchSuggestions.classList.add('active');
 
-            // Show matching notifications
-            notificationCards.forEach(card => {
-                const isMatch = filtered.some(f => f.element === card);
-                card.style.display = isMatch ? 'flex' : 'none';
+                // Show matching notifications
+                notificationCards.forEach(card => {
+                    const isMatch = filtered.some(f => f.element === card);
+                    card.style.display = isMatch ? 'flex' : 'none';
+                });
             });
-        });
 
-        // Hide suggestions when clicking outside
-        document.addEventListener('click', function(e) {
-            if (e.target !== searchInput && e.target !== searchSuggestions) {
-                searchSuggestions.classList.remove('active');
-            }
-        });
-        // 3. FULL DATABASE SEARCH (When user hits ENTER)
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                const searchTerm = this.value.trim();
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', function(e) {
+                if (e.target !== searchInput && e.target !== searchSuggestions) {
+                    searchSuggestions.classList.remove('active');
+                }
+            });
+            // 3. FULL DATABASE SEARCH (When user hits ENTER)
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const searchTerm = this.value.trim();
+                    const currentUrl = new URL(window.location.href);
+
+                    if (searchTerm) {
+                        currentUrl.searchParams.set('search', searchTerm);
+                    } else {
+                        currentUrl.searchParams.delete('search');
+                    }
+
+                    // CRITICAL: Remove 'page' so search starts from Page 1 of the results
+                    currentUrl.searchParams.delete('page');
+                    window.location.href = currentUrl.toString();
+                }
+            });
+
+            // Date filter
+            // Date filter with Clear support
+            dateInput.addEventListener('change', function() {
                 const currentUrl = new URL(window.location.href);
 
-                if (searchTerm) {
-                    currentUrl.searchParams.set('search', searchTerm);
+                if (this.value) {
+                    // If a date is selected, add it to the URL
+                    currentUrl.searchParams.set('date', this.value);
                 } else {
-                    currentUrl.searchParams.delete('search');
+                    // If the date is cleared, remove it from the URL
+                    currentUrl.searchParams.delete('date');
                 }
 
-                // CRITICAL: Remove 'page' so search starts from Page 1 of the results
-                currentUrl.searchParams.delete('page');
+                // Maintain the current tab
+                currentUrl.searchParams.set('tab', '{{ $tab }}');
+
+                window.location.href = currentUrl.toString();
+            });
+
+            function showAllNotifications() {
+                notificationCards.forEach(card => card.style.display = 'flex');
+            }
+
+            // Hide all notifications
+            function hideAllNotifications() {
+                notificationCards.forEach(card => {
+                    card.style.display = 'none';
+                });
+            }
+
+            // Select suggestion
+            // HELPERS
+            function selectSuggestion(index) {
+                const searchTerm = searchInput.value.toLowerCase();
+                const filtered = currentPageData.filter(notif =>
+                    notif.title.toLowerCase().includes(searchTerm) ||
+                    notif.message.toLowerCase().includes(searchTerm)
+                );
+                if (filtered[index]) {
+                    filtered[index].element.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                    filtered[index].element.style.background = '#fffacd';
+                    setTimeout(() => {
+                        filtered[index].element.style.background = '';
+                    }, 1500);
+                }
+                searchSuggestions.classList.remove('active');
+            }
+            // Escape HTML
+            function escapeHtml(text) {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return text.replace(/[&<>"']/g, m => map[m]);
+            }
+
+            // Handle unread filter
+            function filterUnread() {
+                const checkbox = document.getElementById('unreadFilter');
+                const currentUrl = new URL(window.location);
+
+                if (checkbox.checked) {
+                    currentUrl.searchParams.set('unread', 'true');
+                } else {
+                    currentUrl.searchParams.delete('unread');
+                }
+
                 window.location.href = currentUrl.toString();
             }
-        });
 
-        // Date filter
-        // Date filter with Clear support
-        dateInput.addEventListener('change', function() {
-            const currentUrl = new URL(window.location.href);
-
-            if (this.value) {
-                // If a date is selected, add it to the URL
-                currentUrl.searchParams.set('date', this.value);
-            } else {
-                // If the date is cleared, remove it from the URL
-                currentUrl.searchParams.delete('date');
-            }
-
-            // Maintain the current tab
-            currentUrl.searchParams.set('tab', '{{ $tab }}');
-
-            window.location.href = currentUrl.toString();
-        });
-
-        function showAllNotifications() {
-            notificationCards.forEach(card => card.style.display = 'flex');
-        }
-
-        // Hide all notifications
-        function hideAllNotifications() {
-            notificationCards.forEach(card => {
-                card.style.display = 'none';
+            // Check unread filter on page load
+            window.addEventListener('load', function() {
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('unread') === 'true') {
+                    document.getElementById('unreadFilter').checked = true;
+                    const mobileUnreadFilter = document.getElementById('mobileUnreadFilter');
+                    if (mobileUnreadFilter) {
+                        mobileUnreadFilter.checked = true;
+                    }
+                }
             });
-        }
 
-        // Select suggestion
-        // HELPERS
-        function selectSuggestion(index) {
-            const searchTerm = searchInput.value.toLowerCase();
-            const filtered = currentPageData.filter(notif =>
-                notif.title.toLowerCase().includes(searchTerm) ||
-                notif.message.toLowerCase().includes(searchTerm)
-            );
-            if (filtered[index]) {
-                filtered[index].element.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
-                filtered[index].element.style.background = '#fffacd';
-                setTimeout(() => {
-                    filtered[index].element.style.background = '';
-                }, 1500);
+            // Mobile unread filter handler
+            function filterUnreadMobile() {
+                const checkbox = document.getElementById('mobileUnreadFilter');
+                const currentUrl = new URL(window.location);
+
+                if (checkbox.checked) {
+                    currentUrl.searchParams.set('unread', 'true');
+                } else {
+                    currentUrl.searchParams.delete('unread');
+                }
+
+                window.location.href = currentUrl.toString();
             }
-            searchSuggestions.classList.remove('active');
-        }
-        // Escape HTML
-        function escapeHtml(text) {
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-            return text.replace(/[&<>"']/g, m => map[m]);
-        }
-
-        // Handle unread filter
-        function filterUnread() {
-            const checkbox = document.getElementById('unreadFilter');
-            const currentUrl = new URL(window.location);
-
-            if (checkbox.checked) {
-                currentUrl.searchParams.set('unread', 'true');
-            } else {
-                currentUrl.searchParams.delete('unread');
-            }
-
-            window.location.href = currentUrl.toString();
-        }
-
-        // Check unread filter on page load
-        window.addEventListener('load', function() {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('unread') === 'true') {
-                document.getElementById('unreadFilter').checked = true;
-                const mobileUnreadFilter = document.getElementById('mobileUnreadFilter');
-                if (mobileUnreadFilter) {
-                    mobileUnreadFilter.checked = true;
+        </script>
+        <script>
+            function openAllContact() {
+                const screen = document.getElementById('allContactScreen');
+                if (screen) {
+                    screen.classList.add('active');
                 }
             }
-        });
 
-        // Mobile unread filter handler
-        function filterUnreadMobile() {
-            const checkbox = document.getElementById('mobileUnreadFilter');
-            const currentUrl = new URL(window.location);
-
-            if (checkbox.checked) {
-                currentUrl.searchParams.set('unread', 'true');
-            } else {
-                currentUrl.searchParams.delete('unread');
+            function closeAllContact() {
+                const screen = document.getElementById('allContactScreen');
+                if (screen) {
+                    screen.classList.remove('active');
+                }
             }
 
-            window.location.href = currentUrl.toString();
-        }
-    </script>
-    <script>
-        function openAllContact() {
-            const screen = document.getElementById('allContactScreen');
-            if (screen) {
-                screen.classList.add('active');
+            function openNewMessage() {
+                const screen = document.getElementById('newMessageScreen');
+                if (screen) {
+                    screen.classList.add('active');
+                }
             }
-        }
 
-        function closeAllContact() {
-            const screen = document.getElementById('allContactScreen');
-            if (screen) {
-                screen.classList.remove('active');
+            function closeNewMessage() {
+                const screen = document.getElementById('newMessageScreen');
+                if (screen) {
+                    screen.classList.remove('active');
+                }
             }
-        }
-
-        function openNewMessage() {
-            const screen = document.getElementById('newMessageScreen');
-            if (screen) {
-                screen.classList.add('active');
-            }
-        }
-
-        function closeNewMessage() {
-            const screen = document.getElementById('newMessageScreen');
-            if (screen) {
-                screen.classList.remove('active');
-            }
-        }
-    </script>
-@endpush
+        </script>
+    @endpush

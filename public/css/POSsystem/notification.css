@@ -524,7 +524,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     flex:1;
     background:#fff;
     border-radius:18px;
-    padding:30px;
+
 }
 .tag {
     background: #5dd7de;
@@ -549,15 +549,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     display:flex;
     align-items:center;
     gap:12px;
-}
-
-/* css of screen contact  */
-
-.notif-page {
-    padding: 20px;
-    height: 100vh;
-    background: #f5f5f5;
-    width: 100%;
 }
 
 /* HEADER */
@@ -585,18 +576,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     border-radius: 20px;
 }
 
-/* MAIN GRID */
-.notif-layout {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 20px;
-}
 
 /* LEFT PANEL */
 .notif-left {
-    background: #fff;
-    padding: 15px;
-    border-radius: 12px;
+    width:350px;
+    min-width:350px;
+    background:white;
+    border-radius:20px;
+    padding:20px;
 }
 
 .search-input {
@@ -613,14 +600,16 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 /* CONTACT ITEM */
-.contact {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px;
-    border-radius: 10px;
-    margin-top: 8px;
-    cursor: pointer;
+.contact{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:14px;
+    border-radius:16px;
+    background:#fff;
+    margin-bottom:12px;
+    text-decoration:none;
+    position:relative;
 }
 
 .contact img {
@@ -656,9 +645,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* RIGHT PANEL */
 .notif-right {
-    background: #fff;
-    padding: 20px;
-    border-radius: 12px;
+     flex:1;
+    background:#f8f9fb;
+    border-radius:20px;
+    padding:30px;
+    min-height:600px;
 }
 
 /* TABS */
@@ -711,6 +702,19 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     display:none;
 }
 
+.tab-content{
+    width:100%;
+}
+.notif-page{
+    width:100%;
+    background:#fff;
+    border-radius:20px;
+}
+.notif-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 20px;
+}
 
     
 @media (min-width: 769px) {
@@ -732,9 +736,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     .tabs{
         display:none;
     }
-    .tab-content{
+    .checkboxs{
         display:none;
     }
+    .tag, .status, .bi-star{
+        display:none;
+    }
+   
     
    .mobile-bottom-nav {
         display: flex;

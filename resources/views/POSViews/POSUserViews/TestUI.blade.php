@@ -25,82 +25,138 @@
     <div class="notif-layout">
 
         <!-- LEFT PANEL -->
-        <div class="notif-left">
+     <!-- LEFT PANEL -->
+<div class="notif-left">
 
-            <input type="text" class="search-input" placeholder="Search username...">
+    <input type="text"
+        class="search-input"
+        placeholder="Search username...">
 
-            <p class="section-title">CONTACT</p>
+    <p class="section-title">CONTACT</p>
 
-            <div class="contact-list">
+    <div class="contact-list">
 
-                <div class="contact active">
-                    <img src="https://i.pravatar.cc/100">
-                    <div>
-                        <strong>Cody Fisher</strong>
-                        <small>Last connect 8 minutes ago</small>
-                    </div>
-                    <span class="badge">3</span>
+        @forelse($contactList as $index => $contact)
+
+            <div class="contact {{ $index == 0 ? 'active' : '' }}"
+
+                data-name="{{ $contact->name }}"
+                data-avatar="{{ $contact->chat_avatar }}"
+                data-phone="{{ $contact->phone ?? '+1 (605) 655 2777' }}"
+                data-email="{{ $contact->email ?? 'sample@email.com' }}">
+
+                {{-- AVATAR --}}
+                <img src="{{ $contact->chat_avatar }}"
+                    onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
+                    alt="{{ $contact->name }}">
+
+                {{-- INFO --}}
+                <div>
+
+                    <strong>{{ $contact->name }}</strong>
+
+                    <small>last seen recently</small>
+
                 </div>
 
-                <div class="contact">
-                    <img src="https://i.pravatar.cc/101">
-                    <div>
-                        <strong>Ralph Edwards</strong>
-                        <small>Last connect 8 minutes ago</small>
-                    </div>
-                </div>
+                {{-- BADGE --}}
+                @if ($contact->unread_count > 0)
 
-                <div class="contact">
-                    <img src="https://i.pravatar.cc/102">
-                    <div>
-                        <strong>Esther Howard</strong>
-                        <small>Last connect 8 minutes ago</small>
-                    </div>
-                </div>
+                    <span class="badge">
+
+                        {{ $contact->unread_count }}
+
+                    </span>
+
+                @endif
 
             </div>
+
+        @empty
+
+            <div class="ac-empty-text">
+
+                No contacts available
+
+            </div>
+
+        @endforelse
+
+    </div>
+
+</div>
+
+
+
+<!-- RIGHT PANEL -->
+<div class="notif-right">
+
+    <div class="profile">
+
+        <img src="{{ $contactList->first()->chat_avatar ?? asset('images/pos/Rectangle 2.png') }}"
+            class="profile-img"
+            id="profileImage">
+
+        <h4 id="profileName">
+            {{ $contactList->first()->name ?? 'No User' }}
+        </h4>
+
+    </div>
+
+    <div class="settings">
+
+        <div class="row-item">
+
+            <span>
+                <i class="bi bi-bell"></i>
+                Notifications
+            </span>
+
+            <strong>No</strong>
 
         </div>
 
-        <!-- RIGHT PANEL -->
-        <div class="notif-right">
+        <div class="row-item">
 
-            <div class="tabs">
-                <span>Order Notification</span>
-                <span class="active">User Contact</span>
-                <span class="badge-blue">1 new</span>
-                <span>Out of Stock Alert</span>
-            </div>
+            <span>
+                <i class="bi bi-download"></i>
+                Save to Downloads
+            </span>
 
-            <div class="profile">
+            <strong>Default</strong>
 
-                <img src="https://i.pravatar.cc/120" class="profile-img">
-                <h3>Cody Fisher</h3>
+        </div>
 
-            </div>
+        <div class="row-item">
 
-            <div class="settings">
+            <span>
+                <i class="bi bi-person"></i>
+                Contact Details
+            </span>
 
-                <div class="row-item">
-                    <span><i class="bi bi-bell"></i> Notifications</span>
-                    <strong>No</strong>
-                </div>
+        </div>
 
-                <div class="row-item">
-                    <span><i class="bi bi-download"></i> Save to Downloads</span>
-                    <strong>Default</strong>
-                </div>
+        <div class="details">
 
-                <div class="row-item">
-                    <span><i class="bi bi-person"></i> Contact Details</span>
-                </div>
+            <p>
 
-                <div class="details">
-                    <p><strong>Phone Number</strong><br>+1 (605) 655 2777</p>
-                    <p><strong>Email</strong><br>sample@email.com</p>
-                </div>
+                <strong>Phone Number</strong><br>
 
-            </div>
+                <span id="profilePhone">
+                    {{ $contactList->first()->phone ?? '+1 (605) 655 2777' }}
+                </span>
+
+            </p>
+
+            <p>
+
+                <strong>Email</strong><br>
+
+                <span id="profileEmail">
+                    {{ $contactList->first()->email ?? 'sample@email.com' }}
+                </span>
+
+            </p>
 
         </div>
 
@@ -108,7 +164,48 @@
 
 </div>
 
+    </div>
 
+</div>
+
+<script>
+
+    const contacts = document.querySelectorAll('.contact');
+
+    const profileName = document.getElementById('profileName');
+    const profileImage = document.getElementById('profileImage');
+    const profilePhone = document.getElementById('profilePhone');
+    const profileEmail = document.getElementById('profileEmail');
+
+    contacts.forEach(contact => {
+
+        contact.addEventListener('click', function () {
+
+            // REMOVE ACTIVE
+            contacts.forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // ACTIVE CURRENT
+            this.classList.add('active');
+
+            // GET DATA
+            const name = this.getAttribute('data-name');
+            const avatar = this.getAttribute('data-avatar');
+            const phone = this.getAttribute('data-phone');
+            const email = this.getAttribute('data-email');
+
+            // UPDATE RIGHT PANEL
+            profileName.innerText = name;
+            profileImage.src = avatar;
+            profilePhone.innerText = phone;
+            profileEmail.innerText = email;
+
+        });
+
+    });
+
+</script>
 <style>
 
 /* PAGE */
