@@ -16,9 +16,12 @@
        position: sticky;   /* 🔑 makes it stick */
     top: 0;             /* stick to top */
     z-index: 1000;      /* stay above content */
-    background: #f7fbff;
+    background: white;
 }
 .cart-boxM {
+     position: sticky;
+    top: 0;
+    z-index: 1000;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -72,24 +75,5 @@
     .cart-icon {
         width: 46px;
         height: 46px;
-    }
-
-    /* Badge */
-    .cart-count {
-       position: absolute;
-    top: -4px;
-    right: -12px;
-    background: var(--primary);
-    color: #fff;
-    border-radius: 999px;
-    min-width: 22px;
-    height: 22px;
-    padding: 0 6px;
-    font-size: 12px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    line-height: 1;
     }
 </style>

@@ -87,15 +87,15 @@
             align-items: center;
             gap: 8px;
 
-            height: 44px;
+            height: 10px;
             /* 🔑 lock height */
-            padding: 0 12px;
+            padding: 24px;
+            margin-top: 4px;
             border-radius: 12px;
 
             max-width: 280px;
-            /* ✅ not full width */
-            box-sizing: border-box;
-        }
+            border: 1px solid rgba(16, 184, 195, 0.16);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);        }
 
 
 
@@ -123,12 +123,11 @@
         .category-card {
             display: flex;
             align-items: center;
-            margin-top: -10px;
             gap: 14px;
             padding: 16px;
             border-radius: 18px;
             height: 120px;
-            background: #e9edf4;
+            background: #f7fbff;
             text-decoration: none;
             color: inherit;
             border: 1px solid #dbe7ff;
@@ -209,8 +208,7 @@
             position: sticky;
             top: 0;
             z-index: 1;
-            background-color: #f8f8f8;
-            padding: 10px;
+            background-color: white;
             border-radius: 4px;
         }
 

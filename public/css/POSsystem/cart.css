@@ -61,6 +61,9 @@
             align-items: center;
             margin-bottom: 1%;
         }
+        .cart-nav_mobile{
+            display:none;
+        }
 
         .back-btn {
             background: #f5f5f5;
@@ -421,18 +424,35 @@
                 flex-direction: column;
                 min-height: 0;
             }
+           
+           
 
             /* Header */
             .cart-nav {
                 display: none;
             }
+            .cart-nav_mobile {
+                position: sticky;
+                top: 0;
+                z-index: 100;
+                display: flex;
+                align-items: center;
+                padding: 12px 16px;
+                background: #fff;
+                border-bottom: 1px solid #eee;
+            }
+            .heart-icon {
+    color: #10b8c3; /* teal */
+    font-size: 20px;
+}
 
             .nav-title {
-                font-size: 16px;
+                font-size: 18px;
+                font-family: sans-serif;
                 font-weight: 600;
                 text-align: center;
                 flex: 1;
-                color: #000;
+                color: #5a5757;
             }
 
             /* Cart list spacing */
@@ -442,6 +462,7 @@
                 -webkit-overflow-scrolling: touch;
 
             }
+            
 
             .cart-list-wrapper::-webkit-scrollbar {
                 width: 0;
@@ -673,15 +694,7 @@
 
             }
 
-            .icon-btn {
-                width: 40px;
-                height: 40px;
-                border-radius: 12px;
-                background: #d4eaf5;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
+           
 
             .checkout-container {
                 display: flex;
@@ -699,16 +712,28 @@
                 font-weight: 600;
                 padding-bottom: 18px;
             }
-
-            .icon-btn {
-                width: 40px;
-                height: 40px;
-                border-radius: 12px;
-                background: #d4eaf5;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+            .bi-arrow-left{
+            width: 0;
+            height: 0;
+            background: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0px;
             }
+
+            .icon-btn_mobile {
+            width: 46px;
+            height: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            border: 1px solid rgb(202, 195, 195);
+            background: #f7fbff;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.347);
+        }
 
             /* Item Cards */
             .checkout-item-card {

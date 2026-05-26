@@ -10,59 +10,74 @@
 
 /* ===================== GLOBAL ===================== */
 html, body {
-    height: auto;          /* ✅ allow content growth */
-    overflow-y: auto;      /* ✅ enable scroll */
+    height: auto;
+    overflow-y: auto; /* ✅ FIXED (important for sticky) */
     overscroll-behavior: contain;
     touch-action: pan-y;
 }
+
 #appShell,
 .app-shell {
-    height: auto !important;
+    height: auto;
     min-height: 100vh;
-    overflow-y: auto !important;
-    position: relative !important;
+    overflow: visible; /* ✅ SAFE */
+    position: relative;
 }
-
 
 .sidebar-wrap {
     display: none !important;
 }
 
+/* ===================== LAYOUT ===================== */
 .page-wrap {
     background: #f7fafc;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
     min-height: 100vh;
-    position: relative;
 }
 
-/* ===================== CONTENT ===================== */
 .product-detail {
-    min-height: calc(100vh - 60px);
-    padding-bottom: 160px; /* space for fixed add-to-cart */
-    overflow-y: auto;
+    min-height: auto;
+    padding-bottom: 160px;
+    overflow: visible;
 }
 
-/* ===================== TOP BAR ===================== */
+/* ===================== TOP BAR ✅ FIXED ===================== */
 .top-bar {
-    display: flex;
-    justify-content: space-between;
-    padding: 12px;
-}
-
-.icon-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    background: #d4eaf5;
+    position: sticky;
+    top: 0;
+    z-index: 9999;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    background: #f7fafc;
+}
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* ✅ important */
 }
 
+
+/* back button */
+.icon-btn {
+    width: 46px;
+            height: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            border: 1px solid rgb(202, 195, 195);
+            background: #f7fbff;
+            text-decoration: none;
+            margin-top: -12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
 /* ===================== IMAGE ===================== */
 .product-image {
+    position: relative;
     text-align: center;
+    padding-bottom: 36px;
     margin-top: 10px;
 }
 
@@ -70,6 +85,49 @@ html, body {
     width: 80%;
     max-height: 220px;
     object-fit: contain;
+}
+
+/* ❤️ Favorite button */
+.favorite-btn {
+    position: absolute;
+    bottom: -62px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+    background: #ffffff;
+    border: none;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+}
+
+.favorite-btn i {
+    font-size: 18px;
+    color: #10b8c3;
+}
+
+/* Image indicators */
+.image-indicators {
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+}
+
+.image-indicators span {
+    width: 18px;
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 4px;
+}
+
+.image-indicators span.active {
+    background: var(--primary);
 }
 
 /* ===================== INFO ===================== */
@@ -80,14 +138,14 @@ html, body {
     margin-top: 12px;
 }
 
-      .badge {
-            background: var(--primary);
-            color: #fff;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            display: inline-block;
-        }
+.badge {
+    background: var(--primary);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: inline-block;
+}
 
 .product-header {
     display: flex;
@@ -111,7 +169,7 @@ html, body {
     margin-top: 4px;
 }
 
-/* ===================== COLOR (FAKE UI) ===================== */
+/* ===================== COLOR ===================== */
 .color-options {
     display: flex;
     gap: 10px;
@@ -141,7 +199,6 @@ html, body {
     padding: 0 10px;
 }
 
-/* small icons list */
 .recommend-list {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -162,7 +219,6 @@ html, body {
     object-fit: contain;
 }
 
-/* main recommendation (2 columns) */
 .recommend-list1 {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -230,61 +286,12 @@ html, body {
 .toast.success {
     background: #10b8c3;
 }
-/* Product image wrapper */
-.product-image {
-    position: relative;
-    text-align: center;
-    padding-bottom: 36px; /* space for indicators */
-}
-
-/* ❤️ Favorite button */
-.favorite-btn {
-    position: absolute;
-    bottom: -62px;
-    right: 12px;
-    width: 44px;
-    height: 44px;
-    background: #ffffff;
-    border: none;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
-    cursor: pointer;
-}
-
-.favorite-btn i {
-    font-size: 18px;
-    color: #10b8c3; /* primary */
-}
-
-/* Image indicator bars */
-.image-indicators {
-    position: absolute;
-    bottom: -40px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 6px;
-}
-
-.image-indicators span {
-    width: 18px;
-    height: 4px;
-    background: #e5e7eb;
-    border-radius: 4px;
-}
-
-.image-indicators span.active {
-    background: var(--primary);
-}
 
 .toast.error {
     background: #ef4444;
 }
 
-/* header tweaks */
+/* ===================== HEADER MOBILE FIX ✅ ===================== */
 .logo-wrap {
     display: none !important;
 }
@@ -293,6 +300,13 @@ html, body {
     margin-left: auto;
     margin-top: -6px;
 }
+
+/* ✅ IMPORTANT: remove sticky conflict */
+.cart-boxM {
+    position: relative; /* ✅ FIX */
+    background: #f7fafc;
+}
+
 </style>
 @endpush
 

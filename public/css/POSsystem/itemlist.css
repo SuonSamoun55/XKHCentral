@@ -786,7 +786,7 @@ h4{
     }
     .page-wrap {
         min-height: 100vh;
-        padding: 0;
+        padding: 0 12px;
     }
 .topbar{
     display: none;
@@ -804,13 +804,14 @@ h4{
         display: block;
     }
     .header-actions {
-        background: #0cb0b9;
+    background: #0cb0b9;
     display: flex;
     flex-wrap: wrap;
-    gap: 24px;
-    padding: 14px 14px 14px;
+    justify-content: space-between;
+    padding: 14px 0px 14px 0px;
+    align-items: center;
     border-radius: 14px;
-}
+    }
 
 
     .header {

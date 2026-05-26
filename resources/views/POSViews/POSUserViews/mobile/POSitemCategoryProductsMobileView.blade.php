@@ -1,5 +1,5 @@
 @extends('ManagementSystemViews.UserViews.Layouts.app')
-            @include('ManagementSystemViews.UserViews.Layouts.footer')
+@include('ManagementSystemViews.UserViews.Layouts.footer')
 @section('title', 'Category Products')
 
 @push('styles')
@@ -36,18 +36,18 @@
             overflow-y: auto;
             /* 👈 important */
         }
-
+      
         /* .content-area {
-            width: 100%;
-            max-width: 520px;
-            margin: 0 auto;
-            padding: 10px !important;
-            background: transparent;
-            box-shadow: none;
-            border-radius: 0;
-        } */
+                        width: 100%;
+                        max-width: 520px;
+                        margin: 0 auto;
+                        padding: 10px !important;
+                        background: transparent;
+                        box-shadow: none;
+                        border-radius: 0;
+                    } */
 
-        .category-header {
+        /* .category-header {
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
@@ -58,8 +58,21 @@
             background: var(--bg);
             padding: 10px;
             z-index: 100;
+            position: sticky;
+            top: 0;
+            padding: 10px;
+            z-index: 100;
 
         }
+         */
+.category-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #F4F8FF ;
+    padding: 12px;
+}
+
 
         .category-title {
             font-size: 16px;
@@ -75,17 +88,16 @@
         }
 
         .back-btn {
-            width: 42px;
-            height: 42px;
+            width: 50px;
+            height: 50px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 14px;
-            border: 1px solid rgba(16, 184, 195, 0.16);
-            background: #ffffff;
-            color: var(--primary);
+            border-radius: 10px;
+            border: 1px solid rgb(202, 195, 195);
+            background: #f7fbff;
             text-decoration: none;
-            box-shadow: 0 12px 20px rgba(16, 184, 195, 0.12);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
         .products-list {
@@ -179,15 +191,31 @@
             color: var(--muted);
             box-shadow: var(--shadow);
         }
-        .hero-product {
+
+        /* .hero-product {
+
             width: 100%;
             height: 200px;
             border-radius: 20px;
             overflow: hidden;
-            position: relative;
+            position: sticky;
+            top: 0;
+            z-index: 100;
             margin-bottom: 16px;
             background: #eef2f7;
-        }
+        } */
+        
+.hero-product {
+    position: sticky;
+    top: 70px;  /* adjust based on header height */
+    z-index: 90;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    background: #eef2f7;
+}
+
 
         .hero-product img {
             width: 100%;
@@ -216,15 +244,12 @@
 @section('content')
     <div class="page-wrap">
         <main class="content-area">
-            <div class="category-header">
 
+            <!-- ✅ Sticky Header -->
+            <div class="category-header">
                 <a href="{{ route('user.pos.categories') }}" class="back-btn">
                     <i class="bi bi-arrow-left"></i>
                 </a>
-                <div>
-                    <h4 class="category-title">{{ $categoryTitle }}</h4>
-                    <div class="category-subtitle">{{ $items->count() }} product{{ $items->count() !== 1 ? 's' : '' }}</div>
-                </div>
             </div>
 
             @if ($items->isEmpty())
@@ -233,22 +258,30 @@
                 @if ($items->isNotEmpty())
                     @php $firstItem = $items->first(); @endphp
 
+                    <!-- ✅ Sticky Hero (below header) -->
                     <div class="hero-product">
                         <img src="{{ $firstItem->image_url ?: asset('images/no-image.png') }}"
-                            alt="{{ $firstItem->display_name }}">
+                             alt="{{ $firstItem->display_name }}">
 
                         <div class="hero-overlay">
-                            <div class="hero-title">{{ $firstItem->display_name }}</div>
+                            <div>
+                                <h4 class="category-title">{{ $categoryTitle }}</h4>
+                                <div class="category-subtitle">
+                                    {{ $items->count() }}
+                                    product{{ $items->count() !== 1 ? 's' : '' }}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 @endif
-                <div class="products-list">
 
+                <!-- ✅ Products -->
+                <div class="products-list">
                     @foreach ($items as $item)
                         <a href="{{ route('user.pos.product.detail', $item->id) }}" class="product-card">
                             <div class="product-thumb">
                                 <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
-                                    alt="{{ $item->display_name }}">
+                                     alt="{{ $item->display_name }}">
                             </div>
 
                             <!-- ❤️ favorite -->
@@ -257,7 +290,9 @@
                             </div>
 
                             <div class="product-info">
-                                <div class="product-title">{{ $item->display_name ?: 'No Name' }}</div>
+                                <div class="product-title">
+                                    {{ $item->display_name ?: 'No Name' }}
+                                </div>
                                 <div class="product-price">
                                     ${{ number_format((float) ($item->final_price ?? ($item->unit_price ?? 0)), 0) }}
                                 </div>
@@ -271,28 +306,28 @@
                     @endforeach
                 </div>
             @endif
-        </main>
 
+        </main>
     </div>
 @endsection
 
 @push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
 
-        // Redirect to desktop POS page
-        function checkDesktopScreen() {
-            if (window.innerWidth >= 768) {
-                window.location.href = "/pos-system";
+            // Redirect to desktop POS page
+            function checkDesktopScreen() {
+                if (window.innerWidth >= 768) {
+                    window.location.href = "/pos-system";
+                }
             }
-        }
 
-        // Check when page loads
-        checkDesktopScreen();
+            // Check when page loads
+            checkDesktopScreen();
 
-        // Check when resizing screen
-        window.addEventListener('resize', checkDesktopScreen);
+            // Check when resizing screen
+            window.addEventListener('resize', checkDesktopScreen);
 
-    });
-</script>
+        });
+    </script>
 @endpush

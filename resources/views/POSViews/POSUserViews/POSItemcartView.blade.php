@@ -11,18 +11,23 @@
         <div class="cart-container">
 
             <!-- =========================
-                    TOP NAVIGATION (CART HEADER)
-                ========================== -->
+                        TOP NAVIGATION (CART HEADER)
+                    ========================== -->
             <div class="cart-nav">
                 <a href="/pos-system" class="icon-btn"><i class="bi bi-arrow-left"></i></a>
                 <span class="nav-title">My Cart</span>
+            </div>
+            <div class="cart-nav_mobile">
+                <a href="/pos-system" class="icon-btn_mobile"><i class="bi bi-arrow-left"></i></a>
+                <span class="nav-title"><b>Your Cart</b></span>
+                <i class="bi bi-heart-fill heart-icon"></i>
             </div>
 
             <div id="cartMainContent">
 
                 <!-- =========================
-                        SCREEN 1: EMPTY CART STATE (DESKTOP + MOBILE)
-                    ========================== -->
+                            SCREEN 1: EMPTY CART STATE (DESKTOP + MOBILE)
+                        ========================== -->
                 @if (!$cart || $cart->items->isEmpty())
 
                     <!-- ===== DESKTOP EMPTY CART ===== -->
@@ -75,8 +80,8 @@
                     </div>
                 @else
                     <!-- =========================
-                            SCREEN 2: CART WITH ITEMS DESKTOP + MOBILE
-                        ========================== -->
+                                SCREEN 2: CART WITH ITEMS DESKTOP + MOBILE
+                            ========================== -->
 
                     @php
                         $count = $cart->items->count();
@@ -117,6 +122,7 @@
                     </div>
 
                     <!-- CART SUMMARY BOX -->
+                    
                     <div class="summary-box">
                         <div class="summary-line">
                             <span>Subtotal</span>
@@ -159,7 +165,7 @@
 
             <!-- =========================order success======================== -->
 
-<div id="orderSuccessContent" class="success-container" style="display: none;">
+            <div id="orderSuccessContent" class="success-container" style="display: none;">
 
                 <div class="success-card">
 
@@ -193,8 +199,8 @@
             </div>
 
             <!-- =========================
-                    SCREEN 3: CHECKOUT PAGE MOBILE SCREEN ONLY
-                ========================== -->
+                        SCREEN 3: CHECKOUT PAGE MOBILE SCREEN ONLY
+                    ========================== -->
             <div class="checkout-container" id="checkoutContent" style="display:none;">
 
                 <div class="checkout-nav">
@@ -262,8 +268,8 @@
             </div>
 
             <!-- =========================
-                    SCREEN 4: ORDER SUCCESS MOBILE SCREEN
-                ========================== -->
+                        SCREEN 4: ORDER SUCCESS MOBILE SCREEN
+                    ========================== -->
             <div class="order-success-wrapper hidden-success" id="successContent">
 
                 <div class="order-success-header">
@@ -306,8 +312,8 @@
             </div>
 
             <!-- =========================
-                    SCREEN 5: ORDER DETAIL (MOBILE)
-                ========================== -->
+                        SCREEN 5: ORDER DETAIL (MOBILE)
+                    ========================== -->
             <div id="orderDetailPage" class="order-detail-page hidden-order-detail mobile-only">
                 <div class="order-header">
                     <a href="{{ url()->previous() }}" class="back-btn">
@@ -384,8 +390,8 @@
 
 
             <!-- =========================
-                    SCREEN 6: PROCESSING OVERLAY MOBILE
-                ========================== -->
+                        SCREEN 6: PROCESSING OVERLAY MOBILE
+                    ========================== -->
             <div id="processingScreen" class="process-screen hidden">
                 <div class="process-color-overlay"></div>
                 <img src="{{ asset('images/pos/checkout.png') }}" class="process-image">
