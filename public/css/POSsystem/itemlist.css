@@ -740,10 +740,17 @@ h4{
     }
 }
 
+
+@media (max-width: 1024px) {
+    .content-area {
+        height: 110%;
+    }
+}
+
 /* =========================================================
    TRUE MOBILE PRODUCT UI (LIKE PROVIDED IMAGE)
    ========================================================= */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
 
     /* ---- Remove desktop shell ---- */
     .sidebar { display: none; }

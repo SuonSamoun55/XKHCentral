@@ -1,27 +1,4 @@
-    :root {
-        /* --bg: #f3f3ef;
-        --card: #fbfbf8;
-        --line: #ece8df;
-        --text: #1f1f1f;
-        --muted: #7f7f7f;
-        --primary: #09bfd3;
-        --primary-dark: #10b5c1;
-        --primary-soft: #cfeef2;
-        --danger: #e33b32;
-        --gold: #9c6c07;
-        --gold-soft: #f7efdf;
-        --shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
 
-        --sidebar-open: 190px;
-        --sidebar-close: 56px;
-        --gap: 12px;
-        --radius: 16px; */
-        }
-
-    /* body{
-        background-color: white;
-    } */
-        /* SIDEBAR */
     .sidebar-wrap {
         width: var(--sidebar-open);
         position: relative;
@@ -167,10 +144,6 @@
         height: 30px;
         min-width: 30px;
     }
-
-
-
-
     .sidebar {
         height: 100%;
         background: var(--card);
@@ -258,36 +231,12 @@
         font-weight: 800;
         white-space: nowrap;
         }
-
-
-
-
-
-
         .nav-list {
         display: flex;
         flex-direction: column;
         gap: 7px;
         }
-    /* .nav-btn1{
-    background-color: #09bfd3;
-    margin-top: 32px;
-    border: none;
-        background: transparent;
-        width: 100%;
-        min-height: 40px;
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 0 11px;
-        cursor: pointer;
-        text-align: left;
-        transition: 0.2s ease;
-        white-space: nowrap;
-        font-size: 14px;
-        color: #262626;
-    } */
+
         .nav-btn,
         .settings-btn,
         .logout-btn {
@@ -481,15 +430,6 @@
         --gap: 12px;
         --radius: 12px;
         }
-
-
-    /* SIDEBAR */
-
-
-    /* ===== Layout ===== */
-
-
-
     .app-content{
         flex:1;
     }
@@ -512,6 +452,31 @@
         height: 100vh;
         overflow-y: auto;
     }
+
+    
+@media (max-width: 1024px) {
+    
+ .sidebar {
+        height: 100vh;
+        overflow-y: auto;      /* ✅ allow vertical scroll */
+        overflow-x: hidden;
+    }
+    
+ .sidebar-top {
+        overflow: visible;
+    }
+
+    .sidebar-bottom {
+        margin-top: 10px;
+        padding-bottom: 20px; /* ✅ prevent cut */
+    }
+
+ .sidebar-wrap {
+        height: 100vh;
+    }
+
+
+}
 @media (max-width: 768px) {
 
 .content-area{
