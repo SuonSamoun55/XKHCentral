@@ -142,9 +142,8 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::get('/pos-system/order-success', [OrderController::class, 'success'])->name('user.pos.checkout.success');
     Route::get('/pos-system/order-detail/{id}', [OrderController::class, 'detail'])->name('user.pos.order.detail');
     Route::get('/favorites', [FavoriteController::class, 'index']);
-    Route::get('/pos-dashboard-mobile', function (){
-    return view('POSViews.POSUserViews.mobile.POS_mobile');
-    })->name('user.pos.dashboard_mobile');
+    Route::get('/pos-dashboard-mobile',[DashboardUserController::class, 'mobileDashboard'])->middleware('auth') ->name('user.pos.dashboard_mobile');
+
     Route::get('/notifications/mobile-inbox',[NotificationController::class, 'mobileInbox'])->name('user.notifications.mobile_inbox');
     Route::get('notifications/contact/{id}', [NotificationController::class, 'show_mobile'])->name('contact.show_mobile');
 

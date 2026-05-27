@@ -1,402 +1,229 @@
-<!DOCTYPE html>
-<html>
+@extends('ManagementSystemViews.UserViews.Layouts.app')
 
-<head>
-    <title>Notifications</title>
+@section('title', 'POS Cart')
 
-    <link rel="stylesheet" href="{{ asset('css/ManagementSystem/aside.css') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="{{ asset('css/POSsystem/notification.css') }}" />
-</head>
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/POSsystem/cart.css') }}">
+    <style>
+        .icon-wrapper {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 30px;
+        }
 
-<body>
+        .check-circle {
+            background: #00cad1;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 70px;
+        }
 
-    <div class="app-shell" id="appShell">
+        .text-confirmed {
+            color: #4DB37E;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
 
-        {{-- Sidebar --}}
-        @include('ManagementSystemViews.UserViews.Layouts.aside')
+        .text-main, .text-sub {
+            color: #555;
+            font-size: 16px;
+            margin: 5px 0;
+        }
 
-        {{-- Content --}}
-        <div class="page-wrap">
-            <div class="header">
-                <div class="notification-header">
-                    <h2>Notification</h2>
-                    <a href="{{ route('user.chat.index') }}" class="btn btn-sm btn-info text-white ms-2">Message Admin</a>
+        .btn-track {
+            background: #00cad1;
+            color: white !important;
+            padding: 14px 80px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            width: 250px;
+        }
+
+        .btn-home {
+            color: #00cad1;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; }
+        .d1 { background: #FFD700; top: 10px; left: 0; }
+        .d2 { background: #FF69B4; bottom: 20px; right: -10px; }
+        .d3 { background: #7B68EE; top: 40px; right: 0; }
+    </style>
+@endpush
+
+@section('content')
+    <div class="page-wrap">
+        <main class="content-area">
+            <div id="cartMainContent">
+                <div class="cart-header">
+                    @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Cart'])
                 </div>
 
-                {{-- Search and Date --}}
-                <div class="search-date-container">
-                    <div class="search-box">
-                        <i class="bi bi-search"></i>
-                        <input type="text" id="searchInput" class="form-control" placeholder="Search..."
-                            value="{{ request('search') }}" autocomplete="off">
-                        <div class="search-suggestions" id="searchSuggestions"></div>
-                    </div>
-
-                    <div class="date-filter-wrapper">
-                        <label for="dateInput" class="floating-label">Date</label>
-                        <input type="date" name="date" id="dateInput" value="{{ request('date') }}"
-                            onchange="this.form.submit()">
-
-                        <img src="{{ asset('images/pos/icon.png') }}" class="calendar-custom-img" alt="calendar">
-                    </div>
-                </div>
-
-                {{-- Tabs --}}
-                <div class="tabs-section">
-                    <div class="tabs-list">
-                        <a href="{{ route('user.notifications', ['tab' => 'inbox']) }}"
-                            class="tab-item {{ $tab === 'inbox' ? 'active' : '' }}">
-                            Inbox <span class="tab-badge">{{ $inboxCount }}</span>
-                        </a>
-
-                        <a href="{{ route('user.notifications', ['tab' => 'spam']) }}"
-                            class="tab-item {{ $tab === 'spam' ? 'active' : '' }}">
-                            Spam <span class="tab-badge">{{ $spamCount }}</span>
-                        </a>
-
-                        <a href="{{ route('user.notifications', ['tab' => 'archive']) }}"
-                            class="tab-item {{ $tab === 'archive' ? 'active' : '' }}">
-                            Archive <span class="tab-badge">{{ $archiveCount }}</span>
-                        </a>
-
-                        <a href="{{ route('user.notifications', ['tab' => 'global_message']) }}"
-                            class="tab-item {{ $tab === 'global_message' ? 'active' : '' }}">
-                            Global Message <span class="tab-badge">{{ $globalMessageCount }}</span>
-                        </a>
-                    </div>
-
-                    <label class="unread-toggle">
-                        <span>Unreads</span>
-                        <input type="checkbox" id="unreadFilter" onchange="filterUnread()">
-                    </label>
-                </div>
-            </div>
-
-            {{-- Notification List --}}
-            <div class="notification-list">
-                @forelse($notifications as $notification)
-                    <div class="notification-card {{ !$notification->is_read ? 'unread' : '' }}"
-                        data-title="{{ $notification->title }}" data-message="{{ $notification->message }}"
-                        data-message="{{ $notification->message }}"
-                        data-id="{{ $notification->id }}" 
-                        data-type="{{ $notification->type }}"
-                        style="cursor: pointer;" onclick="openNotificationDetail(this)">
-                            
-                        <div class="notification-content">
-                            <div class="avatar">
-                                <img src="{{ $notification->sender_profile_image_display ?? asset('images/pos/Rectangle 2.png') }}" alt="Sender"
-                                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
-                                    onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'">
-                            </div>
-
-                            <div class="notification-text">
-
-                                {{-- Show ADMIN badge only for admin-sent notifications --}}
-                                @if ($notification->type === 'admin_message' || $notification->type === 'global_message')
-                                    <span class="badge-admin">{{ $notification->type === 'global_message' ? 'GLOBAL' : 'ADMIN' }}</span>
-                                @endif
-
-                                <div class="notification-title">
-                                    {{ $notification->title }}
-                                </div>
-
-                                <div class="notification-meta">
-                                    {{ $notification->created_at->format('D d/m/Y') }}
-                                    <span
-                                        style="margin: 0 8px;">{{ $notification->created_at->format('h:i A') }}</span>
-                                </div>
-
-                                @if (str_contains(strtolower($notification->message), 'attachment'))
-                                    <a href="{{ route('user.notifications.show', $notification->id) }}"
-                                        class="notification-attachment" onclick="event.stopPropagation();">
-                                        attachment
-                                    </a>
-                                @endif
-
-                                @if (!$notification->is_read)
-                                    <form action="{{ route('user.notifications.read', $notification->id) }}"
-                                        method="POST" style="display: inline;" onclick="event.stopPropagation();">
-                                        @csrf
-                                    </form>
-                                @endif
-                            </div>
+                @if (!$cart || $cart->items->isEmpty())
+                    <div class="empty-cart">
+                        <div class="empty-cart">
+                            <img src="{{ asset('images/pos/Empty.png') }}" class="empty-image">
                         </div>
-
-                        @if (!$notification->is_read)
-                            <div class="notification-badge">{{ max(1, (int) ($notification->unread_count ?? 1)) }}</div>
-                        @endif
+                        <div class="empty-title">Your cart is Empty</div>
+                        <div class="empty-text">Add something to make me happy..!!</div>
+                        <a href="/pos-system" class="continue-btn">Continue Shopping</a>
                     </div>
-                @empty
-                    <div class="empty-state">
-                        <i class="bi bi-inbox"></i>
-                        <p>You have no notifications yet.</p>
+                @else
+                    <div class="cart-list">
+                        @foreach ($cart->items as $cartItem)
+                            <div class="cart-row">
+                                <div class="cart-image">
+                                    <img src="{{ optional($cartItem->item)->image_url ?? asset('images/no-image.png') }}">
+                                </div>
+                                <div>
+                                    <div class="cart-name">{{ $cartItem->item_name }}</div>
+                                    <div class="cart-uom">{{ optional($cartItem->item)->base_unit_of_measure_code ?? 'PCS' }}</div>
+                                    <div class="cart-price">${{ number_format($cartItem->unit_price, 2) }}</div>
+                                </div>
+                                <div class="cart-actions">
+                                    <button class="remove-btn remove-item" data-id="{{ $cartItem->id }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    <div class="qty-box">
+                                        <button class="qty-btn minus qty-update" data-id="{{ $cartItem->id }}" data-action="minus">-</button>
+                                        <div class="qty-number">{{ $cartItem->qty }}</div>
+                                        <button class="qty-btn plus qty-update" data-id="{{ $cartItem->id }}" data-action="plus">+</button>
+                                    </div>
+                                </div>
+                                <div class="line-total">${{ number_format($cartItem->line_total, 2) }}</div>
+                            </div>
+                        @endforeach
                     </div>
-                @endforelse
-            </div>
 
-            {{-- Pagination --}}
-            <div class="pagination-container">
-                @if ($notifications->hasPages())
-                    {{ $notifications->links('vendor.pagination.custom-pos') }}
+                    <div class="summary">
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <strong>${{ number_format($subtotal, 2) }}</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Discount</span>
+                            <strong>- ${{ number_format($discountAmount ?? 0, 2) }}</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Tax</span>
+                            <strong>${{ number_format($taxAmount ?? 0, 2) }}</strong>
+                        </div>
+                        <div class="summary-row summary-total">
+                            <span>Total</span>
+                            <strong>${{ number_format($total, 2) }}</strong>
+                        </div>
+                        <button id="checkoutBtn" class="checkout-btn">Go to Checkout</button>
+                    </div>
                 @endif
             </div>
-        </div>
 
-        {{-- Notification Detail Modal --}}
-        <div id="notificationModal" class="modal fade" tabindex="-1" aria-labelledby="notificationModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="notification-detail-card">
-                    <div class="detail-header">
-                        <div class="avatar-circle">
-                            <i class="bi bi-person-fill" style="font-size: 30px; color: #94a3b8;"></i>
-                        </div>
-                        <div class="company-info">
-                            <div class="name" id="notificationCompanyName">Trey Research</div>
-                            <div class="email" id="notificationUserEmail">mary.kumm@contoso.com</div>
-                            <div class="status-badge">Read</div>
-                        </div>
+            <div id="orderSuccessContent" style="display: none; padding-top: 50px; text-align: center;">
+                <div class="icon-wrapper">
+                    <div class="check-circle">
+                        <i class="bi bi-check-lg"></i>
                     </div>
+                    <span class="dot d1"></span>
+                    <span class="dot d2"></span>
+                    <span class="dot d3"></span>
+                </div>
 
-                    <div class="info-grid">
-                        <div>
-                            <div class="info-label">Type</div>
-                            <div class="info-value" id="notificationType">order</div>
-                        </div>
-                        <div>
-                            <div class="info-label">Date</div>
-                            <div class="info-value" id="notificationDateDisplay">Fri 10/04/2026 02:03 PM</div>
-                        </div>
-                    </div>
+                <h1 class="text-confirmed">Your Order is Confirmed !</h1>
+                <p class="text-main">Your order is being packed and will arrive soon.</p>
+                <p class="text-sub">Fruits and veggies coming right up!</p>
 
-                    <div class="mb-4">
-                        <div class="info-label">Title</div>
-                        <div class="info-value" id="notificationTitleText">Order Confirmed</div>
-                    </div>
-
-                    <div>
-                        <div class="info-label">Message</div>
-                        <div class="message-box" id="notificationMessageBody">
-                            Your order ORD-20260404092306-0XVQ has been confirmed and stored in Sales Order.
-                        </div>
-                    </div>
-
-                    <div class="detail-footer">
-                        <button type="button" class="btn-back" data-bs-dismiss="modal">Back to List</button>
-                        <button type="button" class="btn-delete" id="deleteNotificationBtn">Delete</button>
-                    </div>
+                <div style="margin-top: 40px; display: flex; flex-direction: column; align-items: center;">
+                    <a href="{{ route('user.pos.order.history') }}" class="btn-track">Track Order</a>
+                    <a href="/pos-system" class="btn-home">Back to home</a>
                 </div>
             </div>
-        </div>
+        </main>
+    </div>
+@endsection
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-            const searchInput = document.getElementById('searchInput');
-            const searchSuggestions = document.getElementById('searchSuggestions');
-            const dateInput = document.getElementById('dateInput');
-            const notificationCards = document.querySelectorAll('.notification-card');
+@push('scripts')
+    <script>
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-            // Open notification detail modal
-            function openNotificationDetail(element) {
-                const title = element.dataset.title;
-                const message = element.dataset.message;
-                const notificationId = element.dataset.id;
-                // Extracting new data attributes (make sure these are in your HTML)
-                const type = element.dataset.type || 'order';
-                const email = element.dataset.email || '';
-                const company = element.dataset.company || '';
-
-                // Get the date from the element
-                const metaElement = element.querySelector('.notification-meta');
-                const dateText = metaElement ? metaElement.textContent.trim() : new Date().toLocaleDateString();
-
-                // 3. Populate the NEW Modern UI IDs
-                document.getElementById('notificationCompanyName').textContent = company;
-                document.getElementById('notificationUserEmail').textContent = email;
-                document.getElementById('notificationType').textContent = type;
-                document.getElementById('notificationDateDisplay').textContent = dateText;
-                document.getElementById('notificationTitleText').textContent = title;
-                document.getElementById('notificationMessageBody').textContent = message;
-                // Open modal
-                const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
-                modal.show();
-
-                // Mark as read if not already read
-                if (element.classList.contains('unread')) {
-                    fetch(`/pos-system/notifications/${notificationId}/read`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ||
-                                '{{ csrf_token() }}',
-                            'Content-Type': 'application/json',
-                        }
-                    }).then(() => {
-                        element.classList.remove('unread');
-                        const badge = element.querySelector('.notification-badge');
-                        if (badge) badge.remove();
-                    }).catch(err => console.error('Error marking as read:', err));
-                }
-            }
-
-            // Get all notifications for autocomplete
-            const allNotifications = Array.from(notificationCards).map(card => ({
-                title: card.dataset.title,
-                message: card.dataset.message,
-                element: card
-            }));
-
-            // Live search with suggestions
-            searchInput.addEventListener('input', function() {
-                const searchTerm = this.value.trim().toLowerCase();
-
-                if (searchTerm.length === 0) {
-                    searchSuggestions.classList.remove('active');
-                    showAllNotifications();
-                    return;
-                }
-
-                // Filter notifications
-                const filtered = allNotifications.filter(notif =>
-                    notif.title.toLowerCase().includes(searchTerm) ||
-                    notif.message.toLowerCase().includes(searchTerm)
-                );
-
-                if (filtered.length === 0) {
-                    searchSuggestions.innerHTML =
-                        '<div class="suggestion-item" style="color: #999;">No results found</div>';
-                    searchSuggestions.classList.add('active');
-                    hideAllNotifications();
-                    return;
-                }
-
-                // Show suggestions
-                searchSuggestions.innerHTML = filtered.map((notif, index) => `
-                <div class="suggestion-item" onclick="selectSuggestion('${index}')">
-                    <strong>${escapeHtml(notif.title)}</strong>
-                    <br>
-                    <span style="font-size: 12px;">${escapeHtml(notif.message.substring(0, 50))}${notif.message.length > 50 ? '...' : ''}</span>
-                </div>
-            `).join('');
-
-                searchSuggestions.classList.add('active');
-
-                // Show matching notifications
-                notificationCards.forEach(card => {
-                    const isMatch = filtered.some(f => f.element === card);
-                    card.style.display = isMatch ? 'flex' : 'none';
-                });
+        async function updateQty(id, qty) {
+            await fetch(`/pos-system/cart/update/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ qty })
             });
+            location.reload();
+        }
 
-            // Hide suggestions when clicking outside
-            document.addEventListener('click', function(e) {
-                if (e.target !== searchInput && e.target !== searchSuggestions) {
-                    searchSuggestions.classList.remove('active');
-                }
-            });
-            // 3. FULL DATABASE SEARCH (When user hits ENTER)
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    const searchTerm = this.value.trim();
-                    const currentUrl = new URL(window.location.href);
-
-                    if (searchTerm) {
-                        currentUrl.searchParams.set('search', searchTerm);
-                    } else {
-                        currentUrl.searchParams.delete('search');
-                    }
-
-                    // CRITICAL: Remove 'page' so search starts from Page 1 of the results
-                    currentUrl.searchParams.delete('page');
-                    window.location.href = currentUrl.toString();
-                }
-            });
-
-            // Date filter
-            // Date filter with Clear support
-            dateInput.addEventListener('change', function() {
-                const currentUrl = new URL(window.location.href);
-
-                if (this.value) {
-                    // If a date is selected, add it to the URL
-                    currentUrl.searchParams.set('date', this.value);
+        document.querySelectorAll('.qty-update').forEach(btn => {
+            btn.onclick = function() {
+                let row = this.closest('.cart-row');
+                let qty = parseInt(row.querySelector('.qty-number').innerText);
+                if (this.dataset.action === 'minus') {
+                    if (qty > 1) qty--;
                 } else {
-                    // If the date is cleared, remove it from the URL
-                    currentUrl.searchParams.delete('date');
+                    qty++;
                 }
-
-                // Maintain the current tab
-                currentUrl.searchParams.set('tab', '{{ $tab }}');
-
-                window.location.href = currentUrl.toString();
-            });
-
-            function showAllNotifications() {
-                notificationCards.forEach(card => card.style.display = 'flex');
+                updateQty(this.dataset.id, qty);
             }
+        });
 
-            // Hide all notifications
-            function hideAllNotifications() {
-                notificationCards.forEach(card => {
-                    card.style.display = 'none';
+        document.querySelectorAll('.remove-item').forEach(btn => {
+            btn.onclick = async function() {
+                await fetch(`/pos-system/cart/remove/${this.dataset.id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': csrfToken }
                 });
+                location.reload();
             }
+        });
 
-            // Select suggestion
-            // HELPERS
-            function selectSuggestion(index) {
-                const searchTerm = searchInput.value.toLowerCase();
-                const filtered = currentPageData.filter(notif =>
-                    notif.title.toLowerCase().includes(searchTerm) ||
-                    notif.message.toLowerCase().includes(searchTerm)
-                );
-                if (filtered[index]) {
-                    filtered[index].element.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center'
-                    });
-                    filtered[index].element.style.background = '#fffacd';
-                    setTimeout(() => {
-                        filtered[index].element.style.background = '';
-                    }, 1500);
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        if(checkoutBtn) {
+            checkoutBtn.onclick = async function() {
+                let currency = prompt("Choose currency (USD or KHR)", "USD");
+                if (!currency) return;
+                currency = currency.toUpperCase();
+
+                let factor = 1;
+                if (currency === "KHR") {
+                    factor = prompt("Enter KHR rate example 4100", "4100");
+                    if (!factor) return;
                 }
-                searchSuggestions.classList.remove('active');
-            }
-            // Escape HTML
-            function escapeHtml(text) {
-                const map = {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#039;'
-                };
-                return text.replace(/[&<>"']/g, m => map[m]);
-            }
 
-            // Handle unread filter
-            function filterUnread() {
-                const checkbox = document.getElementById('unreadFilter');
-                const currentUrl = new URL(window.location);
+                let res = await fetch('/pos-system/checkout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        currency: currency,
+                        factor: factor
+                    })
+                });
 
-                if (checkbox.checked) {
-                    currentUrl.searchParams.set('unread', 'true');
+                let data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('cartMainContent').style.display = 'none';
+                    document.getElementById('orderSuccessContent').style.display = 'block';
                 } else {
-                    currentUrl.searchParams.delete('unread');
+                    alert(data.message || 'Checkout failed');
                 }
-
-                window.location.href = currentUrl.toString();
             }
-
-            // Check unread filter on page load
-            window.addEventListener('load', function() {
-                const params = new URLSearchParams(window.location.search);
-                if (params.get('unread') === 'true') {
-                    document.getElementById('unreadFilter').checked = true;
-                }
-            });
-        </script>
-</body>
-
-</html>
+        }
+    </script>
+@endpush

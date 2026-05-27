@@ -88,8 +88,8 @@
         }
 
         .back-btn {
-            width: 50px;
-            height: 50px;
+            width: 46px;
+            height: 46px;
             display: inline-flex;
             align-items: center;
             justify-content: center;

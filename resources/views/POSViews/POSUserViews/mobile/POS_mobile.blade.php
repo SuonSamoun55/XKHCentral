@@ -12,7 +12,7 @@
         <div class="card-icon">📄</div>
         <div>
             <p>Total Order</p>
-            <h2>$48,988,078</h2>
+            <h2>${{ number_format($totalOrder, 2) }}</h2>
         </div>
         <span class="badge up">+22%</span>
     </div>
@@ -22,7 +22,7 @@
         <div class="card-icon">🔁</div>
         <div>
             <p>Total Order Return</p>
-            <h2>$16,478,145</h2>
+            <h2>${{ number_format($totalReturn, 2) }}</h2>
         </div>
         <span class="badge down">-22%</span>
     </div>
@@ -30,25 +30,38 @@
     <!-- DATE FILTER -->
     <input type="date" class="date-input">
 
-    <!-- CHART (STATIC UI) -->
+    <!-- ✅ CHART (MONDAY → SUNDAY FIX) -->
+    @php
+        $days = [];
+        $labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+        $start = \Carbon\Carbon::now()->startOfWeek(\Carbon\Carbon::MONDAY);
+
+        for ($i = 0; $i < 7; $i++) {
+            $date = $start->copy()->addDays($i)->format('Y-m-d');
+            $days[$labels[$i]] = $dailySales[$date] ?? 0;
+        }
+
+        $max = max($days) > 0 ? max($days) : 1;
+    @endphp
+
     <div class="chart">
-        <div class="bar sat"></div>
-        <div class="bar sun"></div>
-        <div class="bar mon"></div>
-        <div class="bar tue"></div>
-        <div class="bar wed"></div>
-        <div class="bar thu"></div>
-        <div class="bar fri"></div>
+        @foreach($days as $value)
+            @php
+                $height = ($value / $max) * 100;
+            @endphp
+
+            <div class="bar"
+                 style="height: {{ $height }}%"
+                 title="${{ number_format($value, 2) }}">
+            </div>
+        @endforeach
     </div>
 
     <div class="chart-labels">
-        <span>Sat</span>
-        <span>Sun</span>
-        <span>Mon</span>
-        <span>Tue</span>
-        <span>Wed</span>
-        <span>Thu</span>
-        <span>Fri</span>
+        @foreach(array_keys($days) as $label)
+            <span>{{ $label }}</span>
+        @endforeach
     </div>
 
     <!-- BUDGET -->
@@ -59,6 +72,7 @@
         </div>
         <div class="progress-circle">77%</div>
     </div>
+
 </div>
 
 <style>
@@ -95,19 +109,12 @@
     margin-right: 10px;
 }
 
-.card h2 {
-    font-size: 18px;
-}
+.card h2 { font-size: 18px; }
+.card p { font-size: 12px; }
 
-.card p {
-    font-size: 12px;
-}
-
-/* Colors */
 .teal { background: #14b8a6; }
 .blue { background: #06b6d4; }
 
-/* Badge */
 .badge {
     font-size: 12px;
     background: #fff;
@@ -118,7 +125,6 @@
 .up { color: #16a34a; }
 .down { color: #dc2626; }
 
-/* Date */
 .date-input {
     width: 100%;
     border: 2px solid #14b8a6;
@@ -141,14 +147,7 @@
     border-radius: 6px;
 }
 
-.sat { height: 80%; }
-.sun { height: 55%; }
-.mon { height: 35%; }
-.tue { height: 25%; }
-.wed { height: 65%; }
-.thu { height: 85%; }
-.fri { height: 55%; }
-
+/* Labels */
 .chart-labels {
     display: flex;
     justify-content: space-between;
@@ -176,6 +175,7 @@
     font-size: 12px;
     font-weight: bold;
 }
+
 .sidebar,
 .sidebar-wrap {
     display: none;

@@ -821,7 +821,7 @@ padding-bottom: 8px;  }
   .mobile-tabs {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 28px;
     padding-bottom: 14px;
    
  position: sticky;
@@ -853,10 +853,10 @@ padding-bottom: 8px;  }
     width: 0;
     height: 0;
   }
- .mt-switch {
+.mt-switch {
     position: relative;
-    left: 180px;
-    display: inline-block;
+    top: 18px;
+    margin-left: auto;
     width: 46px;
     height: 24px;
 }

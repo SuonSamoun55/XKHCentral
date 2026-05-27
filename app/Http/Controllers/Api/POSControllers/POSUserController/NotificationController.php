@@ -376,10 +376,7 @@ $contactList = Notification::where('user_id', $user->id)
         'POSViews.POSUserViews.mobile.POSInbox_mobile',
         compact('notifications', 'contacts')
     );
-    return view(
-        'POSViews.POSUserViews.POSItemNotiView',
-        compact('notifications', 'contacts')
-    );
+
 }
 public function show_mobile($id)
 {

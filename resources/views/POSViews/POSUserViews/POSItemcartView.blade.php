@@ -11,23 +11,24 @@
         <div class="cart-container">
 
             <!-- =========================
-                        TOP NAVIGATION (CART HEADER)
-                    ========================== -->
+                                    TOP NAVIGATION (CART HEADER)
+                                ========================== -->
             <div class="cart-nav">
                 <a href="/pos-system" class="icon-btn"><i class="bi bi-arrow-left"></i></a>
                 <span class="nav-title">My Cart</span>
             </div>
-            <div class="cart-nav_mobile">
-                <a href="/pos-system" class="icon-btn_mobile"><i class="bi bi-arrow-left"></i></a>
-                <span class="nav-title"><b>Your Cart</b></span>
-                <i class="bi bi-heart-fill heart-icon"></i>
-            </div>
+
 
             <div id="cartMainContent">
+                <div class="cart-nav_mobile">
+                    <a href="/pos-system" class="icon-btn_mobile"><i class="bi bi-arrow-left"></i></a>
+                    <span class="nav-title"><b>Your Cart</b></span>
+                    <i class="bi bi-heart-fill heart-icon"></i>
+                </div>
 
                 <!-- =========================
-                            SCREEN 1: EMPTY CART STATE (DESKTOP + MOBILE)
-                        ========================== -->
+                                        SCREEN 1: EMPTY CART STATE (DESKTOP + MOBILE)
+                                    ========================== -->
                 @if (!$cart || $cart->items->isEmpty())
 
                     <!-- ===== DESKTOP EMPTY CART ===== -->
@@ -80,8 +81,8 @@
                     </div>
                 @else
                     <!-- =========================
-                                SCREEN 2: CART WITH ITEMS DESKTOP + MOBILE
-                            ========================== -->
+                                            SCREEN 2: CART WITH ITEMS DESKTOP + MOBILE
+                                        ========================== -->
 
                     @php
                         $count = $cart->items->count();
@@ -94,7 +95,7 @@
                     @endphp
 
                     <!-- CART ITEM LIST -->
-                    <div class="cart-list-wrapper {{ $scrollClass }}">
+                    <div class="cart-list {{ $scrollClass }}">
                         @foreach ($cart->items as $cartItem)
                             <!-- SINGLE CART ITEM -->
                             <div class="item-card" data-cart-item-id="{{ $cartItem->id }}" data-qty="{{ $cartItem->qty }}">
@@ -103,7 +104,10 @@
                                     class="item-image">
 
                                 <div class="item-details">
-                                    <h3>{{ $cartItem->item_name }} (L)</h3>
+                                    <div class="cart">
+                                        <div class="cart-name">{{ $cartItem->item_name }} (L)</div>
+                                        <div class="cart-price">${{ number_format($cartItem->unit_price, 2) }}</div>
+                                    </div>
 
                                     <div class="qty-controls">
                                         <button class="qty-btn qty-update" data-id="{{ $cartItem->id }}"
@@ -122,7 +126,7 @@
                     </div>
 
                     <!-- CART SUMMARY BOX -->
-                    
+
                     <div class="summary-box">
                         <div class="summary-line">
                             <span>Subtotal</span>
@@ -199,15 +203,13 @@
             </div>
 
             <!-- =========================
-                        SCREEN 3: CHECKOUT PAGE MOBILE SCREEN ONLY
-                    ========================== -->
+                                    SCREEN 3: CHECKOUT PAGE MOBILE SCREEN ONLY
+                                ========================== -->
             <div class="checkout-container" id="checkoutContent" style="display:none;">
 
-                <div class="checkout-nav">
-                    <a href="javascript:history.back()" class="icon-btn">
-                        <i class="bi bi-arrow-left"></i>
-                    </a>
-                    <span class="nav-title">Checkout</span>
+               <div class="cart-nav_mobile">
+                    <a href="/pos-system" class="icon-btn_mobile"><i class="bi bi-arrow-left"></i></a>
+                    <span class="nav-title"><b> Checkout</b></span>
                 </div>
 
                 <!-- ITEMS IN CHECKOUT -->
@@ -268,12 +270,12 @@
             </div>
 
             <!-- =========================
-                        SCREEN 4: ORDER SUCCESS MOBILE SCREEN
-                    ========================== -->
+                                    SCREEN 4: ORDER SUCCESS MOBILE SCREEN
+                                ========================== -->
             <div class="order-success-wrapper hidden-success" id="successContent">
 
                 <div class="order-success-header">
-                    <span class="header-title">Order</span>
+                    <span class="header-title"><b>Order Success</b></span>
                     <a href="{{ route('user.posinterface') }}" class="close-btn">
                         <i class="bi bi-x"></i>
                     </a>
@@ -312,14 +314,14 @@
             </div>
 
             <!-- =========================
-                        SCREEN 5: ORDER DETAIL (MOBILE)
-                    ========================== -->
+                                    SCREEN 5: ORDER DETAIL (MOBILE)
+                                ========================== -->
             <div id="orderDetailPage" class="order-detail-page hidden-order-detail mobile-only">
-                <div class="order-header">
-                    <a href="{{ url()->previous() }}" class="back-btn">
+                <div class="cart-nav_mobile">
+                    <a href="{{ url()->previous() }}" class="icon-btn_mobile">
                         <i class="bi bi-arrow-left"></i>
                     </a>
-                    <h4>Order Detail</h4>
+                    <span class="nav-title"><b> Order Detail</b></span>
                 </div>
 
                 <div class="status-card">
@@ -390,8 +392,8 @@
 
 
             <!-- =========================
-                        SCREEN 6: PROCESSING OVERLAY MOBILE
-                    ========================== -->
+                                    SCREEN 6: PROCESSING OVERLAY MOBILE
+                                ========================== -->
             <div id="processingScreen" class="process-screen hidden">
                 <div class="process-color-overlay"></div>
                 <img src="{{ asset('images/pos/checkout.png') }}" class="process-image">

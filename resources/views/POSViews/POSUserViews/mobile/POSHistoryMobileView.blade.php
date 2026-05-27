@@ -209,6 +209,7 @@
             min-width: 100%;
             background: #f4f6fb;
         }
+ 
 
         .table-head,
         .order-card {
@@ -224,7 +225,7 @@
         .header_sticky {
 
             background: white;
-            padding: 10px;
+            padding-left: 10px;
             position: sticky;
             top: 0;
             z-index: 10;
@@ -383,18 +384,18 @@
         }
 
         .header-btn {
-            position: relative;
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            background: #eef2ff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            color: #1e293b;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-        }
+           width: 46px;
+                height: 46px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 10px;
+                border: 1px solid rgb(202, 195, 195);
+                background: #f7fbff;
+                text-decoration: none;
+                box-shadow: 0 2px 8px rgba(255, 255, 255, 0.347);
+            }
+
 
         .header-btn i {
             font-size: 18px;

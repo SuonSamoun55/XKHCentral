@@ -136,4 +136,43 @@ class DashboardUserController extends Controller
             'reportValues'
         ));
     }
+
+    public function mobileDashboard()
+{
+    
+    $user = Auth::user();
+
+    // ✅ Total Order
+    $totalOrder = Order::where('user_id', $user->id)
+        ->sum('total_amount');
+
+    // ✅ Total Return
+    $totalReturn = Order::where('user_id', $user->id)
+        ->where('status', 'returned')
+        ->sum('total_amount');
+
+    // ✅ Daily Sales (7 days)
+$start = Carbon::now()->subDays(6)->startOfDay();
+
+$dailySales = Order::where('user_id', $user->id)
+    ->whereBetween('created_at', [$start, Carbon::now()])
+    ->selectRaw('DATE(created_at) as date, SUM(total_amount) as total')
+    ->groupBy('date')
+    ->pluck('total', 'date');
+
+    $dailySales = Order::where('user_id', $user->id)
+        ->whereBetween('created_at', [$start, Carbon::now()->endOfWeek()])
+        ->selectRaw('DATE(created_at) as date, SUM(total_amount) as total')
+        ->groupBy('date')
+        ->pluck('total', 'date');
+
+
+
+    return view('POSViews.POSUserViews.mobile.POS_mobile', compact(
+        'totalOrder',
+        'totalReturn',
+        'dailySales'
+    ));
+}
+
 }

@@ -83,7 +83,7 @@
                 </div>
             </div>
             {{-- <div class="tabs-section"> --}}
-                {{-- <div class="tabs-list">
+            {{-- <div class="tabs-list">
                     <a href="{{ route('user.notifications', ['tab' => 'inbox']) }}"
                         class="tab-item {{ $tab === 'inbox' ? 'active' : '' }}">
                         Inbox <span class="tab-badge">{{ $inboxCount }}</span>
@@ -105,14 +105,15 @@
                     </a>
                 </div> --}}
 
-                {{-- <label class="unread-toggle">
+            {{-- <label class="unread-toggle">
                     <span>Unreads</span>
                     <input type="checkbox" id="unreadFilter" onchange="filterUnread()">
                 </label> --}}
             {{-- </div> --}}
             {{-- MOBILE TOP TABS --}}
             <div class="mobile-tabs">
-<a href="{{ route('user.notifications') }}" class="mt-pill active">                    <i class="bi bi-inbox"></i>
+                <a href="{{ route('user.notifications.mobile_inbox') }}" class="mt-pill">
+                    <i class="bi bi-inbox"></i>
                     Inbox
                 </a>
                 <button class="mt-icon" onclick="openNewMessage()">
@@ -912,22 +913,22 @@
 
             // Handle unread filter
             // ✅ Handle unread toggle (ONLY MOBILE NOW)
-           function filterUnreadMobile() {
+            function filterUnreadMobile() {
 
-    const checkbox = document.getElementById('mobileUnreadFilter');
-    let url = new URL(window.location.href);
+                const checkbox = document.getElementById('mobileUnreadFilter');
+                let url = new URL(window.location.href);
 
-    if (checkbox.checked) {
-        url.searchParams.set('unread', 'true');
-    } else {
-        url.searchParams.delete('unread');
-    }
+                if (checkbox.checked) {
+                    url.searchParams.set('unread', 'true');
+                } else {
+                    url.searchParams.delete('unread');
+                }
 
-    // ✅ KEEP CURRENT PAGE + TAB
-    url.searchParams.set('tab', 'inbox');
+                // ✅ KEEP CURRENT PAGE + TAB
+                url.searchParams.set('tab', 'inbox');
 
-    window.location.href = url.toString();
-}
+                window.location.href = url.toString();
+            }
 
 
             // ✅ Restore toggle state on page load
