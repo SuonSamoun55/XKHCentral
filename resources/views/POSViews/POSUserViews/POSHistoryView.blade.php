@@ -44,12 +44,22 @@
                 </form>
             </div>
         </div>
+<div id="actionBar" class="action-bar" style="display:none;">
+    <span id="selectedCount">Selected 0</span>
+
+    <button type="button" id="cancelSelection">Cancel</button>
+
+    <button type="button" id="deleteSelected" class="delete-btn">
+        Delete
+    </button>
+</div>
 
         <div class="custom-table-card">
+            
             <table class="table">
                 <thead>
                     <tr>
-                        <th width="50"><input type="checkbox"></th>
+                        <th width="50"><input type="checkbox" id="selectAll"></th>
                         <th>Order</th>
                         <th></th>
                         <th>Date</th>
@@ -65,7 +75,7 @@
                             data-customer="{{ $order->customer_no }}"
                             data-detail-url="{{ route('user.pos.order.show', $order->id) }}">
 
-                            <td><input type="checkbox"></td>
+                            <td><input type="checkbox" class="rowCheckbox"></td>
 
                             <td>
                                 <a href="{{ route('user.pos.order.show', $order->id) }}"
@@ -120,6 +130,47 @@
 @endsection
 
 @push('scripts')
+<script>
+    const selectAll = document.getElementById('selectAll');
+const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+const actionBar = document.getElementById('actionBar');
+const selectedCount = document.getElementById('selectedCount');
+const cancelBtn = document.getElementById('cancelSelection');
+
+// ✅ Select all
+selectAll.addEventListener('change', function () {
+    rowCheckboxes.forEach(cb => cb.checked = this.checked);
+    updateSelectionUI();
+});
+
+// ✅ Individual checkbox
+rowCheckboxes.forEach(cb => {
+    cb.addEventListener('change', updateSelectionUI);
+});
+
+// ✅ Update UI
+function updateSelectionUI() {
+    let checked = document.querySelectorAll('.rowCheckbox:checked').length;
+
+    if (checked > 0) {
+        actionBar.style.display = 'flex';
+        selectedCount.textContent = `Selected ${checked}`;
+    } else {
+        actionBar.style.display = 'none';
+    }
+
+    // Sync selectAll state
+    selectAll.checked = checked === rowCheckboxes.length;
+}
+
+// ✅ Cancel button
+cancelBtn.addEventListener('click', function () {
+    rowCheckboxes.forEach(cb => cb.checked = false);
+    selectAll.checked = false;
+    updateSelectionUI();
+});
+
+</script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
 
