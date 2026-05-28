@@ -6,13 +6,14 @@
     <link rel="stylesheet" href="{{ asset('css/POSsystem/cart.css') }}">
 @endpush
 
+
 @section('content')
     <div class="page-wrap">
         <div class="cart-container">
 
             <!-- =========================
-                                    TOP NAVIGATION (CART HEADER)
-                                ========================== -->
+                                        TOP NAVIGATION (CART HEADER)
+                                    ========================== -->
             <div class="cart-nav">
                 <a href="/pos-system" class="icon-btn"><i class="bi bi-arrow-left"></i></a>
                 <span class="nav-title">My Cart</span>
@@ -27,8 +28,8 @@
                 </div>
 
                 <!-- =========================
-                                        SCREEN 1: EMPTY CART STATE (DESKTOP + MOBILE)
-                                    ========================== -->
+                                            SCREEN 1: EMPTY CART STATE (DESKTOP + MOBILE)
+                    ========================== -->
                 @if (!$cart || $cart->items->isEmpty())
 
                     <!-- ===== DESKTOP EMPTY CART ===== -->
@@ -81,8 +82,8 @@
                     </div>
                 @else
                     <!-- =========================
-                                            SCREEN 2: CART WITH ITEMS DESKTOP + MOBILE
-                                        ========================== -->
+                                                SCREEN 2: CART WITH ITEMS DESKTOP + MOBILE
+                                            ========================== -->
 
                     @php
                         $count = $cart->items->count();
@@ -106,7 +107,7 @@
                                 <div class="item-details">
                                     <div class="cart">
                                         <div class="cart-name">{{ $cartItem->item_name }} (L)</div>
-                                        <div class="cart-price">${{ number_format($cartItem->unit_price, 2) }}</div>
+                                        <div class="cart-price"><b>${{ number_format($cartItem->unit_price, 2) }}</b></div>
                                     </div>
 
                                     <div class="qty-controls">
@@ -118,9 +119,9 @@
                                         <button class="qty-btn qty-update" data-id="{{ $cartItem->id }}"
                                             data-action="plus">+</button>
                                     </div>
+                                    <p class="remove-item" data-id="{{ $cartItem->id }}">Remove</p>
                                 </div>
-
-                                <i class="bi bi-x-circle remove-icon remove-item" data-id="{{ $cartItem->id }}"></i>
+                                {{-- <i class="bi bi-x-circle remove-icon remove-item" data-id="{{ $cartItem->id }}"></i> --}}
                             </div>
                         @endforeach
                     </div>
@@ -156,8 +157,9 @@
 
                     <!---------------------------- DESKTOP CHECKOUT BUTTON -->
                     <button id="checkoutDesktopBtn" type="button" class="place-order-btn desktop-only">
-                        PLACE ORDER
+                        PLACE ORDER >
                     </button>
+                    <p class="or-text desktop">Or <b>Continue Shopping ➡️</b></p>
 
                     <!-- MOBILE CHECKOUT BUTTON -->
                     <button id="checkoutMobileBtn" type="button" class="place-order-btn mobile-only">
@@ -203,11 +205,11 @@
             </div>
 
             <!-- =========================
-                                    SCREEN 3: CHECKOUT PAGE MOBILE SCREEN ONLY
-                                ========================== -->
+                                        SCREEN 3: CHECKOUT PAGE MOBILE SCREEN ONLY
+                                    ========================== -->
             <div class="checkout-container" id="checkoutContent" style="display:none;">
 
-               <div class="cart-nav_mobile">
+                <div class="cart-nav_mobile">
                     <a href="/pos-system" class="icon-btn_mobile"><i class="bi bi-arrow-left"></i></a>
                     <span class="nav-title"><b> Checkout</b></span>
                 </div>
@@ -270,8 +272,8 @@
             </div>
 
             <!-- =========================
-                                    SCREEN 4: ORDER SUCCESS MOBILE SCREEN
-                                ========================== -->
+                                        SCREEN 4: ORDER SUCCESS MOBILE SCREEN
+                                    ========================== -->
             <div class="order-success-wrapper hidden-success" id="successContent">
 
                 <div class="order-success-header">
@@ -314,8 +316,8 @@
             </div>
 
             <!-- =========================
-                                    SCREEN 5: ORDER DETAIL (MOBILE)
-                                ========================== -->
+                                        SCREEN 5: ORDER DETAIL (MOBILE)
+                                    ========================== -->
             <div id="orderDetailPage" class="order-detail-page hidden-order-detail mobile-only">
                 <div class="cart-nav_mobile">
                     <a href="{{ url()->previous() }}" class="icon-btn_mobile">
@@ -392,8 +394,8 @@
 
 
             <!-- =========================
-                                    SCREEN 6: PROCESSING OVERLAY MOBILE
-                                ========================== -->
+                                        SCREEN 6: PROCESSING OVERLAY MOBILE
+                                    ========================== -->
             <div id="processingScreen" class="process-screen hidden">
                 <div class="process-color-overlay"></div>
                 <img src="{{ asset('images/pos/checkout.png') }}" class="process-image">

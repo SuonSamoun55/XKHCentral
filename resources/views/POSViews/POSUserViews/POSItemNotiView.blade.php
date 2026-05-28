@@ -27,7 +27,7 @@
                 </div>
 
                 <div class="notification-header">
-                    <h2>Notification</h2>
+                    <h2 class="page-title">Notification</h2>
                     <a href="{{ route('user.chat.index') }}" class="btn btn-sm btn-info text-white ms-2">Message Admin</a>
                 </div>
 
@@ -76,10 +76,7 @@
                         Out of Stock Alert
                         <span class="badge-new">1 new</span>
                     </div>
-                    <div class="tab" data-tab="globalMessage">
-                        <i class="bi bi-globe"></i>
-                        Global Message
-                    </div>
+                    
                 </div>
             </div>
             {{-- <div class="tabs-section"> --}}
@@ -561,10 +558,10 @@
                                 <strong class="ac-contact-name">{{ $contact->name }}</strong>
                                 <span class="ac-contact-time">last seen recently</span>
                             </div>
-
+{{-- 
                             @if ($contact->unread_count > 0)
                                 <span class="ac-contact-badge">{{ $contact->unread_count }}</span>
-                            @endif
+                            @endif --}}
                         </a>
                     @empty
                         <div class="ac-empty-text">No contacts available</div>
@@ -624,11 +621,11 @@
                                     onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
                                     alt="{{ $contact->name }}">
 
-                                @if ($contact->unread_count > 0)
+                                {{-- @if ($contact->unread_count > 0)
                                     <span class="nm-contact-badge">
                                         {{ $contact->unread_count }}
                                     </span>
-                                @endif
+                                @endif --}}
                             </div>
 
                             <span class="nm-contact-name">

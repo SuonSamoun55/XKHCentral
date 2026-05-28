@@ -734,7 +734,7 @@ h4{
 }
 }
 
-@media (min-width: 769px) {
+@media (min-width: 768px) {
     .mobile-bottom-nav {
         display: none !important;
     }

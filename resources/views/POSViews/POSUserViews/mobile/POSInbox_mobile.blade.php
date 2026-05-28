@@ -29,11 +29,11 @@
                                     onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
                                     alt="{{ $contact->name }}">
 
-                                @if ((int) ($contact->unread_count ?? 0) > 0)
+                                {{-- @if ((int) ($contact->unread_count ?? 0) > 0)
                                     <span class="recent-badge">
                                         {{ (int) $contact->unread_count }}
                                     </span>
-                                @endif
+                                @endif --}}
                             </div>
 
                             <span class="recent-name">

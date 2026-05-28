@@ -9,7 +9,7 @@
         }
 
         .page-wrap {
-            padding: 0px 30px ;
+            padding: 0px 20px ;
             background: var(--card);
             min-height: 100vh;
             overflow-y: auto;
@@ -20,7 +20,7 @@
         .header{
             background: var(--card);
             position: sticky;
-            padding-top: 30px;
+            padding-top: 16px;
             margin: -3px;
             top: 0;
             z-index: 1000;
@@ -30,15 +30,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
         }
 
-        .notification-header h2 {
-            font-size: 24px;
-            font-weight: 600;
-            color: #19bcc5;
+        .page-title{
+         font-size: 28px;
+    font-weight: 700;
+    color: #2ca5a9;
         }
-
         .search-date-container {
             display: flex;
             justify-content: space-between;
@@ -718,7 +716,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 .table-row.selected {
     background-color: #eaf6ff; /* light blue highlight */
-    font-weight: 600;
 }
 
 .notification-card.unread {
@@ -749,11 +746,21 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     display: none;
 }
 }
+@media screen and (max-width: 1024px) {
+    .table-row.selected {
+    background-color: #eaf6ff; /* light blue highlight */
+    font-size: 12px;
+}
+.tabs{
+    font-size: 14px;
+}
+}
+
 
 /* =====================================================
    MOBILE NOTIFICATION UI — IMAGE MATCH
 ===================================================== */
-@media (max-width: 768px) {
+@media screen and (max-width: 767px) {
     .sidebar{
         display: none;
     }

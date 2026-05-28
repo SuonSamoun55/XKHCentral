@@ -1,363 +1,400 @@
   /* Page */
-    body {
-        background: #f5f6fa;
-    }
+  body {
+      background: #f5f6fa;
+  }
 
-    /* Wrapper */
-    .page-wrap {
-        padding-left: 20px;
-        padding-right: 20px;
-        padding-top: 0;
-        background: var(--card);
-        border-radius: 20px;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-    }
+  /* Wrapper */
+  .page-wrap {
+      padding-left: 20px;
+      padding-right: 20px;
+      padding-top: 0;
+      background: var(--card);
+      border-radius: 20px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+  }
 
-    /* Title */
-    .history-title {
-        padding: 20px 20px 20px 0px;
-        color: #00a8a8;
-        font-weight: 600;
-    }
+  /* Title */
+  .history-title {
+      padding: 10px 10px 10px 0px;
+      font-size: 28px;
+      font-weight: 700;
+      color: #2ca5a9;
+  }
 
-    /* Container FULL WIDTH */
-    .order-history-container {
-        width: 100%;
-        padding: 0 10px;
-    }
+  /* Container FULL WIDTH */
+  .order-history-container {
+      width: 100%;
+      padding: 0 10px;
+  }
 
-    /* FILTER ROW */
-    .filter-form {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 20px;
-        flex-wrap: wrap;
-        position: static;
-    }
-        .header{
-            background: var(--card);
-            position: static;
-            /* flex: 0 0 25%; */
-            /* min-height: 0; */
-            /* overflow: auto; */
-        }
+  /* FILTER ROW */
+  .filter-form {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0;
+      flex-wrap: wrap;
+      position: static;
+  }
 
-    /* LEFT SIDE */
-    .left-section {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
+  .header {
+      background: var(--card);
+      position: static;
+      /* flex: 0 0 25%; */
+      /* min-height: 0; */
+      /* overflow: auto; */
+  }
 
-    /* RIGHT SIDE */
-   .right-section {
-    display: flex;
-    align-items: center;
-}
+  /* LEFT SIDE */
+  .left-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+  }
 
-.date-filter-wrapper {
-    position: relative;
-    width: 250px;
-    /* margin-top: 16px; */
-    margin-right: -50px;
+  /* RIGHT SIDE */
+  .right-section {
+      display: flex;
+      align-items: center;
+  }
 
-}
+  .date-filter-wrapper {
+      position: relative;
+      width: 250px;
+      /* margin-top: 16px; */
+      margin-right: -50px;
 
-.date-filter-wrapper input[type="date"] {
-    width: 80%;
-    border: 2px solid #00b5cc; 
-    border-radius: 5px;
-    /* padding: 8px 10px; */
-    height: 30px;
-    font-size: 14px;
-    outline: none;
-    background-color: white;
-    cursor: pointer;
-    box-sizing: border-box;
-    position: relative;
-    z-index: 2;
+  }
 
-}
+  .date-filter-wrapper input[type="date"] {
+      width: 80%;
+      border: 2px solid #00b5cc;
+      border-radius: 5px;
+      /* padding: 8px 10px; */
+      height: 30px;
+      font-size: 14px;
+      outline: none;
+      background-color: white;
+      cursor: pointer;
+      box-sizing: border-box;
+      position: relative;
+      z-index: 2;
 
-.floating-label {
-    position: absolute;
-    left: 12px;
-    top: -11px; 
-    background: white;
-    padding: 0 5px;
-    font-size: 12px;
-    color: #333;
-    font-weight: 500;
-    z-index: 10;
-}
+  }
 
-.calendar-custom-img {
-    position: absolute;
-    right: 63px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 16px; /* Adjust size to match your UI */
-    height: 16px;
-    pointer-events: none; /* VERY IMPORTANT: Allows clicking through to the input */
-    z-index: 5;
-}
+  .floating-label {
+      position: absolute;
+      left: 12px;
+      top: -11px;
+      background: white;
+      padding: 0 5px;
+      font-size: 12px;
+      color: #333;
+      font-weight: 500;
+      z-index: 10;
+  }
 
-/* This makes sure the whole box is clickable to open the calendar */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: auto;
-    height: auto;
-    color: transparent;
-    background: transparent;
-    cursor: pointer;
-}
+  .calendar-custom-img {
+      position: absolute;
+      right: 63px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      /* Adjust size to match your UI */
+      height: 16px;
+      pointer-events: none;
+      /* VERY IMPORTANT: Allows clicking through to the input */
+      z-index: 5;
+  }
 
-    /* Search */
-    .search-box {
-        /* padding-top: 18px;
+  /* This makes sure the whole box is clickable to open the calendar */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: auto;
+      height: auto;
+      color: transparent;
+      background: transparent;
+      cursor: pointer;
+  }
+
+  /* Search */
+  .search-box {
+      /* padding-top: 18px;
         padding-bottom: 10px; */
-        height: 30px;
-        position: relative;
-        width: 350px;
-        border-radius: 5px;
-    }
-    .search-box img {
-    position: absolute;
-    top: 50%;
-    left: 10px;
-    transform: translateY(-50%);
-    width: 12px;
-}
+      height: 30px;
+      position: relative;
+      width: 350px;
+      border-radius: 5px;
+  }
 
-    .search-box i {
-        position: absolute;
-        left: 12px;
-        top: 80%;
-        transform: translateY(-50%);
-    }
+  .search-box img {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      transform: translateY(-50%);
+      width: 12px;
+  }
 
-    .search-box input {
-        width: 100%;
-        padding: 0 36px;
-        height:100%;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-    }
+  .search-box i {
+      position: absolute;
+      left: 12px;
+      top: 80%;
+      transform: translateY(-50%);
+  }
 
-    /* Tabs */
-    .status-tabs {
-        display: flex;
-        gap: 8px;
-    }
+  .search-box input {
+      width: auto;
+      padding: 0 36px;
+      height: 100%;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+  }
 
-    .tab-btn {
-        border: 1px solid #ddd;
-        background: #f3f4f6;
-        padding: 6px 10px;
-        /* height:30px; */
-        border-radius: 5px;
-        cursor: pointer;
-    }
+  /* Tabs */
+  .status-tabs {
+      display: flex;
+      gap: 8px;
+  }
 
-    .tab-btn.active {
-        background: #00b5cc;
-        color: #fff;
-        border-color: #00b5cc;
-    }
+  .tab-btn {
+      border: 1px solid #ddd;
+      background: #f3f4f6;
+      padding: 6px 10px;
+      /* height:30px; */
+      border-radius: 5px;
+      cursor: pointer;
+  }
 
-    /* Date */
-    .right-section input {
-        border: 1px solid #00b5cc;
-        border-radius: 8px;
-        padding: 6px 10px;
-    }
+  .tab-btn.active {
+      background: #00b5cc;
+      color: #fff;
+      border-color: #00b5cc;
+  }
 
-    /* TABLE CARD FULL WIDTH */
-    .custom-table-card {
-        margin-top: 12px;
-        background: #fff;
-        border-radius: 16px;
-        overflow: hidden;
-        border: 1px solid #eee;
-        width: 100%;
-        position: relative;
-        min-height: 0;
-        overflow-y: auto;
-        overflow-x: auto;
-    }
+  /* Date */
+  .right-section input {
+      border: 1px solid #00b5cc;
+      border-radius: 8px;
+      padding: 6px 10px;
+  }
 
-    /* TABLE */
-    .table {
-        width: 100%;
-        border-collapse: collapse;
-    }
+  /* TABLE CARD FULL WIDTH */
+  .custom-table-card {
+      margin-top: 12px;
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #eee;
+      width: 100%;
+      position: relative;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: auto;
+  }
 
-    .table thead th {
-        background: #f1f3f5 !important;
-        /* padding: px 14px; */
-        font-weight: 600;
-        text-align: left;
-        font-size: 14px;
-        /* Sticky Header Fix */
-    position: sticky;
-    top: 0;           /* Sticks to the very top of the container */
-    z-index: 10;      /* Keeps the header above the scrolling rows */
-    }
+  /* TABLE */
+  .table {
+      width: 100%;
+      border-collapse: collapse;
+  }
 
-    .table tbody td {
-        padding: 10px 12px;
-        font-size: 14px;
-        border-bottom: 1px solid #eee;
-    }
+  .table thead th {
+      background: #f1f3f5 !important;
+      /* padding: px 14px; */
+      font-weight: 600;
+      text-align: left;
+      font-size: 14px;
+      /* Sticky Header Fix */
+      position: sticky;
+      top: 0;
+      /* Sticks to the very top of the container */
+      z-index: 10;
+      /* Keeps the header above the scrolling rows */
+  }
 
-    /* Order link */
-    .order-link {
-        color: #00b5cc;
-        font-weight: 600;
-        text-decoration: none;
-    }
+  .table tbody td {
+      padding: 10px 12px;
+      font-size: 14px;
+      border-bottom: 1px solid #eee;
+  }
 
-    /* Date */
-    .date-text {
-        font-weight: 500;
-    }
+  /* Order link */
+  .order-link {
+      color: #00b5cc;
+      font-weight: 600;
+      text-decoration: none;
+  }
 
-    .time-text {
-        font-size: 13px;
-        color: #777;
-    }
+  /* Date */
+  .date-text {
+      font-weight: 500;
+  }
 
-    /* Total */
-    .total-text {
-        font-weight: 700;
-    }
+  .time-text {
+      font-size: 13px;
+      color: #777;
+  }
 
-    /* STATUS BADGE */
-    .status-badge {
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 600;
-    }
+  /* Total */
+  .total-text {
+      font-weight: 700;
+  }
 
-    /* Colors */
-    .status-badge.pending {
-        background: #fef3c7;
-        color: #d97706;
-    }
+  /* STATUS BADGE */
+  .status-badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+  }
 
-    .status-badge.shipping {
-        background: #dbeafe;
-        color: #0284c7;
-    }
+  /* Colors */
+  .status-badge.pending {
+      background: #fef3c7;
+      color: #d97706;
+  }
 
-    .status-badge.delivered {
-        background: #d1fae5;
-        color: #059669;
-    }
+  .status-badge.shipping {
+      background: #dbeafe;
+      color: #0284c7;
+  }
 
-    /* Download */
-    .btn-download {
-        background: #e6f7fb;
-        color: #00b5cc;
-        border: none;
-        padding: 6px 16px;
-        border-radius: 20px;
-        font-weight: 600;
-        cursor: pointer;
-    }
+  .status-badge.delivered {
+      background: #d1fae5;
+      color: #059669;
+  }
 
-    .btn-download:hover {
-        background: #00b5cc;
-        color: #fff;
-    }
+  /* Download */
+  .btn-download {
+      background: #e6f7fb;
+      color: #00b5cc;
+      border: none;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      cursor: pointer;
+  }
 
-    .search-suggestions {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        z-index: 1000;
-        display: none;
-        max-height: 250px;
-        overflow-y: auto;
-    }
+  .btn-download:hover {
+      background: #00b5cc;
+      color: #fff;
+  }
 
-    .search-suggestions.active {
-        display: block;
-        font-size: 14px;
-        border: solid none;
-        color: rgb(101, 93, 93);
-    }
+  .search-suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      z-index: 1000;
+      display: none;
+      max-height: 250px;
+      overflow-y: auto;
+  }
 
-    .suggestion-item {
-        padding: 10px 15px;
-        cursor: pointer;
-        border-bottom: 1px solid #eee;
-    }
+  .search-suggestions.active {
+      display: block;
+      font-size: 14px;
+      border: solid none;
+      color: rgb(101, 93, 93);
+  }
 
-    .suggestion-item:hover {
-        background-color: #f8f9fa;
-    }
+  .suggestion-item {
+      padding: 10px 15px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+  }
 
-    .badge-small {
+  .suggestion-item:hover {
+      background-color: #f8f9fa;
+  }
+
+  .badge-small {
+      font-size: 10px;
+      padding: 2px 6px;
+      background: #e0f2fe;
+      color: #0369a1;
+      border-radius: 4px;
+      margin-left: 5px;
+  }
+
+  .order-image img {
+      position: relative;
+        left: 6px;
+      width: 50px;
+      height: 50px;
+  }
+
+  /* 2. The Table */
+  .table {
+      width: 100%;
+      border-collapse: separate;
+      /* REQUIRED for sticky headers */
+      border-spacing: 0;
+  }
+
+  /* 3. The Header Cells */
+  .table thead th {
+
+      background: #f1f3f5 !important;
+      /* Matches your design */
+      padding: 10px 14px;
+      font-weight: 600;
+      border-bottom: 2px solid #dee2e6;
+  }
+
+  @media screen and (max-width: 1024px) {
+
+      .order-image img {
+          position: relative;
+ right: 20px;
+           width: 50px;
+          height: 50px;
+      }
+      .time-text {
+          font-size: 10px;
+          color: #777;
+      }
+
+      .order-link {
+
+
+          display: inline-block;
+          max-width: 100px;
+          word-break: break-all;
+
+      }
+
+      .page-wrap {
+          padding-left: 20px;
+          padding-right: 20px;
+          padding-top: 0;
+          background: var(--card);
+          border-radius: 20px;
+          height: auto;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+      }
+
+      .pagination-container {
+         display: flex;
+         justify-content: center;
+         align-items: center;
+      }
+      .table tbody td{
         font-size: 10px;
-        padding: 2px 6px;
-        background: #e0f2fe;
-        color: #0369a1;
-        border-radius: 4px;
-        margin-left: 5px;
-    }
-/* 2. The Table */
-.table {
-    width: 100%;
-    border-collapse: separate; /* REQUIRED for sticky headers */
-    border-spacing: 0;
-}
-
-/* 3. The Header Cells */
-.table thead th {
- 
-    background: #f1f3f5 !important; /* Matches your design */
-    padding: 10px 14px;
-    font-weight: 600;
-    border-bottom: 2px solid #dee2e6;
-}
-
-.pagination-container {
-    /* flex: 0 0 10%; */
-    min-height: 0; 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-     /* overflow: hidden;  */
-    padding:  0;
-}
-@media (max-width: 1200px)
-{
-    .order-image img{
-        position: relative;
-        left: 20px;
-        width: 50px;
-        height: 50px;
-    }
-    .order-link{
-        
-
- display: inline-block;
-  max-width: 100px;
-  word-break: break-all;
-
-    }
-}
+        margin-left:4px;
+        padding-left: 2px;
+        padding-right: 2px;
+      }
+  }

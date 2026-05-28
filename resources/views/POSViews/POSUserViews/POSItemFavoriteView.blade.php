@@ -34,6 +34,25 @@
         .toast.error {
             background: #ef4444;
         }
+
+        .top {
+             display: flex;
+    background: white;
+    justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .nav-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2ca5a9;
+        }
+        .cart-box {
+            margin-right: 18px;
+            
+        }
     </style>
 @endpush
 
@@ -44,23 +63,24 @@
             @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
             @include('ManagementSystemViews.UserViews.Layouts.footer')
 
-             <div id="messageBox" class="message-box"></div>
+            <div id="messageBox" class="message-box"></div>
             <div id="toast" class="toast" aria-live="polite" aria-atomic="true" role="status"></div>
             <div class="top">
-                @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Favorite Items'])
-
+                <div class="cart-nav">
+                    <span class="nav-title">Favorite</span>
+                </div>
                 <div class="cart-box">
-                <a href="{{ route('user.pos.cart') }}" class="cart-box">
-                    <i class="bi bi-cart3"></i>
-                    <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
-                </a>
+                    <a href="{{ route('user.pos.cart') }}" class="cart-box">
+                        <i class="bi bi-cart3"></i>
+                        <span class="cart-count" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
+                    </a>
                 </div>
             </div>
 
 
-                <div id="messageBox" class="message-box"></div>
+            <div id="messageBox" class="message-box"></div>
 
-<!-------If favorite is empty show empty state----------------->
+            <!-------If favorite is empty show empty state----------------->
 
             @if ($favorites->isEmpty())
                 <div class="empty-box">No favorite items found.</div>
@@ -111,8 +131,7 @@
                     </div>
                 </div>
             @else
-
-            <!---------------end of empty state----------------->
+                <!---------------end of empty state----------------->
 
                 <div class="products-grid" id="productsGrid">
                     @foreach ($favorites as $item)
@@ -125,49 +144,49 @@
                         <div class="product-card product-item" data-name="{{ strtolower($item->display_name ?? '') }}"
                             data-uom="{{ strtolower($item->base_unit_of_measure_code ?? '') }}">
 
-                                <div class="product-img-box">
-                                    <button type="button" class="fav-btn" data-item-id="{{ $item->id }}">
-                                        <i class="bi bi-heart-fill text-danger"></i>
-                                    </button>
+                            <div class="product-img-box">
+                                <button type="button" class="fav-btn" data-item-id="{{ $item->id }}">
+                                    <i class="bi bi-heart-fill text-danger"></i>
+                                </button>
 
-                                    <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
-                                        alt="{{ $item->display_name ?? 'No Name' }}" loading="lazy"
-                                        onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
-                                </div>
+                                <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
+                                    alt="{{ $item->display_name ?? 'No Name' }}" loading="lazy"
+                                    onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
+                            </div>
 
-                                <div class="product-info">
-                                    <div class="product-title">{{ $item->display_name ?? 'No Name' }}</div>
+                            <div class="product-info">
+                                <div class="product-title">{{ $item->display_name ?? 'No Name' }}</div>
 
-                                    {{-- <div class="product-desc">
+                                {{-- <div class="product-desc">
                                     {{ $item->description ?: ('Thick ' . ($item->display_name ?? 'product')) }}
                                 </div> --}}
 
-                                    <div class="price-row {{ $oldPrice > $salePrice ? 'has-discount' : 'no-discount' }}">
-                                        <div class="old-price">
-                                            @if ($oldPrice > $salePrice)
-                                                ${{ number_format($oldPrice, 2) }}
-                                            @endif
-                                        </div>
-                                        <div class="new-price">${{ number_format($salePrice, 2) }}</div>
+                                <div class="price-row {{ $oldPrice > $salePrice ? 'has-discount' : 'no-discount' }}">
+                                    <div class="old-price">
+                                        @if ($oldPrice > $salePrice)
+                                            ${{ number_format($oldPrice, 2) }}
+                                        @endif
                                     </div>
-
-                                    <div class="qty-section">
-                                        <span class="qty-label">Quantity:</span>
-                                        <div class="qty-box">
-                                            <button type="button" class="qty-btn minus">−</button>
-                                            <span class="qty">1</span>
-                                            <button type="button" class="qty-btn plus">+</button>
-                                        </div>
-                                    </div>
-
-                                    <button type="button" class="add-cart-btn" data-id="{{ $item->id }}">
-                                        Add to cart
-                                    </button>
+                                    <div class="new-price">${{ number_format($salePrice, 2) }}</div>
                                 </div>
+
+                                <div class="qty-section">
+                                    <span class="qty-label">Quantity:</span>
+                                    <div class="qty-box">
+                                        <button type="button" class="qty-btn minus">−</button>
+                                        <span class="qty">1</span>
+                                        <button type="button" class="qty-btn plus">+</button>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="add-cart-btn" data-id="{{ $item->id }}">
+                                    Add to cart
+                                </button>
                             </div>
-                        @endforeach
-                    </div>
-                @endif
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </main>
     </div>
 @endsection
@@ -233,14 +252,18 @@
                                 if (cartCount) {
                                     cartCount.innerText = data.cartCount;
                                 }
-                                const asideCartCount = document.getElementById("asideCartCount");
+                                const asideCartCount = document.getElementById(
+                                "asideCartCount");
                                 if (asideCartCount && data.cartCount !== undefined) {
                                     asideCartCount.innerText = data.cartCount;
-                                    asideCartCount.classList.toggle("is-empty", data.cartCount <= 0);
+                                    asideCartCount.classList.toggle("is-empty", data
+                                        .cartCount <= 0);
                                 }
-                                showToast("success", data.message || "Added to cart successfully.");
+                                showToast("success", data.message ||
+                                    "Added to cart successfully.");
                             } else {
-                                showToast("error", data.message || "Failed to add item to cart.");
+                                showToast("error", data.message ||
+                                    "Failed to add item to cart.");
                             }
                         })
                         .catch(() => {

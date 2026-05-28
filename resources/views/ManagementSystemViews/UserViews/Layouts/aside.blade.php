@@ -330,6 +330,7 @@
             settingsBtn.addEventListener('click', () => {
                 if (appShell?.classList.contains('collapsed')) return;
                 settingsBox?.classList.toggle('open');
+                appShell.classList.toggle('settings-active');  // ✅ ADD THIS
             });
         };
         const toastContainer = document.getElementById('globalToastContainer');

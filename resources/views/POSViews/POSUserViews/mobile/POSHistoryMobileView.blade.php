@@ -452,8 +452,10 @@
 
         .toggle-switch {
             position: relative;
-            left: 368px;
-            bottom: 8px;
+            right: 6px;
+            display: flex;
+            justify-content: flex-end;
+                margin-bottom: 8px;
         }
 
         .toggle-switch input {

@@ -452,6 +452,12 @@
         height: 100vh;
         overflow-y: auto;
     }
+    
+.app-shell.settings-active .profile,
+.app-shell.settings-active .logout-link {
+    display: none;
+}
+
 
     
 @media (max-width: 1024px) {
