@@ -49,10 +49,7 @@
             font-weight: 700;
             color: #2ca5a9;
         }
-        .cart-box {
-            margin-right: 18px;
-            
-        }
+      
     </style>
 @endpush
 

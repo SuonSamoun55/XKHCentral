@@ -11,7 +11,6 @@
         <div class="header">
             <div class="order-history-container">
                 <h2 class="history-title">Order History</h2>
-
                 <form action="{{ route('user.pos.order.history') }}" method="GET" class="filter-form">
                     <div class="left-section">
                         <div class="search-box" style="position: relative;">
@@ -34,7 +33,18 @@
 
                     <div class="right-section">
                         <div class="date-filter-wrapper">
+                            <div id="actionBar" class="action-bar" style="display:none;">
+                                <span id="selectedCount">Selected 0</span>
+
+                                <button type="button" id="cancelSelection">Cancel</button>
+
+                                <button type="button" id="deleteSelected" class="delete-btn">
+                                    Delete
+                                </button>
+                            </div>
+
                             <label for="dateInput" class="floating-label">Date</label>
+
                             <input type="date" name="date" id="dateInput" value="{{ request('date') }}"
                                 onchange="this.form.submit()">
 
@@ -42,20 +52,15 @@
                         </div>
                     </div>
                 </form>
+                <form id="deleteForm" method="POST" action="{{ route('user.pos.order.deleteMultiple') }}">
+                    @csrf
+                    @method('DELETE')
+                </form>
             </div>
         </div>
-<div id="actionBar" class="action-bar" style="display:none;">
-    <span id="selectedCount">Selected 0</span>
-
-    <button type="button" id="cancelSelection">Cancel</button>
-
-    <button type="button" id="deleteSelected" class="delete-btn">
-        Delete
-    </button>
-</div>
 
         <div class="custom-table-card">
-            
+
             <table class="table">
                 <thead>
                     <tr>
@@ -75,20 +80,19 @@
                             data-customer="{{ $order->customer_no }}"
                             data-detail-url="{{ route('user.pos.order.show', $order->id) }}">
 
-                            <td><input type="checkbox" class="rowCheckbox"></td>
-
+                            <td><input type="checkbox" class="rowCheckbox" value="{{ $order->id }}"></td>
                             <td>
                                 <a href="{{ route('user.pos.order.show', $order->id) }}"
                                     class="order-link">#{{ $order->order_no }}</a>
                             </td>
                             <td>
-                                  <div class="order-image">
+                                <div class="order-image">
                                     <img src="{{ optional($order->items->first()->item)->image_url ?? asset('images/pos/default-food.png') }}"
                                         alt="">
                                 </div>
                             </td>
                             <td>
-                                
+
                                 <div class="date-text">
                                     {{ optional($order->created_at)->format('M d, Y') }}
                                 </div>
@@ -130,47 +134,46 @@
 @endsection
 
 @push('scripts')
-<script>
-    const selectAll = document.getElementById('selectAll');
-const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
-const actionBar = document.getElementById('actionBar');
-const selectedCount = document.getElementById('selectedCount');
-const cancelBtn = document.getElementById('cancelSelection');
+    <script>
+        const selectAll = document.getElementById('selectAll');
+        const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+        const actionBar = document.getElementById('actionBar');
+        const selectedCount = document.getElementById('selectedCount');
+        const cancelBtn = document.getElementById('cancelSelection');
 
-// ✅ Select all
-selectAll.addEventListener('change', function () {
-    rowCheckboxes.forEach(cb => cb.checked = this.checked);
-    updateSelectionUI();
-});
+        // ✅ Select all
+        selectAll.addEventListener('change', function() {
+            rowCheckboxes.forEach(cb => cb.checked = this.checked);
+            updateSelectionUI();
+        });
 
-// ✅ Individual checkbox
-rowCheckboxes.forEach(cb => {
-    cb.addEventListener('change', updateSelectionUI);
-});
+        // ✅ Individual checkbox
+        rowCheckboxes.forEach(cb => {
+            cb.addEventListener('change', updateSelectionUI);
+        });
 
-// ✅ Update UI
-function updateSelectionUI() {
-    let checked = document.querySelectorAll('.rowCheckbox:checked').length;
+        // ✅ Update UI
+        function updateSelectionUI() {
+            let checked = document.querySelectorAll('.rowCheckbox:checked').length;
 
-    if (checked > 0) {
-        actionBar.style.display = 'flex';
-        selectedCount.textContent = `Selected ${checked}`;
-    } else {
-        actionBar.style.display = 'none';
-    }
+            if (checked > 0) {
+                actionBar.style.display = 'flex';
+                selectedCount.textContent = `Selected ${checked}`;
+            } else {
+                actionBar.style.display = 'none';
+            }
 
-    // Sync selectAll state
-    selectAll.checked = checked === rowCheckboxes.length;
-}
+            // Sync selectAll state
+            selectAll.checked = checked === rowCheckboxes.length;
+        }
 
-// ✅ Cancel button
-cancelBtn.addEventListener('click', function () {
-    rowCheckboxes.forEach(cb => cb.checked = false);
-    selectAll.checked = false;
-    updateSelectionUI();
-});
-
-</script>
+        // ✅ Cancel button
+        cancelBtn.addEventListener('click', function() {
+            rowCheckboxes.forEach(cb => cb.checked = false);
+            selectAll.checked = false;
+            updateSelectionUI();
+        });
+    </script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
 
@@ -272,6 +275,41 @@ cancelBtn.addEventListener('click', function () {
                     }
                 });
             });
+        });
+        const deleteBtn = document.getElementById('deleteSelected');
+
+        deleteBtn.addEventListener('click', function() {
+            let selected = document.querySelectorAll('.rowCheckbox:checked');
+
+            console.log('Submitting with IDs:', selected.length); // ✅ ADD HERE
+
+            if (selected.length === 0) {
+                alert('Please select at least one order');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to delete selected orders?')) {
+                return;
+            }
+
+            let form = document.getElementById('deleteForm');
+
+            // Clear old inputs
+            form.innerHTML = `
+        @csrf
+        @method('DELETE')
+    `;
+
+            // Add selected IDs
+            selected.forEach(cb => {
+                let input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = cb.value;
+                form.appendChild(input);
+            });
+
+            form.submit();
         });
     </script>
 @endpush

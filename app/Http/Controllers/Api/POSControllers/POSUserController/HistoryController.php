@@ -279,4 +279,14 @@ class HistoryController extends Controller
 
         return (string) $rows[0]['id'];
     }
+    public function deleteMultiple(Request $request)
+{
+    $ids = $request->ids;
+
+    if ($ids) {
+Order::whereIn('id', $ids)->delete();
+    }
+
+    return redirect()->back()->with('success', 'Orders deleted successfully.');
+}
 }

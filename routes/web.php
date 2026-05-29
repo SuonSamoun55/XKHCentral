@@ -120,6 +120,7 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::get('/pos-system/order/{id}', [HistoryController::class, 'show'])->name('user.pos.order.show');
     Route::post('/pos-system/order/{id}/cancel', [HistoryController::class, 'cancel'])->name('user.pos.order.cancel');
     Route::get('/pos-system/order-history', [HistoryController::class, 'history'])->name('user.pos.order.history');
+    
 
     Route::get('/pos-system/cart', [CartController::class, 'index'])->name('user.pos.cart');
     Route::get('/pos-system/cart/data', [CartController::class, 'getCart'])->name('user.pos.cart.data');
@@ -129,6 +130,9 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::delete('/pos-system/cart/clear', [CartController::class, 'clearCart'])->name('user.pos.cart.clear');
     Route::get('/pos-system/checkout', [CartController::class, 'checkout'])->name('user.pos.checkout');
     Route::post('/pos-system/checkout', [OrderController::class, 'checkout'])->name('user.pos.checkout');
+    Route::delete('/orders/delete-multiple', [HistoryController::class, 'deleteMultiple'])
+    ->name('user.pos.order.deleteMultiple');
+
 
 ///////////////Routes for mobile responsive views////////////////////
 
