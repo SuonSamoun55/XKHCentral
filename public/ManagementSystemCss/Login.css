@@ -525,7 +525,6 @@ body {
     .login-left,
     .login-right {
         width: auto;            /* fix vh issue */
-        height: auto;           /* remove fixed height */
     }
 
 
