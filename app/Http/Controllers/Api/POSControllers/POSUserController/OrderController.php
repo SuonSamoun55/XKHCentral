@@ -18,6 +18,31 @@ use Carbon\Carbon;
 
 class OrderController extends Controller
 {
+    public function history(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated.',
+            ], 401);
+        }
+
+        $orders = Order::with('items')
+            ->where('user_id', $user->id)
+            ->when($request->filled('status') && strtolower((string) $request->status) !== 'all', function ($query) use ($request) {
+                $query->where('status', strtolower(str_replace(' ', '-', (string) $request->status)));
+            })
+            ->latest()
+            ->paginate((int) $request->get('limit', 10));
+
+        return response()->json([
+            'success' => true,
+            'data' => $orders,
+        ]);
+    }
+
     public function checkout(Request $request)
     {
         $user = Auth::user();
@@ -150,9 +175,8 @@ class OrderController extends Controller
                 'subtotal'        => $subtotal,
                 'discount_amount' => $discountAmount,
                 'total_amount'    => $totalAmount,
-                'amount_paid'     => $totalAmount,   // ✅ ✅ ✅ CORRECT PLACE
+                'amount_paid'     => $totalAmount,
                 'location_code'   => $locationCode,
-                'status'          => 'paid',          // ✅ (recommended after payment)
                 'status'          => 'pending',
                 'sync_status'     => 'pending',
                 'checked_out_at'  => now(),

@@ -78,7 +78,8 @@
                     @forelse($orders as $order)
                         <tr class="order-row" data-order-no="{{ $order->order_no }}" data-status="{{ $order->status }}"
                             data-customer="{{ $order->customer_no }}"
-                            data-detail-url="{{ route('user.pos.order.show', $order->id) }}">
+                            data-detail-url="{{ route('user.pos.order.show', $order->id) }}"
+                            data-track-url="{{ route('user.pos.order.bc-status', $order->bc_document_no ?: $order->id) }}">
 
                             <td><input type="checkbox" class="rowCheckbox" value="{{ $order->id }}"></td>
                             <td>
@@ -120,7 +121,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center">No orders found.</td>
+                            <td colspan="7" class="text-center">No orders found.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -200,6 +201,18 @@
                 element: row
             }));
 
+            function displayStatus(value) {
+                return String(value || 'pending').replaceAll('-', ' ').replace(/\b\w/g, char => char.toUpperCase());
+            }
+
+            function statusClass(value) {
+                return String(value || 'pending').toLowerCase().replaceAll(' ', '-');
+            }
+
+            function isFinalStatus(value) {
+                return ['delivery', 'delivered', 'cancelled', 'canceled', 'failed'].includes(String(value || '').toLowerCase());
+            }
+
             searchInput.addEventListener('input', function() {
                 const searchTerm = this.value.trim().toLowerCase();
 
@@ -275,6 +288,65 @@
                     }
                 });
             });
+
+            async function trackRow(row) {
+                const badge = row?.querySelector('.status-badge');
+                const trackUrl = row?.dataset.trackUrl;
+
+                if (!row || !badge || !trackUrl || row.dataset.tracking === '1' || isFinalStatus(row.dataset.status)) {
+                    return;
+                }
+
+                row.dataset.tracking = '1';
+
+                try {
+                    const refreshUrl = new URL(trackUrl, window.location.origin);
+                    refreshUrl.searchParams.set('_', Date.now().toString());
+
+                    const response = await fetch(refreshUrl.toString(), {
+                        cache: 'no-store',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Cache-Control': 'no-cache'
+                        }
+                    });
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        return;
+                    }
+
+                    const nextStatus = result.data?.tracking_status || result.data?.local_status || row.dataset.status;
+                    row.dataset.status = nextStatus;
+                    badge.className = 'status-badge ' + statusClass(nextStatus);
+                    badge.textContent = displayStatus(nextStatus);
+
+                    if (['confirmed', 'on-the-way'].includes(String(nextStatus || '').toLowerCase())) {
+                        window.setTimeout(() => trackRow(row), 5000);
+                        window.setTimeout(() => trackRow(row), 15000);
+                    }
+                } catch (error) {
+                    return;
+                } finally {
+                    row.dataset.tracking = '0';
+                }
+            }
+
+            function refreshVisibleRows() {
+                if (document.hidden) {
+                    return;
+                }
+
+                Array.from(orderRows)
+                    .filter(row => row.style.display !== 'none' && !isFinalStatus(row.dataset.status))
+                    .slice(0, 5)
+                    .forEach((row, index) => {
+                        window.setTimeout(() => trackRow(row), index * 1200);
+                    });
+            }
+
+            refreshVisibleRows();
+            window.setInterval(refreshVisibleRows, 10000);
         });
         const deleteBtn = document.getElementById('deleteSelected');
 

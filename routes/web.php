@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\POSControllers\POSAdminController\UserController;
 use App\Http\Controllers\Api\POSControllers\POSAdminController\AdminProfileController;
 use App\Http\Controllers\Api\POSControllers\POSUserController\PolicyController;
 use App\Http\Controllers\Api\POSControllers\DatabaseNotification;
+use App\Http\Controllers\Api\BusinessCentralOrderStatusController;
 
 Route::view('/test-ui', 'POSViews.POSUserViews.TestUI')
     ->name('user.pos.test_ui');
@@ -117,6 +118,7 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::put('/profile/change-password', [UserProfileController::class, 'updatePassword'])->name('user.password.update');
 
     Route::get('/pos-system/order/download/{id}', [HistoryController::class, 'downloadInvoice'])->name('user.pos.order.download');
+    Route::get('/pos-system/order/{order}/bc-status', [BusinessCentralOrderStatusController::class, 'show'])->name('user.pos.order.bc-status');
     Route::get('/pos-system/order/{id}', [HistoryController::class, 'show'])->name('user.pos.order.show');
     Route::post('/pos-system/order/{id}/cancel', [HistoryController::class, 'cancel'])->name('user.pos.order.cancel');
     Route::get('/pos-system/order-history', [HistoryController::class, 'history'])->name('user.pos.order.history');

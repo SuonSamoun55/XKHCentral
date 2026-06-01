@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\POSControllers\POSAdminController\ItemPosController
 use App\Http\Controllers\Api\POSControllers\POSUserController\CartController;
 use App\Http\Controllers\Api\POSControllers\POSUserController\OrderController;
 use App\Http\Controllers\Api\POSControllers\POSUserController\FavoriteController;
+use App\Http\Controllers\Api\BusinessCentralOrderStatusController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,6 +23,7 @@ Route::get('/users', [WebUserController::class, 'index']);
 Route::get('/bc-customers', [WebUserController::class, 'getBCCustomers']);
 Route::post('/items/sync-from-al', [ItemPosController::class, 'syncFromAl']);
 Route::get('/items/image/{itemId}', [ItemPosController::class, 'getItemImage']);
+Route::get('/orders/{order}/bc-status', [BusinessCentralOrderStatusController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
 

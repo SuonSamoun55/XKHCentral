@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 
 class AdminOrderController extends Controller
@@ -238,11 +239,17 @@ class AdminOrderController extends Controller
                 }
             }
 
-            $order->update([
+            $orderUpdates = [
                 'status'         => 'confirmed',
                 'sync_status'    => 'synced',
                 'bc_document_no' => $salesOrderNo ?: null,
-            ]);
+            ];
+
+            if (Schema::hasColumn('orders', 'bc_order_id')) {
+                $orderUpdates['bc_order_id'] = $salesOrderId;
+            }
+
+            $order->update($orderUpdates);
 
             OrderAction::create([
                 'order_id'    => $order->id,
@@ -304,6 +311,7 @@ class AdminOrderController extends Controller
 
         $order->update([
             'status' => 'cancelled',
+            'sync_status' => 'cancelled',
         ]);
 
         OrderAction::create([
@@ -369,5 +377,20 @@ class AdminOrderController extends Controller
         }
 
         return min(100, $discount);
+    }
+
+    public function actionHistory()
+    {
+        $admin = Auth::user();
+
+        if (!$admin || $admin->role !== 'admin') {
+            abort(403, 'Only admin can access this page.');
+        }
+
+        $actions = OrderAction::with(['order', 'user', 'actionBy'])
+            ->latest()
+            ->paginate(20);
+
+        return view('POSViews.POSAdminViews.OrderActionHistory', compact('actions'));
     }
 }

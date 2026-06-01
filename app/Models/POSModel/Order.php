@@ -20,6 +20,7 @@ class Order extends Model
         'amount_paid',
         'status',
         'sync_status',
+        'bc_order_id',
         'bc_document_no',
         'checked_out_at',
     ];
