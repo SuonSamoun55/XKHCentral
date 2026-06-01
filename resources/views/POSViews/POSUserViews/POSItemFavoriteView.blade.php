@@ -36,9 +36,9 @@
         }
 
         .top {
-            display: flex;
-            background: white;
-            justify-content: space-between;
+             display: flex;
+    background: white;
+    justify-content: space-between;
             align-items: center;
             gap: 14px;
             margin-bottom: 20px;
@@ -49,6 +49,7 @@
             font-weight: 700;
             color: #2ca5a9;
         }
+      
     </style>
 @endpush
 
@@ -86,11 +87,9 @@
                         <i class="bi bi-search"></i>
                         <input type="text" placeholder="Search your wishlist ..." />
                     </div>
-                    <!-- COUNT -->
-                    <div class="product-count">
-                        {{ $favorites->count() }} products
-                    </div>
 
+                    <!-- COUNT -->
+                    <div class="product-count">0 products</div>
 
                     <!-- EMPTY STATE -->
                     <div class="empty-state">
@@ -131,73 +130,59 @@
             @else
                 <!---------------end of empty state----------------->
 
-                <div class="wishlist-page">
-                    <!-- SEARCH -->
+                <div class="products-grid" id="productsGrid">
+                    @foreach ($favorites as $item)
+                        @php
+                            $normalPrice = (float) ($item->unit_price ?? 0);
+                            $discountPercent = (float) ($item->effective_discount_percent ?? 0);
+                            $salePrice = (float) ($item->final_price ?? $normalPrice);
+                            $oldPrice = $discountPercent > 0 ? $normalPrice : 0;
+                        @endphp
+                        <div class="product-card product-item" data-name="{{ strtolower($item->display_name ?? '') }}"
+                            data-uom="{{ strtolower($item->base_unit_of_measure_code ?? '') }}">
 
+                            <div class="product-img-box">
+                                <button type="button" class="fav-btn" data-item-id="{{ $item->id }}">
+                                    <i class="bi bi-heart-fill text-danger"></i>
+                                </button>
 
-                    <div class="sticky-header">
-                        <div class="search-box">
-                            <i class="bi bi-search"></i>
-                            <input type="text" placeholder="Search your wishlist ..." />
-                        </div>
+                                <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
+                                    alt="{{ $item->display_name ?? 'No Name' }}" loading="lazy"
+                                    onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
+                            </div>
 
-                        <div class="product-count">
-                            {{ $favorites->count() }} products
-                        </div>
-                    </div>
-                    <div class="products-grid" id="productsGrid">
-                        @foreach ($favorites as $item)
-                            @php
-                                $normalPrice = (float) ($item->unit_price ?? 0);
-                                $discountPercent = (float) ($item->effective_discount_percent ?? 0);
-                                $salePrice = (float) ($item->final_price ?? $normalPrice);
-                                $oldPrice = $discountPercent > 0 ? $normalPrice : 0;
-                            @endphp
-                            <div class="product-card product-item" data-name="{{ strtolower($item->display_name ?? '') }}"
-                                data-uom="{{ strtolower($item->base_unit_of_measure_code ?? '') }}">
+                            <div class="product-info">
+                                <div class="product-title">{{ $item->display_name ?? 'No Name' }}</div>
 
-                                <div class="product-img-box">
-                                    <button type="button" class="fav-btn" data-item-id="{{ $item->id }}">
-                                        <i class="bi bi-heart-fill text-danger"></i>
-                                    </button>
-
-                                    <img src="{{ $item->image_url ?: asset('images/no-image.png') }}"
-                                        alt="{{ $item->display_name ?? 'No Name' }}" loading="lazy"
-                                        onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
-                                </div>
-
-                                <div class="product-info">
-                                    <div class="product-title">{{ $item->display_name ?? 'No Name' }}</div>
-
-                                    {{-- <div class="product-desc">
+                                {{-- <div class="product-desc">
                                     {{ $item->description ?: ('Thick ' . ($item->display_name ?? 'product')) }}
                                 </div> --}}
 
-                                    <div class="price-row {{ $oldPrice > $salePrice ? 'has-discount' : 'no-discount' }}">
-                                        <div class="old-price">
-                                            @if ($oldPrice > $salePrice)
-                                                ${{ number_format($oldPrice, 2) }}
-                                            @endif
-                                        </div>
-                                        <div class="new-price">${{ number_format($salePrice, 2) }}</div>
+                                <div class="price-row {{ $oldPrice > $salePrice ? 'has-discount' : 'no-discount' }}">
+                                    <div class="old-price">
+                                        @if ($oldPrice > $salePrice)
+                                            ${{ number_format($oldPrice, 2) }}
+                                        @endif
                                     </div>
-
-                                    <div class="qty-section">
-                                        <span class="qty-label">Quantity:</span>
-                                        <div class="qty-box">
-                                            <button type="button" class="qty-btn minus">−</button>
-                                            <span class="qty">1</span>
-                                            <button type="button" class="qty-btn plus">+</button>
-                                        </div>
-                                    </div>
-
-                                    <button type="button" class="add-cart-btn" data-id="{{ $item->id }}">
-                                        Add to cart
-                                    </button>
+                                    <div class="new-price">${{ number_format($salePrice, 2) }}</div>
                                 </div>
+
+                                <div class="qty-section">
+                                    <span class="qty-label">Quantity:</span>
+                                    <div class="qty-box">
+                                        <button type="button" class="qty-btn minus">−</button>
+                                        <span class="qty">1</span>
+                                        <button type="button" class="qty-btn plus">+</button>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="add-cart-btn" data-id="{{ $item->id }}">
+                                    Add to cart
+                                </button>
                             </div>
-                        @endforeach
-                    </div>
+                        </div>
+                    @endforeach
+                </div>
             @endif
         </main>
     </div>
@@ -265,7 +250,7 @@
                                     cartCount.innerText = data.cartCount;
                                 }
                                 const asideCartCount = document.getElementById(
-                                    "asideCartCount");
+                                "asideCartCount");
                                 if (asideCartCount && data.cartCount !== undefined) {
                                     asideCartCount.innerText = data.cartCount;
                                     asideCartCount.classList.toggle("is-empty", data

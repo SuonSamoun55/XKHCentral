@@ -1087,14 +1087,16 @@ h4{
     .sidebar-wrap{
         display: none !important;
     }
+    .qty-box{
+        display: none ;
+    }
 
     .add-cart-btn {
         position: absolute;
         right: 14px;
         bottom: 14px;
-        width: 44px !important;
-        height: 44px !important;
-        border-radius: 50% !important;
+        width: 40px !important;
+        height: 40px !important;
         padding: 0 !important;
         font-size: 0 !important;
         display: flex !important;
