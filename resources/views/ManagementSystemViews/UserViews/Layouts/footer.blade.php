@@ -8,8 +8,8 @@
             </a>
 
             {{-- PRODUCTS (categories + category products) --}}
-            <a href="{{ route('user.pos.categories') }}"
-                class="{{ request()->routeIs('user.pos.categories') || request()->routeIs('user.pos.categories.products') ? 'active' : '' }}">
+            <a href="{{ route('user.posinterface') }}"
+                class="{{ request()->routeIs('user.posinterface') ? 'active' : '' }}">
                 <i class="bi bi-box-seam"></i>
                 <span>products</span>
             </a>
@@ -22,8 +22,8 @@
             </a>
 
 {{-- USER --}}
-<a href="{{ route('profile_mobile') }}"
-   class="{{ request()->routeIs('profile_mobile') ? 'active' : '' }}">
+<a href="{{ route('profile') }}"
+   class="{{ request()->routeIs('profile') ? 'active' : '' }}">
     <i class="bi bi-person"></i>
     <span>user</span>
 </a>

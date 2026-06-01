@@ -177,20 +177,6 @@
     </script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-
-            // Redirect to mobile page if screen < 768px
-            function checkMobileScreen() {
-                if (window.innerWidth < 768) {
-                    window.location.href = "/pos-system/order-history-mobile";
-                }
-            }
-
-            // Run on page load
-            checkMobileScreen();
-
-            // Run when resizing screen
-            window.addEventListener('resize', checkMobileScreen);
-
             const searchInput = document.getElementById('orderSearchInput');
             const searchSuggestions = document.getElementById('orderSuggestions');
             const orderRows = document.querySelectorAll('.order-row');

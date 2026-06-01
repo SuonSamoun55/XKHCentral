@@ -122,16 +122,9 @@ class POSUserControllerItemList extends Controller
     }
     
     public function showProduct($id)
-{
-    $item = Item::findOrFail($id);
-
-    $recommendations = Item::where('id', '!=', $id)->take(4)->get();
-
-    return view(
-        'POSViews.POSUserViews.mobile.POSdetail_mobile',
-        compact('item', 'recommendations')
-    );
-}
+    {
+        return $this->detail($id);
+    }
 
 
 

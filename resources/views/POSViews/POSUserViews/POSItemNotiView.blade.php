@@ -109,7 +109,7 @@
             {{-- </div> --}}
             {{-- MOBILE TOP TABS --}}
             <div class="mobile-tabs">
-                <a href="{{ route('user.notifications.mobile_inbox') }}" class="mt-pill">
+                <a href="{{ route('user.notifications') }}" class="mt-pill">
                     <i class="bi bi-inbox"></i>
                     Inbox
                 </a>
@@ -545,7 +545,7 @@
 
                 <div class="ac-contact-list">
                     @forelse($contactsFromNotifications as $contact)
-                        <a href="{{ route('contact.show_mobile', ['id' => $contact->id]) }}" class="ac-contact-row"
+                        <a href="{{ route('user.notifications.show', ['id' => $contact->id]) }}" class="ac-contact-row"
                             class="ac-contact-row" data-name="{{ strtolower($contact->name) }}">
 
                             <div class="ac-contact-avatar">

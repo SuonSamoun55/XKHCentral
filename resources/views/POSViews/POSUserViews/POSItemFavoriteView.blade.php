@@ -101,7 +101,7 @@
                         <h2>Your wishlist is empty</h2>
                         <p>Looks like you haven't added anything<br>to your wishlist yet</p>
 
-                        <a href="{{ route('user.pos.products') }}" class="primary-btn">
+                        <a href="{{ route('user.posinterface') }}" class="primary-btn">
                             Explore now
                             <i class="bi bi-chevron-right"></i>
                         </a>

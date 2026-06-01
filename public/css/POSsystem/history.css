@@ -444,4 +444,166 @@
       font-weight: 600;
       cursor: pointer;
   }
+
+  @media screen and (max-width: 768px) {
+      body {
+          overflow-x: hidden;
+      }
+
+      .page-wrap {
+          min-height: 100vh;
+          height: auto;
+          padding: 12px;
+          border-radius: 0;
+          overflow: visible;
+      }
+
+      .order-history-container {
+          padding: 0;
+      }
+
+      .history-title {
+          font-size: 26px;
+          padding: 8px 0;
+      }
+
+      .filter-form {
+          display: block;
+      }
+
+      .left-section {
+          width: 100%;
+          gap: 10px;
+      }
+
+      .search-box {
+          width: 100%;
+          height: 42px;
+      }
+
+      .search-box input {
+          width: 100%;
+          height: 42px;
+          font-size: 14px;
+          box-sizing: border-box;
+      }
+
+      .status-tabs {
+          width: 100%;
+          overflow-x: auto;
+          padding-bottom: 4px;
+          gap: 8px;
+      }
+
+      .tab-btn {
+          flex: 0 0 auto;
+          min-height: 40px;
+          padding: 8px 14px;
+          white-space: nowrap;
+      }
+
+      .right-section {
+          width: 100%;
+          margin-top: 10px;
+          justify-content: flex-start;
+      }
+
+      .date-filter-wrapper {
+          width: 100%;
+          max-width: 280px;
+          height: 54px;
+      }
+
+      .date-filter-wrapper input[type="date"] {
+          width: 100%;
+          height: 38px;
+          margin-top: 12px;
+      }
+
+      .calendar-custom-img {
+          right: 12px;
+      }
+
+      .action-bar {
+          position: static;
+          width: 100%;
+          box-sizing: border-box;
+          margin-bottom: 8px;
+          flex-wrap: wrap;
+      }
+
+      .custom-table-card {
+          margin-top: 10px;
+          border-radius: 10px;
+          max-height: none;
+          overflow-x: auto;
+          overflow-y: visible;
+          -webkit-overflow-scrolling: touch;
+      }
+
+      .table {
+          min-width: 760px;
+      }
+
+      .table thead th,
+      .table tbody td {
+          padding: 10px 8px;
+          font-size: 12px;
+          white-space: nowrap;
+      }
+
+      .order-link {
+          max-width: 170px;
+          white-space: normal;
+          word-break: break-word;
+      }
+
+      .order-image img {
+          left: 0;
+          width: 44px;
+          height: 44px;
+          object-fit: cover;
+      }
+
+      .status-badge {
+          display: inline-block;
+          min-width: 78px;
+          text-align: center;
+          padding: 6px 10px;
+          font-size: 12px;
+      }
+
+      .btn-download {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 7px 10px;
+          border-radius: 16px;
+          font-size: 12px;
+      }
+
+      .pagination-container {
+          padding: 12px 0;
+          overflow-x: auto;
+      }
+  }
+
+  @media screen and (max-width: 480px) {
+      .page-wrap {
+          padding: 10px;
+      }
+
+      .history-title {
+          font-size: 24px;
+      }
+
+      .table {
+          min-width: 700px;
+      }
+
+      .table thead th,
+      .table tbody td {
+          font-size: 11px;
+      }
+  }
   }

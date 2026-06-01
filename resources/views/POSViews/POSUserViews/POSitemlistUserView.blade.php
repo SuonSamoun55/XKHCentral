@@ -73,11 +73,11 @@
                 </div>
 
                 <div class="header-actions">
-                    <a href="{{ route('user.pos.order.history.mobile') }}" class="header-action-btn active">
+                    <a href="{{ route('user.pos.order.history') }}" class="header-action-btn active">
                         <i class="bi bi-bag-check"></i>
                         <span>Order</span>
                     </a>
-                    <a href="{{ route('user.pos.dashboard_mobile') }}" class="header-action-btn">
+                    <a href="{{ route('user.index') }}" class="header-action-btn">
                         <i class="bi bi-display"></i>
                         <span>POS System</span>
                     </a>

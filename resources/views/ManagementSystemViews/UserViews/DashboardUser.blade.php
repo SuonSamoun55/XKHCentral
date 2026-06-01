@@ -10,9 +10,185 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/ManagementSystem/dashboard.css') }}" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+        .mobile-dashboard-phone {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .app-shell {
+                display: none !important;
+            }
+
+            .mobile-dashboard-phone {
+                display: block;
+                width: 100%;
+                min-height: 100vh;
+                background: #fff;
+                padding: 20px 20px 90px;
+                box-sizing: border-box;
+            }
+
+            .mobile-dashboard-card {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                color: #fff;
+                border-radius: 14px;
+                padding: 16px;
+                margin-bottom: 12px;
+            }
+
+            .mobile-dashboard-card .card-icon {
+                background: #ffffff30;
+                padding: 10px;
+                border-radius: 10px;
+                font-size: 18px;
+                margin-right: 10px;
+            }
+
+            .mobile-dashboard-card h2 {
+                font-size: 18px;
+                margin: 0;
+            }
+
+            .mobile-dashboard-card p {
+                font-size: 12px;
+                margin: 0 0 4px;
+            }
+
+            .mobile-dashboard-card.teal {
+                background: #14b8a6;
+            }
+
+            .mobile-dashboard-card.blue {
+                background: #06b6d4;
+            }
+
+            .mobile-dashboard-badge {
+                font-size: 12px;
+                background: #fff;
+                padding: 4px 8px;
+                border-radius: 10px;
+                font-weight: bold;
+            }
+
+            .mobile-dashboard-badge.up {
+                color: #16a34a;
+            }
+
+            .mobile-dashboard-badge.down {
+                color: #dc2626;
+            }
+
+            .mobile-dashboard-date {
+                width: 100%;
+                border: 2px solid #14b8a6;
+                border-radius: 10px;
+                padding: 10px;
+                margin: 16px 0;
+                box-sizing: border-box;
+            }
+
+            .mobile-dashboard-chart {
+                display: flex;
+                justify-content: space-between;
+                height: 140px;
+                align-items: flex-end;
+            }
+
+            .mobile-dashboard-bar {
+                width: 12%;
+                background: #5eead4;
+                border-radius: 6px;
+            }
+
+            .mobile-dashboard-labels {
+                display: flex;
+                justify-content: space-between;
+                font-size: 11px;
+                color: #666;
+                margin: 8px 0 20px;
+            }
+
+            .mobile-dashboard-budget {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .mobile-dashboard-progress {
+                width: 46px;
+                height: 46px;
+                border-radius: 50%;
+                border: 4px solid #14b8a6;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #14b8a6;
+                font-size: 12px;
+                font-weight: bold;
+            }
+        }
+    </style>
 
 </head>
 <body>
+    <div class="mobile-dashboard-phone">
+        @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
+
+        <div class="mobile-dashboard-card teal">
+            <div class="card-icon"><i class="bi bi-file-earmark-text"></i></div>
+            <div>
+                <p>Total Order</p>
+                <h2>${{ number_format((float) ($totalOrderAmount ?? 0), 2) }}</h2>
+            </div>
+            <span class="mobile-dashboard-badge up">+22%</span>
+        </div>
+
+        <div class="mobile-dashboard-card blue">
+            <div class="card-icon"><i class="bi bi-arrow-repeat"></i></div>
+            <div>
+                <p>Total Order Return</p>
+                <h2>$0.00</h2>
+            </div>
+            <span class="mobile-dashboard-badge down">-22%</span>
+        </div>
+
+        <input type="date" class="mobile-dashboard-date">
+
+        @php
+            $mobileLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            $mobileValues = array_slice(array_pad($reportValues ?? [], 7, 0), -7);
+            $mobileMax = max($mobileValues) > 0 ? max($mobileValues) : 1;
+        @endphp
+
+        <div class="mobile-dashboard-chart">
+            @foreach($mobileValues as $value)
+                <div class="mobile-dashboard-bar"
+                    style="height: {{ (((float) $value) / $mobileMax) * 100 }}%"
+                    title="${{ number_format((float) $value, 2) }}">
+                </div>
+            @endforeach
+        </div>
+
+        <div class="mobile-dashboard-labels">
+            @foreach($mobileLabels as $label)
+                <span>{{ $label }}</span>
+            @endforeach
+        </div>
+
+        <div class="mobile-dashboard-budget">
+            <div>
+                <p>Your Monthly Budget</p>
+                <strong>USD 4,658.0 for 2 days</strong>
+            </div>
+            <div class="mobile-dashboard-progress">77%</div>
+        </div>
+
+        @include('ManagementSystemViews.UserViews.Layouts.footer')
+    </div>
+
     <div class="app-shell" id="appShell">
 
 
@@ -212,7 +388,7 @@
                 <i class="bi bi-heart"></i>
                 <span>wishlist</span>
             </a>
-            <a href="#">
+            <a href="{{ route('profile') }}">
                 <i class="bi bi-person"></i>
                 <span>user</span>
             </a>

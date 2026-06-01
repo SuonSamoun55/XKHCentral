@@ -290,9 +290,15 @@ public function success(Request $request)
         return redirect('/pos-system/cart');
     }
 
-    return view('POSViews.POSUserViews.mobile.POSorder_success', [
-        
-        'orderId'     => $order->id,          // ✅ ADD THIS
+    return view('POSViews.POSUserViews.POSItemcartView', [
+        'cart' => null,
+        'subtotal' => 0,
+        'discountAmount' => 0,
+        'taxAmount' => 0,
+        'total' => $order->total_amount,
+        'itemCount' => 0,
+        'showOrderSuccess' => true,
+        'orderId'     => $order->id,
         'orderNumber' => $order->order_no,
         'amountPaid'  => $order->amount_paid,
     ]);

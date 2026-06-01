@@ -136,22 +136,10 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     ->name('user.pos.order.deleteMultiple');
 
 
-///////////////Routes for mobile responsive views////////////////////
-
-    Route::get('/pos-system/categories', [POSUserControllerItemList::class, 'mobileCategories'])->name('user.pos.categories');
-    Route::get('/pos-system/categories/{category}', [POSUserControllerItemList::class, 'mobileCategoryProducts'])->name('user.pos.categories.products');
-    Route::get('/pos-system/products', [POSUserControllerItemList::class, 'mobileProducts'])->name('user.pos.products');
     Route::get('/pos/products/filter', [POSUserControllerItemList::class, 'filter'])->name('user.pos.products.filter');
-    Route::get('/profile_mobile', [UserProfileController::class, 'index_mobile'])->name('profile_mobile');
-    Route::get('/mobile/privacy-policy', [PolicyController::class, 'index'])->name('privacy_policy_mobile');
-    Route::get('/pos-system/order-history-mobile', [HistoryController::class, 'historyMobile'])->name('user.pos.order.history.mobile');
     Route::get('/pos-system/order-success', [OrderController::class, 'success'])->name('user.pos.checkout.success');
     Route::get('/pos-system/order-detail/{id}', [OrderController::class, 'detail'])->name('user.pos.order.detail');
     Route::get('/favorites', [FavoriteController::class, 'index']);
-    Route::get('/pos-dashboard-mobile',[DashboardUserController::class, 'mobileDashboard'])->middleware('auth') ->name('user.pos.dashboard_mobile');
-
-    Route::get('/notifications/mobile-inbox',[NotificationController::class, 'mobileInbox'])->name('user.notifications.mobile_inbox');
-    Route::get('notifications/contact/{id}', [NotificationController::class, 'show_mobile'])->name('contact.show_mobile');
 
 
 

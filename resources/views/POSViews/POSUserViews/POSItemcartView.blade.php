@@ -57,7 +57,7 @@
                                 to your cart yet
                             </p>
 
-                            <a href="{{ route('user.pos.products') }}" class="shop-now-btn">
+                            <a href="{{ route('user.posinterface') }}" class="shop-now-btn">
                                 Shop now <i class="bi bi-chevron-right"></i>
                             </a>
                         </div>

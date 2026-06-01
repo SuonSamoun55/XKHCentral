@@ -693,7 +693,7 @@
         <section class="message-pane">
             <header class="mobile-chat-header">
                 <div class="header-left">
-                    <a href="{{ route('user.notifications.mobile_inbox') }}" class="back-link">
+                    <a href="{{ route('user.notifications') }}" class="back-link">
                         <i class="bi bi-arrow-left"></i>
                     </a>
 

@@ -105,12 +105,68 @@
 
     @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
     @include('ManagementSystemViews.UserViews.Layouts.footer')
+    <div class="mobile-profile-menu" id="mobileProfileMenu">
+        <div class="profile-top">
+            @php
+                $avatarUrl = auth()->user()->profile_image_display ?? 'https://via.placeholder.com/120';
+            @endphp
+
+            <img src="{{ $avatarUrl }}" alt="Profile Avatar" class="profile-avatar"
+                onerror="this.src='https://via.placeholder.com/120'">
+
+            <h3 class="profile-name">
+                {{ auth()->user()->name ?? 'User' }}
+            </h3>
+        </div>
+
+        <div class="profile-actions">
+            <button type="button" class="profile-menu-card" id="openMobileEditProfile">
+                <i class="bi bi-pencil"></i>
+                <span>Edit Profile</span>
+            </button>
+
+            <a href="#mobilePrivacyPolicy" class="profile-menu-card">
+                <i class="bi bi-shield-lock"></i>
+                <span>Privacy Policy</span>
+            </a>
+
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="profile-menu-card danger">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Sign Out</span>
+                </button>
+            </form>
+        </div>
+
+        <div class="mobile-policy-inline" id="mobilePrivacyPolicy">
+            <h4>1. Types data we collect</h4>
+            <p>
+                Xtricate eCommerce App, operated by Xtricate Cambodia, respects your privacy
+                and is committed to protecting your personal information. This app allows users
+                to place orders and connects with Microsoft Dynamics 365 Business Central.
+            </p>
+
+            <h4>2. Use of your personal data</h4>
+            <p>
+                We may collect your name, company name, email address, phone number, delivery
+                address, account details, order history, payment status, device information,
+                and app usage data. This information is used to provide services, process
+                orders, improve app performance, offer customer support, prevent fraud, and
+                comply with legal obligations.
+            </p>
+        </div>
+    </div>
+
     <div class="mobile-profile">
         <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             {{-- Header --}}
             <div class="mobile-edit-header">
+                <button type="button" class="mobile-edit-back" id="closeMobileEditProfile">
+                    <i class="bi bi-arrow-left"></i>
+                </button>
                 <h4>Edit Profile</h4>
             </div>
 
@@ -193,6 +249,20 @@
 
         // Auto close alert
         document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenu = document.getElementById('mobileProfileMenu');
+            const mobileEdit = document.querySelector('.mobile-profile');
+            const openMobileEdit = document.getElementById('openMobileEditProfile');
+            const closeMobileEdit = document.getElementById('closeMobileEditProfile');
+
+            openMobileEdit?.addEventListener('click', function() {
+                mobileMenu?.classList.add('is-hidden');
+                mobileEdit?.classList.add('is-open');
+            });
+
+            closeMobileEdit?.addEventListener('click', function() {
+                mobileEdit?.classList.remove('is-open');
+                mobileMenu?.classList.remove('is-hidden');
+            });
 
             const alertElement = document.querySelector('.alert-success');
 

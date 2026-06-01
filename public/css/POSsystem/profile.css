@@ -137,6 +137,7 @@
         /* =========================
                MOBILE PROFILE
             ========================= */
+        .mobile-profile-menu,
         .mobile-profile,
         .cart-boxM,
         .mobile {
@@ -173,8 +174,103 @@
             }
 
             /* Show mobile */
-            .mobile-profile {
+            .mobile-profile-menu {
                 display: block !important;
+                min-height: 100vh;
+                min-width: 100%;
+                background: #f8fafc;
+                padding: 0 6px 80px;
+            }
+
+            .mobile-profile-menu.is-hidden {
+                display: none !important;
+            }
+
+            .profile-top {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin-top: 28px;
+            }
+
+            .profile-top .profile-avatar {
+                width: 120px;
+                height: 120px;
+                border-radius: 50%;
+                object-fit: cover;
+                background: #e5e7eb;
+            }
+
+            .profile-name {
+                margin-top: 14px;
+                font-size: 18px;
+                font-weight: 600;
+                color: #0f172a;
+            }
+
+            .profile-actions {
+                margin-top: 28px;
+                padding: 0 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+            }
+
+            .profile-menu-card {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                padding: 26px;
+                border-radius: 14px;
+                background: #ffffff;
+                text-decoration: none;
+                color: #0f172a;
+                border: none;
+                width: 100%;
+                text-align: left;
+                box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+                cursor: pointer;
+            }
+
+            .profile-menu-card i {
+                font-size: 20px;
+                color: #0ea5e9;
+            }
+
+            .profile-menu-card span {
+                font-size: 14px;
+                font-weight: 500;
+            }
+
+            .profile-menu-card.danger i,
+            .profile-menu-card.danger span {
+                color: #ef4444;
+            }
+
+            .mobile-policy-inline {
+                margin: 28px 20px 0;
+                padding: 20px;
+                border-radius: 14px;
+                background: #ffffff;
+                box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+            }
+
+            .mobile-policy-inline h4 {
+                font-size: 14px;
+                font-weight: 700;
+                color: #0f172a;
+                margin: 0 0 12px;
+            }
+
+            .mobile-policy-inline p {
+                font-size: 13px;
+                line-height: 1.6;
+                color: #334155;
+                margin: 0 0 22px;
+            }
+
+            .mobile-profile {
+                display: none !important;
                 min-height: 100vh;
                 background: #ffffff;
                 max-width: 430px;
@@ -182,10 +278,28 @@
                 padding: 18px;
             }
 
+            .mobile-profile.is-open {
+                display: block !important;
+            }
+
             /* Header */
             .mobile-edit-header {
+                position: relative;
                 text-align: center;
                 margin-bottom: 28px;
+            }
+
+            .mobile-edit-back {
+                position: absolute;
+                left: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 38px;
+                height: 38px;
+                border: none;
+                border-radius: 12px;
+                background: #f1f5f9;
+                color: #0f172a;
             }
 
             .mobile-edit-header h4 {
@@ -323,4 +437,3 @@
                 cursor: pointer;
             }
         }
-
