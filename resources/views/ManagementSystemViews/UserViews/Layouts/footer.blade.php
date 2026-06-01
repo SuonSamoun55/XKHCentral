@@ -18,7 +18,7 @@
             <a href="{{ route('user.pos.favorites') }}"
                 class="{{ request()->routeIs('user.pos.favorites') ? 'active' : '' }}">
                 <i class="bi bi-heart"></i>
-                <span>wishlist</span>
+                <span>favorites</span>
             </a>
 
 {{-- USER --}}
