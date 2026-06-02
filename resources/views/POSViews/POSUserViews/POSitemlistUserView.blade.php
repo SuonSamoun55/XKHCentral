@@ -72,52 +72,6 @@
                     </div>
                 </div>
 
-                <div class="header-actions">
-                    <a href="{{ route('user.pos.order.history') }}" class="header-action-btn active">
-                        <i class="bi bi-bag-check"></i>
-                        <span>Order</span>
-                    </a>
-                    <a href="{{ route('user.index') }}" class="header-action-btn">
-                        <i class="bi bi-display"></i>
-                        <span>POS System</span>
-                    </a>
-
-                    <a href="{{ route('user.notifications') }}" class="header-action-btn">
-                        <i class="bi bi-bell"></i>
-                        <span>Notification</span>
-                    </a>
-                </div>
-
-                <div class="hero-slider-wrapper">
-                    <div class="hero-slider">
-
-                        <div class="hero-card">
-                            <div class="hero-title">New collections is available!</div>
-                            <div class="hero-image">
-                                <img src="{{ asset('images/pos/Image.png') }}" alt="sofa">
-                            </div>
-                        </div>
-
-                        <div class="hero-card">
-                            <div class="hero-title">New collections is available!</div>
-                            <div class="hero-image">
-                                <img src="{{ asset('images/pos/Image.png') }}" alt="table">
-                            </div>
-                        </div>
-
-                        <div class="hero-card">
-                            <div class="hero-title">New collections is available!</div>
-                            <div class="hero-image">
-                                <img src="{{ asset('images/pos/Image.png') }}" alt="sofa">
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-                <a href="#" class="hero-link">
-                    Learn more <i class="bi bi-arrow-right"></i>
-                </a>
-                <h4>Product</h4>
             </div>
 
             <div id="messageBox" class="message-box"></div>
@@ -212,23 +166,6 @@
 @endsection
 
 @push('scripts')
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const slider = document.querySelector(".hero-slider");
-            const cards = document.querySelectorAll(".hero-card");
-
-            let index = 0;
-
-            setInterval(() => {
-                index++;
-                if (index >= cards.length) {
-                    index = 0;
-                }
-
-                slider.style.transform = `translateX(-${index * 100}%)`;
-            }, 3000);
-        });
-    </script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;

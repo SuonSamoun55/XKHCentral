@@ -1,8 +1,8 @@
  <div class="mobile-bottom-nav">
 
             {{-- HOME --}}
-            <a href="{{ route('user.posinterface') }}"
-                class="{{ request()->routeIs('user.posinterface') ? 'active' : '' }}">
+            <a href="{{ route('user.index') }}"
+                class="{{ request()->routeIs('user.index') ? 'active' : '' }}">
                 <i class="bi bi-house-door-fill"></i>
                 <span>home</span>
             </a>

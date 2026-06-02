@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,132 +9,59 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/ManagementSystem/dashboard.css') }}" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <style>
-        .mobile-dashboard-phone {
-            display: none;
-        }
-
-        @media (max-width: 768px) {
-            .app-shell {
-                display: none !important;
-            }
-
-            .mobile-dashboard-phone {
-                display: block;
-                width: 100%;
-                min-height: 100vh;
-                background: #fff;
-                padding: 20px 20px 90px;
-                box-sizing: border-box;
-            }
-
-            .mobile-dashboard-card {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                color: #fff;
-                border-radius: 14px;
-                padding: 16px;
-                margin-bottom: 12px;
-            }
-
-            .mobile-dashboard-card .card-icon {
-                background: #ffffff30;
-                padding: 10px;
-                border-radius: 10px;
-                font-size: 18px;
-                margin-right: 10px;
-            }
-
-            .mobile-dashboard-card h2 {
-                font-size: 18px;
-                margin: 0;
-            }
-
-            .mobile-dashboard-card p {
-                font-size: 12px;
-                margin: 0 0 4px;
-            }
-
-            .mobile-dashboard-card.teal {
-                background: #14b8a6;
-            }
-
-            .mobile-dashboard-card.blue {
-                background: #06b6d4;
-            }
-
-            .mobile-dashboard-badge {
-                font-size: 12px;
-                background: #fff;
-                padding: 4px 8px;
-                border-radius: 10px;
-                font-weight: bold;
-            }
-
-            .mobile-dashboard-badge.up {
-                color: #16a34a;
-            }
-
-            .mobile-dashboard-badge.down {
-                color: #dc2626;
-            }
-
-            .mobile-dashboard-date {
-                width: 100%;
-                border: 2px solid #14b8a6;
-                border-radius: 10px;
-                padding: 10px;
-                margin: 16px 0;
-                box-sizing: border-box;
-            }
-
-            .mobile-dashboard-chart {
-                display: flex;
-                justify-content: space-between;
-                height: 140px;
-                align-items: flex-end;
-            }
-
-            .mobile-dashboard-bar {
-                width: 12%;
-                background: #5eead4;
-                border-radius: 6px;
-            }
-
-            .mobile-dashboard-labels {
-                display: flex;
-                justify-content: space-between;
-                font-size: 11px;
-                color: #666;
-                margin: 8px 0 20px;
-            }
-
-            .mobile-dashboard-budget {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            .mobile-dashboard-progress {
-                width: 46px;
-                height: 46px;
-                border-radius: 50%;
-                border: 4px solid #14b8a6;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: #14b8a6;
-                font-size: 12px;
-                font-weight: bold;
-            }
-        }
-    </style>
-
 </head>
 <body>
     <div class="mobile-dashboard-phone">
         @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
+
+        <div class="pos-home-actions">
+            <a href="{{ route('user.pos.order.history') }}" class="pos-home-action-btn">
+                <img src="{{ asset('images/pos/Vector.png') }}" alt="Order">
+                <span>Order</span>
+            </a>
+            <a href="{{ route('user.posinterface') }}" class="pos-home-action-btn">
+                <img src="{{ asset('images/pos/POS.png') }}" alt="POS System">
+                <span>POS System</span>
+            </a>
+            <a href="{{ route('user.notifications') }}" class="pos-home-action-btn">
+                <img src="{{ asset('images/pos/bell.png') }}" alt="Notification">
+                <span>Notification</span>
+            </a>
+        </div>
+
+        <div class="pos-home-hero-wrapper">
+            <div class="pos-home-hero-slider">
+                <div class="pos-home-hero-card">
+                    <div class="pos-home-hero-title">New collections is available!</div>
+                    <div class="pos-home-hero-image">
+                        <img src="{{ asset('images/pos/Image.png') }}" alt="Sofa">
+                    </div>
+                </div>
+
+                <div class="pos-home-hero-card">
+                    <div class="pos-home-hero-title">New collections is available!</div>
+                    <div class="pos-home-hero-image">
+                        <img src="{{ asset('images/pos/Image.png') }}" alt="Table">
+                    </div>
+                </div>
+
+                <div class="pos-home-hero-card">
+                    <div class="pos-home-hero-title">New collections is available!</div>
+                    <div class="pos-home-hero-image">
+                        <img src="{{ asset('images/pos/Image.png') }}" alt="Sofa">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <a href="{{ route('user.posinterface') }}" class="pos-home-link">
+            Learn more <i class="bi bi-arrow-right"></i>
+        </a>
+
+        <div class="pos-home-product-title">
+            <h4>Product</h4>
+            <a href="{{ route('user.posinterface') }}">View All &gt;</a>
+        </div>
 
         <div class="mobile-dashboard-card teal">
             <div class="card-icon"><i class="bi bi-file-earmark-text"></i></div>
@@ -143,48 +69,91 @@
                 <p>Total Order</p>
                 <h2>${{ number_format((float) ($totalOrderAmount ?? 0), 2) }}</h2>
             </div>
-            <span class="mobile-dashboard-badge up">+22%</span>
-        </div>
-
-        <div class="mobile-dashboard-card blue">
-            <div class="card-icon"><i class="bi bi-arrow-repeat"></i></div>
-            <div>
-                <p>Total Order Return</p>
-                <h2>$0.00</h2>
-            </div>
-            <span class="mobile-dashboard-badge down">-22%</span>
         </div>
 
         <input type="date" class="mobile-dashboard-date">
 
-        @php
-            $mobileLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-            $mobileValues = array_slice(array_pad($reportValues ?? [], 7, 0), -7);
-            $mobileMax = max($mobileValues) > 0 ? max($mobileValues) : 1;
-        @endphp
-
-        <div class="mobile-dashboard-chart">
-            @foreach($mobileValues as $value)
-                <div class="mobile-dashboard-bar"
-                    style="height: {{ (((float) $value) / $mobileMax) * 100 }}%"
-                    title="${{ number_format((float) $value, 2) }}">
-                </div>
-            @endforeach
-        </div>
-
-        <div class="mobile-dashboard-labels">
-            @foreach($mobileLabels as $label)
-                <span>{{ $label }}</span>
-            @endforeach
-        </div>
-
-        <div class="mobile-dashboard-budget">
-            <div>
-                <p>Your Monthly Budget</p>
-                <strong>USD 4,658.0 for 2 days</strong>
+        <div class="mobile-dashboard-report-card">
+            <div class="mobile-dashboard-report-head">
+                <h3>Report</h3>
+                <span>Orders & Money</span>
             </div>
-            <div class="mobile-dashboard-progress">77%</div>
+            <div class="mobile-dashboard-chart-box">
+                <canvas id="mobileReportChart"></canvas>
+            </div>
+            <div class="mobile-dashboard-report-meta">
+                <span>Total: {{ number_format((int) ($totalOrders ?? 0)) }}</span>
+                <span>Amount: ${{ number_format((float) ($totalOrderAmount ?? 0), 2) }}</span>
+            </div>
         </div>
+
+        <section class="mobile-dashboard-list-card">
+            <div class="mobile-dashboard-list-head">
+                <h3>Recent Order</h3>
+                <span>Sort by Newest</span>
+            </div>
+
+            <div class="mobile-dashboard-list">
+                @forelse($recentOrders as $order)
+                    @php
+                        $firstOrderItem = $order->items->first();
+                        $itemName = $firstOrderItem?->item?->display_name
+                            ?? $firstOrderItem?->item_name
+                            ?? 'Unknown item';
+                        $itemImage = 'https://cdn-icons-png.flaticon.com/512/11181/11181220.png';
+                        $totalQty = (int) ($order->items->sum('qty') ?? 0);
+                    @endphp
+                    <a href="{{ route('user.pos.order.show', $order->id) }}" class="mobile-dashboard-list-item">
+                        <div class="mobile-dashboard-item-left">
+                            <img src="{{ $itemImage }}" alt="{{ $itemName }}"
+                                onerror="this.onerror=null;this.src='{{ asset('images/aside/history.png') }}';">
+                            <div>
+                                <div class="mobile-dashboard-item-name">{{ $order->order_no }}</div>
+                                <div class="mobile-dashboard-item-sub">
+                                    {{ \Illuminate\Support\Str::limit($itemName, 30) }} -
+                                    {{ $totalQty }} item(s)
+                                </div>
+                            </div>
+                        </div>
+                        <strong>${{ number_format((float) ($order->total_amount ?? 0), 2) }}</strong>
+                    </a>
+                @empty
+                    <div class="mobile-dashboard-empty">No recent orders yet.</div>
+                @endforelse
+            </div>
+
+            <a href="{{ route('user.pos.order.history') }}" class="mobile-dashboard-card-link">summary orders &gt;</a>
+        </section>
+
+        <section class="mobile-dashboard-list-card">
+            <div class="mobile-dashboard-list-head">
+                <h3>Notification</h3>
+                <span>{{ number_format((int) ($unreadNotificationCount ?? 0)) }} unread</span>
+            </div>
+
+            <div class="mobile-dashboard-list">
+                @forelse($recentNotifications as $notification)
+                    <a href="{{ route('user.notifications') }}" class="mobile-dashboard-list-item">
+                        <div class="mobile-dashboard-item-left">
+                            <img src="{{ $notification->sender_profile_image ?: asset('images/default-user.png') }}"
+                                alt="{{ $notification->title ?? 'Notification' }}">
+                            <div>
+                                <div class="mobile-dashboard-item-name">
+                                    {{ \Illuminate\Support\Str::limit($notification->title ?? 'Notification', 26) }}
+                                </div>
+                                <div class="mobile-dashboard-item-sub">
+                                    {{ optional($notification->created_at)->format('M d, Y h:i A') }}
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                @empty
+                    <div class="mobile-dashboard-empty">No notifications yet.</div>
+                @endforelse
+            </div>
+
+            <a href="{{ route('user.notifications') }}" class="mobile-dashboard-card-link">All messages &gt;</a>
+        </section>
 
         @include('ManagementSystemViews.UserViews.Layouts.footer')
     </div>
@@ -376,7 +345,7 @@
         </main>
 
         <div class="mobile-nav">
-            <a href="{{ route('user.posinterface') }}" class="active">
+            <a href="{{ route('user.index') }}" class="active">
                 <i class="bi bi-house-door-fill"></i>
                 <span>home</span>
             </a>
@@ -398,15 +367,29 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const slider = document.querySelector(".pos-home-hero-slider");
+            const cards = document.querySelectorAll(".pos-home-hero-card");
+
+            if (!slider || cards.length === 0) return;
+
+            let index = 0;
+
+            setInterval(() => {
+                index = index + 1 >= cards.length ? 0 : index + 1;
+                slider.style.transform = `translateX(-${index * 100}%)`;
+            }, 3000);
+        });
+    </script>
+    <script>
         (() => {
-            const ctx = document.getElementById('reportChart');
-            if (!ctx || typeof Chart === 'undefined') return;
+            if (typeof Chart === 'undefined') return;
 
             const labels = @json($reportLabels ?? []);
             const dates = @json($reportDates ?? []);
             const values = @json($reportValues ?? []);
 
-            new Chart(ctx, {
+            const chartConfig = {
                 type: 'line',
                 data: {
                     labels,
@@ -447,6 +430,13 @@
                         }
                     }
                 }
+            };
+
+            ['reportChart', 'mobileReportChart'].forEach((chartId) => {
+                const ctx = document.getElementById(chartId);
+                if (!ctx) return;
+
+                new Chart(ctx, chartConfig);
             });
         })();
     </script>

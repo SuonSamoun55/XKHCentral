@@ -1,7 +1,38 @@
+
+@php
+    use Illuminate\Support\Facades\Storage;
+    use App\Models\MagamentSystemModel\Company;
+
+    $company = null;
+
+    if (session('selected_company_id')) {
+        $company = Company::find(session('selected_company_id'));
+    }
+
+    if (!$company) {
+        $company = Company::first();
+    }
+
+    $companyName = $company->display_name ?? $company->name ?? 'Company';
+    $companyLogoUrl = asset('images/default-company.png');
+
+    if ($company && !empty($company->logo)) {
+        if (preg_match('/^https?:\/\//i', $company->logo)) {
+            $companyLogoUrl = $company->logo;
+        } else {
+            $companyLogoUrl = Storage::url($company->logo);
+        }
+    }
+@endphp
+
 <div class="mobile">
 <header class="cart-boxM">
+
     <div class="logo-wrap">
-        <img src="{{ asset('images/pos/logo.png') }}" alt="Logo" class="logo">
+        <img src="{{ $companyLogoUrl }}"
+             alt="{{ $companyName }} Logo"
+             class="logo"
+             onerror="this.onerror=null;this.src='{{ asset('images/default-company.png') }}';">
     </div>
         {{-- <a href="{{ route('') }}" class="cart-btn"> --}}
                 <a href="{{ route('user.pos.cart') }}" class="cart">
@@ -36,12 +67,17 @@
 
 .logo-wrap {
     padding: 8px;
+    /* -webkit-column-width: 50px */
 }
 
 .logo {
-    height: 20px;
-    width: auto;
+    height: 50px;
+    width: 50px;
+    /* max-width: 0px; */
     display: block;
+    object-fit: contain;
+    border:solid 1px #ddd;
+    border-radius: 8px;
 }
 
     /* Cart button container */
@@ -49,10 +85,10 @@
         position: relative;
         width: 46px;
         height: 46px;
-    
+
     }
     .cart-count{
-    
+
     position: absolute;
     top: -6px !important;
     right: -12px;

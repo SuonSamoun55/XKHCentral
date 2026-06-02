@@ -654,3 +654,316 @@
         padding-bottom: 80px;
     }
 }
+
+/* ======================================
+   MOBILE HOME DASHBOARD
+======================================== */
+.mobile-dashboard-phone {
+    display: none;
+}
+
+.pos-home-actions,
+.pos-home-hero-wrapper,
+.pos-home-link,
+.pos-home-product-title {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .app-shell {
+        display: none !important;
+    }
+
+    .mobile-dashboard-phone {
+        display: block;
+        width: 100%;
+        min-height: 100vh;
+        background: #fff;
+        padding: 20px 20px 90px;
+        box-sizing: border-box;
+    }
+
+    .mobile-dashboard-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #fff;
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 12px;
+    }
+
+    .mobile-dashboard-card .card-icon {
+        background: #ffffff30;
+        padding: 10px;
+        border-radius: 10px;
+        font-size: 18px;
+        margin-right: 10px;
+    }
+
+    .mobile-dashboard-card h2 {
+        font-size: 18px;
+        margin: 0;
+    }
+
+    .mobile-dashboard-card p {
+        font-size: 12px;
+        margin: 0 0 4px;
+    }
+
+    .mobile-dashboard-card.teal {
+        background: #14b8a6;
+    }
+
+    .mobile-dashboard-date {
+        width: 100%;
+        border: 2px solid #14b8a6;
+        border-radius: 10px;
+        padding: 10px;
+        margin: 16px 0;
+        box-sizing: border-box;
+    }
+
+    .mobile-dashboard-report-card {
+        background: #fff;
+        border: 1px solid #eef2f7;
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .mobile-dashboard-report-head,
+    .mobile-dashboard-report-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .mobile-dashboard-report-head h3 {
+        margin: 0;
+        color: #111827;
+        font-size: 16px;
+    }
+
+    .mobile-dashboard-report-head span,
+    .mobile-dashboard-report-meta {
+        color: #6b7280;
+        font-size: 12px;
+    }
+
+    .mobile-dashboard-chart-box {
+        height: 180px;
+        margin: 14px 0 8px;
+    }
+
+    .mobile-dashboard-chart-box canvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .mobile-dashboard-list-card {
+        background: #fff;
+        border: 1px solid #eef2f7;
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .mobile-dashboard-list-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .mobile-dashboard-list-head h3 {
+        margin: 0;
+        color: #111827;
+        font-size: 16px;
+    }
+
+    .mobile-dashboard-list-head span {
+        color: #6b7280;
+        font-size: 12px;
+    }
+
+    .mobile-dashboard-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .mobile-dashboard-list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .mobile-dashboard-item-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .mobile-dashboard-item-left img {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        object-fit: cover;
+        background: #f3f4f6;
+        flex: 0 0 auto;
+    }
+
+    .mobile-dashboard-item-name {
+        color: #111827;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.25;
+    }
+
+    .mobile-dashboard-item-sub {
+        color: #6b7280;
+        font-size: 11px;
+        line-height: 1.35;
+        margin-top: 3px;
+    }
+
+    .mobile-dashboard-list-item strong {
+        color: #111827;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .mobile-dashboard-card-link {
+        display: inline-flex;
+        margin-top: 12px;
+        color: #c7952b;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .mobile-dashboard-empty {
+        color: #6b7280;
+        font-size: 12px;
+        padding: 8px 0;
+    }
+
+    .pos-home-actions {
+        background: #257686;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 5px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
+    .pos-home-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        color: #fff;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 12px;
+        transition: all 0.2s ease;
+    }
+
+    .pos-home-action-btn img {
+        width: 18px;
+        height: 18px;
+        object-fit: contain;
+    }
+
+    .pos-home-hero-wrapper {
+        display: block;
+        overflow: hidden;
+        border-radius: 12px;
+        margin-bottom: 0;
+    }
+
+    .pos-home-hero-slider {
+        display: flex;
+        transition: transform 0.5s ease;
+    }
+
+    .pos-home-hero-card {
+        min-width: 100%;
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        background: #57c7cd;
+        border: 1px solid rgba(16, 184, 195, 0.14);
+        border-radius: 8px;
+    }
+
+    .pos-home-hero-title {
+        margin-left: 20px;
+        margin-bottom: 10px;
+        font-size: 20px;
+        font-weight: 700;
+        color: #000;
+        line-height: 1.2;
+    }
+
+    .pos-home-hero-image {
+        height: 140px;
+        margin-top: 10px;
+        flex: 0 0 44%;
+    }
+
+    .pos-home-hero-image img {
+        width: 90%;
+        height: 90%;
+        object-fit: cover;
+        border-radius: 14px;
+    }
+
+    .pos-home-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        position: relative;
+        top: -24px;
+        left: 20px;
+        color: #007bff;
+        font-weight: 700;
+        font-size: 14px;
+        text-decoration: none;
+    }
+
+    .pos-home-product-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: -8px 0 12px;
+    }
+
+    .pos-home-product-title h4 {
+        margin: 0;
+        font-size: 16px;
+        color: #111827;
+    }
+
+    .pos-home-product-title a {
+        color: #0ac9bd;
+        text-decoration: underline;
+        font-size: 14px;
+        font-weight: 600;
+    }
+}
