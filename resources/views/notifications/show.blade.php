@@ -4,29 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Notification Detail</title>
-    <link rel="stylesheet" href="{{ asset('css/ManagementSystem/aside.css') }}" />
-    <style>
-        .notification-detail-card { 
-            max-width: 720px;
-            margin: 2rem auto;
-            padding: 1.5rem;
-            border: 1px solid #dde1e7;
-            border-radius: 14px;
-            background: #fff;
-        }
-        .notification-detail-card h2 { margin-bottom: 0.75rem; }
-        .notification-detail-card p { margin: 0.5rem 0; }
-        .notification-detail-card .meta { color:#6b7280; font-size:0.88rem; }
-        .btn-back { display:inline-block; margin-top:1rem; color:#007bff; text-decoration:none; }
-        .message-body {
-            line-height: 1.6;
-            word-break: break-word;
-        }
-        .message-body a {
-            color: #2563eb;
-            text-decoration: underline;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/management-system/aside.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/views/notifications/show.css') }}">
 </head>
 <body>
     <div class="app-shell" id="appShell">

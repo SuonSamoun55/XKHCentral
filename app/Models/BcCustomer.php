@@ -30,7 +30,7 @@ class BcCustomer extends Model
     public function user()
     {
         return $this->hasOne(
-            \App\Models\MagamentSystemModel\User::class,
+            \App\Models\ManagementSystem\User::class,
             'bc_customer_no',
             'bc_customer_no'
         );
@@ -39,7 +39,7 @@ class BcCustomer extends Model
     public function company()
     {
         return $this->belongsTo(
-            \App\Models\MagamentSystemModel\Company::class,
+            \App\Models\ManagementSystem\Company::class,
             'company_id'
         );
     }

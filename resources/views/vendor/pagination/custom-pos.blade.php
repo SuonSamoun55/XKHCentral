@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="{{ asset('css/POSsystem/pagination.css') }}">
+<link rel="stylesheet" href="{{ asset('css/pos/pagination.css') }}">
 
 @if ($paginator->hasPages())
 <div class="pagination-container">

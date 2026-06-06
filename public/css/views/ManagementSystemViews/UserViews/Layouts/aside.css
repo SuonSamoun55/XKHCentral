@@ -1,0 +1,103 @@
+.global-toast-container {
+        position: fixed;
+        top: 1.5rem;
+        right: 1.5rem;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .global-toast {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 16px;
+        min-width: 340px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        /* Softer shadow like the image */
+        border: 1px solid #f0f0f0;
+        position: relative;
+        cursor: pointer;
+        animation: toast-slide-in 0.3s ease-out;
+    }
+
+    .toast-content-wrapper {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .toast-avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .toast-text-side {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .toast-title {
+        font-size: 15px;
+        color: #1a1a1a;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+
+    .toast-date {
+        font-size: 13px;
+        color: #6b7280;
+        margin-bottom: 12px;
+    }
+
+    /* Action Buttons */
+    .toast-actions-mini {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-toast-view {
+        background: #5d2df5;
+        /* Purple from your first image */
+        color: white;
+        border: none;
+        padding: 5px 18px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .btn-toast-dismiss {
+        background: white;
+        color: #1a1a1a;
+        border: 1px solid #d1d5db;
+        padding: 5px 18px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .global-toast-close {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        border: none;
+        background: none;
+        font-size: 20px;
+        color: #9ca3af;
+        cursor: pointer;
+    }
+
+    @keyframes toast-slide-in {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }

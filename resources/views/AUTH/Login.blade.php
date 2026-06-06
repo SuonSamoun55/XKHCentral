@@ -2,7 +2,7 @@
 
 @section('title', 'Login - POS')
 @section('content')
-    <link rel="stylesheet" href="{{ asset('ManagementSystemCss/Login.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/management-system/auth/login.css') }}">
 
     <div class="onboarding-overlay" id="onboardingOverlay">
         <div class="onboarding-progress-container">

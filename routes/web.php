@@ -1,32 +1,31 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Models\MagamentSystemModel\User;
-use App\Http\Controllers\Api\ManagementSystemController\WebUserController;
-use App\Http\Controllers\Api\ManagementSystemController\AuthController;
-use App\Http\Controllers\Api\POSControllers\POSAdminController\ItemPosController;
-use App\Http\Controllers\Api\ManagementSystemController\DashboardController;
-use App\Http\Controllers\Api\ManagementSystemController\DashboardUserController;
-use App\Http\Controllers\Api\POSControllers\POSUserController\CartController;
-use App\Http\Controllers\Api\POSControllers\POSUserController\POSUserControllerItemList;
-use App\Http\Controllers\Api\POSControllers\POSUserController\OrderController;
-use App\Http\Controllers\Api\ManagementSystemController\AdminNotificationController;
-use App\Http\Controllers\Api\ChatController;
-use App\Http\Controllers\Api\POSControllers\POSAdminController\AdminOrderController;
-use App\Http\Controllers\Api\POSControllers\POSUserController\FavoriteController;
-use App\Http\Controllers\Api\POSControllers\POSUserController\NotificationController;
-use App\Http\Controllers\Api\POSControllers\POSUserController\UserProfileController;
-use App\Http\Controllers\Api\POSControllers\POSUserController\HistoryController;
-use App\Http\Controllers\Api\ManagementSystemController\CompanyController;
-use App\Http\Controllers\Api\POSControllers\POSAdminController\StoreManagementController;
-use App\Http\Controllers\Api\POSControllers\POSAdminController\DiscountController;
-use App\Http\Controllers\Api\POSControllers\POSAdminController\UserController;
-use App\Http\Controllers\Api\POSControllers\POSAdminController\AdminProfileController;
-use App\Http\Controllers\Api\POSControllers\POSUserController\PolicyController;
-use App\Http\Controllers\Api\POSControllers\DatabaseNotification;
-use App\Http\Controllers\Api\BusinessCentralOrderStatusController;
+use App\Models\ManagementSystem\User;
+use App\Http\Controllers\Api\ManagementSystem\WebUserController;
+use App\Http\Controllers\Api\ManagementSystem\AuthController;
+use App\Http\Controllers\Api\POS\Admin\Items\ItemPosController;
+use App\Http\Controllers\Api\ManagementSystem\DashboardController;
+use App\Http\Controllers\Api\ManagementSystem\DashboardUserController;
+use App\Http\Controllers\Api\POS\User\Cart\CartController;
+use App\Http\Controllers\Api\POS\User\Products\ItemListController;
+use App\Http\Controllers\Api\POS\User\Orders\OrderController;
+use App\Http\Controllers\Api\ManagementSystem\AdminNotificationController;
+use App\Http\Controllers\Api\Communication\ChatController;
+use App\Http\Controllers\Api\POS\Admin\Orders\AdminOrderController;
+use App\Http\Controllers\Api\POS\User\Favorites\FavoriteController;
+use App\Http\Controllers\Api\POS\User\Notifications\NotificationController;
+use App\Http\Controllers\Api\POS\User\Profile\UserProfileController;
+use App\Http\Controllers\Api\POS\User\Orders\HistoryController;
+use App\Http\Controllers\Api\ManagementSystem\CompanyController;
+use App\Http\Controllers\Api\POS\Admin\StoreManagement\StoreManagementController;
+use App\Http\Controllers\Api\POS\Admin\Discounts\DiscountController;
+use App\Http\Controllers\Api\POS\Admin\Users\UserController;
+use App\Http\Controllers\Api\POS\Admin\Profile\AdminProfileController;
+use App\Http\Controllers\Api\POS\User\Legal\PolicyController;
+use App\Http\Controllers\Api\BusinessCentral\OrderStatusController;
 
-Route::view('/test-ui', 'POSViews.POSUserViews.TestUI')
+Route::view('/test-ui', 'POSViews.POSUserViews.Testing.test-ui')
     ->name('user.pos.test_ui');
 // Route::get('/store-management', [StoreManagementController::class, 'index'])->name('store.management.index');
 // ================= AUTH =================
@@ -93,12 +92,12 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
 
     ////////USER CONTROLLER
     Route::prefix('admin')->group(function () {
-    Route::get('/users/{id}', [App\Http\Controllers\Api\POSControllers\POSAdminController\UserController::class, 'show'])->name('admin.users.show');
+    Route::get('/users/{id}', [App\Http\Controllers\Api\POS\Admin\Users\UserController::class, 'show'])->name('admin.users.show');
     });
     // ---------- POS User ----------
-    Route::get('/pos-system', [POSUserControllerItemList::class, 'getItems'])->name('user.posinterface');
+    Route::get('/pos-system', [ItemListController::class, 'getItems'])->name('user.posinterface');
     Route::get('/pos-system/product/{id}', 
-    [POSUserControllerItemList::class, 'showProduct'])->name('user.pos.product.detail');
+    [ItemListController::class, 'showProduct'])->name('user.pos.product.detail');
     Route::get('/pos-system/favorites', [FavoriteController::class, 'getFavorites'])->name('user.pos.favorites');
     Route::post('/pos-system/favorite-toggle', [FavoriteController::class, 'toggle'])->name('user.pos.favorite.toggle');
 
@@ -118,7 +117,7 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::put('/profile/change-password', [UserProfileController::class, 'updatePassword'])->name('user.password.update');
 
     Route::get('/pos-system/order/download/{id}', [HistoryController::class, 'downloadInvoice'])->name('user.pos.order.download');
-    Route::get('/pos-system/order/{order}/bc-status', [BusinessCentralOrderStatusController::class, 'show'])->name('user.pos.order.bc-status');
+    Route::get('/pos-system/order/{order}/bc-status', [OrderStatusController::class, 'show'])->name('user.pos.order.bc-status');
     Route::get('/pos-system/order/{id}', [HistoryController::class, 'show'])->name('user.pos.order.show');
     Route::post('/pos-system/order/{id}/cancel', [HistoryController::class, 'cancel'])->name('user.pos.order.cancel');
     Route::get('/pos-system/order-history', [HistoryController::class, 'history'])->name('user.pos.order.history');
@@ -136,7 +135,7 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     ->name('user.pos.order.deleteMultiple');
 
 
-    Route::get('/pos/products/filter', [POSUserControllerItemList::class, 'filter'])->name('user.pos.products.filter');
+    Route::get('/pos/products/filter', [ItemListController::class, 'filter'])->name('user.pos.products.filter');
     Route::get('/pos-system/order-success', [OrderController::class, 'success'])->name('user.pos.checkout.success');
     Route::get('/pos-system/order-detail/{id}', [OrderController::class, 'detail'])->name('user.pos.order.detail');
     Route::get('/favorites', [FavoriteController::class, 'index']);

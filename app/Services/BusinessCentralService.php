@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\MagamentSystemModel\Company;
-use App\Models\MagamentSystemModel\CompanyConnection;
+use App\Models\ManagementSystem\Company;
+use App\Models\ManagementSystem\CompanyConnection;
 
 class BusinessCentralService
 {

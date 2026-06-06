@@ -1,5 +1,5 @@
 @extends('ManagementSystemViews.AdminViews.Layouts.app')
-<link rel="stylesheet" href="{{ asset('css/POSsystem/POSAdmin/notification/admin_chat_view.css') }}">
+<link rel="stylesheet" href="{{ asset('css/pos/admin/notification/admin_chat_view.css') }}">
 @section('title', 'Admin Chat')
 
 @push('styles')

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Routing\Controller as BaseController;
-use App\Models\MagamentSystemModel\Company;
-use App\Models\MagamentSystemModel\CompanyConnection;
+use App\Models\ManagementSystem\Company;
+use App\Models\ManagementSystem\CompanyConnection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 

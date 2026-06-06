@@ -1,0 +1,683 @@
+body.admin-notifications-page,
+    body.admin-notifications-page .main-wrapper,
+    body.admin-notifications-page .content-area {
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* ============================================================
+       SEND MESSAGE MODAL — FULL REPLACEMENT
+       ============================================================ */
+
+    /* ── OVERLAY ── */
+    #sendModal .modal-dialog {
+        max-width: 660px;
+    }
+
+    #sendModal .modal-content {
+        border: none;
+        border-radius: 20px;
+        overflow: visible;
+        background: #fff;
+        box-shadow: 0 20px 70px rgba(15, 23, 42, 0.20);
+        font-family: 'DM Sans', Arial, sans-serif;
+    }
+
+    /* ── HEADER ── */
+    #sendModal .send-modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 16px 20px 14px;
+        border-bottom: 1px solid #f0f2f5;
+        border-radius: 20px 20px 0 0;
+        background: #fff;
+    }
+
+    #sendModal .send-to-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    #sendModal .send-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        height: 34px;
+        padding: 0 10px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        background: #f8fafc;
+        border: 1px solid #e4e7ec;
+        border-radius: 999px;
+        flex-shrink: 0;
+    }
+    #sendModal .send-label i {
+        color: #18c4d4;
+        font-size: 13px;
+    }
+
+    #sendModal .send-recipient-area {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* ── RECIPIENT TOP ROW: select + inline search ── */
+    #sendModal .recipient-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    /* Type select */
+    #sendModal .recipient-type-select {
+        height: 34px;
+        min-width: 155px;
+        border: 1px solid #e4e7ec;
+        border-radius: 9px;
+        padding: 0 28px 0 10px;
+        font-size: 13px;
+        color: #374151;
+        background: #fff;
+        font-family: inherit;
+        outline: none;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 9px center;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    #sendModal .recipient-type-select:focus {
+        border-color: #18c4d4;
+        box-shadow: 0 0 0 3px rgba(24,196,212,0.12);
+    }
+
+    /* ── INLINE CUSTOMER SEARCH (sits right next to the select) ── */
+    #sendModal .inline-customer-search-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 180px;
+        max-width: 300px;
+        display: none; /* shown via JS */
+    }
+    #sendModal .inline-customer-search-wrap.visible {
+        display: block;
+    }
+    #sendModal .inline-customer-input {
+        width: 100%;
+        height: 34px;
+        border: 1px solid #e4e7ec;
+        border-radius: 9px;
+        padding: 0 12px 0 32px;
+        font-size: 13px;
+        color: #374151;
+        font-family: inherit;
+        outline: none;
+        background: #f8fffe;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    #sendModal .inline-customer-input:focus {
+        border-color: #18c4d4;
+        box-shadow: 0 0 0 3px rgba(24,196,212,0.12);
+        background: #fff;
+    }
+    #sendModal .inline-search-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        font-size: 12px;
+        pointer-events: none;
+    }
+    #sendModal .inline-customer-dropdown {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid #e4e7ec;
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(15,23,42,0.12);
+        max-height: 210px;
+        overflow-y: auto;
+        z-index: 1060;
+        display: none;
+        padding: 6px;
+    }
+    #sendModal .inline-customer-dropdown.open {
+        display: block;
+    }
+
+    /* Dropdown items */
+    #sendModal .cust-dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        border: none;
+        background: transparent;
+        text-align: left;
+        padding: 8px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.1s;
+        font-family: inherit;
+    }
+    #sendModal .cust-dropdown-item:hover { background: #e0f8fa; }
+
+    #sendModal .cust-dd-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: #e6e9ef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 11px;
+        font-weight: 700;
+        color: #fff;
+    }
+    #sendModal .cust-dd-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    #sendModal .cust-dd-meta { display: flex; flex-direction: column; min-width: 0; }
+    #sendModal .cust-dd-name  { font-size: 13px; font-weight: 600; color: #111827; line-height: 1.2; }
+    #sendModal .cust-dd-email { font-size: 11px; color: #6b7280; margin-top: 1px; }
+    #sendModal .cust-dd-empty { padding: 10px 12px; font-size: 12px; color: #94a3b8; }
+
+    /* ── CHIPS (selected customers) ── */
+    #sendModal .chip-box {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+        min-height: 4px;
+    }
+    #sendModal .cust-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 7px 3px 3px;
+        background: #e0f8fa;
+        border: 1px solid #b2edf2;
+        border-radius: 999px;
+    }
+    #sendModal .chip-avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: #18c4d4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        color: #fff;
+        flex-shrink: 0;
+    }
+    #sendModal .chip-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    #sendModal .chip-name  { font-size: 11px; font-weight: 600; color: #0d6b75; }
+    #sendModal .chip-remove {
+        border: none;
+        background: transparent;
+        color: #4da8b5;
+        font-size: 15px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0;
+        display: flex;
+        align-items: center;
+    }
+    #sendModal .chip-remove:hover { color: #0d6b75; }
+
+    /* ── HEADER ICON BUTTONS ── */
+    #sendModal .send-header-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+        padding-top: 1px;
+    }
+    #sendModal .header-icon-btn {
+        width: 30px;
+        height: 30px;
+        border: 1px solid #e4e7ec;
+        border-radius: 9px;
+        background: #f8fafc;
+        color: #9aa3b2;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 13px;
+        transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    #sendModal .header-icon-btn:hover {
+        background: #edf2f7;
+        color: #555d6b;
+        border-color: #d1d5db;
+    }
+    #sendModal .header-icon-btn.close-btn:hover {
+        background: #fef2f2;
+        border-color: #fca5a5;
+        color: #ef4444;
+    }
+
+    /* ── SUBJECT ROW ── */
+    #sendModal .send-subject-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 20px;
+        min-height: 52px;
+        border-bottom: 1px solid #f0f2f5;
+    }
+    #sendModal .subject-row-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: #eefbfc;
+        color: #18c4d4;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        flex-shrink: 0;
+    }
+    #sendModal .send-subject-input {
+        flex: 1;
+        border: none;
+        outline: none;
+        font-family: inherit;
+        font-size: 16px;
+        font-weight: 600;
+        color: #111827;
+        background: transparent;
+        padding: 14px 0;
+    }
+    #sendModal .send-subject-input::placeholder { color: #d1d5db; font-weight: 400; }
+    #sendModal .subject-counter {
+        font-size: 11px;
+        color: #c4cad4;
+        background: #f5f7fb;
+        padding: 3px 8px;
+        border-radius: 6px;
+        min-width: 28px;
+        text-align: center;
+    }
+
+    /* ── EDITOR AREA ── */
+    #sendModal .send-modal-body { padding: 0; }
+    #sendModal .send-editor-wrap { position: relative; }
+    #sendModal .editor-mode-badge {
+        position: absolute;
+        top: 14px;
+        right: 18px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(238, 251, 252, 0.96);
+        color: #0f766e;
+        font-size: 11px;
+        font-weight: 600;
+        border: 1px solid #c7f2f5;
+        z-index: 5;
+        pointer-events: none;
+    }
+    #sendModal .editor-mode-badge i {
+        color: #18c4d4;
+        font-size: 12px;
+    }
+
+    #sendModal .send-message-editor {
+        width: 100%;
+        min-height: 220px;
+        border: none;
+        outline: none;
+        padding: 16px 20px 90px;
+        font-family: inherit;
+        font-size: 14px;
+        line-height: 1.7;
+        color: #1f2937;
+        background: #fff;
+        white-space: normal;
+        overflow-wrap: break-word;
+        overflow-y: auto;
+    }
+    #sendModal .send-message-editor:empty::before {
+        content: attr(data-placeholder);
+        color: #d1d5db;
+        pointer-events: none;
+    }
+    #sendModal .send-message-editor ul,
+    #sendModal .send-message-editor ol { padding-left: 22px; margin-bottom: 0; }
+
+    #sendModal .send-message-textarea {
+        width: 100%;
+        min-height: 220px;
+        border: none;
+        outline: none;
+        resize: none;
+        padding: 16px 20px 90px;
+        font-family: inherit;
+        font-size: 14px;
+        line-height: 1.7;
+        color: #1f2937;
+        background: #fff;
+    }
+
+    /* ── FLOATING TOOLBAR ── */
+    #sendModal .editor-toolbar {
+        position: absolute;
+        left: 20px;
+        bottom: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        padding: 5px 8px;
+        background: rgba(255,255,255,0.98);
+        border: 1px solid #e4e7ec;
+        border-radius: 10px;
+        box-shadow: 0 4px 18px rgba(15,23,42,0.09);
+        z-index: 10;
+    }
+    #sendModal .toolbar-type-pill {
+        height: 28px;
+        padding: 0 10px;
+        border-radius: 7px;
+        border: none;
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 500;
+        color: #374151;
+        cursor: pointer;
+        transition: background 0.12s;
+    }
+    #sendModal .toolbar-type-pill:hover { background: #f0f4f8; }
+    #sendModal .toolbar-divider {
+        width: 1px;
+        height: 14px;
+        background: #e4e7ec;
+        margin: 0 4px;
+        flex-shrink: 0;
+    }
+    #sendModal .toolbar-btn {
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: 7px;
+        background: transparent;
+        color: #6b7280;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: background 0.12s, color 0.12s;
+    }
+    #sendModal .toolbar-btn:hover { background: #f0f4f8; color: #334155; }
+    /* Active state — highlighted when format is applied */
+    #sendModal .toolbar-btn.is-active {
+        background: #e0f8fa;
+        color: #0d8f9e;
+        box-shadow: inset 0 0 0 1px #b2edf2;
+    }
+
+    /* ── LINK INSERT OVERLAY ── */
+    #sendModal .link-insert-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(255,255,255,0.72);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+    }
+    #sendModal .link-insert-overlay.show { display: flex; }
+    #sendModal .link-insert-box {
+        background: #fff;
+        border: 1px solid #e4e7ec;
+        border-radius: 14px;
+        box-shadow: 0 14px 44px rgba(15,23,42,0.14);
+        padding: 20px;
+        width: 320px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    #sendModal .link-insert-title { font-size: 14px; font-weight: 700; color: #111827; margin: 0; }
+    #sendModal .link-insert-field { display: flex; flex-direction: column; gap: 4px; }
+    #sendModal .link-insert-field label {
+        font-size: 11px;
+        color: #6b7280;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+    #sendModal .link-insert-field input {
+        height: 36px;
+        border: 1px solid #dbe2ea;
+        border-radius: 9px;
+        padding: 0 12px;
+        font-family: inherit;
+        font-size: 13px;
+        color: #334155;
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    #sendModal .link-insert-field input:focus {
+        border-color: #18c4d4;
+        box-shadow: 0 0 0 3px rgba(24,196,212,0.12);
+    }
+    #sendModal .link-insert-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+    #sendModal .link-cancel-btn {
+        height: 32px;
+        padding: 0 14px;
+        border: 1px solid #e4e7ec;
+        border-radius: 8px;
+        background: #fff;
+        color: #6b7280;
+        font-family: inherit;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    #sendModal .link-cancel-btn:hover { background: #f8fafc; }
+    #sendModal .link-confirm-btn {
+        height: 32px;
+        padding: 0 16px;
+        border: none;
+        border-radius: 8px;
+        background: #18c4d4;
+        color: #fff;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.14s;
+    }
+    #sendModal .link-confirm-btn:hover { background: #0fa8b8; }
+
+    /* ── EMOJI PICKER ── */
+    #sendModal .emoji-picker {
+        position: absolute;
+        right: 88px;
+        bottom: 58px;
+        width: 316px;
+        max-width: calc(100vw - 44px);
+        padding: 18px 16px 14px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+        display: none;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+        z-index: 120;
+    }
+    #sendModal .emoji-picker.show { display: grid; }
+    #sendModal .emoji-picker::after {
+        content: '';
+        position: absolute;
+        right: 52px;
+        bottom: -9px;
+        width: 18px;
+        height: 18px;
+        background: #fff;
+        border-right: 1px solid #e5e7eb;
+        border-bottom: 1px solid #e5e7eb;
+        transform: rotate(45deg);
+    }
+    #sendModal .emoji-option {
+        width: 46px;
+        height: 46px;
+        border: none;
+        border-radius: 14px;
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 27px;
+        line-height: 1;
+        cursor: pointer;
+        transition: background 0.14s, transform 0.14s;
+    }
+    #sendModal .emoji-option:hover {
+        background: #f5f7fb;
+        transform: translateY(-1px);
+    }
+
+    /* ── FOOTER ── */
+    #sendModal .send-modal-footer {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 16px 12px;
+        border-top: 1px solid #f0f2f5;
+        background: #f8f9fc;
+        border-radius: 0 0 20px 20px;
+    }
+    #sendModal .footer-left-tools,
+    #sendModal .footer-right-tools { display: flex; align-items: center; gap: 4px; }
+    #sendModal .footer-icon-btn {
+        width: 34px;
+        height: 34px;
+        border: none;
+        background: transparent;
+        color: #b0b9c8;
+        border-radius: 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.14s, color 0.14s;
+    }
+    #sendModal .footer-icon-btn:hover { background: #edf2f7; color: #64748b; }
+    #sendModal .footer-icon-btn.danger-btn:hover { background: #fef2f2; color: #ef4444; }
+    #sendModal .send-now-btn {
+        height: 40px;
+        border: none;
+        border-radius: 12px;
+        background: #18c4d4;
+        color: #fff;
+        padding: 0 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        text-transform: lowercase;
+        box-shadow: 0 5px 16px rgba(24,196,212,0.30);
+        transition: background 0.14s, transform 0.1s, box-shadow 0.14s;
+    }
+    #sendModal .send-now-btn:hover {
+        background: #0fa8b8;
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(24,196,212,0.36);
+    }
+
+    /* ── MINIMIZED STATE ── */
+    #sendModal.modal.is-minimized {
+        pointer-events: none;
+    }
+    .send-minimized-tab {
+        position: fixed;
+        bottom: 0;
+        right: 28px;
+        background: #fff;
+        border: 1px solid #e4e7ec;
+        border-bottom: none;
+        border-radius: 12px 12px 0 0;
+        padding: 10px 18px;
+        box-shadow: 0 -4px 20px rgba(15,23,42,0.10);
+        display: none;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        z-index: 1055;
+        transition: background 0.14s;
+    }
+    .send-minimized-tab:hover { background: #f0fffe; }
+    .send-minimized-tab.visible { display: flex; }
+    .minimized-dot { width: 8px; height: 8px; border-radius: 50%; background: #18c4d4; }
+    .minimized-label { font-size: 13px; font-weight: 600; color: #374151; }
+    .minimized-restore-btn {
+        width: 22px; height: 22px; border-radius: 6px;
+        border: none; background: #f0f2f5; color: #9ca3af;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; font-size: 11px;
+    }
+
+    /* ── FULLSCREEN STATE ── */
+    #sendModal.modal.is-fullscreen .modal-dialog {
+        max-width: 100vw;
+        width: 100vw;
+        margin: 0;
+        height: 100vh;
+    }
+    #sendModal.modal.is-fullscreen .modal-dialog .modal-content {
+        border-radius: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    #sendModal.modal.is-fullscreen .send-modal-body { flex: 1; }
+    #sendModal.modal.is-fullscreen .send-message-editor { min-height: 350px; }
+    #sendModal.modal.is-fullscreen .send-modal-footer { border-radius: 0; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 767px) {
+        #sendModal .modal-dialog { max-width: calc(100% - 20px); margin: 10px auto; }
+        #sendModal .recipient-top { flex-direction: column; align-items: flex-start; }
+        #sendModal .inline-customer-search-wrap { max-width: 100%; min-width: 0; width: 100%; }
+        #sendModal .send-modal-header,
+        #sendModal .send-subject-row { padding-left: 14px; padding-right: 14px; }
+        #sendModal .send-message-editor { padding-left: 14px; padding-right: 14px; }
+        #sendModal .editor-toolbar { left: 14px; }
+    }

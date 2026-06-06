@@ -1,0 +1,32 @@
+.top-bar {
+    /* Existing Styles */
+    display: sticky;
+    background: white;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 28px;
+    padding-left: 10px;
+    margin-bottom: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 20px;    
+    height: 70px;
+
+    /* REQUIRED Sticky Fixes */
+    position: sticky;
+    top: 0;                /* Sticks to very top */
+    z-index: 100;          /* High number to stay on top of products */
+}
+    .page-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--primary); /* Uses your aqua/teal color */
+
+    }
+    
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 20px;
+        margin-left: -20px;
+    }
+}

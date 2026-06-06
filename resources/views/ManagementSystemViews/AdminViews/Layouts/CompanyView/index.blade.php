@@ -1,5 +1,5 @@
 @extends('ManagementSystemViews.AdminViews.Layouts.app')
-<link rel="stylesheet" href="{{ asset('css/POSsystem/POSAdmin/company.css') }}">
+<link rel="stylesheet" href="{{ asset('css/pos/admin/company.css') }}">
 @section('title', 'Company')
 
 @push('styles')

@@ -2,13 +2,13 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\ManagementSystemController\AuthController;
-use App\Http\Controllers\Api\ManagementSystemController\WebUserController;
-use App\Http\Controllers\Api\POSControllers\POSAdminController\ItemPosController;
-use App\Http\Controllers\Api\POSControllers\POSUserController\CartController;
-use App\Http\Controllers\Api\POSControllers\POSUserController\OrderController;
-use App\Http\Controllers\Api\POSControllers\POSUserController\FavoriteController;
-use App\Http\Controllers\Api\BusinessCentralOrderStatusController;
+use App\Http\Controllers\Api\ManagementSystem\AuthController;
+use App\Http\Controllers\Api\ManagementSystem\WebUserController;
+use App\Http\Controllers\Api\POS\Admin\Items\ItemPosController;
+use App\Http\Controllers\Api\POS\User\Cart\CartController;
+use App\Http\Controllers\Api\POS\User\Orders\OrderController;
+use App\Http\Controllers\Api\POS\User\Favorites\FavoriteController;
+use App\Http\Controllers\Api\BusinessCentral\OrderStatusController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,7 +23,7 @@ Route::get('/users', [WebUserController::class, 'index']);
 Route::get('/bc-customers', [WebUserController::class, 'getBCCustomers']);
 Route::post('/items/sync-from-al', [ItemPosController::class, 'syncFromAl']);
 Route::get('/items/image/{itemId}', [ItemPosController::class, 'getItemImage']);
-Route::get('/orders/{order}/bc-status', [BusinessCentralOrderStatusController::class, 'show']);
+Route::get('/orders/{order}/bc-status', [OrderStatusController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
 

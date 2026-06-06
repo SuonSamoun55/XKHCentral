@@ -1,7 +1,7 @@
 @php
     use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\Storage;
-    use App\Models\MagamentSystemModel\Company;
+    use App\Models\ManagementSystem\Company;
 
     $authUser = Auth::user();
 
@@ -74,7 +74,7 @@
     }
 @endphp
 
-<link rel="stylesheet" href="{{ asset('css/ManagementSystem/adminSidbar.css') }}">
+<link rel="stylesheet" href="{{ asset('css/management-system/admin-sidebar.css') }}">
 
 <div class="sidebar-wrap" id="appShell">
     <aside class="sidebar">
@@ -188,5 +188,3 @@
         <span>‹</span>
     </button>
 </div>
-
-<script src="{{ asset('JS/AdminJS/SideBarjs/sidebar.js') }}"></script>

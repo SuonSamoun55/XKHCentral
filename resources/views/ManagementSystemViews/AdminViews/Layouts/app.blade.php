@@ -7,27 +7,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin System')</title>
 
-    <link rel="stylesheet" href="{{ asset('css/ManagementSystem/adminSidbar.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/management-system/admin-sidebar.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <style>
-        /* In app.blade.php or adminSidbar.css */
-        .main-wrapper {
-            display: flex;
-            min-height: 100vh;
-            /* Remove the gap here so it doesn't affect the login page */
-        }
-
-        .content-area {
-            flex: 1;
-            width: 100%;
-        }
-
-        /* Add the gap only when the aside is actually there */
-        aside+.content-area {
-            margin-left: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/views/ManagementSystemViews/AdminViews/Layouts/app.css') }}">
     @stack('styles')
 </head>
 
@@ -43,7 +26,7 @@
         </div>
     </div>
 
-    <script src="{{ asset('js/AdminJS/sidebar.js') }}"></script>
+    <script src="{{ asset('js/admin/sidebar.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
 

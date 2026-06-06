@@ -6,7 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
-use App\Models\POSModel\Cart;
+use App\Models\POS\Cart;
 class AppServiceProvider extends ServiceProvider
 {
     /**

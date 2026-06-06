@@ -1,0 +1,16 @@
+/* In app.blade.php or admin-sidebar.css */
+        .main-wrapper {
+            display: flex;
+            min-height: 100vh;
+            /* Remove the gap here so it doesn't affect the login page */
+        }
+
+        .content-area {
+            flex: 1;
+            width: 100%;
+        }
+
+        /* Add the gap only when the aside is actually there */
+        aside+.content-area {
+            margin-left: 10px;
+        }

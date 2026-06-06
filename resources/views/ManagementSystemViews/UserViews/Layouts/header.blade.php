@@ -1,7 +1,7 @@
 
     <!-- Your CSS -->
-    <link rel="stylesheet" href="{{ asset('css/pos.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/ManagementSystem/aside.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/pos/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/management-system/aside.css') }}">
 
 {{-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"> --}}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -11,37 +11,4 @@
     <h1 class="page-title">{{ $title ?? 'Default Title' }}</h1>
 </div>
 
-<style>
-   .top-bar {
-    /* Existing Styles */
-    display: sticky;
-    background: white;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 28px;
-    padding-left: 10px;
-    margin-bottom: 12px;
-    width: 100%;
-    box-sizing: border-box;
-    border-radius: 20px;    
-    height: 70px;
-
-    /* REQUIRED Sticky Fixes */
-    position: sticky;
-    top: 0;                /* Sticks to very top */
-    z-index: 100;          /* High number to stay on top of products */
-}
-    .page-title {
-        font-size: 24px;
-        font-weight: 700;
-        color: var(--primary); /* Uses your aqua/teal color */
-
-    }
-    
-@media (max-width: 768px) {
-    .page-title {
-        font-size: 20px;
-        margin-left: -20px;
-    }
-}
-</style>
+<link rel="stylesheet" href="{{ asset('css/views/ManagementSystemViews/UserViews/Layouts/header.css') }}">
