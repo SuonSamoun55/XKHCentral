@@ -131,8 +131,8 @@
                                     </div>
                                 </div>
 
-                                <button type="button" class="add-cart-btn" data-id="{{ $item->id }}">
-                                    Add to cart
+                                <button type="button" class="add-cart-btn mobile-action" data-id="{{ $item->id }}">
+                                    <span class="add-cart-text">Add to cart</span>
                                 </button>
                             </div>
                         </div>

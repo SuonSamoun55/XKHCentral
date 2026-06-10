@@ -8,10 +8,38 @@
 @endpush
 
 @section('content')
+    @php
+        $categoryOptions = $items
+            ->pluck('item_category_code')
+            ->filter(fn ($category) => filled($category))
+            ->unique()
+            ->sort()
+            ->values();
+    @endphp
+
     <div class="page-wrap">
         <main class="content-area">
             @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
             @include('ManagementSystemViews.UserViews.Layouts.footer')
+            <div class="mobile-product-filters" id="mobileProductFilters">
+                <div class="mobile-search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="mobileSearchInput" placeholder="Search products ...">
+                </div>
+
+                <div class="mobile-category-row" aria-label="Product categories">
+                    <button type="button" class="category-filter-btn active" data-category="">
+                        All categories
+                    </button>
+                    @foreach ($categoryOptions as $category)
+                        <button type="button" class="category-filter-btn"
+                            data-category="{{ strtolower($category) }}">
+                            {{ ucwords(str_replace(['_', '-'], ' ', $category)) }}
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+
             <div class="header">
                 <div class="topbar">
                     <div class="top">
@@ -165,11 +193,19 @@
                 searchSuggestions: document.getElementById("searchSuggestions"),
                 searchPreviewProducts: document.getElementById("searchPreviewProducts"),
                 searchWrapper: document.querySelector(".search-wrapper"),
+                mobileProductFilters: document.getElementById("mobileProductFilters"),
+                mobileSearchInput: document.getElementById("mobileSearchInput"),
+                mobileCategoryRow: document.querySelector(".mobile-category-row"),
+                categoryButtons: [...document.querySelectorAll(".category-filter-btn")],
                 noSearchResult: document.getElementById("noSearchResult"),
+                productsGrid: document.getElementById("productsGrid"),
 
                 productCards: [...document.querySelectorAll(".product-card")],
                 favButtons: [...document.querySelectorAll(".fav-btn")]
             };
+
+            let selectedCategory = "";
+            let lastScrollY = window.scrollY;
 
             let recentSearches = JSON.parse(localStorage.getItem("pos_recent_searches")) || [
                 "premium beef", "beef steak", "meat"
@@ -234,11 +270,31 @@
                 };
             }
 
-            function matchCard(card, keyword) {
-                const text = keyword.trim().toLowerCase();
-                if (!text) return true;
+            function normalizeCategory(value = "") {
+                return value.trim().toLowerCase();
+            }
 
+            function currentSearchValue() {
+                return (els.mobileSearchInput?.value || els.searchInput?.value || "").trim();
+            }
+
+            function syncSearchInputs(value) {
+                if (els.searchInput && els.searchInput.value !== value) {
+                    els.searchInput.value = value;
+                }
+
+                if (els.mobileSearchInput && els.mobileSearchInput.value !== value) {
+                    els.mobileSearchInput.value = value;
+                }
+            }
+
+            function matchCard(card, keyword, category = selectedCategory) {
+                const text = keyword.trim().toLowerCase();
                 const data = getCardData(card);
+                const categoryMatched = !category || data.category === category;
+                if (!categoryMatched) return false;
+
+                if (!text) return true;
 
                 return [
                     data.name,
@@ -249,11 +305,13 @@
                 ].some(value => value.includes(text));
             }
 
-            function filterProducts(keyword = "") {
+            function filterProducts(keyword = currentSearchValue()) {
                 let visibleCount = 0;
+                const value = keyword.trim();
+                syncSearchInputs(value);
 
                 els.productCards.forEach(card => {
-                    const matched = matchCard(card, keyword);
+                    const matched = matchCard(card, value);
                     card.style.display = matched ? "" : "none";
                     if (matched) visibleCount++;
                 });
@@ -325,7 +383,7 @@
                         if (e.target.closest('.delete-history-btn')) return;
 
                         const value = item.dataset.value || "";
-                        els.searchInput.value = value;
+                        syncSearchInputs(value);
                         addRecentSearch(value);
                         filterProducts(value);
                         renderSearchPanel(value);
@@ -551,6 +609,21 @@
             }
 
             function bindSearch() {
+                if (els.mobileSearchInput) {
+                    els.mobileSearchInput.addEventListener("input", e => {
+                        filterProducts(e.target.value);
+                        closeSearchDropdown();
+                    });
+
+                    els.mobileSearchInput.addEventListener("keydown", e => {
+                        if (e.key === "Enter") {
+                            const value = e.target.value.trim();
+                            if (value) addRecentSearch(value);
+                            els.mobileSearchInput.blur();
+                        }
+                    });
+                }
+
                 if (!els.searchInput) return;
 
                 els.searchInput.addEventListener("focus", () => {
@@ -589,6 +662,54 @@
                 });
             }
 
+            function bindCategoryFilters() {
+                els.categoryButtons.forEach(button => {
+                    button.addEventListener("click", () => {
+                        selectedCategory = normalizeCategory(button.dataset.category || "");
+
+                        els.categoryButtons.forEach(item => item.classList.remove("active"));
+                        button.classList.add("active");
+
+                        filterProducts();
+                        closeSearchDropdown();
+                    });
+                });
+            }
+
+            function bindMobileFilterScroll() {
+                if (!els.mobileCategoryRow) return;
+
+                const isMobile = () => window.matchMedia("(max-width: 767px)").matches;
+
+                const updateCategoryVisibility = (currentY) => {
+                    if (!isMobile()) {
+                        els.mobileCategoryRow.classList.remove("is-hidden");
+                        return;
+                    }
+
+                    const scrollingDown = currentY > lastScrollY;
+
+                    els.mobileCategoryRow.classList.toggle(
+                        "is-hidden",
+                        scrollingDown && currentY > 24
+                    );
+
+                    lastScrollY = Math.max(currentY, 0);
+                };
+
+                window.addEventListener("scroll", () => {
+                    updateCategoryVisibility(window.scrollY);
+                }, {
+                    passive: true
+                });
+
+                els.productsGrid?.addEventListener("scroll", () => {
+                    updateCategoryVisibility(els.productsGrid.scrollTop);
+                }, {
+                    passive: true
+                });
+            }
+
             function bindProductDetailNavigation() {
                 els.productCards.forEach(card => {
 
@@ -621,6 +742,8 @@
             bindAddToCart();
             bindFavoriteButtons();
             bindSearch();
+            bindCategoryFilters();
+            bindMobileFilterScroll();
             bindProductDetailNavigation();
         });
     </script>

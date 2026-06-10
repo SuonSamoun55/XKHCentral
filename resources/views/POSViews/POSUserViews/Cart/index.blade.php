@@ -647,14 +647,8 @@
                         if (successBlock) {
                             successBlock.style.display = 'block';
                         }
-
-                        // ✅ Hide button
                         checkoutDesktopBtn.style.display = 'none';
-
-                        // ✅ Scroll to top (VERY IMPORTANT)
                         window.scrollTo(0, 0);
-
-                        // ✅ Redirect after 20 sec
                         setTimeout(() => {
                             window.location.href = "{{ route('user.pos.cart') }}";
                         }, 20000);
@@ -694,6 +688,7 @@
                     event.preventDefault();
                     window.location.href = "{{ route('user.pos.cart') }}";
                 }
+
             });
         }
 
