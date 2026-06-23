@@ -8,24 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('carts', function (Blueprint $table) {
-
+        Schema::create('favorites', function (Blueprint $table) {
             $table->id();
-
-            $table->foreignId('user_id')
-                  ->constrained()
-                  ->cascadeOnDelete();
-
-            $table->string('status')->default('active');
-            // active, checked_out, abandoned
-
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('item_id')->constrained('items')->cascadeOnDelete();
             $table->timestamps();
-
+            $table->unique(['user_id', 'item_id']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('carts');
+        Schema::dropIfExists('favorites');
     }
 };

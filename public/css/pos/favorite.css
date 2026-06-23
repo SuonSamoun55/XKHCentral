@@ -3,7 +3,6 @@
     --primary-hover: #1eb2b6;
     --border: #e7e9ee;
 }
-
 .page-wrap {
     flex: 1;
     height: 100%;
@@ -13,26 +12,20 @@
     border-radius: 12px;
     padding: 12px 12px;
 }
-
 .content-area {
     height: 100%;
     overflow: visible;
     padding: 6px !important;
-
 }
-
-
 .cart-box {
     display: none;
 }
-
 .title {
     margin: 10px 0;
     font-size: 22px;
     font-weight: 700;
     color: var(--primary);
 }
-
 .cart-box {
     position: relative;
     color: var(--primary);
@@ -41,7 +34,6 @@
     align-items: center;
     text-decoration: none;
 }
-
 .cart-count {
     position: absolute;
     top: -8px;
@@ -59,7 +51,6 @@
     font-weight: 700;
     line-height: 1;
 }
-
 .products-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 0px));
@@ -74,8 +65,8 @@
 .products-grid::-webkit-scrollbar {
     width: 0;
     height: 0;
+    
 }
-
 .product-card {
     background: #fff;
     border: 1px solid var(--border);
@@ -83,7 +74,6 @@
     /* overflow: hidden; */
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
 }
-
 .product-img-box {
     position: relative;
     background: #f2f4f7;
@@ -319,19 +309,35 @@
 
 
 @media screen and (max-width: 767px) {
-    
+    html {
+        height: 100%;
+        overflow-y: hidden;
+    }
+
+    body {
+        height: 100%;
+        overflow-x: hidden;
+        overflow-y: hidden;
+    }
+
+    #appShell.app-shell {
+        height: 100dvh;
+        min-height: 100dvh;
+        overflow: hidden;
+    }
+
     .mobile-bottom-nav {
         display: flex;
     }
-  
+
 .page-wrap {
     flex: 1;
-    min-height: 100vh;
-    height: auto;
-    overflow-y: auto;   /* ✅ allow scrolling */
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
     background-color: white;
     border-radius: 12px;
-    padding: 0;
+    padding: 0 0 82px;
 }
 
     .top .cart-box {
@@ -350,7 +356,7 @@
     .header-desktop {
         display: none;
     }
-    
+
     .empty-box {
         display: none;
     }
@@ -362,9 +368,12 @@
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
-        padding: 10px 4px 90px;
-        height: auto;
-        overflow: visible;
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 10px 4px 12px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .products-grid::-webkit-scrollbar {
@@ -395,8 +404,11 @@
     }
 
   .content-area {
-    min-height: 100vh;
-    overflow-y: auto;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     padding: 0px !important;
 }
 
@@ -578,19 +590,21 @@
     }
 
     .page-wrap {
-        min-height: 100vh;
-        max-height: none;
-        height: auto;
-        padding: 0 12px;
+        height: 100dvh;
+        min-height: 0;
+        max-height: 100dvh;
+        padding: 0 12px 82px;
         border-radius: 0;
         background: #ffffff;
-        overflow: visible;
+        overflow: hidden;
     }
 
     .content-area {
-        height: auto;
-        min-height: auto;
-        overflow: visible;
+        height: 100%;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
         padding: 0 !important;
         background: transparent;
         box-shadow: none;
@@ -606,9 +620,12 @@
         align-items: start;
         justify-content: stretch;
         align-content: start;
-        padding: 0 0 90px;
-        height: auto;
-        overflow: visible;
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 0 0 12px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .product-card {

@@ -15,8 +15,8 @@
             <div class="notification-detail-card">
                 <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem;">
                     <div style="width: 60px; height: 60px; border-radius: 50%; overflow: hidden; flex-shrink: 0;">
-                        <img src="{{ $notification->sender_profile_image_display ?? asset('images/pos/Rectangle 2.png') }}" 
-                             alt="Sender" 
+                        <img src="{{ $notification->sender_profile_image_display ?? asset('images/pos/Rectangle 2.png') }}"
+                             alt="Sender"
                              style="width: 100%; height: 100%; object-fit: cover;">
                     </div>
                     <div style="flex: 1;">

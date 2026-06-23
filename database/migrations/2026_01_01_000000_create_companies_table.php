@@ -1,4 +1,4 @@
-    <?php
+<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -16,14 +16,14 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->text('address')->nullable();
             $table->string('logo')->nullable();
+            $table->string('company_image')->nullable();
             $table->string('tax_number')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
-
     public function down(): void
     {
         Schema::dropIfExists('companies');
     }
-};  
+};

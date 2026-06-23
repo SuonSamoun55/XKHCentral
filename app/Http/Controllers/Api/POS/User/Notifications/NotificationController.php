@@ -133,6 +133,18 @@ $contactList = Notification::where('user_id', $user->id)
     })
     ->values();
 
+        $adminMessages = Notification::with('sender')
+            ->where('user_id', $user->id)
+            ->whereIn('type', ['admin_message', 'global_message'])
+            ->latest()
+            ->limit(50)
+            ->get()
+            ->map(function ($notification) {
+                $notification->sender_profile_image_display = $this->getSenderImageDisplay($notification);
+                $notification->sender_name = $this->getSenderName($notification);
+                return $notification;
+            });
+
         return view('POSViews.POSUserViews.Notifications.index', compact(
             'notifications',
             'inboxCount',
@@ -142,8 +154,9 @@ $contactList = Notification::where('user_id', $user->id)
             'unreadCount',
             'tab',
             'contacts',
-            
-        'contactList'    // ✅ NEW collection
+
+        'contactList',
+        'adminMessages'
 
         ));
     }
@@ -335,8 +348,8 @@ $contactList = Notification::where('user_id', $user->id)
         return 'Admin';
     }
 
-    
- 
+
+
  public function mobileInbox()
 {
     $userId = auth()->id();

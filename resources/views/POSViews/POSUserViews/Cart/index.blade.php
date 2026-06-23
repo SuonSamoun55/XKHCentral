@@ -10,16 +10,10 @@
 @section('content')
     <div class="page-wrap">
         <div class="cart-container">
-
-            <!-- =========================
-                                        TOP NAVIGATION (CART HEADER)
-                                    ========================== -->
             <div class="cart-nav">
                 <a href="/pos-system" class="icon-btn"><i class="bi bi-arrow-left"></i></a>
                 <span class="nav-title">My Cart</span>
             </div>
-
-
             <div id="cartMainContent">
                 <div class="cart-nav_mobile">
                     <a href="/pos-system" class="icon-btn_mobile"><i class="bi bi-arrow-left"></i></a>
@@ -27,12 +21,7 @@
                     <i class="bi bi-heart-fill heart-icon"></i>
                 </div>
 
-                <!-- =========================
-                                            SCREEN 1: EMPTY CART STATE (DESKTOP + MOBILE)
-                    ========================== -->
                 @if (!$cart || $cart->items->isEmpty())
-
-                    <!-- ===== DESKTOP EMPTY CART ===== -->
                     <div class="empty-state desktop-only">
                         <img src="{{ asset('images/pos/Empty.png') }}" class="empty-state-image">
                         <h3 style="color: #ccc;">Your cart is Empty</h3>
@@ -68,23 +57,16 @@
                                 <div><span>Discount</span><span>$0</span></div>
                                 <div><span>Delivery Fee</span><span>$0</span></div>
                                 <div><span>Estimated Tax</span><span>$0</span></div>
-
                                 <hr>
-
                                 <div class="total"><span>Total in USD</span><span>$0</span></div>
                                 <div class="total"><span>Total in Riel</span><span>Riel 0</span></div>
                             </div>
-
                             <button class="checkout-disabled" disabled>
                                 Checkout
                             </button>
                         </div>
                     </div>
-                @else
-                    <!-- =========================
-                                                SCREEN 2: CART WITH ITEMS DESKTOP + MOBILE
-                                            ========================== -->
-
+                @else   
                     @php
                         $count = $cart->items->count();
                         $scrollClass = '';

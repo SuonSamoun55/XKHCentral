@@ -34,6 +34,8 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
+        $credentials['email'] = strtolower(trim($credentials['email']));
+
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
@@ -82,6 +84,8 @@ $user->last_seen_at = now();
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
+
+        $credentials['email'] = strtolower(trim($credentials['email']));
 
         if (!Auth::attempt($credentials)) {
             return response()->json([

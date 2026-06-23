@@ -5,7 +5,6 @@
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/views/ManagementSystemViews/AdminViews/Layouts/Notifications/NotificationsViews.css') }}">
 @endpush
-
 @section('content')
 @php
     $user = $notification->user;

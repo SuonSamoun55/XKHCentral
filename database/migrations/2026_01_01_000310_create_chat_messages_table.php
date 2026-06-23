@@ -10,14 +10,15 @@ return new class extends Migration
     {
         Schema::create('chat_messages', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('sender_id');
-            $table->unsignedBigInteger('receiver_id');
+            $table->foreignId('sender_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('receiver_id')->constrained('users')->cascadeOnDelete();
             $table->text('message');
+            $table->string('message_type', 20)->default('text');
+            $table->string('attachment_path')->nullable();
+            $table->string('attachment_mime', 100)->nullable();
+            $table->unsignedInteger('attachment_size')->nullable();
             $table->boolean('is_read')->default(false);
             $table->timestamps();
-
-            $table->foreign('sender_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->foreign('receiver_id')->references('id')->on('users')->cascadeOnDelete();
             $table->index(['sender_id', 'receiver_id']);
             $table->index(['receiver_id', 'is_read']);
         });

@@ -62,14 +62,6 @@
 
             <div class="login-right">
                 <div class="login-form-box">
-                    <form method="POST" action="{{ route('logout') }}" class="logout-link">
-                        @csrf
-                        <a href="{{ route('logout') }}" class="nav-link">
-                            <span class="nav-icon">
-                                <img src="{{ asset('images/pos/Vector.png') }}" alt="Logout Icon">
-                            </span>
-                        </a>
-                    </form>
                     <img src="{{ asset('images/pos/image 14.png') }}" alt="second login image" class="login-form-image">
                     <h1 class="login-title">Account Login</h1>
                     <p class="login-subtitle">

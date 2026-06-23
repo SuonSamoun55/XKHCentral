@@ -28,32 +28,21 @@
 
                 <div class="notification-header">
                     <h2 class="page-title">Notification</h2>
-                    <a href="{{ route('user.chat.index') }}" class="btn btn-sm btn-info text-white ms-2">Message Admin</a>
                 </div>
 
                 {{-- Search and Date --}}
                 <div class="search-date-container">
-                    {{-- <div class="search-box">
-                        <i class="bi bi-search"></i>
-                        <input type="text" id="searchInput" class="form-control" placeholder="Search..."
-                            value="{{ request('search') }}" autocomplete="off">
-                        <div class="search-suggestions" id="searchSuggestions"></div>
-                    </div> --}}
-
                     <div class="top-actions">
-                        <a href="{{ route('user.chat.index') }}" class="inbox-label">
+
+                        <a href="{{ route('user.chat.index') }}" class="btn-send">
+                            {{-- <i class="bi bi-send"></i> In Box --}}
                             <i class="bi bi-chat-left"></i> Inbox
                         </a>
-
-                        <button class="btn-send">
-                            <i class="bi bi-send"></i> Send Message
-                        </button>
                     </div>
 
                     <div class="date-filter-wrapper">
                         <label for="dateInput" class="floating-label">Date</label>
-                        <input type="date" name="date" id="dateInput" value="{{ request('date') }}"
-                            onchange="this.form.submit()">
+                        <input type="date" name="date" id="dateInput" value="{{ request('date') }}">
 
                         <img src="{{ asset('images/pos/icon.png') }}" class="calendar-custom-img" alt="calendar">
                     </div>
@@ -66,48 +55,19 @@
                         Order Notification
                     </div>
 
-                    <div class="tab" data-tab="userContact">
-                        <i class="bi bi-calendar-event"></i>
-                        User Contact
+                    <div class="tab" data-tab="adminMessage">
+                        <i class="bi bi-chat-left-text"></i>
+                        Admin Message
                     </div>
 
-                    <div class="tab" data-tab="outOfStock">
-                        <i class="bi bi-bell"></i>
-                        Out of Stock Alert
-                        <span class="badge-new">1 new</span>
-                    </div>
-                    
+                    <button type="button" class="desktop-delete-selected-btn" onclick="deleteSelectedNotifications()"
+                        title="Delete selected">
+                        <i class="bi bi-trash-fill"></i>
+                        <span>Delete Selected</span>
+                    </button>
                 </div>
             </div>
-            {{-- <div class="tabs-section"> --}}
-            {{-- <div class="tabs-list">
-                    <a href="{{ route('user.notifications', ['tab' => 'inbox']) }}"
-                        class="tab-item {{ $tab === 'inbox' ? 'active' : '' }}">
-                        Inbox <span class="tab-badge">{{ $inboxCount }}</span>
-                    </a>
 
-                    <a href="{{ route('user.notifications', ['tab' => 'spam']) }}"
-                        class="tab-item {{ $tab === 'spam' ? 'active' : '' }}">
-                        Spam <span class="tab-badge">{{ $spamCount }}</span>
-                    </a>
-
-                    <a href="{{ route('user.notifications', ['tab' => 'archive']) }}"
-                        class="tab-item {{ $tab === 'archive' ? 'active' : '' }}">
-                        Archive <span class="tab-badge">{{ $archiveCount }}</span>
-                    </a>
-
-                    <a href="{{ route('user.notifications', ['tab' => 'global_message']) }}"
-                        class="tab-item {{ $tab === 'global_message' ? 'active' : '' }}">
-                        Global Message <span class="tab-badge">{{ $globalMessageCount }}</span>
-                    </a>
-                </div> --}}
-
-            {{-- <label class="unread-toggle">
-                    <span>Unreads</span>
-                    <input type="checkbox" id="unreadFilter" onchange="filterUnread()">
-                </label> --}}
-            {{-- </div> --}}
-            {{-- MOBILE TOP TABS --}}
             <div class="mobile-tabs">
                 <a href="{{ route('user.notifications') }}" class="mt-pill">
                     <i class="bi bi-inbox"></i>
@@ -142,16 +102,16 @@
             </div>
             <div class="mobile-sub-tabs">
                 <span class="active">Order Notification ({{ $inboxCount }})</span>
-                <span>Out of Stock Alert ({{ $spamCount }})</span>
+                <span>Admin Message ({{ $globalMessageCount }})</span>
             </div>
-            <!------------ Notification List desktop------------------------------->
+
             {{-- Notification List --}}
             <div id="orderNotification" class="tab-content">
 
                 <div class="notification-table">
                     <div class="notification-lists">
 
-                        @forelse($notifications as $notification)
+                        @forelse($notifications->whereNotIn('type', ['admin_message', 'global_message']) as $notification)
                             <div class="table-row {{ !$notification->is_read ? 'selected' : '' }}"
                                 data-title="{{ $notification->title }}" data-message="{{ $notification->message }}"
                                 data-id="{{ $notification->id }}" data-type="{{ $notification->type }}"
@@ -160,18 +120,21 @@
                                 {{-- LEFT --}}
                                 <div class="row-left">
 
-                                    <input type="checkbox" class="checkboxs">
-
-                                    <i class="bi bi-star" class="checkboxs"></i>
+                                    <input type="checkbox" class="checkboxs notification-select"
+                                        name="notification_ids[]" value="{{ $notification->id }}"
+                                        onclick="event.stopPropagation();">
 
                                     <span class="tag">
 
-                                        <div class="avatar">
-                                            <img src="{{ $notification->sender_profile_image_display ?? asset('images/pos/Rectangle 2.png') }}"
-                                                alt="Sender"
-                                                style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
-                                                onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'">
-                                        </div>
+                                        <span class="avatar notification-type-icon">
+                                            @if ($notification->type === 'admin_message')
+                                                <i class="bi bi-check-circle-fill"></i>
+                                            @elseif ($notification->type === 'global_message')
+                                                <i class="bi bi-percent"></i>
+                                            @else
+                                                <i class="bi bi-truck"></i>
+                                            @endif
+                                        </span>
 
                                     </span>
 
@@ -193,7 +156,21 @@
 
                                 {{-- CENTER --}}
                                 <div class="row-center">
-                                    {{ Str::limit($notification->message, 90) }}
+                                    <span class="desktop-subject">
+                                        @if ($notification->type === 'admin_message')
+                                            Admin Message
+                                        @elseif ($notification->type === 'global_message')
+                                            New Deal
+                                        @else
+                                            Order Received
+                                        @endif
+                                    </span>
+                                    <span class="desktop-separator">-</span>
+                                    <span class="desktop-message">{{ Str::limit($notification->message, 118) }}</span>
+                                    <span class="notification-meta d-none">
+                                        {{ $notification->created_at->format('D d/m/Y') }}
+                                        <span>{{ $notification->created_at->format('h:i A') }}</span>
+                                    </span>
 
                                     @if (str_contains(strtolower($notification->message), 'attachment'))
                                         <a href="{{ route('user.notifications.show', $notification->id) }}"
@@ -207,7 +184,13 @@
                                 {{-- RIGHT --}}
                                 <div class="row-right">
 
-                                    {{ $notification->created_at->format('M d') }}
+                                    <span class="row-date">{{ $notification->created_at->format('M d') }}</span>
+                                    <div class="row-actions" onclick="event.stopPropagation();">
+                                        <button type="button" title="Delete"
+                                            onclick="deleteNotificationById({{ $notification->id }})">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </div>
 
                                 </div>
 
@@ -292,143 +275,148 @@
                     {{ $notifications->links('vendor.pagination.custom-pos') }}
                 @endif
             </div>
+            {{-- ADMIN MESSAGE PAGE --}}
+            <div id="adminMessage" class="tab-content" style="display:none;">
+                <div class="notification-table">
+                    <div class="notification-lists">
+                        @forelse($adminMessages as $notification)
+                            <div class="table-row {{ !$notification->is_read ? 'selected' : '' }}"
+                                data-title="{{ $notification->title }}" data-message="{{ $notification->message }}"
+                                data-id="{{ $notification->id }}" data-type="{{ $notification->type }}"
+                                style="cursor:pointer;" onclick="openNotificationDetail(this)">
 
-            <!------------Order Contact List desktop-------------->
-
-            {{-- USER CONTACT PAGE --}}
-            <div id="userContact" class="tab-content" style="display:none;">
-
-                <div class="notif-page">
-
-
-                    <!-- MAIN LAYOUT -->
-                    <div class="notif-layout">
-
-                        <!-- LEFT PANEL -->
-                        <div class="notif-left">
-
-                            <input type="text" class="search-input" placeholder="Search username...">
-
-                            <p class="section-title">CONTACT</p>
-
-                            <div class="contact-list">
-
-                                @forelse($contactList as $contact)
-                                    <div class="contact" data-name="{{ $contact->name }}"
-                                        data-avatar="{{ $contact->chat_avatar }}" data-phone="{{ $contact->phone }}"
-                                        data-email="{{ $contact->email }}">
-
-                                        <img src="{{ $contact->chat_avatar }}"
-                                            onerror="this.src='{{ asset('images/pos/Rectangle 2.png') }}'"
-                                            alt="{{ $contact->name }}">
-
-                                        <div>
-                                            <strong>{{ $contact->name }}</strong>
-                                            <small>last seen recently</small>
-                                        </div>
-
-                                        @if ($contact->unread_count > 0)
-                                            <span class="badge">{{ $contact->unread_count }}</span>
-                                        @endif
-                                    </div>
-                                @empty
-                                    <div class="ac-empty-text">
-                                        No contacts available
-                                    </div>
-                                @endforelse
-                            </div>
-                        </div>
-                        <div class="notif-right">
-
-                            <div class="profile">
-
-                                <img src="{{ $contactList->first()->chat_avatar ?? asset('images/pos/Rectangle 2.png') }}"
-                                    class="profile-img" id="profileImage">
-
-                                <h4 id="profileName">
-                                    {{ $contactList->first()->name ?? 'No User' }}
-                                </h4>
-
-                            </div>
-
-                            <div class="settings">
-
-                                <div class="row-item">
-
-                                    <span>
-                                        <i class="bi bi-bell"></i>
-                                        Notifications
-                                    </span>
-
-                                    <strong>No</strong>
-
-                                </div>
-
-                                <div class="row-item">
-
-                                    <span>
-                                        <i class="bi bi-download"></i>
-                                        Save to Downloads
-                                    </span>
-
-                                    <strong>Default</strong>
-
-                                </div>
-
-                                <div class="row-item">
-
-                                    <span>
-                                        <i class="bi bi-person"></i>
-                                        Contact Details
-                                    </span>
-
-                                </div>
-
-                                <div class="details">
-
-                                    <p>
-
-                                        <strong>Phone Number</strong><br>
-
-                                        <span id="profilePhone">
-                                            {{ $contactList->first()->phone ?? '+1 (605) 655 2777' }}
+                                <div class="row-left">
+                                    <input type="checkbox" class="checkboxs notification-select"
+                                        name="notification_ids[]" value="{{ $notification->id }}"
+                                        onclick="event.stopPropagation();">
+                                    <span class="tag">
+                                        <span class="avatar notification-type-icon">
+                                            <i class="bi {{ $notification->type === 'global_message' ? 'bi-megaphone-fill' : 'bi-chat-left-text-fill' }}"></i>
                                         </span>
-
-                                    </p>
-
-                                    <p>
-
-                                        <strong>Email</strong><br>
-
-                                        <span id="profileEmail">
-                                            {{ $contactList->first()->email ?? 'sample@email.com' }}
-                                        </span>
-
-                                    </p>
-
+                                    </span>
+                                    <span class="status">
+                                        {{ $notification->type === 'global_message' ? 'Global Message' : 'Admin Message' }}
+                                    </span>
                                 </div>
 
+                                <div class="row-center">
+                                    <span class="desktop-subject">
+                                        {{ $notification->type === 'global_message' ? 'Global Message' : 'Admin Message' }}
+                                    </span>
+                                    <span class="desktop-separator">-</span>
+                                    <span class="desktop-message">{{ Str::limit($notification->message, 118) }}</span>
+                                    <span class="notification-meta d-none">
+                                        {{ $notification->created_at->format('D d/m/Y') }}
+                                        <span>{{ $notification->created_at->format('h:i A') }}</span>
+                                    </span>
+                                </div>
+
+                                <div class="row-right">
+                                    <span class="row-date">{{ $notification->created_at->format('M d') }}</span>
+                                    <div class="row-actions" onclick="event.stopPropagation();">
+                                        <button type="button" title="Delete"
+                                            onclick="deleteNotificationById({{ $notification->id }})">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        @empty
+                            <div class="empty-state">
+                                <i class="bi bi-chat-left-text"></i>
+                                <p>You have no admin messages yet.</p>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
-                <div id="outOfStock" class="tab-content" style="display:none;">
-
-                    <div class="notification-table">
-
-                        <div class="table-row">
-                            <div class="row-left">
-                                Out Of Stock Alert Content
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <!------------End of Order Contact List-------------->
-                {{-- Pagination --}}
             </div>
+
+               <div class="desktop-notification-toolbar">
+
+    <!-- LEFT: SHOW ITEMS -->
+    <form method="GET" action="{{ route('user.notifications') }}" class="pager-size-form">
+
+        @foreach (request()->except(['limit', 'page']) as $key => $value)
+            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+        @endforeach
+
+        <label for="desktopLimitSelect">Show</label>
+
+        <select id="desktopLimitSelect" name="limit" onchange="this.form.submit()">
+            @foreach ([10, 25, 50, 100] as $size)
+                <option value="{{ $size }}" {{ (int) request('limit', 10) === $size ? 'selected' : '' }}>
+                    {{ $size }}
+                </option>
+            @endforeach
+        </select>
+
+        <span>items</span>
+
+    </form>
+
+    <!-- CENTER: PAGINATION -->
+    <div class="desktop-pagination-center">
+
+        <nav class="desktop-page-numbers" aria-label="Notification pagination">
+
+            {{-- LEFT ARROW --}}
+            @if ($notifications->onFirstPage())
+                <span class="page-arrow disabled">
+                    <i class="bi bi-chevron-left"></i>
+                </span>
+            @else
+                <a class="page-arrow" href="{{ $notifications->previousPageUrl() }}">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            @endif
+
+            {{-- PAGES --}}
+            @for ($page = 1; $page <= $notifications->lastPage(); $page++)
+                @if (
+                    $page <= 5 ||
+                    $page === $notifications->lastPage() ||
+                    abs($page - $notifications->currentPage()) <= 1
+                )
+                    <a class="page-number {{ $notifications->currentPage() === $page ? 'active' : '' }}"
+                       href="{{ $notifications->url($page) }}">
+                        {{ $page }}
+                    </a>
+
+                @elseif ($page === 6)
+                    <span class="page-number muted">...</span>
+                @endif
+            @endfor
+
+            {{-- RIGHT ARROW --}}
+            @if ($notifications->hasMorePages())
+                <a class="page-arrow" href="{{ $notifications->nextPageUrl() }}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            @else
+                <span class="page-arrow disabled">
+                    <i class="bi bi-chevron-right"></i>
+                </span>
+            @endif
+
+        </nav>
+
+    </div>
+
+    <!-- RIGHT: RESULT COUNT -->
+    <div class="desktop-result-count">
+
+        <span data-result-count="orderNotification">
+            {{ $notifications->firstItem() ?? 0 }} - {{ $notifications->lastItem() ?? 0 }} of
+            {{ $notifications->total() }}
+        </span>
+
+        <span data-result-count="adminMessage" style="display:none;">
+            {{ $adminMessages->count() ? 1 : 0 }} - {{ $adminMessages->count() }} of {{ $adminMessages->count() }}
+        </span>
+
+    </div>
+
+</div>
 
             {{-- MOBILE PAGINATION --}}
             <div class="mobile-pagination">
@@ -558,7 +546,7 @@
                                 <strong class="ac-contact-name">{{ $contact->name }}</strong>
                                 <span class="ac-contact-time">last seen recently</span>
                             </div>
-{{-- 
+{{--
                             @if ($contact->unread_count > 0)
                                 <span class="ac-contact-badge">{{ $contact->unread_count }}</span>
                             @endif --}}
@@ -650,6 +638,8 @@
             const tabs = document.querySelectorAll('.tab');
             const tabContents = document.querySelectorAll('.tab-content');
             const pagination = document.getElementById('paginationContainer');
+            const desktopPager = document.getElementById('desktopNotificationPager');
+            const resultCounts = document.querySelectorAll('[data-result-count]');
 
             tabs.forEach(tab => {
 
@@ -671,16 +661,75 @@
                     // SHOW CONTENT
                     document.getElementById(target).style.display = 'block';
 
+                    resultCounts.forEach(count => {
+                        count.style.display = count.dataset.resultCount === target ? 'inline' : 'none';
+                    });
+
                     // ✅ ✅ CONTROL PAGINATION VISIBILITY
                     if (target === 'orderNotification') {
                         pagination.style.display = 'block';
+                        if (desktopPager) desktopPager.style.display = '';
                     } else {
                         pagination.style.display = 'none';
+                        if (desktopPager) desktopPager.style.display = 'none';
                     }
 
                 });
 
             });
+
+            function getCsrfToken() {
+                return document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
+            }
+
+            function checkedNotificationIds() {
+                const activeTab = document.querySelector('.tab-content[style*="block"]') ||
+                    document.getElementById('orderNotification');
+
+                return Array.from(activeTab.querySelectorAll('.notification-select:checked'))
+                    .map(input => input.value)
+                    .filter(Boolean);
+            }
+
+            function removeNotificationRows(ids) {
+                ids.forEach(id => {
+                    document.querySelectorAll(`.notification-select[value="${id}"]`).forEach(input => {
+                        input.closest('.table-row, .notification-card')?.remove();
+                    });
+                });
+            }
+
+            function deleteNotifications(ids) {
+                if (!ids.length) {
+                    alert('Please select at least one message.');
+                    return;
+                }
+
+                if (!confirm('Delete selected message(s)?')) return;
+
+                fetch('{{ route('user.notifications.deleteSelected') }}', {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': getCsrfToken(),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ notification_ids: ids }),
+                })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Delete failed.');
+                        removeNotificationRows(ids);
+                    })
+                    .catch(error => alert(error.message || 'Delete failed.'));
+            }
+
+            function deleteSelectedNotifications() {
+                deleteNotifications(checkedNotificationIds());
+            }
+
+            function deleteNotificationById(id) {
+                deleteNotifications([String(id)]);
+            }
         </script>
         <script>
             document.addEventListener("DOMContentLoaded", function() {
@@ -781,7 +830,8 @@
             }));
 
             // Live search with suggestions
-            searchInput.addEventListener('input', function() {
+            if (searchInput && searchSuggestions) {
+                searchInput.addEventListener('input', function() {
                 const searchTerm = this.value.trim().toLowerCase();
 
                 if (searchTerm.length === 0) {
@@ -822,34 +872,36 @@
                 });
             });
 
-            // Hide suggestions when clicking outside
-            document.addEventListener('click', function(e) {
-                if (e.target !== searchInput && e.target !== searchSuggestions) {
-                    searchSuggestions.classList.remove('active');
-                }
-            });
-            // 3. FULL DATABASE SEARCH (When user hits ENTER)
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    const searchTerm = this.value.trim();
-                    const currentUrl = new URL(window.location.href);
-
-                    if (searchTerm) {
-                        currentUrl.searchParams.set('search', searchTerm);
-                    } else {
-                        currentUrl.searchParams.delete('search');
+                // Hide suggestions when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (e.target !== searchInput && e.target !== searchSuggestions) {
+                        searchSuggestions.classList.remove('active');
                     }
+                });
+                // 3. FULL DATABASE SEARCH (When user hits ENTER)
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        const searchTerm = this.value.trim();
+                        const currentUrl = new URL(window.location.href);
 
-                    // CRITICAL: Remove 'page' so search starts from Page 1 of the results
-                    currentUrl.searchParams.delete('page');
-                    window.location.href = currentUrl.toString();
-                }
-            });
+                        if (searchTerm) {
+                            currentUrl.searchParams.set('search', searchTerm);
+                        } else {
+                            currentUrl.searchParams.delete('search');
+                        }
+
+                        // CRITICAL: Remove 'page' so search starts from Page 1 of the results
+                        currentUrl.searchParams.delete('page');
+                        window.location.href = currentUrl.toString();
+                    }
+                });
+            }
 
             // Date filter
             // Date filter with Clear support
-            dateInput.addEventListener('change', function() {
-                const currentUrl = new URL(window.location.href);
+            if (dateInput) {
+                dateInput.addEventListener('change', function() {
+                    const currentUrl = new URL(window.location.href);
 
                 if (this.value) {
                     // If a date is selected, add it to the URL
@@ -862,8 +914,9 @@
                 // Maintain the current tab
                 currentUrl.searchParams.set('tab', '{{ $tab }}');
 
-                window.location.href = currentUrl.toString();
-            });
+                    window.location.href = currentUrl.toString();
+                });
+            }
 
             function showAllNotifications() {
                 notificationCards.forEach(card => card.style.display = 'flex');
