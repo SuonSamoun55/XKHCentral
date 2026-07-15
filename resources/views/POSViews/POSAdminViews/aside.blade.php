@@ -2,29 +2,16 @@
     use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\Storage;
     use App\Models\ManagementSystem\Company;
+    // use App\Models\ManagementSystem\Company;
 
     $authUser = Auth::user();
-
-    /*
-    |--------------------------------------------------------------------------
-    | COMPANY LOAD
-    |--------------------------------------------------------------------------
-    */
     $company = null;
-
     if (session('selected_company_id')) {
         $company = Company::find(session('selected_company_id'));
     }
-
     if (!$company) {
         $company = Company::first();
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | USER IMAGE RESOLVER
-    |--------------------------------------------------------------------------
-    */
     $userAvatar = asset('images/default-user.png');
 
     if ($authUser) {
@@ -138,9 +125,7 @@
         ],
     ];
 @endphp
-
 <link rel="stylesheet" href="{{ asset('css/management-system/admin-sidebar.css') }}">
-
 <div class="sidebar-wrap" id="appShell">
     <aside class="sidebar">
         <div class="sidebar-top">
@@ -152,7 +137,6 @@
                         onerror="this.onerror=null;this.src='{{ asset('images/default-company.png') }}';"
                     >
                 </div>
-                {{--    --}}
             </div>
 
             <nav class="nav-list">

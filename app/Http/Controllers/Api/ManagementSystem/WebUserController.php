@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use App\Models\BcCustomer;
 use App\Models\ManagementSystem\User;
 use App\Models\ManagementSystem\Company;
@@ -174,7 +175,7 @@ protected function getCustomerImageDisplay($customer, $linkedUser = null)
 
         $url = $this->bcEndpoint(
             'customers_endpoint',
-            "customers?\$select=id,number,displayName,email,phoneNumber"
+            'Customers'
         );
 
         if (!$url) {
@@ -202,41 +203,64 @@ protected function getCustomerImageDisplay($customer, $linkedUser = null)
             $data = $response->json('value', []);
 
             foreach ($data as $row) {
-                $displayName = trim($row['displayName'] ?? '');
-                $customerNo = $row['number'] ?? null;
-                $bcId = $row['id'] ?? null;
+                $displayName = trim((string) $this->valueFrom($row, [
+                    'displayName',
+                    'display_name',
+                    'name',
+                    'Name',
+                    'customerName',
+                ], ''));
+                $customerNo = $this->valueFrom($row, [
+                    'number',
+                    'no',
+                    'No',
+                    'customerNo',
+                    'customerNumber',
+                ]);
+                $bcId = $this->valueFrom($row, ['id', 'systemId', 'SystemId']);
 
                 if (!$customerNo) {
                     continue;
                 }
 
-                $phoneNumber = $row['phoneNumber'] ?? null;
+                $phoneNumber = $this->valueFrom($row, [
+                    'phoneNumber',
+                    'phone_number',
+                    'phone',
+                    'Phone',
+                    'mobilePhoneNo',
+                ]);
 
                 $bcImageUrl = null;
                 if (!empty($bcId)) {
                     $bcImageUrl = route('users.bc-image', ['bcId' => $bcId]);
                 }
 
+                $customerName = $displayName !== '' ? $displayName : 'Unknown';
+                $customerEmail = $this->valueFrom($row, ['email', 'Email', 'emailAddress']);
+
                 BcCustomer::updateOrCreate(
                     [
                         'company_id' => $companyId,
                         'bc_customer_no' => $customerNo,
                     ],
-                    [
+                    $this->filterCustomerDataByExistingColumns([
                         'bc_id' => $bcId,
-                        'name' => $displayName !== '' ? $displayName : 'Unknown',
-                        'display_name' => $displayName !== '' ? $displayName : 'Unknown',
-                        'email' => $row['email'] ?? null,
+                        'name' => $customerName,
+                        'display_name' => $customerName,
+                        'email' => $customerEmail,
+                        'phone' => $phoneNumber,
                         'phone_number' => $phoneNumber,
                         'profile_image_url' => $bcImageUrl,
-                    ]
+                        'last_synced_at' => now(),
+                    ])
                 );
 
                 User::where('company_id', $companyId)
                     ->where('bc_customer_no', $customerNo)
                     ->update([
-                        'name' => $displayName !== '' ? $displayName : 'Unknown',
-                        'email' => $row['email'] ?? null,
+                        'name' => $customerName,
+                        'email' => $customerEmail,
                         'phone' => $phoneNumber,
                         'profile_image_url' => $bcImageUrl,
                     ]);
@@ -254,6 +278,28 @@ protected function getCustomerImageDisplay($customer, $linkedUser = null)
         }
     }
 
+    protected function valueFrom(array $row, array $keys, mixed $default = null): mixed
+    {
+        foreach ($keys as $key) {
+            if (array_key_exists($key, $row)) {
+                return $row[$key];
+            }
+        }
+
+        return $default;
+    }
+
+    protected function filterCustomerDataByExistingColumns(array $data): array
+    {
+        static $columns = null;
+
+        if ($columns === null) {
+            $columns = array_flip(Schema::getColumnListing('bc_customers'));
+        }
+
+        return array_intersect_key($data, $columns);
+    }
+
     public function getBCImage($bcId)
     {
         $token = $this->getToken();
@@ -264,12 +310,23 @@ protected function getCustomerImageDisplay($customer, $linkedUser = null)
 
         $contentUrl = $this->bcUrl("customers({$bcId})/picture/pictureContent");
 
-        $imageResponse = Http::withoutVerifying()
-            ->withToken($token)
-            ->withHeaders([
-                'Accept' => 'image/jpeg, image/png, image/*',
-            ])
-            ->get($contentUrl);
+        try {
+            $imageResponse = Http::withoutVerifying()
+                ->withToken($token)
+                ->timeout(15)
+                ->withHeaders([
+                    'Accept' => 'image/jpeg, image/png, image/*',
+                ])
+                ->get($contentUrl);
+        } catch (\Throwable $e) {
+            Log::warning('BC customer image fetch failed', [
+                'bc_id' => $bcId,
+                'url' => $contentUrl,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->file(public_path('images/default-user.png'));
+        }
 
         if (!$imageResponse->successful()) {
             return response()->json([

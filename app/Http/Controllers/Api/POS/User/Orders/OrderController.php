@@ -3,393 +3,185 @@
 namespace App\Http\Controllers\Api\POS\User\Orders;
 
 use App\Http\Controllers\Controller;
-use App\Models\POS\Cart;
-use App\Models\POS\Order;
-use App\Models\POS\OrderItem;
-use App\Models\POS\OrderHistory;
+use App\Models\POS\{Cart, Order, OrderItem, OrderHistory};
 use App\Models\ManagementSystem\Notification;
-use App\Models\ManagementSystem\Company;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\{Auth, DB, Log};
 use Illuminate\Support\Str;
-use Carbon\Carbon;
-
 class OrderController extends Controller
 {
-    public function history(Request $request)
+    private function user()
     {
-        $user = Auth::user();
+        return Auth::user() ?? abort(response()->json([
+            'success' => false,
+            'message' => 'Unauthenticated'
+        ], 401));
+    }
 
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthenticated.',
-            ], 401);
-        }
+    private function orders()
+    {
+        return Order::where('user_id', auth()->id());
+    }
 
-        $orders = Order::with('items')
-            ->where('user_id', $user->id)
-            ->when($request->filled('status') && strtolower((string) $request->status) !== 'all', function ($query) use ($request) {
-                $query->where('status', strtolower(str_replace(' ', '-', (string) $request->status)));
-            })
-            ->latest()
-            ->paginate((int) $request->get('limit', 10));
-
+    public function history(Request $r)
+    {
         return response()->json([
             'success' => true,
-            'data' => $orders,
+            'data' => $this->orders()
+                ->with('items')
+                ->when($r->status && $r->status != 'all', fn($q) =>
+                    $q->where('status', strtolower(str_replace(' ', '-', $r->status)))
+                )
+                ->latest()
+                ->paginate($r->limit ?? 10),
         ]);
     }
 
-    public function checkout(Request $request)
+    public function checkout(Request $r)
     {
-        $user = Auth::user();
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthenticated.',
-            ], 401);
-        }
-
-        $companyId = Company::value('id');
-
-        Log::info('Checkout started', [
-            'user_id' => $user->id,
-            'company_id' => $companyId,
-            'request' => $request->all(),
-            'all_user_carts' => Cart::where('user_id', $user->id)->with('items')->get()->toArray(),
-        ]);
-
-        if (!$companyId) {
-            Log::warning('Checkout stopped: no company found', [
-                'user_id' => $user->id,
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'No company found.',
-            ], 422);
-        }
+        $user = $this->user();
 
         $cart = Cart::with('items.item')
             ->where('user_id', $user->id)
             ->where('status', 'active')
             ->first();
 
-        // Ensure items are loaded fresh
-        if ($cart) {
-            $cart->load('items.item');
+        if (!$cart || $cart->items->isEmpty()) {
+            return $this->fail('Cart is empty');
         }
 
-        Log::info('Cart found', [
-            'cart_id' => $cart ? $cart->id : null,
-            'cart_status' => $cart ? $cart->status : null,
-            'items_count' => $cart ? $cart->items->count() : 0,
-            'items_data' => $cart ? $cart->items->toArray() : null,
-        ]);
-
-        if (!$cart) {
-            Log::warning('Checkout stopped: cart not found', [
-                'user_id' => $user->id,
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Cart not found.',
-            ], 422);
-        }
-
-        if ($cart->items->isEmpty()) {
-            Log::warning('Checkout stopped: cart empty', [
-                'user_id' => $user->id,
-                'cart_id' => $cart->id,
-                'all_carts' => Cart::where('user_id', $user->id)->with('items')->get()->toArray(),
-                'cart_items_raw' => \DB::table('cart_items')->where('cart_id', $cart->id)->get(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Cart is empty.',
-            ], 422);
-        }
+        $companyId = DB::table('companies')->value('id');
+        if (!$companyId) return $this->fail('Company not found');
 
         DB::beginTransaction();
 
         try {
-            $subtotal = 0.0;
-            $discountAmount = 0.0;
-            $taxAmount = 0.0;
-
-            foreach ($cart->items as $cartItem) {
-                $item = $cartItem->item;
-
-                if (!$item) {
-                    throw new \Exception("Cart item ID {$cartItem->id} has no related item.");
-                }
-
-                $qty = (float) ($cartItem->qty ?? $cartItem->quantity ?? 0);
-                $unitPrice = (float) ($cartItem->unit_price ?? $cartItem->price ?? 0);
-
-                Log::info('Cart item debug', [
-                    'cart_item_id' => $cartItem->id,
-                    'item_id' => $cartItem->item_id,
-                    'qty' => $qty,
-                    'unit_price' => $unitPrice,
-                    'item_company_id' => $item->company_id ?? null,
-                    'company_id' => $companyId,
-                ]);
-
-                if ((int) $item->company_id !== (int) $companyId) {
-                    throw new \Exception("Item {$item->display_name} does not belong to current company.");
-                }
-
-                if ($qty <= 0) {
-                    throw new \Exception("Invalid quantity for cart item ID {$cartItem->id}.");
-                }
-
-                if ($unitPrice < 0) {
-                    throw new \Exception("Invalid unit price for cart item ID {$cartItem->id}.");
-                }
-
-                $linePricing = $this->calculateLinePricing($item, (int) $qty);
-                $subtotal += $linePricing['subtotal'];
-                $discountAmount += $linePricing['discount_amount'];
-                $taxAmount += $linePricing['tax_amount'];
-            }
-
-            $totalAmount = ($subtotal - $discountAmount) + $taxAmount;
-            $firstCartItem = $cart->items->first();
-            $locationCode = optional($firstCartItem->item)->default_location_code;
-            $orderNo = 'ORD-' . now()->format('YmdHis') . '-' . strtoupper(Str::random(4));
+            [$subtotal, $discount, $tax] = $this->calculateTotals($cart, $companyId);
 
             $order = Order::create([
-                'company_id'      => $companyId,
-                'order_no'        => $orderNo,
-                'user_id'         => $user->id,
-                'customer_no'     => $user->bc_customer_no ?? null,
-                'currency_code'   => $request->currency_code ?? 'USD',
-                'currency_factor' => $request->currency_factor ?? 1,
-                'subtotal'        => $subtotal,
-                'discount_amount' => $discountAmount,
-                'total_amount'    => $totalAmount,
-                'amount_paid'     => $totalAmount,
-                'location_code'   => $locationCode,
-                'status'          => 'pending',
-                'sync_status'     => 'pending',
-                'checked_out_at'  => now(),
-            ]);
-
-            Log::info('Order created', [
-                'order_id' => $order->id,
-                'order_no' => $order->order_no,
-            ]);
-
-            // Save order history
-            $itemsSummary = [];
-            foreach ($cart->items as $cartItem) {
-                $itemsSummary[] = [
-                    'item_no' => $cartItem->item_no,
-                    'item_name' => $cartItem->item_name,
-                    'qty' => $cartItem->qty,
-                    'unit_price' => $cartItem->unit_price,
-                    'discount_percent' => $this->resolveDiscountPercent($cartItem->item),
-                    'line_total' => $cartItem->line_total,
-                ];
-            }
-
-            OrderHistory::create([
+                'company_id' => $companyId,
+                'order_no' => 'ORD-' . now()->format('YmdHis') . Str::upper(Str::random(4)),
                 'user_id' => $user->id,
-                'order_no' => $order->order_no,
-                'customer_no' => $user->bc_customer_no ?? null,
-                'total_amount' => $totalAmount,
+                'customer_no' => $user->bc_customer_no,
+                'subtotal' => $subtotal,
+                'discount_amount' => $discount,
+                'total_amount' => ($subtotal - $discount) + $tax,
+                'amount_paid' => ($subtotal - $discount) + $tax,
                 'status' => 'pending',
-                'items_summary' => json_encode($itemsSummary),
             ]);
 
-            foreach ($cart->items as $cartItem) {
-                $item = $cartItem->item;
-                $qty = (float) ($cartItem->qty ?? $cartItem->quantity ?? 0);
-                $unitPrice = (float) ($cartItem->unit_price ?? $cartItem->price ?? 0);
-                $linePricing = $this->calculateLinePricing($item, (int) $qty);
-                $lineTotal = $linePricing['line_total'];
-
-                OrderItem::create([
-                    'order_id'      => $order->id,
-                    'company_id'    => $companyId,
-                    'item_id'       => $cartItem->item_id,
-                    'item_no'       => $item->number,
-                    'item_name'     => $item->display_name,
-                    'qty'           => $qty,
-                    'unit_price'    => $unitPrice,
-                    'line_total'    => $lineTotal,
-                    'location_code' => $item->default_location_code,
-                ]);
-            }
-
-            try {
-                Notification::create([
-                    'user_id' => $user->id,
-                    'title' => 'Order Created',
-                    'message' => 'Your order #' . $order->order_no . ' has been created successfully.',
-                    'type' => 'user',
-                    'is_read' => false,
-                ]);
-            } catch (\Throwable $notifyError) {
-                Log::warning('Notification create failed', [
-                    'error' => $notifyError->getMessage(),
-                ]);
-            }
+            $this->createItems($cart, $order, $companyId);
+            $this->createHistory($cart, $order);
 
             $cart->items()->delete();
-            $cart->status = 'completed';
-            $cart->save();
+            $cart->update(['status' => 'completed']);
 
             DB::commit();
 
             return response()->json([
-                'success'  => true,
-                'message'  => 'Checkout successful.',
+                'success' => true,
                 'order_id' => $order->id,
                 'order_no' => $order->order_no,
-                'total'    => $totalAmount,
             ]);
+
         } catch (\Throwable $e) {
             DB::rollBack();
+            Log::error($e->getMessage());
+            return $this->fail('Checkout failed');
+        }
+    }
 
-            Log::error('Checkout failed', [
-                'user_id' => $user->id,
+    private function calculateTotals($cart, $companyId)
+    {
+        $subtotal = $discount = $tax = 0;
+
+        foreach ($cart->items as $i) {
+            $item = $i->item;
+
+            if (!$item || $item->company_id != $companyId) {
+                throw new \Exception("Invalid item");
+            }
+
+            $qty = $i->qty ?? 0;
+            $price = $i->unit_price ?? 0;
+
+            $line = $price * $qty;
+
+            $subtotal += $line;
+            $discount += 0;
+            $tax += 0;
+        }
+
+        return [$subtotal, $discount, $tax];
+    }
+
+    private function createItems($cart, $order, $companyId)
+    {
+        foreach ($cart->items as $i) {
+            OrderItem::create([
+                'order_id' => $order->id,
                 'company_id' => $companyId,
-                'error' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile(),
+                'item_id' => $i->item_id,
+                'item_no' => $i->item->number,
+                'item_name' => $i->item->display_name,
+                'qty' => $i->qty,
+                'unit_price' => $i->unit_price,
+                'line_total' => $i->line_total,
             ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Checkout failed.',
-                'error'   => $e->getMessage(),
-            ], 500);
         }
     }
-public function success(Request $request)
-{
-    $orderId = $request->query('order');
 
-    if (!$orderId) {
-        return redirect('/pos-system/cart');
-    }
-
-    $order = Order::where('id', $orderId)
-        ->where('user_id', Auth::id())
-        ->first();
-
-    if (!$order) {
-        return redirect('/pos-system/cart');
-    }
-
-    return view('POSViews.POSUserViews.Cart.index', [
-        'cart' => null,
-        'subtotal' => 0,
-        'discountAmount' => 0,
-        'taxAmount' => 0,
-        'total' => $order->total_amount,
-        'itemCount' => 0,
-        'showOrderSuccess' => true,
-        'orderId'     => $order->id,
-        'orderNumber' => $order->order_no,
-        'amountPaid'  => $order->amount_paid,
-    ]);
-}
-public function detail($id)
-{
-    $order = Order::with('items.item')
-        ->where('id', $id)
-        ->where('user_id', Auth::id())
-        ->firstOrFail();
-
-    $cart = Cart::with('items.item')
-        ->where('user_id', Auth::id())
-        ->where('status', 'active')
-        ->first();
-
-    $subtotal = 0;
-    $discountAmount = 0;
-    $taxAmount = 0;
-    $total = 0;
-    $itemCount = 0;
-
-    if ($cart && $cart->items->count()) {
-        $itemCount = $cart->items->sum('qty');
-        foreach ($cart->items as $cartItem) {
-            $subtotal += $cartItem->line_total;
-        }
-        $total = $subtotal;
-    }
-
-    return view('POSViews.POSUserViews.Cart.index', [
-        'cart' => $cart,
-        'subtotal' => $subtotal,
-        'discountAmount' => $discountAmount,
-        'taxAmount' => $taxAmount,
-        'total' => $total,
-        'itemCount' => $itemCount,
-        'showOrderDetail' => true,
-        'orderDetail' => $order,
-    ]);
-}
-    private function calculateLinePricing($item, int $qty): array
+    private function createHistory($cart, $order)
     {
-        $unitPrice = (float) ($item->unit_price ?? 0);
-        $subtotal = max(0, $unitPrice * $qty);
-
-        $discountPercent = $this->resolveDiscountPercent($item);
-        $discountAmount = $subtotal * ($discountPercent / 100);
-
-        $taxableAmount = max(0, $subtotal - $discountAmount);
-        $taxAmount = 0;
-
-        if (!$item->price_includes_tax) {
-            $vatPercent = max(0, (float) ($item->vat_percent ?? 0));
-            $fixedTaxPerUnit = max(0, (float) ($item->tax_amount ?? 0));
-
-            $percentTaxAmount = $taxableAmount * ($vatPercent / 100);
-            $fixedTaxAmount = $fixedTaxPerUnit * $qty;
-            $taxAmount = $percentTaxAmount + $fixedTaxAmount;
-        }
-
-        return [
-            'subtotal' => round($subtotal, 2),
-            'discount_percent' => round($discountPercent, 2),
-            'discount_amount' => round($discountAmount, 2),
-            'tax_amount' => round($taxAmount, 2),
-            'line_total' => round($taxableAmount + $taxAmount, 2),
-        ];
+        OrderHistory::create([
+            'user_id' => auth()->id(),
+            'order_no' => $order->order_no,
+            'total_amount' => $order->total_amount,
+            'status' => 'pending',
+            'items_summary' => json_encode($cart->items),
+        ]);
     }
 
-    private function resolveDiscountPercent($item): float
+    private function fail($msg)
     {
-        $discount = max(0, (float) ($item->discount_amount ?? 0));
-        if ($discount <= 0) {
-            return 0.0;
-        }
-
-        $today = Carbon::today();
-        $start = $item->discount_start_date ? Carbon::parse($item->discount_start_date)->startOfDay() : null;
-        $end = $item->discount_end_date ? Carbon::parse($item->discount_end_date)->endOfDay() : null;
-
-        if ($start && $today->lt($start)) {
-            return 0.0;
-        }
-
-        if ($end && $today->gt($end)) {
-            return 0.0;
-        }
-
-        return min(100, $discount);
+        return response()->json([
+            'success' => false,
+            'message' => $msg
+        ], 422);
     }
 
+    public function success(Request $r)
+    {
+        $order = Order::where('id', $r->order)
+            ->where('user_id', auth()->id())
+            ->first();
 
+        if (!$order) return redirect('/pos-system/cart');
+
+        return view('POSViews.POSUserViews.Cart.index', [
+            'showOrderSuccess' => true,
+            'orderId' => $order->id,
+            'orderNumber' => $order->order_no,
+            'amountPaid' => $order->amount_paid,
+        ]);
+    }
+
+    public function detail($id)
+    {
+        $order = Order::with('items.item')
+            ->where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        $cart = Cart::with('items.item')
+            ->where('user_id', auth()->id())
+            ->where('status', 'active')
+            ->first();
+
+        return view('POSViews.POSUserViews.Cart.index', [
+            'cart' => $cart,
+            'orderDetail' => $order,
+            'showOrderDetail' => true,
+        ]);
+    }
 }

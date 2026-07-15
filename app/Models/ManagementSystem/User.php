@@ -2,21 +2,20 @@
 
 namespace App\Models\ManagementSystem;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 use App\Models\BcCustomer;
 use App\Models\ManagementSystem\ChatMessage;
 use App\Models\Role;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
-
     protected $fillable = [
         'name',
         'email',
@@ -41,12 +40,12 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+ 
     protected $appends = [
         'profile_image_display',
         'is_online',
         'offline_duration',
     ];
-
     protected $casts = [
         'status' => 'boolean',
         'linked_at' => 'datetime',
@@ -68,65 +67,76 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class, 'role_id');
     }
 
-    public function hasPermission($permissionName): bool
+    public function sentMessages(): HasMany
     {
-        if (!$this->roleRelation) {
-            return false;
-        }
-
-        return $this->roleRelation->permissions->contains('name', $permissionName);
+        return $this->hasMany(ChatMessage::class, 'sender_id');
     }
+
+    public function receivedMessages(): HasMany
+    {
+        return $this->hasMany(ChatMessage::class, 'receiver_id');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ROLE HELPERS
+    |--------------------------------------------------------------------------
+    */
 
     public function isAdmin(): bool
     {
-        if ($this->roleRelation) {
-            return $this->roleRelation->name === 'admin';
-        }
-
-        return $this->role === 'admin';
+        return $this->roleRelation?->name === 'admin'
+            || $this->role === 'admin';
     }
+
+    public function hasPermission(string $permission): bool
+    {
+        return $this->roleRelation
+            ? $this->roleRelation->permissions->contains('name', $permission)
+            : false;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ATTRIBUTES
+    |--------------------------------------------------------------------------
+    */
 
     public function getProfileImageDisplayAttribute(): string
     {
-        if (!empty($this->profile_image) && Storage::disk('public')->exists($this->profile_image)) {
+        if ($this->profile_image && Storage::disk('public')->exists($this->profile_image)) {
             return asset('storage/' . $this->profile_image);
         }
 
-        if (!empty($this->profile_image_url)) {
-            return $this->profile_image_url;
-        }
-
-        $defaultPath = public_path('images/default-user.png');
-
-        if (file_exists($defaultPath)) {
-            return asset('images/default-user.png');
-        }
-
-        return asset('images/pos/Rectangle 2.png');
+        return $this->profile_image_url
+            ?? (file_exists(public_path('images/default-user.png'))
+                ? asset('images/default-user.png')
+                : asset('images/pos/Rectangle 2.png'));
     }
 
     public function getIsOnlineAttribute(): bool
     {
-        if (!$this->last_seen_at) {
-            return false;
-        }
-
-        return $this->last_seen_at->gte(now()->subMinutes(5));
+        return $this->last_seen_at
+            ? $this->last_seen_at->gte(now()->subMinutes(5))
+            : false;
     }
 
     public function getOfflineDurationAttribute(): string
     {
-        if (!$this->last_seen_at) {
-            return 'Never online';
-        }
-
-        return $this->last_seen_at->diffForHumans();
+        return $this->last_seen_at
+            ? $this->last_seen_at->diffForHumans()
+            : 'Never online';
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SCOPES
+    |--------------------------------------------------------------------------
+    */
 
     public function scopeOnline($query)
     {
-        return $query->whereNotNull('last_seen_at')
-            ->where('last_seen_at', '>=', now()->subMinutes(5));
+        return $query->where('last_seen_at', '>=', now()->subMinutes(5));
     }
 
     public function scopeOffline($query)
@@ -137,7 +147,7 @@ class User extends Authenticatable
         });
     }
 
-    public function scopeOfflineLongTime($query, $days = 7)
+    public function scopeOfflineLongTime($query, int $days = 7)
     {
         return $query->where(function ($q) use ($days) {
             $q->whereNull('last_seen_at')
@@ -145,15 +155,11 @@ class User extends Authenticatable
         });
     }
 
-    public function sentMessages(): HasMany
-    {
-        return $this->hasMany(ChatMessage::class, 'sender_id');
-    }
-
-    public function receivedMessages(): HasMany
-    {
-        return $this->hasMany(ChatMessage::class, 'receiver_id');
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | ALIAS
+    |--------------------------------------------------------------------------
+    */
 
     public function messages(): HasMany
     {

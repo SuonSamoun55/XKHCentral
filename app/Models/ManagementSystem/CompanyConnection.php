@@ -24,8 +24,13 @@ class CompanyConnection extends Model
         'items_endpoint',
         'sales_orders_endpoint',
         'sales_order_lines_endpoint',
+        'sales_order_lines_by_document_endpoint',
+        'sales_order_post_status_endpoint',
         'sales_orders_by_number_endpoint',
         'sales_order_pdf_endpoint',
+        'posted_sales_invoice_endpoint',
+        'posted_sales_invoice_lines_endpoint',
+        'posted_sales_invoice_pdf_endpoint',
         'is_default',
         'status',
     ];

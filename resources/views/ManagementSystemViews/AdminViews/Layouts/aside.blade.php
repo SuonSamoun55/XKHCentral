@@ -125,15 +125,6 @@
                     </div>
                 </a>
 
-                <a href="/companies/select" class="nav-link-wrap">
-                    <div class="nav-btn {{ request()->is('companies/select') ? 'active' : '' }}">
-                        <span class="nav-icon">
-                            <img src="{{ asset('images/aside/mm.png') }}" alt="Select Company Icon">
-                        </span>
-                        <span class="nav-label">Select Company</span>
-                    </div>
-                </a>
-
                 <a href="/admin/notification" class="nav-link-wrap">
                     <div class="nav-btn {{ request()->is('admin/notification') || request()->is('admin/notification/*') ? 'active' : '' }}">
                         <span class="nav-icon">
@@ -188,3 +179,5 @@
         <span>‹</span>
     </button>
 </div>
+
+<script src="{{ asset('js/management-system/admin-sidebar.js') }}"></script>

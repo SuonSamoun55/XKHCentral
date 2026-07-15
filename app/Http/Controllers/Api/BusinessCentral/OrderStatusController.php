@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\POS\Order;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Schema;
 
 class OrderStatusController extends Controller
 {
@@ -36,6 +35,7 @@ class OrderStatusController extends Controller
 
         $result = $this->syncOrderStatus($order);
         $statusCode = $result['status_code'];
+
         unset($result['status_code']);
 
         return response()
@@ -64,35 +64,22 @@ class OrderStatusController extends Controller
             'tracking_status' => $order->status,
         ];
 
-        if (empty($order->bc_document_no)) {
-            return [
-                'success' => true,
-                'message' => 'Order has not been synced to Business Central yet.',
-                'data' => $payload,
-                'status_code' => 200,
-            ];
+        if (empty($order->bc_document_no) && empty($order->bc_order_id)) {
+            return $this->ok('Order has not been synced yet', $payload);
         }
 
         $token = $this->getToken();
 
         if (!$token) {
-            return [
-                'success' => false,
-                'message' => 'Failed to authenticate with Business Central.',
-                'data' => $payload,
-                'status_code' => 502,
-            ];
+            return $this->fail('Failed to authenticate with Business Central', 502, $payload);
         }
 
-        $endpoint = $this->salesOrderLookupEndpoint((string) $order->bc_document_no);
+        $lookupDocumentNo = $order->bc_document_no ?: $order->order_no;
+
+        $endpoint = $this->salesOrderLookupEndpoint($order, $lookupDocumentNo);
 
         if (!$endpoint) {
-            return [
-                'success' => false,
-                'message' => 'Business Central URL is not configured.',
-                'data' => $payload,
-                'status_code' => 422,
-            ];
+            return $this->fail('Business Central URL is not configured', 422, $payload);
         }
 
         $response = Http::withoutVerifying()
@@ -100,329 +87,168 @@ class OrderStatusController extends Controller
             ->acceptJson()
             ->get($endpoint);
 
-        $bcOrderLookupFailed = false;
-
         if (!$response->successful()) {
-            logger()->warning('BC order status lookup failed', [
+            logger()->warning('BC order lookup failed', [
                 'order_id' => $order->id,
-                'bc_document_no' => $order->bc_document_no,
-                'status' => $response->status(),
-                'body' => $response->body(),
+                'response' => $response->body(),
             ]);
-            $bcOrderLookupFailed = true;
         }
 
-        $bcOrder = $bcOrderLookupFailed ? null : $response->json('value.0');
+        $bcOrder = data_get($response->json(), 'value.0');
 
         if (is_array($bcOrder)) {
-            $bcOrderId = $bcOrder['id'] ?? null;
-
             $payload['bc_status'] = $bcOrder['status'] ?? null;
-            $payload['bc_order'] = [
-                'id' => $bcOrderId,
-                'number' => $bcOrder['number'] ?? null,
-                'status' => $bcOrder['status'] ?? null,
-                'last_modified_date_time' => $bcOrder['lastModifiedDateTime'] ?? null,
-            ];
 
-            if ($bcOrderId && empty($order->bc_order_id) && $this->orderHasColumn('bc_order_id')) {
-                $order->forceFill(['bc_order_id' => $bcOrderId])->save();
-                $payload['bc_order_id'] = $bcOrderId;
+            if (!empty($bcOrder['id'])) {
+                $order->forceFill(['bc_order_id' => $bcOrder['id']])->save();
+                $payload['bc_order_id'] = $bcOrder['id'];
+            }
+
+            if (!empty($bcOrder['number'])) {
+                $order->forceFill(['bc_document_no' => $bcOrder['number']])->save();
+                $payload['bc_document_no'] = $bcOrder['number'];
             }
         }
 
-        $postedInvoice = $this->findPostedSalesInvoice($token, (string) $order->bc_document_no);
+        $invoice = $this->findPostedSalesInvoice($token, $lookupDocumentNo);
 
-        if ($postedInvoice) {
-            $invoiceNumber = $this->valueFrom($postedInvoice, ['number', 'no']);
+        if ($invoice) {
+            $invoiceNo = $invoice['number'] ?? null;
 
             $payload['posted_sales_invoice_found'] = true;
             $payload['posted_sales_invoice_status'] = 'Posted';
-            $payload['posted_sales_invoice'] = [
-                'id' => $this->valueFrom($postedInvoice, ['id', 'systemId']),
-                'number' => $invoiceNumber,
-                'order_number' => $this->valueFrom($postedInvoice, ['orderNumber', 'orderNo']),
-                'invoice_date' => $this->valueFrom($postedInvoice, ['invoiceDate']),
-                'posting_date' => $this->valueFrom($postedInvoice, ['postingDate']),
-                'customer_number' => $this->valueFrom($postedInvoice, ['customerNumber', 'sellToCustomerNo']),
-                'customer_name' => $this->valueFrom($postedInvoice, ['customerName', 'sellToCustomerName']),
-                'total_amount_including_tax' => $this->valueFrom($postedInvoice, ['totalAmountIncludingTax']),
-                'last_modified_date_time' => $this->valueFrom($postedInvoice, ['lastModifiedDateTime']),
-            ];
+            $payload['posted_sales_invoice'] = $invoice;
             $payload['tracking_status'] = 'delivery';
 
-            $this->syncPostedInvoiceToLocalOrder($order, $invoiceNumber);
-            $payload['local_status'] = 'delivery';
-            $payload['bc_invoice_no'] = $invoiceNumber;
-            $payload['bc_status'] = 'Posted';
+            $this->syncPostedInvoiceToLocalOrder($order, $invoiceNo);
 
-            return [
-                'success' => true,
-                'message' => 'Posted sales invoice found. Order tracking status is delivery.',
-                'data' => $payload,
-                'status_code' => 200,
-            ];
+            return $this->ok('Invoice found', $payload);
         }
 
-        $postedShipment = $this->findPostedSalesShipment($token, (string) $order->bc_document_no);
+        $shipment = $this->findPostedSalesShipment($token, $lookupDocumentNo);
 
-        if ($postedShipment) {
-            $shipmentNumber = $this->valueFrom($postedShipment, ['number', 'no']);
+        if ($shipment) {
+            $shipmentNo = $shipment['number'] ?? null;
 
             $payload['posted_sales_shipment_found'] = true;
             $payload['posted_sales_shipment_status'] = 'Posted';
-            $payload['posted_sales_shipment'] = [
-                'id' => $this->valueFrom($postedShipment, ['id', 'systemId']),
-                'number' => $shipmentNumber,
-                'order_number' => $this->valueFrom($postedShipment, ['orderNumber', 'orderNo']),
-                'shipment_date' => $this->valueFrom($postedShipment, ['shipmentDate']),
-                'posting_date' => $this->valueFrom($postedShipment, ['postingDate']),
-                'customer_number' => $this->valueFrom($postedShipment, ['customerNumber', 'sellToCustomerNo']),
-                'customer_name' => $this->valueFrom($postedShipment, ['customerName', 'sellToCustomerName']),
-                'last_modified_date_time' => $this->valueFrom($postedShipment, ['lastModifiedDateTime']),
-            ];
+            $payload['posted_sales_shipment'] = $shipment;
             $payload['tracking_status'] = 'on-the-way';
 
-            $this->syncPostedShipmentToLocalOrder($order, $shipmentNumber);
-            $payload['local_status'] = 'on-the-way';
-            $payload['bc_shipment_no'] = $shipmentNumber;
-            $payload['bc_status'] = 'Shipment Posted';
+            $this->syncPostedShipmentToLocalOrder($order, $shipmentNo);
 
-            return [
-                'success' => true,
-                'message' => 'Posted sales shipment found. Order tracking status is on the way.',
-                'data' => $payload,
-                'status_code' => 200,
-            ];
+            return $this->ok('Shipment found', $payload);
         }
 
-        if ($bcOrderLookupFailed) {
-            return [
-                'success' => false,
-                'message' => 'Failed to get order status from Business Central.',
-                'data' => $payload,
-                'status_code' => 502,
-            ];
-        }
-
-        if (!is_array($bcOrder)) {
-            return [
-                'success' => false,
-                'message' => 'Order was not found in Sales Orders, Posted Sales Shipments, or Posted Sales Invoices in Business Central.',
-                'data' => $payload,
-                'status_code' => 404,
-            ];
-        }
-
-        return [
-            'success' => true,
-            'message' => 'Order status loaded from Business Central.',
-            'data' => $payload,
-            'status_code' => 200,
-        ];
+        return $this->ok('No updates found', $payload);
     }
 
-    private function salesOrderLookupEndpoint(string $documentNo): ?string
+    /*
+    |--------------------------------------------------------------------------
+    | FIXED BC QUERY (NO $filter VARIABLE ERROR)
+    |--------------------------------------------------------------------------
+    */
+
+    private function salesOrderLookupEndpoint(Order $order, string $documentNo): ?string
     {
-        $escapedDocumentNo = str_replace("'", "''", $documentNo);
+        if (!empty($order->bc_order_id)) {
+            return $this->bcUrl('salesOrders(' . $order->bc_order_id . ')');
+        }
+
+        $escaped = str_replace("'", "''", $documentNo);
+
         $endpoint = $this->bcEndpoint(
             'sales_orders_by_number_endpoint',
             "salesOrders?\$filter=number eq '{documentNo}'&\$top=1",
-            ['documentNo' => $escapedDocumentNo]
+            ['documentNo' => $escaped]
         );
 
         if (!$endpoint) {
             return null;
         }
 
-        if (str_contains($endpoint, '{documentNo}')) {
-            $endpoint = str_replace('{documentNo}', rawurlencode($escapedDocumentNo), $endpoint);
-        }
-
-        if (str_contains($endpoint, '$filter=') || str_contains($endpoint, '%24filter=')) {
-            return $endpoint;
-        }
-
-        $separator = str_contains($endpoint, '?') ? '&' : '?';
-
-        return $endpoint . $separator . '$filter=' . rawurlencode("number eq '" . $escapedDocumentNo . "'") . '&$top=1';
+        return str_replace('{documentNo}', rawurlencode($escaped), $endpoint);
     }
 
-    private function findPostedSalesInvoice(string $token, string $orderNumber): ?array
+    /*
+    |--------------------------------------------------------------------------
+    | POSTED INVOICE SEARCH (FIXED QUERY BUILD)
+    |--------------------------------------------------------------------------
+    */
+
+    private function findPostedSalesInvoice(string $token, string $doc): ?array
     {
-        $lookups = [
-            $this->collectionLookupEndpoint('salesInvoices', 'orderNumber', $orderNumber),
-            $this->collectionLookupEndpoint('postedSalesInvoices', 'orderNumber', $orderNumber),
-            $this->collectionLookupEndpoint('postedSalesInvoices', 'orderNo', $orderNumber),
-            $this->customApiLookupEndpoint('postedSalesInvoices', 'orderNumber', $orderNumber),
-            $this->customApiLookupEndpoint('postedSalesInvoices', 'orderNo', $orderNumber),
+        $url = $this->bcUrl('postedSalesInvoices');
+
+        if (!$url) {
+            return null;
+        }
+
+        // ✅ FIX: NO "$filter variable error"
+        $response = Http::withoutVerifying()
+            ->withToken($token)
+            ->acceptJson()
+            ->get($url, [
+                '$filter' => "orderNumber eq '{$doc}'",
+                '$top' => 1,
+            ]);
+
+        return data_get($response->json(), 'value.0');
+    }
+
+
+    private function findPostedSalesShipment(string $token, string $doc): ?array
+    {
+        $url = $this->bcUrl('postedSalesShipments');
+
+        if (!$url) {
+            return null;
+        }
+
+        $response = Http::withoutVerifying()
+            ->withToken($token)
+            ->acceptJson()
+            ->get($url, [
+                '$filter' => "orderNumber eq '{$doc}'",
+                '$top' => 1,
+            ]);
+
+        return data_get($response->json(), 'value.0');
+    }
+
+    private function ok($message, $data, $code = 200): array
+    {
+        return [
+            'success' => true,
+            'message' => $message,
+            'data' => $data,
+            'status_code' => $code,
         ];
-
-        foreach (array_filter($lookups) as $endpoint) {
-            $response = Http::withoutVerifying()
-                ->withToken($token)
-                ->acceptJson()
-                ->get($endpoint);
-
-            if (!$response->successful()) {
-                logger()->info('BC posted invoice lookup skipped', [
-                    'endpoint' => $endpoint,
-                    'order_number' => $orderNumber,
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-
-                continue;
-            }
-
-            $invoice = $response->json('value.0');
-
-            if (is_array($invoice)) {
-                return $invoice;
-            }
-        }
-
-        return null;
     }
 
-    private function findPostedSalesShipment(string $token, string $orderNumber): ?array
+    private function fail($message, $code = 400, $data = []): array
     {
-        $lookups = [
-            $this->collectionLookupEndpoint('salesShipments', 'orderNumber', $orderNumber),
-            $this->collectionLookupEndpoint('salesShipments', 'orderNo', $orderNumber),
-            $this->collectionLookupEndpoint('postedSalesShipments', 'orderNumber', $orderNumber),
-            $this->collectionLookupEndpoint('postedSalesShipments', 'orderNo', $orderNumber),
-            $this->customApiLookupEndpoint('postedSalesShipments', 'orderNumber', $orderNumber),
-            $this->customApiLookupEndpoint('postedSalesShipments', 'orderNo', $orderNumber),
+        return [
+            'success' => false,
+            'message' => $message,
+            'data' => $data,
+            'status_code' => $code,
         ];
-
-        foreach (array_filter($lookups) as $endpoint) {
-            $response = Http::withoutVerifying()
-                ->withToken($token)
-                ->acceptJson()
-                ->get($endpoint);
-
-            if (!$response->successful()) {
-                logger()->info('BC posted shipment lookup skipped', [
-                    'endpoint' => $endpoint,
-                    'order_number' => $orderNumber,
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-
-                continue;
-            }
-
-            $shipment = $response->json('value.0');
-
-            if (is_array($shipment)) {
-                return $shipment;
-            }
-        }
-
-        return null;
     }
 
-    private function collectionLookupEndpoint(string $collection, string $field, string $value): ?string
+    private function syncPostedInvoiceToLocalOrder(Order $order, ?string $invoiceNo): void
     {
-        $endpoint = $this->bcUrl($collection);
-
-        if (!$endpoint) {
-            return null;
-        }
-
-        $escapedValue = str_replace("'", "''", $value);
-        $separator = str_contains($endpoint, '?') ? '&' : '?';
-
-        return $endpoint . $separator . '$filter=' . rawurlencode($field . " eq '" . $escapedValue . "'") . '&$top=1';
+        $order->update([
+            'status' => 'delivery',
+            'bc_invoice_no' => $invoiceNo,
+        ]);
     }
 
-    private function customApiLookupEndpoint(string $collection, string $field, string $value): ?string
+    private function syncPostedShipmentToLocalOrder(Order $order, ?string $shipmentNo): void
     {
-        $this->loadCompanyConnection();
-
-        if (!$this->connection || !$this->companyId) {
-            return null;
-        }
-
-        $baseUrl = rtrim((string) $this->connection->base_url, '/');
-        $customBaseUrl = preg_replace('#/api/v2\.0$#', '/api/xkh/integration/v1.0', $baseUrl);
-
-        if (!$customBaseUrl) {
-            return null;
-        }
-
-        $escapedValue = str_replace("'", "''", $value);
-        $endpoint = $customBaseUrl . '/companies(' . $this->companyId . ')/' . $collection;
-
-        return $endpoint . '?$filter=' . rawurlencode($field . " eq '" . $escapedValue . "'") . '&$top=1';
-    }
-
-    private function valueFrom(array $row, array $keys): mixed
-    {
-        foreach ($keys as $key) {
-            if (array_key_exists($key, $row)) {
-                return $row[$key];
-            }
-        }
-
-        return null;
-    }
-
-    private function syncPostedInvoiceToLocalOrder(Order $order, ?string $invoiceNumber): void
-    {
-        $updates = ['status' => 'delivery'];
-
-        if ($invoiceNumber && $this->orderHasColumn('bc_invoice_no')) {
-            $updates['bc_invoice_no'] = $invoiceNumber;
-        }
-
-        if ($this->orderHasColumn('bc_status')) {
-            $updates['bc_status'] = 'Posted';
-        }
-
-        if ($this->orderHasColumn('bc_last_synced_at')) {
-            $updates['bc_last_synced_at'] = now();
-        } elseif ($this->orderHasColumn('last_synced_at')) {
-            $updates['last_synced_at'] = now();
-        }
-
-        $order->forceFill($updates)->save();
-    }
-
-    private function syncPostedShipmentToLocalOrder(Order $order, ?string $shipmentNumber): void
-    {
-        if (in_array($order->status, ['delivery', 'delivered'], true)) {
-            return;
-        }
-
-        $updates = ['status' => 'on-the-way'];
-
-        if ($shipmentNumber && $this->orderHasColumn('bc_shipment_no')) {
-            $updates['bc_shipment_no'] = $shipmentNumber;
-        }
-
-        if ($this->orderHasColumn('bc_status')) {
-            $updates['bc_status'] = 'Shipment Posted';
-        }
-
-        if ($this->orderHasColumn('bc_last_synced_at')) {
-            $updates['bc_last_synced_at'] = now();
-        } elseif ($this->orderHasColumn('last_synced_at')) {
-            $updates['last_synced_at'] = now();
-        }
-
-        $order->forceFill($updates)->save();
-    }
-
-    private function orderHasColumn(string $column): bool
-    {
-        static $columns = null;
-
-        if ($columns === null) {
-            $columns = array_flip(Schema::getColumnListing('orders'));
-        }
-
-        return isset($columns[$column]);
+        $order->update([
+            'status' => 'on-the-way',
+            'bc_shipment_no' => $shipmentNo,
+        ]);
     }
 }

@@ -35,12 +35,172 @@
     @endphp
 
     <div id="order-detail-page">
+        <div class="od-mobile-chrome">
+            {{-- @include('ManagementSystemViews.UserViews.Layouts.header_mobile') --}}
+            @include('ManagementSystemViews.UserViews.Layouts.footer')
+        </div>
+
         @if (session('success'))
             <div class="od-alert success">{{ session('success') }}</div>
         @endif
         @if (session('error'))
             <div class="od-alert error">{{ session('error') }}</div>
         @endif
+
+        <!-- ===================== MOBILE ONLY ===================== -->
+        <div class="od-mobile-header">
+            <a href="{{ route('user.pos.order.history') }}" class="od-mobile-back">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h1 class="od-mobile-title">Order Detail</h1>
+        </div>
+
+        <div class="od-mobile-banner {{ $statusClass }}">
+            <div class="od-mobile-banner-icon"><i class="bi bi-box-seam"></i></div>
+            <div>
+                <div class="od-mobile-banner-title">
+                    @if ($statusRaw === 'pending')
+                        Order is pending
+                    @elseif ($statusClass === 'success')
+                        Order is confirmed
+                    @elseif ($statusClass === 'cancelled')
+                        Order is cancelled
+                    @else
+                        Order status: {{ ucfirst($statusRaw) }}
+                    @endif
+                </div>
+                <div class="od-mobile-banner-sub">We will notify you by inbox</div>
+            </div>
+        </div>
+
+        <div class="od-mobile-info">
+            <div class="od-mobile-info-row">
+                <span>Invoice number</span>
+                <strong>#{{ $order->order_no }}</strong>
+            </div>
+            <div class="od-mobile-info-row">
+                <span>Order date</span>
+                <strong>{{ optional($order->created_at)->format('d F Y') }}</strong>
+            </div>
+            <div class="od-mobile-info-row">
+                <span>Customer number</span>
+                <strong>{{ $order->customer_no ?? 'Guest / N/A' }}</strong>
+            </div>
+            <div class="od-mobile-info-row">
+                <span>Sync status</span>
+                <strong>{{ ucfirst($order->sync_status ?? 'Pending') }}</strong>
+            </div>
+        </div>
+
+        <div class="od-mobile-section-title">Purchased Item</div>
+        <div class="od-mobile-items">
+            @forelse ($order->items as $line)
+                <div class="od-mobile-item-row">
+                    <img class="od-mobile-item-img"
+                        src="{{ optional($line->item)->image_url ?: asset('images/no-image.png') }}"
+                        alt="{{ $line->item_name ?? 'Item' }}"
+                        onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
+                    <div class="od-mobile-item-info">
+                        <div class="od-mobile-item-name">{{ $line->item_name ?? 'Unknown Item' }}</div>
+                        <div class="od-mobile-item-qty">
+                            SKU: {{ $line->item_no ?? 'N/A' }} &middot;
+                            Qty: {{ (int) ($line->qty ?? 0) }} × ${{ number_format((float) ($line->unit_price ?? 0), 2) }}
+                        </div>
+                    </div>
+                    <div class="od-mobile-item-total">
+                        ${{ number_format((float) ($line->line_total ?? 0), 2) }}
+                    </div>
+                </div>
+            @empty
+                <div class="od-mobile-empty">No items found in this order.</div>
+            @endforelse
+        </div>
+
+        <div class="od-mobile-section-title">Payment</div>
+        <div class="od-mobile-payment">
+            <div class="od-mobile-pay-row">
+                <span>Items Total</span>
+                <strong>${{ number_format($itemsTotal, 2) }}</strong>
+            </div>
+            <div class="od-mobile-pay-row">
+                <span>Subtotal</span>
+                <strong>${{ number_format($subtotal, 2) }}</strong>
+            </div>
+            @if ($shipping > 0)
+                <div class="od-mobile-pay-row">
+                    <span>Delivery Fee</span>
+                    <strong>+ ${{ number_format($shipping, 2) }}</strong>
+                </div>
+            @endif
+            @if ($tax > 0)
+                <div class="od-mobile-pay-row">
+                    <span>Estimated Tax</span>
+                    <strong>+ ${{ number_format($tax, 2) }}</strong>
+                </div>
+            @endif
+            @if ($discount > 0)
+                <div class="od-mobile-pay-row">
+                    <span>Discount</span>
+                    <strong class="neg">- ${{ number_format($discount, 2) }}</strong>
+                </div>
+            @endif
+            <div class="od-mobile-pay-row total">
+                <span>Total in USD</span>
+                <strong>${{ number_format($total, 2) }}</strong>
+            </div>
+        </div>
+
+        @if ($approvedAction || $cancelledAction)
+            <div class="od-mobile-section-title">Approval / Cancel Report</div>
+            <div class="od-mobile-approval">
+                @if ($approvedAction)
+                    <div class="od-mobile-approval-row">
+                        <span>Approved By</span>
+                        <strong>
+                            {{ $approvedAction->actionBy->name ?? 'Admin' }}<br>
+                            {{ optional($approvedAction->created_at)->format('M d, Y h:i A') }}
+                        </strong>
+                    </div>
+                @endif
+
+                @if ($cancelledAction)
+                    @php
+                        $isCustomerDirectCancelMobile = (int) ($cancelledAction->action_by ?? 0) === (int) ($order->user_id ?? 0);
+                    @endphp
+                    <div class="od-mobile-approval-row">
+                        <span>Cancelled By</span>
+                        <strong>
+                            {{ $cancelledAction->actionBy->name ?? 'Unknown User' }}
+                            ({{ $isCustomerDirectCancelMobile ? 'Customer Direct Cancel' : 'Admin Cancel' }})<br>
+                            {{ optional($cancelledAction->created_at)->format('M d, Y h:i A') }}
+                        </strong>
+                    </div>
+
+                    @if (!empty($cancelledAction->note))
+                        <div class="od-mobile-approval-row">
+                            <span>Cancel Note</span>
+                            <strong>{{ $cancelledAction->note }}</strong>
+                        </div>
+                    @endif
+                @endif
+            </div>
+        @endif
+
+        <div class="od-mobile-actions">
+            <a href="{{ route('user.pos.order.download', $order->id) }}" class="od-mobile-download-btn">
+                Download Invoice <i class="bi bi-download"></i>
+            </a>
+
+            @if ($statusRaw === 'pending')
+                <form method="POST" action="{{ route('user.pos.order.cancel', $order->id) }}"
+                    onsubmit="return confirm('Are you sure you want to cancel this order?');" class="od-mobile-cancel-form">
+                    @csrf
+                    <input type="hidden" name="note" value="Cancelled directly by customer.">
+                    <button type="submit" class="od-mobile-cancel-btn">Cancel Order</button>
+                </form>
+            @endif
+        </div>
+        <!-- =================== END MOBILE ONLY =================== -->
 
         <div class="od-header">
             <div>
@@ -73,7 +233,7 @@
         </div>
 
         <div class="od-grid">
-            <div class="od-card">
+            <div class="od-card od-items-card">
                 <div class="od-card-head">Order Items ({{ (int) ($order->items->sum('qty') ?? 0) }})</div>
                 <div class="od-table-card-body od-table-wrap">
                     <table class="od-table">
@@ -117,56 +277,58 @@
             </div>
 
             <div class="od-right">
-                <div class="od-card">
-                    <div class="od-card-head">Payment Summary</div>
-                    <div class="od-card-content">
-                        <div class="od-sum-row">
-                            <span>Items Total</span>
-                            <strong>${{ number_format($itemsTotal, 2) }}</strong>
-                        </div>
-                        <div class="od-sum-row">
-                            <span>Subtotal</span>
-                            <strong>${{ number_format($subtotal, 2) }}</strong>
-                        </div>
-                        @if ($shipping > 0)
+                <div class="od-right-row">
+                    <div class="od-card">
+                        <div class="od-card-head">Payment Summary</div>
+                        <div class="od-card-content">
                             <div class="od-sum-row">
-                                <span>Shipping</span>
-                                <strong>+ ${{ number_format($shipping, 2) }}</strong>
+                                <span>Items Total</span>
+                                <strong>${{ number_format($itemsTotal, 2) }}</strong>
                             </div>
-                        @endif
-                        @if ($tax > 0)
                             <div class="od-sum-row">
-                                <span>Tax</span>
-                                <strong>+ ${{ number_format($tax, 2) }}</strong>
+                                <span>Subtotal</span>
+                                <strong>${{ number_format($subtotal, 2) }}</strong>
                             </div>
-                        @endif
-                        @if ($discount > 0)
-                            <div class="od-sum-row">
-                                <span>Discount</span>
-                                <strong style="color:#059669;">- ${{ number_format($discount, 2) }}</strong>
+                            @if ($shipping > 0)
+                                <div class="od-sum-row">
+                                    <span>Shipping</span>
+                                    <strong>+ ${{ number_format($shipping, 2) }}</strong>
+                                </div>
+                            @endif
+                            @if ($tax > 0)
+                                <div class="od-sum-row">
+                                    <span>Tax</span>
+                                    <strong>+ ${{ number_format($tax, 2) }}</strong>
+                                </div>
+                            @endif
+                            @if ($discount > 0)
+                                <div class="od-sum-row">
+                                    <span>Discount</span>
+                                    <strong style="color:#059669;">- ${{ number_format($discount, 2) }}</strong>
+                                </div>
+                            @endif
+                            <div class="od-sum-row od-sum-total">
+                                <span>Total</span>
+                                <strong>${{ number_format($total, 2) }}</strong>
                             </div>
-                        @endif
-                        <div class="od-sum-row od-sum-total">
-                            <span>Total</span>
-                            <strong>${{ number_format($total, 2) }}</strong>
                         </div>
                     </div>
-                </div>
 
-                <div class="od-card">
-                    <div class="od-card-head">Order Details</div>
-                    <div class="od-card-content">
-                        <div class="od-info">
-                            <div class="od-info-label">Customer Number</div>
-                            <div class="od-info-value">{{ $order->customer_no ?? 'Guest / N/A' }}</div>
-                        </div>
-                        <div class="od-info">
-                            <div class="od-info-label">Order Date</div>
-                            <div class="od-info-value">{{ optional($order->created_at)->format('M d, Y h:i A') }}</div>
-                        </div>
-                        <div class="od-info">
-                            <div class="od-info-label">Sync Status</div>
-                            <div class="od-info-value">{{ ucfirst($order->sync_status ?? 'Pending') }}</div>
+                    <div class="od-card">
+                        <div class="od-card-head">Order Details</div>
+                        <div class="od-card-content">
+                            <div class="od-info">
+                                <div class="od-info-label">Customer Number</div>
+                                <div class="od-info-value">{{ $order->customer_no ?? 'Guest / N/A' }}</div>
+                            </div>
+                            <div class="od-info">
+                                <div class="od-info-label">Order Date</div>
+                                <div class="od-info-value">{{ optional($order->created_at)->format('M d, Y h:i A') }}</div>
+                            </div>
+                            <div class="od-info">
+                                <div class="od-info-label">Sync Status</div>
+                                <div class="od-info-value">{{ ucfirst($order->sync_status ?? 'Pending') }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>

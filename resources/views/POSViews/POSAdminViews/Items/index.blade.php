@@ -11,7 +11,7 @@
     <h1 class="page-title">POS System</h1>
 
     <div class="toolbar-row">
-        <div class="toolbar-left">
+        <div class="toolbar-left">  
             <div class="search-box">
                 <i class="bi bi-search"></i>
                 <input type="text" id="searchInput" placeholder="Search">
@@ -445,14 +445,19 @@
                 body: JSON.stringify({
                     items: PRODUCTS.map(item => ({
                         id: item.id,
-                        number: item.number,
-                        displayName: item.displayName,
-                        unitPrice: item.unitPrice,
-                        inventory: item.inventory,
-                        blocked: item.blocked,
-                        itemCategoryCode: item.itemCategoryCode,
-                        baseUnitOfMeasureCode: item.baseUnitOfMeasureCode,
-                        priceIncludesTax: item.priceIncludesTax,
+                        number: item.number || item.no || item.No || item.itemNo || item.itemNumber,
+                        displayName: item.displayName || item.display_name || item.description || item.Description || item.name,
+                        unitPrice: item.unitPrice ?? item.unit_price ?? item.price ?? item.UnitPrice ?? 0,
+                        vatPercent: item.vatPercent ?? item.vat_percentage ?? item.vatpercent ?? 0,
+                        taxAmount: item.taxAmount ?? item.tax_amount ?? item.taxamount ?? 0,
+                        discountAmount: item.discountAmount ?? item.discount_amount ?? item.discountamount ?? 0,
+                        discountStartDate: item.discountStartDate ?? item.discount_start_date ?? item.discountstartdate ?? null,
+                        discountEndDate: item.discountEndDate ?? item.discount_end_date ?? item.discountenddate ?? null,
+                        inventory: item.inventory ?? item.Inventory ?? item.quantityOnHand ?? item.qtyOnHand ?? 0,
+                        blocked: item.blocked ?? item.Blocked ?? item.isBlocked ?? false,
+                        itemCategoryCode: item.itemCategoryCode || item.item_category_code || item.categoryCode || item.CategoryCode,
+                        baseUnitOfMeasureCode: item.baseUnitOfMeasureCode || item.base_unit_of_measure_code || item.unitOfMeasureCode,
+                        priceIncludesTax: item.priceIncludesTax ?? item.price_includes_tax ?? false,
                         imageUrl: `/item-image/${item.id}`,
                         defaultLocationCode: item.defaultLocationCode || item.locationCode || null
                     }))

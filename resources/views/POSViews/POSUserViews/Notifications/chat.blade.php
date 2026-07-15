@@ -8,120 +8,182 @@
 @endpush
 
 @section('content')
-    <div class="chat-page">
-        <aside class="conversation-pane">
-            <div class="inbox-header">
-                <div class="inbox-left">
 
- <a href="{{ route('user.notifications') }}" class="inbox-back">
-        <i class="bi bi-arrow-left"></i>
-    </a>
-                    <span class="inbox-title">Inbox</span>
+{{-- LIGHTBOX OVERLAY (global, outside chat-page) --}}
+<div class="lightbox-overlay" id="lightboxOverlay">
+    <button class="lightbox-nav lightbox-prev" id="lightboxPrev" type="button" aria-label="Previous image">&lt;</button>
+    <button class="lightbox-close" id="lightboxClose">&#x2715;</button>
+    <img class="lightbox-img" id="lightboxImg" src="" alt="Image preview">
+    <button class="lightbox-nav lightbox-next" id="lightboxNext" type="button" aria-label="Next image">&gt;</button>
+    <div class="lightbox-count" id="lightboxCount">1 / 1</div>
+</div>
 
+<div class="chat-page {{ $activeContactId ? 'has-active-chat' : 'no-active-chat' }}">
+    @php
+        $activeContactIsOnline = $activeContact ? (bool) ($activeContact->is_online ?? false) : false;
+        $activeContactStatusText = $activeContact
+            ? ($activeContactIsOnline ? 'Online' : ((string) ($activeContact->offline_duration ?? 'Offline')))
+            : '';
+    @endphp
 
-                    <button class="inbox-action">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                </div>
+    <aside class="conversation-pane">
+        <div class="inbox-header">
+            <div class="inbox-left">
 
+                <a href="{{ route('user.notifications') }}" class="inbox-back">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <span class="inbox-title">Inbox</span>
+
+                <a href="{{ route('user.chat.index', ['admin_id' => $activeContactId ?: optional($contacts->first())->id]) }}"
+                    @if (($orderNotificationCount ?? 0) > 0)
+                        <span class="inbox-action-badge">{{ $orderNotificationCount }}</span>
+                    @endif
+                </a>
+
+                <button class="inbox-action">
+                    <i class="bi bi-pencil"></i>
+                </button>
             </div>
 
-            <div class="search-wrap">
-                <i class="bi bi-search"></i>
-                <input id="contactSearch" type="text" class="search-input" placeholder="Search...">
-            </div>
+        </div>
 
-            <div class="contact-list" id="contactList">
-                @forelse($contacts as $contact)
-                    <a class="contact-item {{ (int) $activeContactId === (int) $contact->id ? 'active' : '' }}"
-                        data-name="{{ strtolower($contact->name) }}"
-                        data-last="{{ strtolower($contact->last_message ?: '') }}"
-                        href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}">
-                        <div class="contact-avatar-wrap">
-                            <img src="{{ $contact->chat_avatar ?? asset('images/pos/Rectangle 2.png') }}"
-                                class="contact-avatar" alt="{{ $contact->name }}">
-                            @if ((int) ($contact->unread_count ?? 0) > 0)
-                                <div class="contact-badge">{{ (int) $contact->unread_count }}</div>
-                            @endif
-                        </div>
-                        <div class="contact-text">
-                            <div class="contact-name-row">
-                                <div class="contact-name">{{ $contact->name }}</div>
-                                <div class="contact-time">
-                                    {{ $contact->last_message_at ? \Carbon\Carbon::parse($contact->last_message_at)->format('gA') : '' }}
-                                </div>
+        <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input id="contactSearch" type="text" class="search-input" placeholder="Search...">
+        </div>
+
+        <div class="contact-list" id="contactList">
+            @forelse($contacts as $contact)
+                <a class="contact-item {{ (int) $activeContactId === (int) $contact->id ? 'active' : '' }}"
+                    data-name="{{ strtolower($contact->name) }}"
+                    data-last="{{ strtolower($contact->last_message ?: '') }}"
+                    href="{{ route('user.chat.index', ['admin_id' => $contact->id]) }}">
+                    <div class="contact-avatar-wrap">
+                        <img src="{{ $contact->chat_avatar ?? asset('images/pos/Rectangle 2.png') }}"
+                            class="contact-avatar" alt="{{ $contact->name }}">
+                        @if ((int) ($contact->unread_count ?? 0) > 0)
+                            <div class="contact-badge">{{ (int) $contact->unread_count }}</div>
+                        @endif
+                    </div>
+                    <div class="contact-text">
+                        <div class="contact-name-row">
+                            <div class="contact-name">{{ $contact->name }}</div>
+                            <div class="contact-time">
+                                {{ $contact->last_message_at ? \Carbon\Carbon::parse($contact->last_message_at)->format('gA') : '' }}
                             </div>
-                            <div class="contact-last">{{ $contact->last_message ?: 'No message yet' }}</div>
                         </div>
-                    </a>
-                @empty
-                    <div class="text-muted">No admin contact yet.</div>
-                @endforelse
-            </div>
+                        <div class="contact-last">{{ $contact->last_message ?: 'No message yet' }}</div>
+                    </div>
+                </a>
+            @empty
+                <div class="text-muted">No admin contact yet.</div>
+            @endforelse
+        </div>
 
 
-        </aside>
+    </aside>
 
-        <section class="message-pane">
-            <header class="mobile-chat-header">
-                <div class="header-left">
-                    <a href="{{ route('user.notifications') }}" class="back-link">
-                        <i class="bi bi-arrow-left"></i>
-                    </a>
+    <section class="message-pane">
+        <header class="mobile-chat-header">
+            <div class="header-left">
+                <a href="{{ route('user.chat.index') }}" class="back-btn" title="Back to inbox">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
 
-                    <img src="{{ $activeContact->chat_avatar ?? asset('images/pos/Rectangle 2.png') }}"
-                        class="header-avatar" alt="Avatar">
+                <img src="{{ $activeContact->chat_avatar ?? asset('images/pos/Rectangle 2.png') }}"
+                    class="header-avatar" alt="Avatar">
 
-                    <div class="header-meta">
-                        <div class="header-name">
-                            {{ $activeContact->name ?? 'User Chat' }}
-                        </div>
-                        <div class="header-status">
-                            <span class="status-dot"></span> Online
-                        </div>
+                <div class="header-meta">
+                    <div class="header-name">
+                        Admin
+                    </div>
+                    <div class="header-status">
+                        <span class="status-dot"></span> Online
                     </div>
                 </div>
+            </div>
 
-                <div class="header-right">
-                    <button type="button" class="header-icon">
-                        <i class="bi bi-search"></i>
-                    </button>
+            <div class="header-right">
+                <button type="button" class="header-icon" id="toggleInfoPaneMobile" title="View contact info & shared images" @if(!$activeContact) hidden @endif>
+                    <i class="bi bi-info-circle"></i>
+                </button>
+            </div>
+        </header>
+
+        {{-- Desktop / tablet header --}}
+        <header class="message-header">
+            @if($activeContact)
+                <div class="contact-avatar-wrap">
+                    <img src="{{ $activeContact->chat_avatar ?? asset('images/pos/Rectangle 2.png') }}"
+                        class="contact-avatar" alt="{{ $activeContact->name }}">
                 </div>
-            </header>
-            <header class="message-header">
-                 <div class="contact-avatar-wrap">
-                            <img src="{{ $contact->chat_avatar ?? asset('images/pos/Rectangle 2.png') }}"
-                                class="contact-avatar" alt="{{ $contact->name }}">
-                            @if ((int) ($contact->unread_count ?? 0) > 0)
-                                <div class="contact-badge">{{ (int) $contact->unread_count }}</div>
-                            @endif
-                        </div>
-                <div class="peer-name">{{ $activeContact->name ?? 'User Chat' }}</div>
-            </header>
+                <div class="header-info">
+                    <div class="peer-name">{{ $activeContact->name }}</div>
+                </div>
+            @else
+                <div class="header-info">
+                    <div class="peer-name">Admin</div>
+                </div>
+            @endif
 
-            <div class="message-stream" id="chatBody">
-                @forelse($messages as $msg)
-                    @php
-                        $isMine = (int) $msg->sender_id === (int) $currentUser->id;
-                        $type = $msg->message_type ?? 'text';
-                        $attachmentUrl = $msg->attachment_path ? '/storage/' . ltrim($msg->attachment_path, '/') : null;
-                        $text = (string) ($msg->message ?? '');
-                        $myAvatarSrc = $currentUser->profile_image_display ?? asset('images/pos/Rectangle 2.png');
-                        $peerAvatarSrc = $activeContact->chat_avatar ?? asset('images/pos/Rectangle 2.png');
-                    @endphp
-                    <div class="msg-row {{ $isMine ? 'mine' : 'other' }}">
-                        <img src="{{ $isMine ? $myAvatarSrc : $peerAvatarSrc }}" class="msg-avatar" alt="Avatar">
-                        <div class="msg-bubble">
-                            @if ($type === 'image' && $attachmentUrl)
-                                <img src="{{ $attachmentUrl }}" alt="Shared image" class="msg-image">
-                                @if ($text !== '' && $text !== '[Image]')
-                                    <div>{{ $text }}</div>
-                                @endif
-                            @elseif($type === 'voice' && $attachmentUrl)
-                                <audio controls class="msg-audio">
+            {{-- Toggle right info panel --}}
+            <button class="icon-btn header-toggle-btn" id="toggleInfoPane" title="Show / hide info panel" @if(!$activeContact) hidden @endif>
+                <i class="bi bi-layout-sidebar-reverse"></i>
+            </button>
+        </header>
+
+        <div class="message-stream" id="chatBody">
+            @forelse($messages as $msg)
+                @php
+                    $isMine = (int) $msg->sender_id === (int) $currentUser->id;
+                    $type = $msg->message_type ?? 'text';
+                    $attachmentUrl = $msg->attachment_path ? '/storage/' . ltrim($msg->attachment_path, '/') : null;
+                    $text = (string) ($msg->message ?? '');
+                    $myAvatarSrc = $currentUser->profile_image_display ?? asset('images/pos/Rectangle 2.png');
+                    $peerAvatarSrc = $activeContact->chat_avatar ?? asset('images/pos/Rectangle 2.png');
+                @endphp
+                <div class="msg-row {{ $isMine ? 'mine' : 'other' }}">
+                    <img src="{{ $isMine ? $myAvatarSrc : $peerAvatarSrc }}" class="msg-avatar" alt="Avatar">
+
+                    @if ($type === 'order')
+                        @php
+                            $order = json_decode($text ?: '{}', true) ?: [];
+                            $orderStatus = $order['status'] ?? 'pending';
+                            $orderStatusLabel = $order['status_label'] ?? ucfirst($orderStatus);
+                            $orderInvoice = $order['invoice_number'] ?? '—';
+                        @endphp
+                        <button type="button" class="order-msg-card status-{{ $orderStatus }}"
+                            data-order='@json($order)'>
+                            <i class="bi bi-box-seam order-msg-icon"></i>
+                            <div class="order-msg-text">
+                                <div class="order-msg-title">Order {{ $orderInvoice }}</div>
+                                <div class="order-msg-sub">{{ $orderStatusLabel }} · Tap to view</div>
+                            </div>
+                            <i class="bi bi-chevron-right order-msg-chevron"></i>
+                        </button>
+
+                    @elseif ($type === 'voice')
+                        <div class="msg-bubble msg-voice">
+                            @if ($attachmentUrl)
+                                <audio controls class="msg-audio-row">
                                     <source src="{{ $attachmentUrl }}" type="{{ $msg->attachment_mime ?? 'audio/webm' }}">
                                 </audio>
                                 @if ($text !== '' && $text !== '[Voice message]')
+                                    <div>{{ $text }}</div>
+                                @endif
+                            @endif
+                            <small class="msg-time">
+                                {{ optional($msg->created_at)->format('g:i A') }}
+                                <i class="bi bi-check2-all msg-check"></i>
+                            </small>
+                        </div>
+
+                    @else
+                        <div class="msg-bubble">
+                            @if ($type === 'image' && $attachmentUrl)
+                                <img src="{{ $attachmentUrl }}" alt="Shared image" class="msg-image js-lightbox-trigger">
+                                @if ($text !== '' && $text !== '[Image]')
                                     <div>{{ $text }}</div>
                                 @endif
                             @elseif($type === 'icon')
@@ -129,51 +191,143 @@
                             @else
                                 <div>{{ $text }}</div>
                             @endif
-                            <small class="msg-time">{{ optional($msg->created_at)->format('g:i A') }}</small>
+                            <small class="msg-time">
+                                {{ optional($msg->created_at)->format('g:i A') }}
+                                <i class="bi bi-check2-all msg-check"></i>
+                            </small>
                         </div>
-                    </div>
-                @empty
-                    <div class="text-muted" id="emptyChatText">Start chatting with admin.</div>
-                @endforelse
+                    @endif
+                </div>
+            @empty
+                <div class="text-muted" id="emptyChatText">Start chatting with admin.</div>
+            @endforelse
+        </div>
+
+        <div class="order-detail-overlay" id="orderDetailOverlay">
+            <div class="order-detail-header">
+                <button type="button" class="order-detail-back" id="orderDetailBack">
+                    <i class="bi bi-arrow-left"></i>
+                </button>
+                <div class="order-detail-title">Order Detail</div>
             </div>
 
-            @if ($activeContactId)
-                <div class="composer-wrap">
-                    <div class="emoji-panel" id="emojiPanel">
-                        <button type="button" class="emoji-item" data-icon="😀">😀</button>
-                        <button type="button" class="emoji-item" data-icon="😂">😂</button>
-                        <button type="button" class="emoji-item" data-icon="😍">😍</button>
-                        <button type="button" class="emoji-item" data-icon="👍">👍</button>
-                        <button type="button" class="emoji-item" data-icon="🙏">🙏</button>
-                        <button type="button" class="emoji-item" data-icon="🔥">🔥</button>
-                        <button type="button" class="emoji-item" data-icon="🎉">🎉</button>
-                        <button type="button" class="emoji-item" data-icon="😢">😢</button>
+            <div class="order-detail-banner" id="orderDetailBanner">
+                <i class="bi bi-box-seam order-detail-banner-icon"></i>
+                <div>
+                    <div class="order-detail-banner-title" id="orderDetailBannerTitle">Order is pending</div>
+                    <div class="order-detail-banner-sub" id="orderDetailBannerSub">We will notify you by inbox</div>
+                </div>
+            </div>
+
+            <div class="order-detail-list" id="orderDetailList">
+                {{-- rows injected by JS --}}
+            </div>
+        </div>
+
+        @if ($activeContactId)
+            <div class="composer-wrap">
+                <div class="emoji-panel" id="emojiPanel">
+                    <button type="button" class="emoji-item" data-icon="😀">😀</button>
+                    <button type="button" class="emoji-item" data-icon="😂">😂</button>
+                    <button type="button" class="emoji-item" data-icon="😍">😍</button>
+                    <button type="button" class="emoji-item" data-icon="👍">👍</button>
+                    <button type="button" class="emoji-item" data-icon="🙏">🙏</button>
+                    <button type="button" class="emoji-item" data-icon="🔥">🔥</button>
+                    <button type="button" class="emoji-item" data-icon="🎉">🎉</button>
+                    <button type="button" class="emoji-item" data-icon="😢">😢</button>
+                </div>
+
+                <form class="composer" id="userChatForm" action="{{ route('user.chat.send') }}" method="POST"
+                    enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" name="receiver_id" value="{{ $activeContactId }}">
+                    <input type="file" id="imageInput" accept="image/*" class="d-none">
+                    <input type="text" id="chatMessageInput" name="message" class="composer-input"
+                        placeholder="Type a message...">
+
+                    <button type="button" id="attachButton" class="icon-btn" title="Send image">
+                        <i class="bi bi-paperclip"></i>
+                    </button>
+                    <button type="button" id="emojiButton" class="icon-btn" title="Send icon">
+                        <i class="bi bi-emoji-smile"></i>
+                    </button>
+                    <button type="button" id="voiceButton" class="icon-btn" title="Click to record voice">
+                        <i class="bi bi-mic"></i>
+                    </button>
+                    <button type="button" class="voice-cancel-btn" id="voiceCancelButton" title="Cancel recording">
+                        Cancel
+                    </button>
+                    <button type="submit" class="send-btn">
+                        <span>Send</span>
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </form>
+                <div class="composer-hint" id="composerHint">Click mic to start recording, click again to send. Press Esc to cancel.</div>
+            </div>
+        @endif
+    </section>
+
+    {{-- RIGHT PANE — Contact info, toggled by header button --}}
+    @if ($activeContact)
+        <aside class="contact-info-pane pane-hidden" id="contactInfoPane">
+
+            <button type="button" class="info-pane-close" id="closeInfoPane" title="Close">
+                <i class="bi bi-x-lg"></i>
+            </button>
+
+            <div class="rp-top">
+                <img src="{{ $activeContact->chat_avatar ?? asset('images/pos/Rectangle 2.png') }}"
+                    alt="{{ $activeContact->name }}">
+                <h4>{{ $activeContact->name }}</h4>
+                <div class="rp-status {{ $activeContactIsOnline ? 'is-online' : 'is-offline' }}">
+                    {{ $activeContactStatusText }}
+                </div>
+            </div>
+
+            <div class="rp-section">
+                <h5>Info</h5>
+                @if ($activeContact->phone ?? null)
+                    <div class="rp-info-row">
+                        <i class="bi bi-telephone"></i>
+                        <span>{{ $activeContact->phone }}</span>
                     </div>
+                @endif
+                @if ($activeContact->email ?? null)
+                    <div class="rp-info-row">
+                        <i class="bi bi-envelope"></i>
+                        <span>{{ $activeContact->email }}</span>
+                    </div>
+                @endif
+                @if (!($activeContact->phone ?? null) && !($activeContact->email ?? null))
+                    <div class="rp-info-row"><span>No extra contact info.</span></div>
+                @endif
+            </div>
 
-                    <form class="composer" id="userChatForm" action="{{ route('user.chat.send') }}" method="POST"
-                        enctype="multipart/form-data">
-                        @csrf
-                        <input type="hidden" name="receiver_id" value="{{ $activeContactId }}">
-                        <input type="file" id="imageInput" accept="image/*" class="d-none">
-                        <input type="text" id="chatMessageInput" name="message" class="composer-input"
-                            placeholder="Type a message...">
-
-                        <button type="button" id="attachButton" class="icon-btn" title="Send image">
-                            <i class="bi bi-image"></i>
-                        </button>
-                        <button type="button" id="emojiButton" class="icon-btn" title="Send icon">
-                            <i class="bi bi-emoji-smile"></i>
-                        </button>
-                        <button type="button" id="voiceButton" class="icon-btn" title="Click to record voice">
-                            <i class="bi bi-mic"></i>
-                        </button>
-                        <button type="submit" class="send-btn">Send</button>
-                    </form>
-                    <div class="composer-hint" id="composerHint">Click mic to start recording, click again to send.</div>
+            {{-- Shared media — images sent in this conversation --}}
+            @php
+                $sentImages = $messages->where('message_type', 'image')->where('attachment_path', '!=', null);
+            @endphp
+            @if ($sentImages->count())
+                <div class="rp-section">
+                    <h5>Shared media</h5>
+                    <div class="media-grid-scroll">
+                        @foreach ($sentImages as $imgMsg)
+                            @php $imgUrl = '/storage/' . ltrim($imgMsg->attachment_path, '/'); @endphp
+                            <button type="button"
+                                class="media-thumb-link js-lightbox-trigger"
+                                data-full-src="{{ $imgUrl }}"
+                                title="{{ optional($imgMsg->created_at)->format('M d, Y g:i A') }}">
+                                <img class="media-thumb" src="{{ $imgUrl }}" alt="Shared image">
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
             @endif
-        </section>
-    </div>
+
+        </aside>
+    @endif
+
+</div>
 @endsection
 
 @push('scripts')
@@ -189,7 +343,19 @@
             const emojiButton = document.getElementById('emojiButton');
             const emojiPanel = document.getElementById('emojiPanel');
             const voiceButton = document.getElementById('voiceButton');
+            const voiceCancelButton = document.getElementById('voiceCancelButton');
             const composerHint = document.getElementById('composerHint');
+            const toggleInfoPane = document.getElementById('toggleInfoPane');
+            const toggleInfoPaneMobile = document.getElementById('toggleInfoPaneMobile');
+            const closeInfoPane = document.getElementById('closeInfoPane');
+            const contactInfoPane = document.getElementById('contactInfoPane');
+
+            const lightboxOverlay = document.getElementById('lightboxOverlay');
+            const lightboxImg = document.getElementById('lightboxImg');
+            const lightboxClose = document.getElementById('lightboxClose');
+            const lightboxPrev = document.getElementById('lightboxPrev');
+            const lightboxNext = document.getElementById('lightboxNext');
+            const lightboxCount = document.getElementById('lightboxCount');
 
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
             const activeContactId = Number(@json((int) $activeContactId));
@@ -198,6 +364,10 @@
             const peerAvatar = @json($activeContact->chat_avatar ?? asset('images/pos/Rectangle 2.png'));
             const sendUrl = @json(route('user.chat.send'));
             const messagesUrl = @json(route('user.chat.messages'));
+
+            let lbZoomed = false;
+            let lightboxImages = [];
+            let lightboxIndex = 0;
 
             if (contactSearch && contactList) {
                 contactSearch.addEventListener('input', function() {
@@ -211,6 +381,108 @@
                     });
                 });
             }
+
+            // ===== Info panel toggle (desktop/tablet) =====
+            toggleInfoPane?.addEventListener('click', function() {
+                if (!contactInfoPane) return;
+                const hidden = contactInfoPane.classList.toggle('pane-hidden');
+                const icon = toggleInfoPane.querySelector('i');
+                if (icon) {
+                    icon.className = hidden ? 'bi bi-layout-sidebar-inset-reverse' : 'bi bi-layout-sidebar-reverse';
+                }
+            });
+
+            // ===== Info panel toggle (mobile — slides in as full overlay) =====
+            toggleInfoPaneMobile?.addEventListener('click', function() {
+                contactInfoPane?.classList.add('mobile-open');
+            });
+
+            closeInfoPane?.addEventListener('click', function() {
+                contactInfoPane?.classList.remove('mobile-open');
+            });
+
+            // ===== Lightbox (click-to-view images) =====
+            function syncLightboxControls() {
+                const total = lightboxImages.length || 1;
+                if (lightboxCount) lightboxCount.textContent = `${lightboxIndex + 1} / ${total}`;
+                const showNav = total > 1;
+                lightboxPrev?.classList.toggle('show', showNav);
+                lightboxNext?.classList.toggle('show', showNav);
+            }
+
+            function openLightbox(src, images = [], index = 0) {
+                if (!lightboxOverlay || !lightboxImg) return;
+                lightboxImages = Array.isArray(images) && images.length ? images : [src];
+                lightboxIndex = Math.max(0, Math.min(index, lightboxImages.length - 1));
+                lightboxImg.src = lightboxImages[lightboxIndex] || src;
+                lbZoomed = false;
+                lightboxImg.classList.remove('zoomed');
+                syncLightboxControls();
+                lightboxOverlay.classList.add('show');
+            }
+
+            function stepLightbox(direction) {
+                if (lightboxImages.length < 2 || !lightboxImg) return;
+                lightboxIndex = (lightboxIndex + direction + lightboxImages.length) % lightboxImages.length;
+                lightboxImg.src = lightboxImages[lightboxIndex];
+                lbZoomed = false;
+                lightboxImg.classList.remove('zoomed');
+                syncLightboxControls();
+            }
+
+            function attachLightbox(scope) {
+                if (!scope) return;
+                const triggers = Array.from(scope.querySelectorAll('.js-lightbox-trigger'));
+                if (!triggers.length) return;
+                const imageSources = triggers.map(function(trigger) {
+                    return trigger.dataset.fullSrc || trigger.getAttribute('src') || trigger.querySelector('img')?.getAttribute('src') || '';
+                }).filter(Boolean);
+                triggers.forEach(function(trigger, index) {
+                    if (trigger.dataset.lbBound === '1') return;
+                    trigger.dataset.lbBound = '1';
+                    trigger.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const src = trigger.dataset.fullSrc || trigger.getAttribute('src') || trigger.querySelector('img')?.getAttribute('src') || '';
+                        if (!src) return;
+                        const freshTriggers = Array.from(scope.querySelectorAll('.js-lightbox-trigger'));
+                        const freshSources = freshTriggers.map(t => t.dataset.fullSrc || t.getAttribute('src') || t.querySelector('img')?.getAttribute('src') || '').filter(Boolean);
+                        const freshIndex = freshTriggers.indexOf(trigger);
+                        openLightbox(src, freshSources.length ? freshSources : imageSources, freshIndex >= 0 ? freshIndex : index);
+                    });
+                });
+            }
+
+            lightboxClose?.addEventListener('click', function() {
+                lightboxOverlay.classList.remove('show');
+            });
+            lightboxPrev?.addEventListener('click', function(e) {
+                e.stopPropagation();
+                stepLightbox(-1);
+            });
+            lightboxNext?.addEventListener('click', function(e) {
+                e.stopPropagation();
+                stepLightbox(1);
+            });
+            lightboxOverlay?.addEventListener('click', function(e) {
+                if (e.target === lightboxOverlay) lightboxOverlay.classList.remove('show');
+            });
+            lightboxImg?.addEventListener('click', function() {
+                lbZoomed = !lbZoomed;
+                lightboxImg.classList.toggle('zoomed', lbZoomed);
+            });
+            document.addEventListener('keydown', function(e) {
+                if (lightboxOverlay?.classList.contains('show')) {
+                    if (e.key === 'Escape') lightboxOverlay.classList.remove('show');
+                    if (e.key === 'ArrowLeft') stepLightbox(-1);
+                    if (e.key === 'ArrowRight') stepLightbox(1);
+                }
+                if (e.key === 'Escape' && contactInfoPane?.classList.contains('mobile-open')) {
+                    contactInfoPane.classList.remove('mobile-open');
+                }
+            });
+
+            attachLightbox(chatBody);
+            attachLightbox(contactInfoPane);
 
             if (!chatBody || !form || !input || !activeContactId) {
                 return;
@@ -258,6 +530,7 @@
                 mediaStream = null;
                 isRecording = false;
                 voiceButton?.classList.remove('listening');
+                voiceCancelButton?.classList.remove('show');
             }
 
             function setHint(text) {
@@ -294,12 +567,12 @@
 
                 if (type === 'image' && attachmentUrl) {
                     const caption = (text && text !== '[Image]') ? `<div>${text}</div>` : '';
-                    return `<img src="${attachmentUrl}" class="msg-image" alt="Shared image">${caption}`;
+                    return `<img src="${attachmentUrl}" class="msg-image js-lightbox-trigger" alt="Shared image">${caption}`;
                 }
 
                 if (type === 'voice' && attachmentUrl) {
                     const caption = (text && text !== '[Voice message]') ? `<div>${text}</div>` : '';
-                    return `<audio controls class="msg-audio"><source src="${attachmentUrl}" type="${attachmentMime || 'audio/webm'}"></audio>${caption}`;
+                    return `<audio controls class="msg-audio-row"><source src="${attachmentUrl}" type="${attachmentMime || 'audio/webm'}"></audio>${caption}`;
                 }
 
                 if (type === 'icon') {
@@ -318,19 +591,55 @@
                 const isMine = Boolean(message.is_mine ?? (Number(message.sender_id) === currentUserId));
                 const row = document.createElement('div');
                 row.className = `msg-row ${isMine ? 'mine' : 'other'}`;
-                row.innerHTML = `
-                <img src="${escapeHtml(isMine ? myAvatar : peerAvatar)}" class="msg-avatar" alt="Avatar">
-                <div class="msg-bubble">
-                    ${renderMessageBody(message)}
-                    <small class="msg-time">${escapeHtml(message.sent_at || '')}</small>
-                </div>
-            `;
+
+                const type = message.message_type || 'text';
+
+                if (type === 'order') {
+                    let order = {};
+                    try {
+                        order = JSON.parse(message.message || '{}');
+                    } catch (e) {
+                        order = {};
+                    }
+                    const status = order.status || 'pending';
+                    const statusLabel = order.status_label || (status.charAt(0).toUpperCase() + status.slice(1));
+                    const invoice = escapeHtml(order.invoice_number || '—');
+
+                    row.innerHTML = `
+                    <img src="${escapeHtml(isMine ? myAvatar : peerAvatar)}" class="msg-avatar" alt="Avatar">
+                    <button type="button" class="order-msg-card status-${escapeHtml(status)}" data-order='${escapeHtml(JSON.stringify(order))}'>
+                        <i class="bi bi-box-seam order-msg-icon"></i>
+                        <div class="order-msg-text">
+                            <div class="order-msg-title">Order ${invoice}</div>
+                            <div class="order-msg-sub">${escapeHtml(statusLabel)} · Tap to view</div>
+                        </div>
+                        <i class="bi bi-chevron-right order-msg-chevron"></i>
+                    </button>
+                `;
+                } else if (type === 'voice') {
+                    row.innerHTML = `
+                    <img src="${escapeHtml(isMine ? myAvatar : peerAvatar)}" class="msg-avatar" alt="Avatar">
+                    <div class="msg-bubble msg-voice">
+                        ${renderMessageBody(message)}
+                        <small class="msg-time">${escapeHtml(message.sent_at || '')}<i class="bi bi-check2-all msg-check"></i></small>
+                    </div>
+                `;
+                } else {
+                    row.innerHTML = `
+                    <img src="${escapeHtml(isMine ? myAvatar : peerAvatar)}" class="msg-avatar" alt="Avatar">
+                    <div class="msg-bubble">
+                        ${renderMessageBody(message)}
+                        <small class="msg-time">${escapeHtml(message.sent_at || '')}<i class="bi bi-check2-all msg-check"></i></small>
+                    </div>
+                `;
+                }
 
                 chatBody.appendChild(row);
                 if (messageId > 0) {
                     renderedMessageIds.add(messageId);
                 }
                 removeEmptyState();
+                attachLightbox(row);
                 scrollToBottom();
             }
 
@@ -581,12 +890,13 @@
                     mediaRecorder.start();
                     isRecording = true;
                     voiceButton.classList.add('listening');
-                    setHint('Recording... 0:00');
+                    voiceCancelButton?.classList.add('show');
+                    setHint('Recording... 0:00 (click mic again to send, Cancel or Esc to cancel)');
                     recordTimer = setInterval(function() {
                         const sec = Math.max(0, Math.floor((Date.now() - recordStartedAt) / 1000));
                         const mm = Math.floor(sec / 60);
                         const ss = String(sec % 60).padStart(2, '0');
-                        setHint(`Recording... ${mm}:${ss} (click mic again to send)`);
+                        setHint(`Recording... ${mm}:${ss} (click mic again to send, Cancel or Esc to cancel)`);
                     }, 250);
                 } catch (error) {
                     console.error('Voice recording start failed', error);
@@ -615,6 +925,7 @@
                 mediaRecorder.stop();
                 isRecording = false;
                 voiceButton.classList.remove('listening');
+                voiceCancelButton?.classList.remove('show');
             }
 
             if (voiceButton) {
@@ -634,6 +945,13 @@
                 });
             }
 
+            voiceCancelButton?.addEventListener('click', function(event) {
+                event.preventDefault();
+                if (isRecording) {
+                    stopVoiceRecording(false);
+                }
+            });
+
             const sendBtn = form.querySelector('.send-btn');
             if (sendBtn) {
                 sendBtn.addEventListener('click', function() {
@@ -649,6 +967,81 @@
                     stopVoiceRecording(false);
                 }
             });
+
+            // ===== Order detail overlay =====
+            const orderDetailOverlay = document.getElementById('orderDetailOverlay');
+            const orderDetailBack = document.getElementById('orderDetailBack');
+            const orderDetailBanner = document.getElementById('orderDetailBanner');
+            const orderDetailBannerTitle = document.getElementById('orderDetailBannerTitle');
+            const orderDetailBannerSub = document.getElementById('orderDetailBannerSub');
+            const orderDetailList = document.getElementById('orderDetailList');
+
+            const ORDER_STATUS_COPY = {
+                pending: {
+                    title: 'Order is pending',
+                    sub: 'We will notify you by inbox'
+                },
+                completed: {
+                    title: 'Order is completed',
+                    sub: 'Thank you for your purchase'
+                },
+                cancelled: {
+                    title: 'Order was cancelled',
+                    sub: 'Contact support if this is unexpected'
+                },
+            };
+
+            function openOrderDetail(order) {
+                if (!orderDetailOverlay) {
+                    return;
+                }
+
+                const status = order.status || 'pending';
+                const copy = ORDER_STATUS_COPY[status] || ORDER_STATUS_COPY.pending;
+
+                orderDetailBanner.className = `order-detail-banner status-${status}`;
+                orderDetailBannerTitle.textContent = order.status_label ? order.status_label : copy.title;
+                orderDetailBannerSub.textContent = order.status_note || copy.sub;
+
+                const rows = [
+                    ['Invoice number', order.invoice_number],
+                    ['Order date', order.order_date],
+                    ['Item', order.item_name],
+                    ['Quantity', order.quantity],
+                    ['Total amount', order.total],
+                ].filter(([, value]) => value !== undefined && value !== null && value !== '');
+
+                orderDetailList.innerHTML = rows.map(([label, value]) => `
+                    <div class="order-detail-row">
+                        <span class="label">${escapeHtml(label)}</span>
+                        <span class="value">${escapeHtml(String(value))}</span>
+                    </div>
+                `).join('');
+
+                orderDetailOverlay.classList.add('open');
+            }
+
+            function closeOrderDetail() {
+                orderDetailOverlay?.classList.remove('open');
+            }
+
+            if (chatBody) {
+                chatBody.addEventListener('click', function(event) {
+                    const card = event.target.closest('.order-msg-card');
+                    if (!card) {
+                        return;
+                    }
+                    let order = {};
+                    try {
+                        order = JSON.parse(card.dataset.order || '{}');
+                    } catch (e) {
+                        order = {};
+                    }
+                    openOrderDetail(order);
+                });
+            }
+
+            orderDetailBack?.addEventListener('click', closeOrderDetail);
 
             scrollToBottom();
             setInterval(pollMessages, 2500);

@@ -4,398 +4,157 @@ namespace App\Http\Controllers\Api\POS\User\Notifications;
 
 use App\Http\Controllers\Controller;
 use App\Models\ManagementSystem\Notification;
+use App\Models\ManagementSystem\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use App\Models\User;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class NotificationController extends Controller
 {
+    private const PER_PAGE_DEFAULT = 10;
+
+    private const ADMIN_TYPES = [
+        'admin_message',
+        'global_message',
+    ];
+
+    private const DEFAULT_IMAGE = 'images/pos/Rectangle 2.png';
+
     public function getNotifications(Request $request)
     {
-        $user = Auth::user();
+        $user = $request->user();
 
-        if (!$user) {
+        if (!$user instanceof User) {
             return redirect('/login')->with('error', 'Please login first.');
         }
-        $perPage = $request->get('limit', 10);
 
-        $tab = $request->get('tab', 'inbox');
+        $perPage = (int) $request->input('limit', self::PER_PAGE_DEFAULT);
+        $tab = $request->input('tab', 'orderNotification');
 
-        $query = Notification::with('sender')
-            ->where('user_id', $user->id)
-            ->latest();
+        $notificationsQuery = $this->baseQuery($user->id);
 
-        if ($request->filled('search')) {
-            $search = trim($request->search);
+        $this->applyTab($notificationsQuery, $tab);
+        $this->applyFilters($notificationsQuery, $request);
 
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', '%' . $search . '%')
-                    ->orWhere('message', 'like', '%' . $search . '%')
-                    ->orWhere('type', 'like', '%' . $search . '%');
-            });
-        }
+        $notifications = $this->paginate($notificationsQuery, $request, $perPage, 'page');
 
-        // Filter based on tab
-        if ($tab === 'spam') {
-            $query->where('category', 'spam');
-        } elseif ($tab === 'archive') {
-            $query->where('category', 'archive');
-        } elseif ($tab === 'global_message') {
-            $query->where('type', 'global_message');
-        } else { // inbox is default
-            $query->where(function ($q) {
-                $q->where('category', 'inbox')
-                    ->orWhereNull('category');
-            });
-        }
+        $adminQuery = $this->baseQuery($user->id)
+            ->whereIn('type', self::ADMIN_TYPES);
 
-        // Filter unread if requested
-        if ($request->get('unread') === 'true') {
-            $query->where('is_read', false);
-        }
-
-        if ($request->filled('date')) {
-            $query->whereDate('created_at', $request->date);
-        }
-
-        $notifications = $query->paginate($perPage)->withQueryString();
-
-        // Set profile image display for notifications (sender avatar)
-        $notifications->getCollection()->transform(function ($notification) {
-            // For POS user notifications, sender is typically admin/system
-            $notification->sender_profile_image_display = $this->getSenderImageDisplay($notification);
-            $notification->sender_name = $this->getSenderName($notification);
-            return $notification;
-        });
-
-        // Get counts for each tab
+        $adminMessages = $this->paginate($adminQuery, $request, $perPage, 'admin_page');
         $inboxCount = Notification::where('user_id', $user->id)
             ->where(function ($q) {
-                $q->where('category', 'inbox')
-                    ->orWhereNull('category');
+                $q->where('category', 'inbox')->orWhereNull('category');
             })
-            ->count();
-
-        $spamCount = Notification::where('user_id', $user->id)
-            ->where('category', 'spam')
-            ->count();
-
-        $archiveCount = Notification::where('user_id', $user->id)
-            ->where('category', 'archive')
             ->count();
 
         $globalMessageCount = Notification::where('user_id', $user->id)
             ->where('type', 'global_message')
             ->count();
 
-        $unreadCount = (int) Notification::where('user_id', $user->id)
-            ->where('is_read', false)
-            ->sum('unread_count');
-
-        $contacts = Notification::where('user_id', $user->id)
-            ->where('type', 'contact')
+        $unreadCount = Notification::where('user_id', $user->id)
             ->where('is_read', false)
             ->count();
-
-            $contacts = User::withCount([
-    'messages as unread_count' => function ($query) {
-        $query->where('is_read', 0);
-    }
-])->get();
-
-        // ✅ ADDITIONAL CONTACT LIST (for All Contact UI)
-$contactList = Notification::where('user_id', $user->id)
-    ->with('sender')
-    ->orderByDesc('created_at')
-    ->get()
-    ->groupBy(function ($n) {
-        if ($n->sender_id !== null) {
-            return 'user_' . $n->sender_id;
-        }
-
-        return 'sender_' . md5(strtolower(trim($n->sender_name ?? ($n->type ?? 'system'))));
-    })
-    ->map(function ($items) {
-        $latest = $items->first();
-
-        return (object) [
-            'id' => $latest->sender_id ?? 0,
-            'name' => $latest->sender_name ?? 'System Support',
-            'chat_avatar' => $this->getSenderImageDisplay($latest),
-            'last_message_at' => $latest->created_at,
-            'unread_count' => $items->where('is_read', false)->count(),
-            'phone' => optional($latest->sender)->phone,
-            'email' => optional($latest->sender)->email,
-
-        ];
-    })
-    ->values();
-
-        $adminMessages = Notification::with('sender')
-            ->where('user_id', $user->id)
-            ->whereIn('type', ['admin_message', 'global_message'])
-            ->latest()
-            ->limit(50)
-            ->get()
-            ->map(function ($notification) {
-                $notification->sender_profile_image_display = $this->getSenderImageDisplay($notification);
-                $notification->sender_name = $this->getSenderName($notification);
-                return $notification;
-            });
+        $contactList = $this->contactList($user->id);
 
         return view('POSViews.POSUserViews.Notifications.index', compact(
             'notifications',
+            'adminMessages',
             'inboxCount',
-            'spamCount',
-            'archiveCount',
             'globalMessageCount',
             'unreadCount',
             'tab',
-            'contacts',
-
-        'contactList',
-        'adminMessages'
-
+            'contactList'
         ));
     }
-
-    public function unreadNotifications(Request $request)
+    private function baseQuery(int $userId): Builder
     {
-        $user = Auth::user();
-
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+        return Notification::query()
+            ->with('sender')
+            ->where('user_id', $userId)
+            ->latest();
+    }
+    private function applyTab(Builder $query, string $tab): void
+    {
+        if ($tab === 'adminMessage') {
+            $query->whereIn('type', self::ADMIN_TYPES);
+            return;
         }
 
-        $unreadToasts = Notification::with('sender')
-            ->where('user_id', $user->id)
-            ->where('is_read', false)
+        $query->where(function ($q) {
+            $q->where('category', 'inbox')
+              ->orWhereNull('category');
+        });
+    }
+    private function applyFilters(Builder $query, Request $request): void
+    {
+        if ($search = trim($request->input('search', ''))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('message', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->date);
+        }
+
+        if ($request->boolean('unread')) {
+            $query->where('is_read', false);
+        }
+    }
+
+    private function paginate(Builder $query, Request $request, int $perPage, string $pageName): LengthAwarePaginator
+    {
+        /** @var LengthAwarePaginator $paginator */
+        $paginator = $query->paginate($perPage, ['*'], $pageName);
+
+        $paginator->appends($request->except($pageName));
+
+        $paginator->setCollection(
+            $paginator->getCollection()->map(function ($item) {
+                $item->sender_profile_image_display = $this->senderImage($item);
+                $item->sender_name = $this->senderName($item);
+                return $item;
+            })
+        );
+
+        return $paginator;
+    }
+    private function contactList(int $userId): Collection
+    {
+        return Notification::with('sender')
+            ->where('user_id', $userId)
             ->latest()
-            ->take(5)
-            ->get();
+            ->get()
+            ->groupBy(fn ($n) => $n->sender_id ?? 'system')
+            ->map(function ($items) {
+                $latest = $items->first();
 
-        $unreadCount = (int) Notification::where('user_id', $user->id)
-            ->where('is_read', false)
-            ->selectRaw('COALESCE(SUM(CASE WHEN unread_count IS NULL OR unread_count < 1 THEN 1 ELSE unread_count END), 0) AS unread_total')
-            ->value('unread_total');
-
-        return response()->json([
-            'unread_count' => $unreadCount,
-            'unread' => $unreadToasts->map(function ($notif) {
-                return [
-                    'id' => $notif->id,
-                    'title' => $notif->title,
-                    'message' => $notif->message,
-                    'created_at' => $notif->created_at->toDateTimeString(),
-                    'sender_name' => $this->getSenderName($notif),
-                    'avatar' => $this->getSenderImageDisplay($notif),
-                    'unread_count' => max(1, (int) ($notif->unread_count ?? 1)),
+                return (object)[
+                    'id' => $latest->sender_id ?? 0,
+                    'name' => $this->senderName($latest),
+                    'chat_avatar' => $this->senderImage($latest),
+                    'unread_count' => $items->where('is_read', false)->count(),
                 ];
-            }),
-        ]);
+            })
+            ->values();
     }
 
-    public function markAsRead(Request $request, $id)
+    private function senderImage($notification): string
     {
-        $user = Auth::user();
-
-        if (!$user) {
-            return redirect('/login')->with('error', 'Please login first.');
+        if ($notification->relationLoaded('sender') && $notification->sender?->profile_image) {
+            return asset('storage/' . $notification->sender->profile_image);
         }
 
-        $notification = Notification::where('user_id', $user->id)->findOrFail($id);
-
-        if (!$notification->is_read) {
-            $notification->update([
-                'is_read' => true,
-                'unread_count' => 0,
-            ]);
-        }
-
-        if ($request->expectsJson() || $request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'id' => $notification->id,
-            ]);
-        }
-
-        return back()->with('success', 'Notification marked as read.');
+        return asset(self::DEFAULT_IMAGE);
     }
 
-    public function markAllAsRead()
+    private function senderName($notification): string
     {
-        $user = Auth::user();
-
-        if (!$user) {
-            return redirect('/login')->with('error', 'Please login first.');
-        }
-
-        Notification::where('user_id', $user->id)
-            ->where('is_read', false)
-            ->update([
-                'is_read' => true,
-                'unread_count' => 0,
-            ]);
-
-        if (request()->expectsJson() || request()->ajax()) {
-            return response()->json([
-                'success' => true,
-            ]);
-        }
-
-        return back()->with('success', 'All notifications marked as read.');
+        return $notification->sender_name
+            ?? $notification->sender?->name
+            ?? 'Admin';
     }
-
-    public function show($id)
-    {
-        $user = Auth::user();
-
-        if (!$user) {
-            return redirect('/login')->with('error', 'Please login first.');
-        }
-
-        $notification = Notification::with('sender')
-            ->where('user_id', $user->id)
-            ->findOrFail($id);
-
-        if (!$notification->is_read) {
-            $notification->is_read = true;
-            $notification->unread_count = 0;
-            $notification->save();
-        }
-
-        $notification->sender_profile_image_display = $this->getSenderImageDisplay($notification);
-        $notification->sender_name = $this->getSenderName($notification);
-
-        return view('notifications.show', compact('notification'));
-    }
-
-    public function deleteSelected(Request $request)
-    {
-        $user = Auth::user();
-
-        if (!$user) {
-            return redirect('/login')->with('error', 'Please login first.');
-        }
-
-        $ids = $request->input('notification_ids', []);
-
-        if (!is_array($ids) || count($ids) === 0) {
-            return back()->with('error', 'No notifications selected.');
-        }
-
-        Notification::where('user_id', $user->id)
-            ->whereIn('id', $ids)
-            ->delete();
-
-        if ($request->expectsJson() || $request->ajax()) {
-            return response()->json([
-                'success' => true,
-            ]);
-        }
-
-        return back()->with('success', 'Selected notifications deleted.');
-    }
-
-    protected function getSenderImageDisplay($notification)
-    {
-        if ($notification->relationLoaded('sender') && $notification->sender) {
-            $sender = $notification->sender;
-
-            if (!empty($sender->profile_image)) {
-                return asset('storage/' . ltrim($sender->profile_image, '/'));
-            }
-
-            if (!empty($sender->profile_image_url)) {
-                return $sender->profile_image_url;
-            }
-
-            $bcId = $sender->bc_id ?? null;
-            if (!empty($bcId)) {
-                return route('users.bc-image', ['bcId' => $bcId]);
-            }
-        }
-
-        if (!empty($notification->sender_profile_image)) {
-            $raw = trim((string) $notification->sender_profile_image);
-
-            if (Str::startsWith($raw, ['http://', 'https://'])) {
-                return $raw;
-            }
-
-            if (Str::startsWith($raw, ['/storage/', 'storage/'])) {
-                return asset(ltrim($raw, '/'));
-            }
-
-            return asset('storage/' . ltrim($raw, '/'));
-        }
-
-        return asset('images/pos/Rectangle 2.png');
-    }
-
-    protected function getSenderName($notification)
-    {
-        if (!empty($notification->sender_name)) {
-            return $notification->sender_name;
-        }
-
-        if ($notification->relationLoaded('sender') && $notification->sender) {
-            return $notification->sender->name ?? 'Admin';
-        }
-
-        return 'Admin';
-    }
-
-
-
- public function mobileInbox()
-{
-    $userId = auth()->id();
-
-    // Get all notifications
-    $notifications = Notification::where('user_id', $userId)
-        ->orderByDesc('created_at')
-        ->get();
-
-    // Build contacts from notifications (grouped by sender)
-    $contacts = $notifications
-        ->groupBy(function ($n) {
-            if ($n->sender_id !== null) {
-                return 'user_' . $n->sender_id;
-            }
-
-            return 'sender_' . md5(strtolower(trim($n->sender_name ?? ($n->type ?? 'system'))));
-        })
-        ->map(function ($items) {
-            $latest = $items->first();
-
-            return (object) [
-                'id' => $latest->sender_id ?? 0,
-                'name' => $latest->sender_name ?? 'System',
-                'chat_avatar' => $latest->sender_profile_image_display
-                    ?? $latest->sender_profile_image
-                    ?? asset('images/pos/Rectangle 2.png'),
-                'last_message' => $latest->message,
-                'last_message_at' => $latest->created_at,
-                'unread_count' => $items->where('is_read', false)
-                    ->sum(fn ($n) => max(1, (int) ($n->unread_count ?? 1))),
-            ];
-        })
-        ->values();
-
-    return view(
-        'POSViews.POSUserViews.mobile.POSInbox_mobile',
-        compact('notifications', 'contacts')
-    );
-
-}
-public function show_mobile($id)
-{
-    $contact = User::findOrFail($id);
-
-    return view('POSViews.POSUserViews.mobile.contact_detail', compact('contact'));
-}
-
 }

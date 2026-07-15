@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\POS\Admin\Items;
 
 use App\Http\Controllers\Controller;
 use App\Models\POS\Item;
+use App\Models\POS\ItemVariant;
 use App\Models\POS\InventoryMovement;
 use App\Models\ManagementSystem\Company;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ class ItemPosController extends Controller
     public function index()
     {
         $token = $this->getToken();
-        $url = $this->bcEndpoint('items_endpoint', "items?\$filter=blocked eq false");
+        $url = $this->bcEndpoint('items_endpoint', 'items');
 
         if (!$token) {
             return response()->json([
@@ -53,19 +54,64 @@ class ItemPosController extends Controller
                 'discount_amount',
                 'discount_start_date',
                 'discount_end_date',
-                'is_visible'
+                'is_visible',
+                'custom_image_url'
             )
             ->get()
             ->keyBy('bc_id');
 
         foreach ($items as $index => &$item) {
+            $item['id'] = $item['id'] ?? $item['systemId'] ?? $item['SystemId'] ?? null;
+
+            if (empty($item['id'])) {
+                unset($items[$index]);
+                continue;
+            }
+
             $localItem = $localItems[$item['id']] ?? null;
+            $blocked = filter_var(
+                $item['blocked'] ?? $item['Blocked'] ?? $item['isBlocked'] ?? false,
+                FILTER_VALIDATE_BOOLEAN
+            );
+
+            if ($blocked) {
+                unset($items[$index]);
+                continue;
+            }
 
             // Hide products marked inactive from Store Management.
             if ($localItem && !$localItem->is_visible) {
                 unset($items[$index]);
                 continue;
             }
+
+            $item['number'] = $item['number']
+                ?? $item['no']
+                ?? $item['No']
+                ?? $item['itemNo']
+                ?? $item['itemNumber']
+                ?? null;
+
+            $item['displayName'] = $item['displayName']
+                ?? $item['display_name']
+                ?? $item['description']
+                ?? $item['Description']
+                ?? $item['name']
+                ?? null;
+
+            $item['unitPrice'] = $item['unitPrice']
+                ?? $item['unit_price']
+                ?? $item['price']
+                ?? $item['UnitPrice']
+                ?? 0;
+
+            $item['inventory'] = $item['inventory']
+                ?? $item['Inventory']
+                ?? $item['quantityOnHand']
+                ?? $item['qtyOnHand']
+                ?? 0;
+
+            $item['blocked'] = $blocked;
 
             $item['defaultLocationCode'] = $item['defaultLocationCode']
                 ?? $item['locationCode']
@@ -101,6 +147,9 @@ $item['discountEndDate'] =
     ?? $item['discount_end_date']
     ?? $item['discountenddate']
     ?? ($localItem?->discount_end_date?->format('Y-m-d H:i:s'));
+
+            // Custom uploaded photo, if any (protected from BC sync overwrites)
+            $item['customImageUrl'] = $localItem->custom_image_url ?? null;
         }
 
         $items = array_values($items);
@@ -164,6 +213,9 @@ $item['discountEndDate'] =
             ?? $item['discount_end_date']
             ?? $item['discountenddate']
             ?? optional(optional($localItem)->discount_end_date)->format('Y-m-d H:i:s');
+
+        // Custom uploaded photo, if any (protected from BC sync overwrites)
+        $item['customImageUrl'] = $localItem->custom_image_url ?? null;
 
         return response()->json($item);
     }
@@ -328,11 +380,93 @@ $item['discountEndDate'] =
             ], 500);
         }
 
+        // Also sync variants right after items, so one click does both
+        $variantResult = $this->syncVariantsFromBc();
+
         return response()->json([
             'success' => true,
-            'message' => 'Items synced successfully.',
+            'message' => 'Items and variants synced successfully.',
             'count' => count($validated['items']),
+            'variantsSaved' => $variantResult['saved'],
+            'variantsSkipped' => $variantResult['skipped'],
         ]);
+    }
+
+    // Pulls item variants from Business Central and saves them locally.
+    // Called automatically at the end of syncFromAl(), so one button click does both.
+    private function syncVariantsFromBc()
+    {
+        $token = $this->getToken();
+
+        if (!$token) {
+            return ['saved' => 0, 'skipped' => 0];
+        }
+
+        $url = $this->bcEndpoint('item_variants_endpoint', 'itemVariants');
+
+        if (!$url) {
+            return ['saved' => 0, 'skipped' => 0];
+        }
+
+        $response = Http::withoutVerifying()->withToken($token)->get($url);
+
+        if (!$response->successful()) {
+            return ['saved' => 0, 'skipped' => 0];
+        }
+
+        $variants = $response->json()['value'] ?? [];
+
+        $savedCount = 0;
+        $skippedCount = 0;
+
+        foreach ($variants as $variant) {
+
+            $itemNumber = $variant['itemNo'] ?? null;
+            $bcId = $variant['id'] ?? null;
+            $code = $variant['code'] ?? null;
+
+            if (!$itemNumber || !$bcId || !$code) {
+                $skippedCount = $skippedCount + 1;
+                continue;
+            }
+
+            $localItem = Item::where('number', $itemNumber)->first();
+
+            if (!$localItem) {
+                $skippedCount = $skippedCount + 1;
+                continue;
+            }
+
+            $existingVariant = ItemVariant::where('bc_id', $bcId)->first();
+
+            if ($existingVariant) {
+                $existingVariant->item_id = $localItem->id;
+                $existingVariant->item_number = $itemNumber;
+                $existingVariant->code = $code;
+                $existingVariant->description = $variant['description'] ?? null;
+                $existingVariant->description2 = $variant['description2'] ?? null;
+                $existingVariant->blocked = $variant['blocked'] ?? false;
+                $existingVariant->sales_blocked = $variant['salesBlocked'] ?? false;
+                $existingVariant->purchasing_blocked = $variant['purchasingBlocked'] ?? false;
+                $existingVariant->save();
+            } else {
+                $newVariant = new ItemVariant();
+                $newVariant->item_id = $localItem->id;
+                $newVariant->bc_id = $bcId;
+                $newVariant->item_number = $itemNumber;
+                $newVariant->code = $code;
+                $newVariant->description = $variant['description'] ?? null;
+                $newVariant->description2 = $variant['description2'] ?? null;
+                $newVariant->blocked = $variant['blocked'] ?? false;
+                $newVariant->sales_blocked = $variant['salesBlocked'] ?? false;
+                $newVariant->purchasing_blocked = $variant['purchasingBlocked'] ?? false;
+                $newVariant->save();
+            }
+
+            $savedCount = $savedCount + 1;
+        }
+
+        return ['saved' => $savedCount, 'skipped' => $skippedCount];
     }
 
     public function detail(string $id)
@@ -388,7 +522,9 @@ $item['discountEndDate'] =
             ?? $item['discountenddate']
             ?? optional($localItem->discount_end_date)->format('Y-m-d H:i:s');
 
+        // Custom uploaded photo, if any (protected from BC sync overwrites)
+        $item['customImageUrl'] = $localItem->custom_image_url ?? null;
+
         return view('POSViews.POSAdminViews.Items.show', compact('item'));
     }
 }
-    

@@ -16,9 +16,12 @@ class BcCustomer extends Model
         'bc_id',
         'bc_customer_no',
         'name',
+        'display_name',
         'email',
         'phone',
+        'phone_number',
         'address',
+        'profile_image_url',
         'connect_status',
         'last_synced_at',
     ];

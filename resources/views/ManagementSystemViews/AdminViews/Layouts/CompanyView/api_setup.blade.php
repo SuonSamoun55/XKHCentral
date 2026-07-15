@@ -34,7 +34,7 @@
                 <div class="full">
                     <div class="field-label">Base URL</div>
                     <input type="text" class="field-input" name="base_url" value="{{ old('base_url', $company->companyConnection->base_url ?? '') }}" required>
-                    <div class="field-help">Example: https://api.businesscentral.dynamics.com/v2.0/SandboxKH/api/v2.0</div>
+                    <div class="field-help">Use only the API base here: https://api.businesscentral.dynamics.com/v2.0/SandboxKH/api/samoun/sale/v1.0</div>
                 </div>
 
                 <div>
@@ -49,13 +49,13 @@
 
                 <div class="full">
                     <div class="field-label">Users/Customers List Endpoint</div>
-                    <input type="text" class="field-input" name="customers_endpoint" value="{{ old('customers_endpoint', $company->companyConnection->customers_endpoint ?? 'customers?$select=id,number,displayName,email,phoneNumber') }}" required>
-                    <div class="field-help">Used by user sync list.</div>
+                    <input type="text" class="field-input" name="customers_endpoint" value="{{ old('customers_endpoint', $company->companyConnection->customers_endpoint ?? 'Customers') }}" required>
+                    <div class="field-help">Use <code>Customers</code>. If you paste the full Customers URL by mistake, Laravel will convert it when saving.</div>
                 </div>
 
                 <div class="full">
                     <div class="field-label">Items List Endpoint</div>
-                    <input type="text" class="field-input" name="items_endpoint" value="{{ old('items_endpoint', $company->companyConnection->items_endpoint ?? 'items?$filter=blocked eq false') }}" required>
+                    <input type="text" class="field-input" name="items_endpoint" value="{{ old('items_endpoint', $company->companyConnection->items_endpoint ?? 'items') }}" required>
                 </div>
 
                 <div>
@@ -65,8 +65,8 @@
 
                 <div>
                     <div class="field-label">Sales Order Line Create Endpoint</div>
-                    <input type="text" class="field-input" name="sales_order_lines_endpoint" value="{{ old('sales_order_lines_endpoint', $company->companyConnection->sales_order_lines_endpoint ?? 'salesOrders({salesOrderId})/salesOrderLines') }}" required>
-                    <div class="field-help">Placeholder: <code>{salesOrderId}</code></div>
+                    <input type="text" class="field-input" name="sales_order_lines_endpoint" value="{{ old('sales_order_lines_endpoint', $company->companyConnection->sales_order_lines_endpoint ?? 'salesOrderLines') }}" required>
+                    <div class="field-help">Use <code>salesOrderLines</code> when your custom API exposes lines as their own page. Use <code>salesOrders({salesOrderId})/salesOrderLines</code> only if the AL API exposes a nested line part.</div>
                 </div>
 
                 <div class="full">
@@ -79,6 +79,22 @@
                     <div class="field-label">PDF Print Endpoint</div>
                     <input type="text" class="field-input" name="sales_order_pdf_endpoint" value="{{ old('sales_order_pdf_endpoint', $company->companyConnection->sales_order_pdf_endpoint ?? 'salesOrders({salesOrderId})/pdfDocument/pdfDocumentContent') }}" required>
                     <div class="field-help">Placeholder: <code>{salesOrderId}</code></div>
+                </div>
+
+                <div class="full">
+                    <div class="field-label">Posted Sales Invoice Lookup Endpoint</div>
+                    <input type="text" class="field-input" name="posted_sales_invoice_endpoint" value="{{ old('posted_sales_invoice_endpoint', $company->companyConnection->posted_sales_invoice_endpoint ?? 'postedSalesInvoices') }}">
+                </div>
+
+                <div>
+                    <div class="field-label">Posted Sales Invoice Lines Endpoint</div>
+                    <input type="text" class="field-input" name="posted_sales_invoice_lines_endpoint" value="{{ old('posted_sales_invoice_lines_endpoint', $company->companyConnection->posted_sales_invoice_lines_endpoint ?? 'postedSalesInvoiceLines') }}">
+                </div>
+
+                <div>
+                    <div class="field-label">Posted Sales Invoice PDF Endpoint</div>
+                    <input type="text" class="field-input" name="posted_sales_invoice_pdf_endpoint" value="{{ old('posted_sales_invoice_pdf_endpoint', $company->companyConnection->posted_sales_invoice_pdf_endpoint ?? 'postedSalesInvoices({invoiceId})/pdfDocument/pdfDocumentContent') }}">
+                    <div class="field-help">Placeholder: <code>{invoiceId}</code></div>
                 </div>
 
                 <div class="full">

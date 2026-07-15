@@ -4,7 +4,6 @@
 @section('title', 'POS Favorites')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/pos/favorite.css') }}">
     <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSUserViews/Favorites/index.css') }}">
 @endpush
 

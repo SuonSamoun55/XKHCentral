@@ -8,6 +8,9 @@
 
 @section('content')
     <div class="page-wrap">
+        @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
+        @include('ManagementSystemViews.UserViews.Layouts.footer')
+
         <div class="header">
             <div class="order-history-container">
                 <h2 class="history-title">Order History</h2>
@@ -22,11 +25,14 @@
                         </div>
 
                         <div class="status-tabs">
+                            @php
+                                $tabQuery = request()->except(['status', 'page']);
+                            @endphp
                             @foreach (['All', 'Pending', 'On The Way', 'Delivered'] as $status)
-                                <button type="submit" name="status" value="{{ $status }}"
+                                <a href="{{ route('user.pos.order.history', array_merge($tabQuery, ['status' => $status])) }}"
                                     class="tab-btn {{ request('status', 'All') == $status ? 'active' : '' }}">
                                     {{ $status }}
-                                </button>
+                                </a>
                             @endforeach
                         </div>
                     </div>
@@ -35,19 +41,13 @@
                         <div class="date-filter-wrapper">
                             <div id="actionBar" class="action-bar" style="display:none;">
                                 <span id="selectedCount">Selected 0</span>
-
                                 <button type="button" id="cancelSelection">Cancel</button>
-
-                                <button type="button" id="deleteSelected" class="delete-btn">
-                                    Delete
-                                </button>
+                                <button type="button" id="deleteSelected" class="delete-btn">Delete</button>
                             </div>
 
                             <label for="dateInput" class="floating-label">Date</label>
-
                             <input type="date" name="date" id="dateInput" value="{{ request('date') }}"
                                 onchange="this.form.submit()">
-
                             <img src="{{ asset('images/pos/icon.png') }}" class="calendar-custom-img" alt="calendar">
                         </div>
                     </div>
@@ -59,12 +59,51 @@
             </div>
         </div>
 
-        <div class="custom-table-card">
+        <!-- PHONE-ONLY CARD LIST -->
+        <div class="mobile-order-list">
+            @forelse($orders as $order)
+                <div class="order-card-mobile" data-detail-url="{{ route('user.pos.order.show', $order->id) }}">
+                    <div class="order-card-img">
+                        <img src="{{ $order->image_url ?? asset('images/no-image.png') }}"
+                            alt="Order" loading="lazy"
+                            onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
+                    </div>
 
+                    <div class="order-card-info">
+                        <div class="order-card-id">
+                            <span class="label">Order ID :</span> {{ $order->order_no }}
+                        </div>
+                        <div class="order-card-price">${{ number_format($order->total_amount, 2) }}</div>
+                        <div class="order-card-date">
+                            Order date: {{ optional($order->created_at)->format('d F Y') }}
+                        </div>
+                    </div>
+
+                    <div class="order-card-side">
+                        <span class="status-pill {{ strtolower(str_replace(' ', '-', $order->status)) }}">
+                            {{ ucfirst($order->status) }}
+                        </span>
+
+                        <a href="{{ route('user.pos.order.download', $order->id) }}"
+                            class="mobile-download-btn"
+                            onclick="event.stopPropagation();"
+                            title="Download invoice">
+                            <i class="bi bi-download"></i>
+                        </a>
+                    </div>
+                </div>
+            @empty
+                <div class="empty-box">No orders found.</div>
+            @endforelse
+        </div>
+
+        <!-- DESKTOP + TABLET TABLE -->
+        <div class="custom-table-card">
             <table class="table">
                 <thead>
                     <tr>
                         <th width="50"><input type="checkbox" id="selectAll"></th>
+                        <th width="40">#</th>
                         <th>Order</th>
                         <th></th>
                         <th>Date</th>
@@ -75,6 +114,11 @@
                 </thead>
 
                 <tbody id="orderTableBody">
+                    @php
+                        $companyName = auth()->user()->local_name ?? auth()->user()->name ?? 'U';
+                        $companyInitial = strtoupper(mb_substr(trim($companyName), 0, 1)) ?: 'U';
+                    @endphp
+
                     @forelse($orders as $order)
                         <tr class="order-row" data-order-no="{{ $order->order_no }}" data-status="{{ $order->status }}"
                             data-customer="{{ $order->customer_no }}"
@@ -82,18 +126,26 @@
                             data-track-url="{{ route('user.pos.order.bc-status', $order->bc_document_no ?: $order->id) }}">
 
                             <td><input type="checkbox" class="rowCheckbox" value="{{ $order->id }}"></td>
+                            <td>{{ $orders->firstItem() + $loop->index }}</td>
                             <td>
                                 <a href="{{ route('user.pos.order.show', $order->id) }}"
                                     class="order-link">#{{ $order->order_no }}</a>
                             </td>
                             <td>
                                 <div class="order-image">
-                                    <img src="{{ optional($order->items->first()->item)->image_url ?? asset('images/pos/default-food.png') }}"
-                                        alt="">
+                                    @if(!empty($companyImage))
+                                        <img
+                                            src="{{ $companyImage }}"
+                                            alt="{{ $companyName }}"
+                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                        >
+                                        <div class="order-image-fallback" style="display:none;">{{ $companyInitial }}</div>
+                                    @else
+                                        <div class="order-image-fallback">{{ $companyInitial }}</div>
+                                    @endif
                                 </div>
                             </td>
                             <td>
-
                                 <div class="date-text">
                                     {{ optional($order->created_at)->format('M d, Y') }}
                                 </div>
@@ -101,17 +153,14 @@
                                     {{ $order->created_at->format('h:i A') }}
                                 </div>
                             </td>
-
                             <td class="total-text">
                                 ${{ number_format($order->total_amount, 2) }}
                             </td>
-
                             <td>
                                 <span class="status-badge {{ strtolower(str_replace(' ', '-', $order->status)) }}">
                                     {{ ucfirst($order->status) }}
                                 </span>
                             </td>
-
                             <td class="text-end">
                                 <a href="{{ route('user.pos.order.download', $order->id) }}"
                                     class="btn-download text-decoration-none">
@@ -121,15 +170,48 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center">No orders found.</td>
+                            <td colspan="8" class="text-center">No orders found.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
+        {{-- PAGINATION BAR --}}
         <div class="pagination-container">
-            {{ $orders->links('vendor.pagination.custom-pos') }}
+            <form method="GET" action="{{ route('user.pos.order.history') }}" class="pager-size-form">
+                @foreach (request()->except(['limit', 'page']) as $key => $value)
+                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                @endforeach
+
+                <span>Show</span>
+                <select id="orderLimitSelect" name="limit" onchange="this.form.submit()">
+                    @foreach ([10, 20, 50, 100] as $size)
+                        <option value="{{ $size }}" {{ (int) request('limit', 10) === $size ? 'selected' : '' }}>
+                            {{ $size }}
+                        </option>
+                    @endforeach
+                </select>
+                <span>orders</span>
+
+                @if ($orders->onFirstPage())
+                    <span class="pager-page-btn disabled">Previous</span>
+                @else
+                    <a class="pager-page-btn" href="{{ $orders->previousPageUrl() }}">Previous</a>
+                @endif
+
+                <span class="pager-page-info">Page {{ $orders->currentPage() }} of {{ $orders->lastPage() }}</span>
+
+                @if ($orders->hasMorePages())
+                    <a class="pager-page-btn" href="{{ $orders->nextPageUrl() }}">Next</a>
+                @else
+                    <span class="pager-page-btn disabled">Next</span>
+                @endif
+            </form>
+
+            <div class="pager-result-count">
+                Showing <strong>{{ $orders->count() }}</strong> of <strong>{{ $orders->total() }}</strong> orders
+            </div>
         </div>
     </div>
 @endsection
@@ -142,33 +224,26 @@
         const selectedCount = document.getElementById('selectedCount');
         const cancelBtn = document.getElementById('cancelSelection');
 
-        // ✅ Select all
         selectAll.addEventListener('change', function() {
             rowCheckboxes.forEach(cb => cb.checked = this.checked);
             updateSelectionUI();
         });
 
-        // ✅ Individual checkbox
         rowCheckboxes.forEach(cb => {
             cb.addEventListener('change', updateSelectionUI);
         });
 
-        // ✅ Update UI
         function updateSelectionUI() {
             let checked = document.querySelectorAll('.rowCheckbox:checked').length;
-
             if (checked > 0) {
                 actionBar.style.display = 'flex';
                 selectedCount.textContent = `Selected ${checked}`;
             } else {
                 actionBar.style.display = 'none';
             }
-
-            // Sync selectAll state
             selectAll.checked = checked === rowCheckboxes.length;
         }
 
-        // ✅ Cancel button
         cancelBtn.addEventListener('click', function() {
             rowCheckboxes.forEach(cb => cb.checked = false);
             selectAll.checked = false;
@@ -232,11 +307,9 @@
 
             window.selectOrderSuggestion = function(orderNo) {
                 searchInput.value = orderNo;
-
                 orderRows.forEach(row => {
                     row.style.display = (row.dataset.orderNo === orderNo) ? '' : 'none';
                 });
-
                 searchSuggestions.classList.remove('active');
             };
 
@@ -244,7 +317,6 @@
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     const term = this.value.trim().toLowerCase();
-
                     orderRows.forEach(row => {
                         const match = row.dataset.orderNo.toLowerCase().includes(term) ||
                             row.dataset.status.toLowerCase().includes(term);
@@ -263,15 +335,19 @@
             orderRows.forEach((row) => {
                 row.style.cursor = 'pointer';
                 row.addEventListener('click', (e) => {
-                    if (e.target.closest(
-                            'input[type="checkbox"], .btn-download, .btn-download *, .order-link'
-                        )) {
+                    if (e.target.closest('input[type="checkbox"], .btn-download, .btn-download *, .order-link')) {
                         return;
                     }
                     const url = row.dataset.detailUrl;
-                    if (url) {
-                        window.location.href = url;
-                    }
+                    if (url) window.location.href = url;
+                });
+            });
+
+            // Phone card list click-through
+            document.querySelectorAll('.order-card-mobile').forEach(card => {
+                card.addEventListener('click', () => {
+                    const url = card.dataset.detailUrl;
+                    if (url) window.location.href = url;
                 });
             });
 
@@ -291,16 +367,11 @@
 
                     const response = await fetch(refreshUrl.toString(), {
                         cache: 'no-store',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Cache-Control': 'no-cache'
-                        }
+                        headers: { 'Accept': 'application/json', 'Cache-Control': 'no-cache' }
                     });
                     const result = await response.json();
 
-                    if (!response.ok || !result.success) {
-                        return;
-                    }
+                    if (!response.ok || !result.success) return;
 
                     const nextStatus = result.data?.tracking_status || result.data?.local_status || row.dataset.status;
                     row.dataset.status = nextStatus;
@@ -319,10 +390,7 @@
             }
 
             function refreshVisibleRows() {
-                if (document.hidden) {
-                    return;
-                }
-
+                if (document.hidden) return;
                 Array.from(orderRows)
                     .filter(row => row.style.display !== 'none' && !isFinalStatus(row.dataset.status))
                     .slice(0, 5)
@@ -334,31 +402,19 @@
             refreshVisibleRows();
             window.setInterval(refreshVisibleRows, 10000);
         });
-        const deleteBtn = document.getElementById('deleteSelected');
 
+        const deleteBtn = document.getElementById('deleteSelected');
         deleteBtn.addEventListener('click', function() {
             let selected = document.querySelectorAll('.rowCheckbox:checked');
-
-            console.log('Submitting with IDs:', selected.length); // ✅ ADD HERE
-
             if (selected.length === 0) {
                 alert('Please select at least one order');
                 return;
             }
-
-            if (!confirm('Are you sure you want to delete selected orders?')) {
-                return;
-            }
+            if (!confirm('Are you sure you want to delete selected orders?')) return;
 
             let form = document.getElementById('deleteForm');
+            form.innerHTML = `@csrf @method('DELETE')`;
 
-            // Clear old inputs
-            form.innerHTML = `
-        @csrf
-        @method('DELETE')
-    `;
-
-            // Add selected IDs
             selected.forEach(cb => {
                 let input = document.createElement('input');
                 input.type = 'hidden';

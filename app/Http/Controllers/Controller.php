@@ -51,7 +51,20 @@ class Controller extends BaseController
             return null;
         }
 
-        return rtrim($this->baseUrl, '/') . '/companies(' . $this->companyId . ')/' . ltrim($path, '/');
+        if (Str::startsWith($path, ['http://', 'https://'])) {
+            return $path;
+        }
+
+        $baseUrl = rtrim($this->baseUrl, '/');
+        $resource = ltrim($path, '/');
+        
+        $isImagePath = Str::contains($resource, ['/picture', 'getImage']);
+
+        if ($isImagePath) {
+            $baseUrl = preg_replace('#/api/[^/]+/[^/]+/v[\d.]+$#i', '/api/v2.0', $baseUrl);
+        }
+
+        return $baseUrl . '/companies(' . $this->companyId . ')/' . $resource;
     }
 
     protected function bcEndpoint(string $field, string $defaultTemplate, array $replacements = []): ?string

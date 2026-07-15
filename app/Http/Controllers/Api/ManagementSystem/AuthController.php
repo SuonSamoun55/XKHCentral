@@ -5,23 +5,16 @@ namespace App\Http\Controllers\Api\ManagementSystem;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\ManagementSystem\User;
 
 class AuthController extends Controller
 {
     public function showLogin()
     {
         if (Auth::check()) {
-            /** @var User $user */
+            /** @var \App\Models\ManagementSystem\User $user */
             $user = Auth::user();
 
-            if ($user->role === 'admin') {
-                return redirect()->route('pos.index');
-            }
-
-            if ($user->role === 'customer') {
-                return redirect()->route('user.index');
-            }
+            return $this->redirectUser($user);
         }
 
         return view('AUTH.Login');
@@ -36,37 +29,30 @@ class AuthController extends Controller
 
         $credentials['email'] = strtolower(trim($credentials['email']));
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-
-            /** @var User $user */
-            $user = Auth::user();
-
-            if ($user) {
-                $user->last_seen_at = now();
-                $user->save();
-            }
-
-            if ($user->role === 'admin') {
-                return redirect()->route('pos.index');
-            }
-
-            if ($user->role === 'customer') {
-                return redirect()->route('user.index');
-            }
+        if (!Auth::attempt($credentials)) {
+            return back()->withErrors([
+                'email' => 'Invalid credentials.',
+            ]);
         }
 
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
+        $request->session()->regenerate();
+
+        /** @var \App\Models\ManagementSystem\User $user */
+        $user = Auth::user();
+
+        $user->last_seen_at = now();
+        $user->save();
+
+        return $this->redirectUser($user);
     }
 
     public function logout(Request $request)
     {
-        if (Auth::check()) {
-            /** @var User $user */
-            $user = Auth::user();
-$user->last_seen_at = now();
+        /** @var \App\Models\ManagementSystem\User|null $user */
+        $user = Auth::user();
+
+        if ($user) {
+            $user->last_seen_at = now();
             $user->save();
         }
 
@@ -90,47 +76,46 @@ $user->last_seen_at = now();
         if (!Auth::attempt($credentials)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid email or password.',
+                'message' => 'Invalid credentials.',
             ], 401);
         }
 
-        /** @var User $user */
+        /** @var \App\Models\ManagementSystem\User $user */
         $user = Auth::user();
 
         $user->last_seen_at = now();
         $user->save();
 
-        $token = $user->createToken('pos-token')->plainTextToken;
-
         return response()->json([
             'success' => true,
-            'message' => 'Login successful.',
-            'token' => $token,
+            'token' => $user->createToken('pos-token')->plainTextToken,
             'user' => $user,
         ]);
     }
 
-   public function apiLogout(Request $request)
-{
-    /** @var \App\Models\ManagementSystem\User|null $user */
-    $user = $request->user();
+    public function apiLogout(Request $request)
+    {
+        $user = $request->user();
 
-    if ($user) {
-        $user->last_seen_at = now();
-        $user->save();
+        if ($user) {
+            $user->last_seen_at = now();
+            $user->save();
 
-        if (method_exists($user, 'currentAccessToken') && $user->currentAccessToken()) {
-            $accessToken = $user->currentAccessToken();
-
-            if ($accessToken instanceof \Laravel\Sanctum\PersonalAccessToken) {
-                $accessToken->delete();
-            }
+            optional($user->currentAccessToken())->delete();
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Logged out successfully.',
+        ]);
     }
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Logout successful.',
-    ]);
-}
+    private function redirectUser($user)
+    {
+        return match ($user->role) {
+            'admin' => redirect()->route('pos.index'),
+            'customer' => redirect()->route('user.index'),
+            default => redirect()->route('login'),
+        };
+    }
 }

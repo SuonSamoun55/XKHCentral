@@ -34,19 +34,26 @@ class ChatController extends Controller
             return back()->with('error', 'No admin account found.');
         }
 
-        $adminId = (int) ($request->get('admin_id') ?: $admins->first()->id);
-        if (!$admins->pluck('id')->contains($adminId)) {
-            $adminId = (int) $admins->first()->id;
+        // Only treat a thread as "selected" if admin_id was explicitly passed
+        // (e.g. the user tapped a contact). Without it, we deliberately leave
+        // $adminId at 0 so the view can show the contact list first instead
+        // of auto-opening a conversation.
+        $hasExplicitAdmin = $request->filled('admin_id');
+        $adminId = 0;
+
+        if ($hasExplicitAdmin) {
+            $requestedAdminId = (int) $request->get('admin_id');
+            $adminId = $admins->pluck('id')->contains($requestedAdminId)
+                ? $requestedAdminId
+                : (int) $admins->first()->id;
         }
 
-        $this->markThreadAsRead($user->id, $adminId);
+        if ($adminId) {
+            $this->markThreadAsRead($user->id, $adminId);
+        }
 
         $contacts = $this->buildContactCards($user->id, $admins);
-        $activeContact = $contacts->firstWhere('id', $adminId);
-        if (!$activeContact) {
-            $activeContact = $contacts->first();
-            $adminId = (int) ($activeContact->id ?? 0);
-        }
+        $activeContact = $adminId ? $contacts->firstWhere('id', $adminId) : null;
 
         $messages = $adminId
             ? $this->threadMessages($user->id, $adminId)

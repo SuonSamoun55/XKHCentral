@@ -167,3 +167,8 @@
                 display:none;
             } */
         }
+        .variant-chip-active{
+    border-color: var(--primary);
+    background: #e6fbfd;
+    color: var(--primary-dark);
+}

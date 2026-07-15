@@ -6,9 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\POS\Item;
 use App\Models\POS\InventoryMovement;
 use App\Models\POS\OrderItem;
+use App\Models\POS\ItemVariant;
+use App\Models\POS\ItemSetupStatus;
 use App\Models\ManagementSystem\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class StoreManagementController extends Controller
 {
@@ -28,6 +31,15 @@ class StoreManagementController extends Controller
             ->where('company_id', $companyId)
             ->orderBy('display_name')
             ->get();
+
+        // Pull setup status for all items at once and attach to each product
+        $statuses = ItemSetupStatus::all()->keyBy('item_id');
+
+        foreach ($products as $item) {
+            $status = $statuses[$item->id] ?? null;
+            $item->main_image_done = $status->main_image_done ?? false;
+            $item->variants_done = $status->variants_done ?? false;
+        }
 
         $categories = Item::query()
             ->select(
@@ -331,6 +343,47 @@ class StoreManagementController extends Controller
             'buyerStats' => $buyerStats,
             'buyerSearch' => $buyerSearch,
             'buyerFilter' => $buyerFilter,
+        ]);
+    }
+
+    // Show the "Update Images" page for one item (main photo + all variant photos)
+    public function editImages(int $id)
+    {
+        $companyId = Company::value('id');
+
+        $item = Item::where('company_id', $companyId)->findOrFail($id);
+
+        $variants = ItemVariant::where('item_id', $item->id)->get();
+
+        return view('POSViews.POSAdminViews.StoreManagement.product-images', compact('item', 'variants'));
+    }
+
+    // Upload / replace the main photo for one item.
+    // Saved to custom_image_url (NOT image_url) so it survives future BC syncs,
+    // since syncFromAl() always overwrites image_url with the BC photo.
+    public function uploadMainImage(Request $request, int $id)
+    {
+        $request->validate([
+            'image' => 'required|image|max:5120',
+        ]);
+
+        $companyId = Company::value('id');
+
+        $item = Item::where('company_id', $companyId)->findOrFail($id);
+
+        $path = $request->file('image')->store('item-main-images', 'public');
+
+        $item->custom_image_url = Storage::url($path);
+        $item->save();
+
+        // Mark that the main image has been set up for this item
+        $status = ItemSetupStatus::firstOrNew(['item_id' => $item->id]);
+        $status->main_image_done = true;
+        $status->save();
+
+        return response()->json([
+            'success' => true,
+            'image_url' => $item->custom_image_url,
         ]);
     }
 }

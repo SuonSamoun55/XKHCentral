@@ -15,7 +15,7 @@ class CompanyController extends Controller
     {
         $selectedCompanyId = session('selected_company_id');
         $company = null;
-    
+
         if ($selectedCompanyId) {
             $company = Company::with('companyConnection')->find($selectedCompanyId);
         }
@@ -65,6 +65,9 @@ class CompanyController extends Controller
             'sales_order_lines_endpoint' => ['nullable', 'string'],
             'sales_orders_by_number_endpoint' => ['nullable', 'string'],
             'sales_order_pdf_endpoint' => ['nullable', 'string'],
+            'posted_sales_invoice_endpoint' => ['nullable', 'string'],
+            'posted_sales_invoice_lines_endpoint' => ['nullable', 'string'],
+            'posted_sales_invoice_pdf_endpoint' => ['nullable', 'string'],
         ]);
 
         $logoPath = null;
@@ -100,6 +103,9 @@ class CompanyController extends Controller
             'sales_order_lines_endpoint' => $validated['sales_order_lines_endpoint'] ?? null,
             'sales_orders_by_number_endpoint' => $validated['sales_orders_by_number_endpoint'] ?? null,
             'sales_order_pdf_endpoint' => $validated['sales_order_pdf_endpoint'] ?? null,
+            'posted_sales_invoice_endpoint' => $validated['posted_sales_invoice_endpoint'] ?? null,
+            'posted_sales_invoice_lines_endpoint' => $validated['posted_sales_invoice_lines_endpoint'] ?? null,
+            'posted_sales_invoice_pdf_endpoint' => $validated['posted_sales_invoice_pdf_endpoint'] ?? null,
             'is_default' => true,
             'status' => true,
         ];
@@ -150,6 +156,9 @@ class CompanyController extends Controller
             'sales_order_lines_endpoint' => ['nullable', 'string'],
             'sales_orders_by_number_endpoint' => ['nullable', 'string'],
             'sales_order_pdf_endpoint' => ['nullable', 'string'],
+            'posted_sales_invoice_endpoint' => ['nullable', 'string'],
+            'posted_sales_invoice_lines_endpoint' => ['nullable', 'string'],
+            'posted_sales_invoice_pdf_endpoint' => ['nullable', 'string'],
             'status' => ['nullable'],
         ]);
 
@@ -191,6 +200,16 @@ class CompanyController extends Controller
             'status' => $request->has('status'),
             'is_default' => true,
         ];
+
+        foreach ([
+            'posted_sales_invoice_endpoint',
+            'posted_sales_invoice_lines_endpoint',
+            'posted_sales_invoice_pdf_endpoint',
+        ] as $postedEndpointField) {
+            if ($request->has($postedEndpointField)) {
+                $connectionData[$postedEndpointField] = $validated[$postedEndpointField] ?? null;
+            }
+        }
 
         if (!empty($validated['client_secret'])) {
             $connectionData['client_secret'] = $validated['client_secret'];
@@ -235,19 +254,30 @@ class CompanyController extends Controller
             'sales_order_lines_endpoint' => ['required', 'string'],
             'sales_orders_by_number_endpoint' => ['required', 'string'],
             'sales_order_pdf_endpoint' => ['required', 'string'],
+            'posted_sales_invoice_endpoint' => ['nullable', 'string'],
+            'posted_sales_invoice_lines_endpoint' => ['nullable', 'string'],
+            'posted_sales_invoice_pdf_endpoint' => ['nullable', 'string'],
             'status' => ['nullable'],
         ]);
 
+        [$baseUrl, $customersEndpoint] = $this->normalizeBusinessCentralApiInput(
+            trim($validated['base_url']),
+            trim($validated['customers_endpoint'])
+        );
+
         $connectionData = [
-            'base_url' => trim($validated['base_url']),
+            'base_url' => $baseUrl,
             'token_url' => trim($validated['token_url']),
             'api_scope' => trim($validated['api_scope']),
-            'customers_endpoint' => trim($validated['customers_endpoint']),
+            'customers_endpoint' => $customersEndpoint,
             'items_endpoint' => trim($validated['items_endpoint']),
             'sales_orders_endpoint' => trim($validated['sales_orders_endpoint']),
             'sales_order_lines_endpoint' => trim($validated['sales_order_lines_endpoint']),
             'sales_orders_by_number_endpoint' => trim($validated['sales_orders_by_number_endpoint']),
             'sales_order_pdf_endpoint' => trim($validated['sales_order_pdf_endpoint']),
+            'posted_sales_invoice_endpoint' => trim($validated['posted_sales_invoice_endpoint'] ?? ''),
+            'posted_sales_invoice_lines_endpoint' => trim($validated['posted_sales_invoice_lines_endpoint'] ?? ''),
+            'posted_sales_invoice_pdf_endpoint' => trim($validated['posted_sales_invoice_pdf_endpoint'] ?? ''),
             'status' => $request->has('status'),
             'is_default' => true,
         ];
@@ -298,5 +328,21 @@ class CompanyController extends Controller
                 return Schema::hasColumn('company_connections', $key);
             })
             ->all();
+    }
+
+    private function normalizeBusinessCentralApiInput(string $baseUrl, string $customersEndpoint): array
+    {
+        $fullCustomerPattern = '#^(https?://.+?/api/[^/]+/[^/]+/v[0-9.]+)/companies\(([^)]+)\)/(Customers)(?:\?.*)?$#i';
+
+        foreach (['baseUrl' => $baseUrl, 'customersEndpoint' => $customersEndpoint] as $field => $value) {
+            if (!preg_match($fullCustomerPattern, $value, $matches)) {
+                continue;
+            }
+
+            $baseUrl = $matches[1];
+            $customersEndpoint = $matches[3];
+        }
+
+        return [rtrim($baseUrl, '/'), ltrim($customersEndpoint, '/')];
     }
 }

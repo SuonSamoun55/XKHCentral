@@ -1,4 +1,4 @@
-    <div class="store-header-row">
+<div class="store-header-row">
         <h2 class="store-page-title">Manage Store</h2>
     </div>
 
@@ -147,9 +147,9 @@
                             <td>
                                 <div class="product-cell">
                                     <div class="product-thumb-box">
-                                        @if(!empty($item->image_url))
+                                        @if(!empty($item->custom_image_url) || !empty($item->image_url))
                                             <img
-                                                src="{{ $item->image_url }}"
+                                                src="{{ $item->custom_image_url ?? $item->image_url }}"
                                                 alt="{{ $item->display_name }}"
                                                 onerror="this.onerror=null;this.parentElement.innerHTML='<div class=&quot;thumb-placeholder&quot;><i class=&quot;bi bi-image&quot;></i></div>';"
                                             >
@@ -183,13 +183,27 @@
                                         <span class="toggle-dot"></span>
                                     </button>
 
-                                    <a
-                                        href="{{ route('store.management.products.detail', $item->id) }}"
-                                        class="store-action-btn btn-active-custom"
-                                        style="height:30px; padding:0 10px; font-size:12px; text-decoration:none;"
-                                    >
+                                    <a href="{{ route('store.management.products.detail', $item->id) }}" class="store-action-btn btn-active-custom" style="height:30px; padding:0 10px; font-size:12px; text-decoration:none;">
                                         View Detail
                                     </a>
+
+                                    <a href="{{ route('store.management.product.images', $item->id) }}" class="store-action-btn btn-active-custom" style="height:30px; padding:0 10px; font-size:12px; text-decoration:none;">
+                                        <i class="bi bi-image"></i> Update
+                                    </a>
+                                </div>
+
+                                <div style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;">
+                                    @if($item->main_image_done)
+                                        <span style="font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; background:#d1fae5; color:#065f46;">
+                                            <i class="bi bi-check-circle"></i> Image Setup
+                                        </span>
+                                    @endif
+
+                                    @if($item->variants_done)
+                                        <span style="font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; background:#d1fae5; color:#065f46;">
+                                            <i class="bi bi-check-circle"></i> Variants Setup
+                                        </span>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -300,3 +314,5 @@
             </div>
         </div>
     </div>
+
+

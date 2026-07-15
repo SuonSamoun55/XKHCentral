@@ -24,6 +24,8 @@ use App\Http\Controllers\Api\POS\Admin\Users\UserController;
 use App\Http\Controllers\Api\POS\Admin\Profile\AdminProfileController;
 use App\Http\Controllers\Api\POS\User\Legal\PolicyController;
 use App\Http\Controllers\Api\BusinessCentral\OrderStatusController;
+// use App\Http\Controllers\Api\POS\Admin\Items\ItemVariantPosController;
+use App\http\controllers\api\POS\Admin\Items\ItemVariantPosController;
 
 Route::view('/test-ui', 'POSViews.POSUserViews.Testing.test-ui')
     ->name('user.pos.test_ui');
@@ -64,6 +66,13 @@ Route::post('/store-management/products/{id}/toggle', [StoreManagementController
 Route::post('/store-management/categories/{code}/toggle', [StoreManagementController::class, 'toggleCategory'])->name('store.management.categories.toggle');
 Route::post('/store-management/products/bulk-update', [StoreManagementController::class, 'bulkUpdateProducts'])->name('store.management.products.bulkUpdate');
 Route::post('/store-management/categories/bulk-update', [StoreManagementController::class, 'bulkUpdateCategories'])->name('store.management.categories.bulkUpdate');
+Route::get('/store/management/products/{id}/images', [StoreManagementController::class, 'editImages'])
+    ->name('store.management.product.images');
+Route::post('/store/management/products/{id}/image', [StoreManagementController::class, 'uploadMainImage'])
+    ->name('store.management.product.image.upload');
+Route::post('/store/management/products/{id}/image', [StoreManagementController::class, 'uploadMainImage'])
+    ->name('store.management.product.image.upload');
+
     // ---------- Dashboard ----------
     Route::get('/admin', [DashboardController::class, 'index'])->name('pos.index');
     Route::get('/', [DashboardUserController::class, 'index'])->name('user.index');
@@ -90,6 +99,9 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::get('/admin/order-actions', [AdminOrderController::class, 'actionHistory'])->name('admin.orders.actions');
     Route::get('/admin/orders/{id}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
 
+
+
+
     ////////USER CONTROLLER
     Route::prefix('admin')->group(function () {
     Route::get('/users/{id}', [App\Http\Controllers\Api\POS\Admin\Users\UserController::class, 'show'])->name('admin.users.show');
@@ -110,7 +122,15 @@ Route::post('/store-management/categories/bulk-update', [StoreManagementControll
     Route::post('/pos-system/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('user.notifications.read');
     Route::post('/pos-system/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('user.notifications.markAllRead');
     Route::delete('/pos-system/notifications/delete-selected', [NotificationController::class, 'deleteSelected'])->name('user.notifications.deleteSelected');
+// variant
+ 
+    Route::get('/store/management/variants', [ItemVariantPosController::class, 'manage'])
+        ->name('store.management.variants');
 
+    Route::get('/items/{itemId}/variants', [ItemVariantPosController::class, 'index']);
+
+    Route::post('/items/variants/{variantId}/image', [ItemVariantPosController::class, 'uploadImage']);
+///-------------------------
     Route::get('/profile', [UserProfileController::class, 'index'])->name('profile');
     Route::put('/profile/update', [UserProfileController::class, 'update'])->name('profile.update');
     Route::get('/profile/change-password', [UserProfileController::class, 'showChangePasswordForm'])->name('user.password.change');
