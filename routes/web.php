@@ -24,8 +24,7 @@ use App\Http\Controllers\Api\POS\Admin\Users\UserController;
 use App\Http\Controllers\Api\POS\Admin\Profile\AdminProfileController;
 use App\Http\Controllers\Api\POS\User\Legal\PolicyController;
 use App\Http\Controllers\Api\BusinessCentral\OrderStatusController;
-// use App\Http\Controllers\Api\POS\Admin\Items\ItemVariantPosController;
-use App\http\controllers\api\POS\Admin\Items\ItemVariantPosController;
+use App\Http\Controllers\Api\POS\Admin\Items\ItemVariantPosController;
 
 Route::view('/test-ui', 'POSViews.POSUserViews.Testing.test-ui')
     ->name('user.pos.test_ui');
@@ -70,8 +69,6 @@ Route::get('/store/management/products/{id}/images', [StoreManagementController:
     ->name('store.management.product.images');
 Route::post('/store/management/products/{id}/image', [StoreManagementController::class, 'uploadMainImage'])
     ->name('store.management.product.image.upload');
-Route::post('/store/management/products/{id}/image', [StoreManagementController::class, 'uploadMainImage'])
-    ->name('store.management.product.image.upload');
 
     // ---------- Dashboard ----------
     Route::get('/admin', [DashboardController::class, 'index'])->name('pos.index');
@@ -108,7 +105,7 @@ Route::post('/store/management/products/{id}/image', [StoreManagementController:
     });
     // ---------- POS User ----------
     Route::get('/pos-system', [ItemListController::class, 'getItems'])->name('user.posinterface');
-    Route::get('/pos-system/product/{id}', 
+    Route::get('/pos-system/product/{id}',
     [ItemListController::class, 'showProduct'])->name('user.pos.product.detail');
     Route::get('/pos-system/favorites', [FavoriteController::class, 'getFavorites'])->name('user.pos.favorites');
     Route::post('/pos-system/favorite-toggle', [FavoriteController::class, 'toggle'])->name('user.pos.favorite.toggle');
@@ -123,7 +120,7 @@ Route::post('/store/management/products/{id}/image', [StoreManagementController:
     Route::post('/pos-system/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('user.notifications.markAllRead');
     Route::delete('/pos-system/notifications/delete-selected', [NotificationController::class, 'deleteSelected'])->name('user.notifications.deleteSelected');
 // variant
- 
+
     Route::get('/store/management/variants', [ItemVariantPosController::class, 'manage'])
         ->name('store.management.variants');
 
@@ -141,7 +138,7 @@ Route::post('/store/management/products/{id}/image', [StoreManagementController:
     Route::get('/pos-system/order/{id}', [HistoryController::class, 'show'])->name('user.pos.order.show');
     Route::post('/pos-system/order/{id}/cancel', [HistoryController::class, 'cancel'])->name('user.pos.order.cancel');
     Route::get('/pos-system/order-history', [HistoryController::class, 'history'])->name('user.pos.order.history');
-    
+
 
     Route::get('/pos-system/cart', [CartController::class, 'index'])->name('user.pos.cart');
     Route::get('/pos-system/cart/data', [CartController::class, 'getCart'])->name('user.pos.cart.data');
@@ -150,7 +147,7 @@ Route::post('/store/management/products/{id}/image', [StoreManagementController:
     Route::delete('/pos-system/cart/remove/{id}', [CartController::class, 'removeItem'])->name('user.pos.cart.remove');
     Route::delete('/pos-system/cart/clear', [CartController::class, 'clearCart'])->name('user.pos.cart.clear');
     Route::get('/pos-system/checkout', [CartController::class, 'checkout'])->name('user.pos.checkout');
-    Route::post('/pos-system/checkout', [OrderController::class, 'checkout'])->name('user.pos.checkout');
+    Route::post('/pos-system/checkout', [OrderController::class, 'checkout'])->name('user.pos.checkout.store');
     Route::delete('/orders/delete-multiple', [HistoryController::class, 'deleteMultiple'])
     ->name('user.pos.order.deleteMultiple');
 
