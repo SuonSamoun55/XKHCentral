@@ -124,15 +124,6 @@
                         <span class="nav-label">Companies</span>
                     </div>
                 </a>
-
-                <a href="/admin/notification" class="nav-link-wrap">
-                    <div class="nav-btn {{ request()->is('admin/notification') || request()->is('admin/notification/*') ? 'active' : '' }}">
-                        <span class="nav-icon">
-                            <img src="{{ asset('images/aside/Notification.png') }}" alt="Notification Icon">
-                        </span>
-                        <span class="nav-label">Notification</span>
-                    </div>
-                </a>
             </nav>
         </div>
 
