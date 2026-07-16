@@ -177,6 +177,18 @@
                     window.history.back();
                 });
             }
+
+            // --- FIX: keep focused input visible when mobile keyboard opens ---
+            // Email was scrolling into view fine because it's near the top,
+            // but password sits lower and was getting hidden behind the keyboard
+            // with no scroll room to reach it (login-shell was locked to height:100vh).
+            document.querySelectorAll('.login-input').forEach(function(input) {
+                input.addEventListener('focus', function() {
+                    setTimeout(function() {
+                        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 300); // wait for keyboard open animation to finish
+                });
+            });
         });
     </script>
 @endsection

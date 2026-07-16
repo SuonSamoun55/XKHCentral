@@ -74,6 +74,54 @@
 
     // 3. Setup User Avatar Logic
     $userAvatar = $authUser->profile_image_display ?? asset('images/default-user.png');
+
+    // ------------------------------------------------------------------
+    // Sidebar nav items — one array entry per link.
+    // 'match' is the list of URL patterns (request()->is()) that should
+    // mark this item as active.
+    // 'icon' is the normal icon, 'icon_active' is shown while the item
+    // is active. If you don't have a separate active icon yet, just
+    // point 'icon_active' to the same file as 'icon'.
+    // ------------------------------------------------------------------
+    $navItems = [
+        [
+            'name' => 'Dashboard',
+            'url' => '/',
+            'match' => ['/', 'pos-system'],
+            'icon' => 'images/aside/SidbarDaskboard.png',
+            'icon_active' => 'images/aside/UserDaskboardActive.png',
+        ],
+        [
+            'name' => 'Cart',
+            'url' => '/pos-system/cart',
+            'match' => ['pos-system/cart'],
+            'icon' => 'images/aside/SidebarCart.png',
+            'icon_active' => 'images/aside/UserCartActive.png',
+        ],
+        [
+            'name' => 'Favorite',
+            'url' => '/pos-system/favorites',
+            'match' => ['pos-system/favorites'],
+            'icon' => 'images/aside/SidebarFavorite.png',
+            'icon_active' => 'images/aside/FavoriteActive.png',
+        ],
+        [
+            'name' => 'Order History',
+            'url' => '/pos-system/order-history',
+            'match' => ['pos-system/order-history'],
+            'icon' => 'images/aside/SidebarOrder.png',
+            'icon_active' => 'images/aside/OrderHistoryActive.png',
+        ],
+        [
+            'name' => 'Notification',
+            'url' => '/pos-system/notifications',
+            'match' => ['pos-system/notifications'],
+            'icon' => 'images/aside/SidebarNotification.png',
+            'icon_active' => 'images/aside/NotificationActive.png',
+            'notification' => true,
+        ],
+        
+    ];
 @endphp
 
 <div class="sidebar-wrap">
@@ -89,60 +137,33 @@
                 {{-- <div class="brand-text">{{ $companyName }}</div> --}}
             </div>
             <nav class="nav-list">
-                <a href="/">
-                    <button class="nav-btn {{ request()->is('/') || request()->is('pos-system') ? 'active' : '' }}"
-                        type="button">
-                        {{-- <span class="nav-icon">⌗111111111111</span> --}}
-                        <span class="nav-icon">
-                            <img src="{{ asset('images/aside/dashboard.png') }}" alt="Dashboard Icon">
-                        </span> <span class="nav-label">Dashboard</span>
-                    </button>
-                </a>
+                @foreach ($navItems as $item)
+                    @php
+                        $isActive = false;
+                        foreach ($item['match'] as $pattern) {
+                            if (request()->is($pattern)) {
+                                $isActive = true;
+                                break;
+                            }
+                        }
 
-                {{-- <a href="/users">
-              <button class="nav-btn" type="button">
-                <span class="nav-icon">👤</span>
-                <span class="nav-label">Users</span>
-              </button>
-            </a> --}}
-                <a href="/pos-system/cart">
-                    <button class="nav-btn {{ request()->is('pos-system/cart') ? 'active' : '' }}" type="button">
-                        <span class="nav-icon">
-                            <img src="{{ asset('images/aside/Cart.png') }}" alt="Cart Icon">
-                        </span>
-                        <span class="nav-label">Cart</span>
-                    </button>
-                </a>
-
-                <a href="/pos-system/favorites">
-                    <button class="nav-btn {{ request()->is('pos-system/favorites') ? 'active' : '' }}" type="button">
-                        <span class="nav-icon">
-                            <img src="{{ asset('images/aside/Heart Button.png') }}" alt="Favorite Icon">
-                        </span>
-                        <span class="nav-label">Favorite</span>
-                    </button>
-                </a>
-
-                    <a href="/pos-system/order-history">
-                        <button class="nav-btn {{ request()->is('pos-system/order-history') ? 'active' : '' }}"
-                            type="button">
-                            <span class="nav-icon">
-                                <img src="{{ asset('images/aside/history.png') }}" alt="Order History Icon">
+                        $iconToShow = $item['icon'];
+                        if ($isActive && !empty($item['icon_active'])) {
+                            $iconToShow = $item['icon_active'];
+                        }
+                    @endphp
+                    <a href="{{ $item['url'] }}">
+                        <button class="nav-btn {{ $isActive ? 'active' : '' }}" type="button">
+                            <span class="nav-icon {{ !empty($item['notification']) ? 'nav-icon-notification' : '' }}">
+                                <img src="{{ asset($iconToShow) }}" alt="{{ $item['name'] }} Icon">
+                                @if (!empty($item['notification']))
+                                    <span id="unreadNotiDot" class="noti-dot" aria-hidden="true"></span>
+                                @endif
                             </span>
-                            <span class="nav-label">Order History</span>
+                            <span class="nav-label">{{ $item['name'] }}</span>
                         </button>
                     </a>
-
-                    <a href="/pos-system/notifications">
-                    <button class="nav-btn {{ request()->is('pos-system/notifications') ? 'active' : '' }}"
-                            type="button">
-                            <span class="nav-icon nav-icon-notification">
-                                <img src="{{ asset('images/aside/Notification.png') }}" alt="Notification Icon">
-                                <span id="unreadNotiDot" class="noti-dot" aria-hidden="true"></span>
-                            </span>
-                            <span class="nav-label">Notification</span>
-                        </button>
-                    </a>
+                @endforeach
             </nav>
         </div>
 
@@ -312,21 +333,6 @@
                 .then(data => {
                     if (!data || typeof data.unread_count === 'undefined') return;
                     updateNotificationDot(data.unread_count);
-
-                    // Update nav badge if present
-                    // document.querySelectorAll('.nav-label').forEach(el => {
-                    //     if (el.textContent.trim().toLowerCase() === 'notification') {
-                    //         let badge = el.nextElementSibling;
-                    //         if (!badge || !badge.classList.contains('badge-noti-count')) {
-                    //             badge = document.createElement('span');
-                    //             badge.className = 'badge-noti-count';
-                    //             badge.style.cssText = 'background:#ff5252;color:#fff;border-radius:12px;font-size:9px; padding:2px 6px; position:relative;left:-100px; top:-10px; positoin:sticky;';
-                    //             el.parentElement.appendChild(badge);
-                    //         }
-                    //         badge.textContent = data.unread_count > 0 ? data.unread_count : '';
-                    //     }
-                    // });
-
                     if (data.unread && Array.isArray(data.unread)) {
                         data.unread.forEach(notification => createToast(notification));
                     }
