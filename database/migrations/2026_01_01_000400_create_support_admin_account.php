@@ -8,8 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $email = strtolower(trim(env('SUPPORT_ADMIN_EMAIL', 'extricatesupportcoltd@gmail.com')));
-        $password = env('SUPPORT_ADMIN_PASSWORD', 'extricatesupportcoltd@885*#%');
+        $email = strtolower(trim(env('SUPPORT_ADMIN_EMAIL', 'support@xtricate.com')));
+        $password = env('SUPPORT_ADMIN_PASSWORD', 'Xtricate@2026');
         $now = now();
         $existing = DB::table('users')->where('email', $email)->first();
 
@@ -39,7 +39,7 @@ return new class extends Migration
     public function down(): void
     {
         DB::table('users')
-            ->where('email', strtolower(trim(env('SUPPORT_ADMIN_EMAIL', 'extricatesupportcoltd@gmail.com'))))
+            ->where('email', strtolower(trim(env('SUPPORT_ADMIN_EMAIL', 'support@xtricate.com'))))
             ->delete();
     }
 };

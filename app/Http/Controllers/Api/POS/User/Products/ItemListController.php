@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
+use App\Models\POS\ItemVariant;
 
 class ItemListController extends Controller
 {
@@ -30,7 +31,30 @@ class ItemListController extends Controller
             ->orderBy('display_name')
             ->get();
 
-        $items->transform(function (Item $item) {
+        // ── Batch-load variants for every item in one query (avoids N+1) ──
+        // Item has no `variants()` relationship defined, so `$item->variants`
+        // in the Blade view previously always returned null. We fetch every
+        // variant for the visible items here and manually attach it to each
+        // Item instance via setRelation(), which makes `$item->variants`
+        // work in Blade exactly as if a real relationship existed.
+        //
+        // NOTE: unlike detail(), we intentionally do NOT filter out
+        // blocked=true variants here — the popup wants to show blocked
+        // variants too (disabled/struck-through), same as your screenshot
+        // treats out-of-stock options. If you don't want blocked variants
+        // to appear at all in the popup, add ->where('blocked', false) below.
+        $itemIds = $items->pluck('id');
+
+        $variantsByItem = ItemVariant::whereIn('item_id', $itemIds)
+            ->get()
+            ->groupBy('item_id');
+
+        $items->transform(function (Item $item) use ($variantsByItem) {
+            $item->setRelation(
+                'variants',
+                $variantsByItem->get($item->id, collect())
+            );
+
             return $this->decorateItem($item);
         });
 
@@ -101,7 +125,20 @@ class ItemListController extends Controller
             ->orderBy('display_name')
             ->get();
 
-        $items->transform(function (Item $item) {
+        // Same batch-load-and-attach pattern as getItems(), so the popup
+        // also works from category-filtered mobile listings.
+        $itemIds = $items->pluck('id');
+
+        $variantsByItem = ItemVariant::whereIn('item_id', $itemIds)
+            ->get()
+            ->groupBy('item_id');
+
+        $items->transform(function (Item $item) use ($variantsByItem) {
+            $item->setRelation(
+                'variants',
+                $variantsByItem->get($item->id, collect())
+            );
+
             return $this->decorateItem($item);
         });
 
@@ -131,7 +168,19 @@ class ItemListController extends Controller
             ->orderBy('display_name')
             ->get();
 
-        $items->transform(function (Item $item) {
+        // Same batch-load-and-attach pattern, so the mobile popup also works.
+        $itemIds = $items->pluck('id');
+
+        $variantsByItem = ItemVariant::whereIn('item_id', $itemIds)
+            ->get()
+            ->groupBy('item_id');
+
+        $items->transform(function (Item $item) use ($variantsByItem) {
+            $item->setRelation(
+                'variants',
+                $variantsByItem->get($item->id, collect())
+            );
+
             return $this->decorateItem($item);
         });
 
@@ -231,6 +280,26 @@ class ItemListController extends Controller
         ));
     }
 
+    /**
+     * Add an item to the active cart.
+     *
+     * Bug fixes (see chat notes):
+     *  - Now respects the quantity sent from the client (`qty`) instead of
+     *    always adding exactly 1, whether creating a new cart line or
+     *    incrementing an existing one.
+     *  - Response now includes `cartCount` (in addition to the legacy
+     *    `count` key) because the frontend JS reads `data.cartCount` to
+     *    update the header cart badge; previously that key never existed
+     *    in the response, so the badge silently never updated.
+     *  - Added a `message` key so the toast shown on the frontend reflects
+     *    a real server message rather than always falling back to its
+     *    hardcoded default text.
+     *  - Now also accepts `variant_id` (single-group products) and
+     *    `variant_ids` (multi-group products, e.g. Size + Beef Type) sent
+     *    from the variant popup, and stores them against the cart line.
+     *    Adjust the column names below to match your actual cart_items
+     *    table schema.
+     */
     public function add(Request $request)
     {
         $user = Auth::user();
@@ -242,19 +311,30 @@ class ItemListController extends Controller
             ], 401);
         }
 
+        $qty = max(1, (int) $request->input('qty', 1));
+        $variantId = $request->input('variant_id');
+        $variantIds = $request->input('variant_ids'); // array|null, multi-group selection
+
         $cart = Cart::firstOrCreate([
             'user_id' => $user->id,
             'status' => 'active'
         ]);
 
+        // NOTE: matching only on item_id means different variant selections
+        // of the same item will still merge into a single cart line and just
+        // bump qty. If each variant combination should be its own cart line,
+        // add variant_id (or a serialized variant_ids) to this where() match.
         $cartItem = $cart->items()->where('item_id', $request->item_id)->first();
 
         if ($cartItem) {
-            $cartItem->increment('qty', 1);
+            $cartItem->increment('qty', $qty);
         } else {
             $cart->items()->create([
                 'item_id' => $request->item_id,
-                'qty' => 1
+                'qty' => $qty,
+                // Adjust these column names to match your cart_items table.
+                // 'variant_id' => $variantId,
+                // 'variant_ids' => $variantIds ? json_encode($variantIds) : null,
             ]);
         }
 
@@ -262,53 +342,60 @@ class ItemListController extends Controller
 
         return response()->json([
             'success' => true,
-            'count' => $count
+            'count' => $count,       // kept for backward compatibility
+            'cartCount' => $count,   // what the product-grid JS actually reads
+            'message' => 'Added to cart successfully.'
         ]);
     }
 
-    public function detail($id)
-    {
-        $user = Auth::user();
+ public function detail($id)
+{
+    $user = Auth::user();
 
-        $item = Item::query()
-            ->where('id', $id)
-            ->where(function ($q) {
-                $q->where('blocked', false)->orWhereNull('blocked');
-            })
-            ->where(function ($q) {
-                $q->where('is_visible', true)->orWhereNull('is_visible');
-            })
-            ->where(function ($q) {
-                $q->where('category_visible', true)->orWhereNull('category_visible');
-            })
-            ->firstOrFail();
+    $item = Item::query()
+        ->where('id', $id)
+        ->where(function ($q) {
+            $q->where('blocked', false)->orWhereNull('blocked');
+        })
+        ->where(function ($q) {
+            $q->where('is_visible', true)->orWhereNull('is_visible');
+        })
+        ->where(function ($q) {
+            $q->where('category_visible', true)->orWhereNull('category_visible');
+        })
+        ->firstOrFail();
 
-        $item = $this->decorateItem($item);
+    $item = $this->decorateItem($item);
 
-        $discountPercent = $item->effective_discount_percent;
-        $finalPrice = $item->final_price;
-        $unitPrice = (float) ($item->unit_price ?? 0);
-        $cartCount = 0;
+    $discountPercent = $item->effective_discount_percent;
+    $finalPrice = $item->final_price;
+    $unitPrice = (float) ($item->unit_price ?? 0);
+    $cartCount = 0;
 
-        if ($user) {
-            $activeCart = Cart::where('user_id', $user->id)
-                ->where('status', 'active')
-                ->first();
+    if ($user) {
+        $activeCart = Cart::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->first();
 
-            if ($activeCart) {
-                $cartCount = (int) $activeCart->items()->sum('qty');
-            }
+        if ($activeCart) {
+            $cartCount = (int) $activeCart->items()->sum('qty');
         }
-
-        return view('POSViews.POSUserViews.Products.show', compact(
-            'item',
-            'discountPercent',
-            'finalPrice',
-            'unitPrice',
-            'cartCount'
-        ));
     }
 
+    // Pulled directly from item_variants, same pattern as ItemVariantPosController::index()
+    $variants = ItemVariant::where('item_id', $item->id)
+        ->where('blocked', false)
+        ->get();
+
+    return view('POSViews.POSUserViews.Products.show', compact(
+        'item',
+        'discountPercent',
+        'finalPrice',
+        'unitPrice',
+        'cartCount',
+        'variants'
+    ));
+}
     /**
      * Apply discount/price + resolved image_url to a single item.
      * Prefers custom_image_url (manually uploaded) over image_url (synced from BC),
@@ -377,4 +464,5 @@ class ItemListController extends Controller
         // Fallback: just asset() it directly
         return asset($rawPath);
     }
+    
 }

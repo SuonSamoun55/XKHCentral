@@ -10,8 +10,8 @@ class SupportAdminSeeder extends Seeder
 {
     public function run(): void
     {
-        $email = env('SUPPORT_ADMIN_EMAIL', 'extricatesupportcoltd@gmail.com');
-        $plainPassword = env('SUPPORT_ADMIN_PASSWORD', 'extricatesupportcoltd@885*#%');
+        $email = env('SUPPORT_ADMIN_EMAIL', 'support@xtricate.com');
+        $plainPassword = env('SUPPORT_ADMIN_PASSWORD', 'Xtricate@2026');
         $adminRoleId = DB::table('roles')->where('name', 'admin')->value('id');
         $existing = DB::table('users')->where('email', $email)->first();
         $now = now();
