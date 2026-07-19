@@ -3,7 +3,7 @@
     @section('title', 'POS User Item List')
 
     @push('styles')
-        <link rel="stylesheet" href="{{ asset('css/pos/item-list.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSUserViews/Products/item-list.css') }}">
     @endpush
 
     @section('content')

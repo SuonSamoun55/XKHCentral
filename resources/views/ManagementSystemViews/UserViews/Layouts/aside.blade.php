@@ -120,7 +120,7 @@
             'icon_active' => 'images/aside/NotificationActive.png',
             'notification' => true,
         ],
-        
+
     ];
 @endphp
 
@@ -129,8 +129,8 @@
         <div class="sidebar-top">
             <div class="brand">
                 <div class="company-logo-box">
-                    <img src="{{ $companyLogoUrl }}" 
-                         alt="Company Logo" 
+                    <img src="{{ $companyLogoUrl }}"
+                         alt="Company Logo"
                          class="company-logo-img"
                          onerror="this.onerror=null;this.src='{{ asset('images/default-company.png') }}';">
                 </div>

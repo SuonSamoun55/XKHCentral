@@ -95,6 +95,14 @@
         <div class="od-mobile-section-title">Purchased Item</div>
         <div class="od-mobile-items">
             @forelse ($order->items as $line)
+                @php
+                    // Works whether the variant is a loaded relation
+                    // (itemVariant) or a stored snapshot column
+                    // (variant_description) on order_items.
+                    $variantLabel = optional($line->itemVariant)->description
+                        ?? $line->variant_description
+                        ?? null;
+                @endphp
                 <div class="od-mobile-item-row">
                     <img class="od-mobile-item-img"
                         src="{{ optional($line->item)->image_url ?: asset('images/no-image.png') }}"
@@ -103,8 +111,15 @@
                     <div class="od-mobile-item-info">
                         <div class="od-mobile-item-name">{{ $line->item_name ?? 'Unknown Item' }}</div>
                         <div class="od-mobile-item-qty">
-                            SKU: {{ $line->item_no ?? 'N/A' }} &middot;
+                            Item No.: {{ $line->item_no ?? 'N/A' }} &middot;
+                            Variant: {{ $variantLabel ?: '-' }} &middot;
                             Qty: {{ (int) ($line->qty ?? 0) }} × ${{ number_format((float) ($line->unit_price ?? 0), 2) }}
+                            @if (($line->discount_amount ?? 0) > 0)
+                                &middot; <span style="color:#059669;">-${{ number_format((float) $line->discount_amount, 2) }} off</span>
+                            @endif
+                            @if (($line->tax_amount ?? 0) > 0)
+                                &middot; VAT ${{ number_format((float) $line->tax_amount, 2) }}
+                            @endif
                         </div>
                     </div>
                     <div class="od-mobile-item-total">
@@ -204,8 +219,8 @@
 
         <div class="od-header">
             <div>
-                <a href="{{ route('user.pos.order.history') }}" class="od-back">
-                    <i class="bi bi-arrow-left"></i> Back to Orders
+                <a href="{{ route('user.pos.order.history') }}" class="od-back" title="Back to Orders">
+                    <i class="bi bi-arrow-left"></i>
                 </a>
                 <h1 class="od-title">Order #{{ $order->order_no }}</h1>
                 <div class="od-meta">
@@ -240,13 +255,21 @@
                         <thead>
                             <tr>
                                 <th>Product</th>
+                                <th>Variant</th>
                                 <th style="text-align:center;">Qty</th>
                                 <th style="text-align:right;">Unit Price</th>
+                                <th style="text-align:right;">Discount</th>
+                                <th style="text-align:right;">VAT</th>
                                 <th style="text-align:right;">Line Total</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse ($order->items as $line)
+                                @php
+                                    $variantLabel = optional($line->itemVariant)->description
+                                        ?? $line->variant_description
+                                        ?? null;
+                                @endphp
                                 <tr>
                                     <td>
                                         <div class="od-item">
@@ -256,17 +279,30 @@
                                                 onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
                                             <div>
                                                 <div class="od-item-name">{{ $line->item_name ?? 'Unknown Item' }}</div>
-                                                <div class="od-item-sku">SKU: {{ $line->item_no ?? 'N/A' }}</div>
+                                                <div class="od-item-sku">Item No.: {{ $line->item_no ?? 'N/A' }}</div>
                                             </div>
                                         </div>
                                     </td>
+                                    <td>{{ $variantLabel ?: '-' }}</td>
                                     <td style="text-align:center;">{{ (int) ($line->qty ?? 0) }}</td>
                                     <td style="text-align:right;">${{ number_format((float) ($line->unit_price ?? 0), 2) }}</td>
+                                    <td style="text-align:center;">
+                                        @if (($line->discount_amount ?? 0) > 0)
+                                            <span>
+                                                {{ rtrim(rtrim(number_format($line->discount_percent ?? 0, 2), '0'), '.') }}%
+                                            </span>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                    <td style="text-align:right;">
+                                        ${{ number_format((float) ($line->tax_amount ?? 0), 2) }}
+                                    </td>
                                     <td style="text-align:right;"><strong>${{ number_format((float) ($line->line_total ?? 0), 2) }}</strong></td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" style="text-align:center; padding: 28px 0; color:#64748b;">
+                                    <td colspan="7" style="text-align:center; padding: 28px 0; color:#64748b;">
                                         No items found in this order.
                                     </td>
                                 </tr>

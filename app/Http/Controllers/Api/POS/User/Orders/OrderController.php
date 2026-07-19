@@ -8,6 +8,8 @@ use App\Models\ManagementSystem\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, DB, Log};
 use Illuminate\Support\Str;
+use Carbon\Carbon;
+
 class OrderController extends Controller
 {
     private function user()
@@ -41,7 +43,7 @@ class OrderController extends Controller
     {
         $user = $this->user();
 
-        $cart = Cart::with('items.item')
+        $cart = Cart::with('items.item', 'items.itemVariant')
             ->where('user_id', $user->id)
             ->where('status', 'active')
             ->first();
@@ -102,14 +104,11 @@ class OrderController extends Controller
                 throw new \Exception("Invalid item");
             }
 
-            $qty = $i->qty ?? 0;
-            $price = $i->unit_price ?? 0;
+            $line = $this->calculateLinePricing($item, (int) ($i->qty ?? 0));
 
-            $line = $price * $qty;
-
-            $subtotal += $line;
-            $discount += 0;
-            $tax += 0;
+            $subtotal += $line['subtotal'];
+            $discount += $line['discount_amount'];
+            $tax += $line['tax_amount'];
         }
 
         return [$subtotal, $discount, $tax];
@@ -118,15 +117,23 @@ class OrderController extends Controller
     private function createItems($cart, $order, $companyId)
     {
         foreach ($cart->items as $i) {
+            $item = $i->item;
+            $line = $this->calculateLinePricing($item, (int) ($i->qty ?? 0));
+
             OrderItem::create([
                 'order_id' => $order->id,
                 'company_id' => $companyId,
                 'item_id' => $i->item_id,
+                'item_variant_id' => $i->item_variant_id,
                 'item_no' => $i->item->number,
                 'item_name' => $i->item->display_name,
+                'variant_description' => $i->itemVariant->description ?? null,
                 'qty' => $i->qty,
                 'unit_price' => $i->unit_price,
-                'line_total' => $i->line_total,
+                'discount_percent' => $line['discount_percent'],
+                'discount_amount' => $line['discount_amount'],
+                'tax_amount' => $line['tax_amount'],
+                'line_total' => $line['line_total'],
             ]);
         }
     }
@@ -168,7 +175,7 @@ class OrderController extends Controller
 
     public function detail($id)
     {
-        $order = Order::with('items.item')
+        $order = Order::with('items.item', 'items.itemVariant')
             ->where('id', $id)
             ->where('user_id', auth()->id())
             ->firstOrFail();
@@ -183,5 +190,62 @@ class OrderController extends Controller
             'orderDetail' => $order,
             'showOrderDetail' => true,
         ]);
+    }
+
+    /**
+     * Same pricing logic used in CartController::calculateLinePricing()
+     * so cart totals and order totals never diverge.
+     */
+    private function calculateLinePricing($item, int $qty): array
+    {
+        $unitPrice = (float) ($item->unit_price ?? 0);
+        $subtotal = max(0, $unitPrice * $qty);
+
+        $discountPercent = $this->resolveDiscountPercent($item);
+        $discountAmount = $subtotal * ($discountPercent / 100);
+
+        $taxableAmount = max(0, $subtotal - $discountAmount);
+        $taxAmount = 0;
+
+        if (!$item->price_includes_tax) {
+            $vatPercent = max(0, (float) ($item->vat_percent ?? 0));
+            $fixedTaxPerUnit = max(0, (float) ($item->tax_amount ?? 0));
+
+            $percentTaxAmount = $taxableAmount * ($vatPercent / 100);
+            $fixedTaxAmount = $fixedTaxPerUnit * $qty;
+            $taxAmount = $percentTaxAmount + $fixedTaxAmount;
+        }
+
+        $lineTotal = $taxableAmount + $taxAmount;
+
+        return [
+            'subtotal' => round($subtotal, 2),
+            'discount_percent' => round($discountPercent, 2),
+            'discount_amount' => round($discountAmount, 2),
+            'tax_amount' => round($taxAmount, 2),
+            'line_total' => round($lineTotal, 2),
+        ];
+    }
+
+    private function resolveDiscountPercent($item): float
+    {
+        $discount = max(0, (float) ($item->discount_amount ?? 0));
+        if ($discount <= 0) {
+            return 0.0;
+        }
+
+        $today = Carbon::today();
+        $start = $item->discount_start_date ? Carbon::parse($item->discount_start_date)->startOfDay() : null;
+        $end = $item->discount_end_date ? Carbon::parse($item->discount_end_date)->endOfDay() : null;
+
+        if ($start && $today->lt($start)) {
+            return 0.0;
+        }
+
+        if ($end && $today->gt($end)) {
+            return 0.0;
+        }
+
+        return min(100, $discount);
     }
 }

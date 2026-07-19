@@ -22,7 +22,8 @@ class HistoryController extends Controller
 
     public function history(Request $request)
     {
-        $orders = $this->filteredOrders($request, ['items']);
+        // items.item is needed for the row/card product-image thumbnails
+        $orders = $this->filteredOrders($request, ['items.item']);
         $companyImage = $this->companyImage();
 
         return view(
@@ -61,14 +62,14 @@ class HistoryController extends Controller
         );
     }
 
-    public function show($id)
-    {
-        $order = $this->orders()
-            ->with(['items.item', 'actions.actionBy'])
-            ->findOrFail($id);
+public function show($id)
+{
+    $order = $this->orders()
+        ->with(['items.item', 'items.itemVariant', 'actions.actionBy'])
+        ->findOrFail($id);
 
-        return view('POSViews.POSUserViews.Orders.show', compact('order'));
-    }
+    return view('POSViews.POSUserViews.Orders.show', compact('order'));
+}
 
     public function cancel(Request $request, $id)
     {
@@ -339,9 +340,11 @@ class HistoryController extends Controller
         );
 
         // The "Delivered" tab must match every status spelling
-        // actually stored in the orders table.
+        // actually stored in the orders table, and the "Cancel"
+        // tab label maps to the "cancelled"/"canceled" statuses.
         $statusAliases = [
             'delivered' => ['delivered', 'delivery'],
+            'cancel'    => ['cancelled', 'canceled'],
         ];
         $statusValues = $statusAliases[$status] ?? [$status];
 

@@ -3,9 +3,8 @@
     @section('title', 'POS Cart')
 
     @push('styles')
-        <link rel="stylesheet" href="{{ asset('css/pos/cart.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSUserViews/ItemCart/cart.css') }}">
     @endpush
-
 
     @section('content')
         <div class="page-wrap">
@@ -66,7 +65,7 @@
                                 </button>
                             </div>
                         </div>
-                    @else   
+                    @else
                         @php
                             $count = $cart->items->count();
                             $scrollClass = '';

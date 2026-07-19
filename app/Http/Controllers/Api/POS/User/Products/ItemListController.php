@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use App\Models\POS\ItemVariant;
+use Illuminate\Support\Facades\Log;
+// use Illuminate\Log;
+// use mobileCategories
+// use App\Http\Controllers\Api\POS\User\Products\Category;
 
 class ItemListController extends Controller
 {
@@ -279,75 +283,65 @@ class ItemListController extends Controller
             'categories'
         ));
     }
+public function add(Request $request)
+{
+    $user = Auth::user();
 
-    /**
-     * Add an item to the active cart.
-     *
-     * Bug fixes (see chat notes):
-     *  - Now respects the quantity sent from the client (`qty`) instead of
-     *    always adding exactly 1, whether creating a new cart line or
-     *    incrementing an existing one.
-     *  - Response now includes `cartCount` (in addition to the legacy
-     *    `count` key) because the frontend JS reads `data.cartCount` to
-     *    update the header cart badge; previously that key never existed
-     *    in the response, so the badge silently never updated.
-     *  - Added a `message` key so the toast shown on the frontend reflects
-     *    a real server message rather than always falling back to its
-     *    hardcoded default text.
-     *  - Now also accepts `variant_id` (single-group products) and
-     *    `variant_ids` (multi-group products, e.g. Size + Beef Type) sent
-     *    from the variant popup, and stores them against the cart line.
-     *    Adjust the column names below to match your actual cart_items
-     *    table schema.
-     */
-    public function add(Request $request)
-    {
-        $user = Auth::user();
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Not authenticated'
-            ], 401);
-        }
-
-        $qty = max(1, (int) $request->input('qty', 1));
-        $variantId = $request->input('variant_id');
-        $variantIds = $request->input('variant_ids'); // array|null, multi-group selection
-
-        $cart = Cart::firstOrCreate([
-            'user_id' => $user->id,
-            'status' => 'active'
-        ]);
-
-        // NOTE: matching only on item_id means different variant selections
-        // of the same item will still merge into a single cart line and just
-        // bump qty. If each variant combination should be its own cart line,
-        // add variant_id (or a serialized variant_ids) to this where() match.
-        $cartItem = $cart->items()->where('item_id', $request->item_id)->first();
-
-        if ($cartItem) {
-            $cartItem->increment('qty', $qty);
-        } else {
-            $cart->items()->create([
-                'item_id' => $request->item_id,
-                'qty' => $qty,
-                // Adjust these column names to match your cart_items table.
-                // 'variant_id' => $variantId,
-                // 'variant_ids' => $variantIds ? json_encode($variantIds) : null,
-            ]);
-        }
-
-        $count = (int) $cart->items()->sum('qty');
-
+    if (!$user) {
         return response()->json([
-            'success' => true,
-            'count' => $count,       // kept for backward compatibility
-            'cartCount' => $count,   // what the product-grid JS actually reads
-            'message' => 'Added to cart successfully.'
+            'success' => false,
+            'message' => 'Not authenticated'
+        ], 401);
+    }
+
+    $qty = max(1, (int) $request->input('qty', 1));
+    $variantId = $request->input('variant_id')
+        ?? $request->input('variantId')
+        ?? $request->input('selected_variant_id')
+        ?? $request->input('selectedVariantId');
+    if (!$variantId) {
+        $variantIds = $request->input('variant_ids') ?? $request->input('variantIds');
+        if (is_array($variantIds) && count($variantIds) > 0) {
+            $variantId = $variantIds[0];
+        }
+    }
+    Log::info('CART ADD DEBUG', [
+        'raw_all' => $request->all(),
+        'resolved_variant_id' => $variantId,
+        'item_id' => $request->item_id,
+        'qty' => $qty,
+    ]);
+
+    $cart = Cart::firstOrCreate([
+        'user_id' => $user->id,
+        'status' => 'active'
+    ]);
+
+    $cartItem = $cart->items()
+        ->where('item_id', $request->item_id)
+        ->where('item_variant_id', $variantId)
+        ->first();
+
+    if ($cartItem) {
+        $cartItem->increment('qty', $qty);
+    } else {
+        $cart->items()->create([
+            'item_id' => $request->item_id,
+            'item_variant_id' => $variantId,
+            'qty' => $qty,
         ]);
     }
 
+    $count = (int) $cart->items()->sum('qty');
+
+    return response()->json([
+        'success' => true,
+        'count' => $count,
+        'cartCount' => $count,
+        'variant_id_received' => $variantId, // temporary, for debugging
+        'message' => 'Added to cart successfully.'
+    ]);
+}
  public function detail($id)
 {
     $user = Auth::user();
@@ -388,13 +382,8 @@ class ItemListController extends Controller
         ->get();
 
     return view('POSViews.POSUserViews.Products.show', compact(
-        'item',
-        'discountPercent',
-        'finalPrice',
-        'unitPrice',
-        'cartCount',
-        'variants'
-    ));
+    'item', 'discountPercent', 'finalPrice', 'unitPrice', 'cartCount', 'variants'
+));
 }
     /**
      * Apply discount/price + resolved image_url to a single item.
@@ -455,8 +444,6 @@ class ItemListController extends Controller
         if (str_starts_with($rawPath, '/')) {
             return asset(ltrim($rawPath, '/'));
         }
-
-        // Relative path stored, e.g. "items/photo1.jpg" saved via Storage::disk('public')
         if (Storage::disk('public')->exists($rawPath)) {
             return asset('storage/' . $rawPath);
         }
@@ -464,5 +451,5 @@ class ItemListController extends Controller
         // Fallback: just asset() it directly
         return asset($rawPath);
     }
-    
+
 }

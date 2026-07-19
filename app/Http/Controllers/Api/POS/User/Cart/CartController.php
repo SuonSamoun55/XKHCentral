@@ -73,7 +73,7 @@ public function checkout()
         'showCheckout' => true,
     ]);
 }
-    
+
 public function success(Request $request)
 {
     $order = Order::where('id', $request->order)
@@ -122,73 +122,91 @@ public function success(Request $request)
         ]);
     }
 
-    public function addToCart(Request $request)
-    {
-        $validated = $request->validate([
-            'item_id' => ['required', 'exists:items,id'],
-            'qty'     => ['nullable', 'integer', 'min:1'],
+  public function addToCart(Request $request)
+{
+    $validated = $request->validate([
+        'item_id' => ['required', 'exists:items,id'],
+        'qty'     => ['nullable', 'integer', 'min:1'],
+    ]);
+
+    $user = Auth::user();
+
+    if (!$user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthenticated.',
+        ], 401);
+    }
+
+    $qty = (int) ($validated['qty'] ?? 1);
+
+    // Accept every shape the frontend might send for a variant selection
+    $variantId = $request->input('variant_id')
+        ?? $request->input('variantId')
+        ?? $request->input('selected_variant_id')
+        ?? $request->input('selectedVariantId');
+
+    if (!$variantId) {
+        $variantIds = $request->input('variant_ids') ?? $request->input('variantIds');
+        if (is_array($variantIds) && count($variantIds) > 0) {
+            $variantId = $variantIds[0];
+        }
+    }
+
+    $cart = Cart::firstOrCreate(
+        [
+            'user_id' => $user->id,
+            'status'  => 'active',
+        ],
+        [
+            'user_id' => $user->id,
+            'status'  => 'active',
+        ]
+    );
+
+    $item = Item::findOrFail($validated['item_id']);
+
+    if (!$item->is_visible) {
+        return response()->json([
+            'success' => false,
+            'message' => 'This product is inactive and cannot be added to cart.',
+        ], 422);
+    }
+
+    // IMPORTANT: match on item_variant_id too, so different variants of the
+    // same item don't get merged into one cart line.
+    $cartItem = CartItem::where('cart_id', $cart->id)
+        ->where('item_id', $item->id)
+        ->where('item_variant_id', $variantId)
+        ->first();
+
+    if ($cartItem) {
+        $cartItem->qty += $qty;
+        $linePricing = $this->calculateLinePricing($item, (int) $cartItem->qty);
+        $cartItem->line_total = $linePricing['line_total'];
+        $cartItem->save();
+    } else {
+        $linePricing = $this->calculateLinePricing($item, $qty);
+        $cartItem = CartItem::create([
+            'cart_id'         => $cart->id,
+            'item_id'         => $item->id,
+            'item_variant_id' => $variantId,
+            'item_no'         => $item->number,
+            'item_name'       => $item->display_name,
+            'qty'             => $qty,
+            'unit_price'      => $item->unit_price,
+            'line_total'      => $linePricing['line_total'],
         ]);
-
-        $user = Auth::user();
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthenticated.',
-            ], 401);
-        }
-
-        $qty = (int) ($validated['qty'] ?? 1);
-
-        $cart = Cart::firstOrCreate(
-            [
-                'user_id' => $user->id,
-                'status'  => 'active',
-            ],
-            [
-                'user_id' => $user->id,
-                'status'  => 'active',
-            ]
-        );
-
-        $item = Item::findOrFail($validated['item_id']);
-
-        if (!$item->is_visible) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This product is inactive and cannot be added to cart.',
-            ], 422);
-        }
-
-        $cartItem = CartItem::where('cart_id', $cart->id)
-            ->where('item_id', $item->id)
-            ->first();
-
-        if ($cartItem) {
-            $cartItem->qty += $qty;
-            $linePricing = $this->calculateLinePricing($item, (int) $cartItem->qty);
-            $cartItem->line_total = $linePricing['line_total'];
-            $cartItem->save();
-        } else {
-            $linePricing = $this->calculateLinePricing($item, $qty);
-            $cartItem = CartItem::create([
-                'cart_id'    => $cart->id,
-                'item_id'    => $item->id,
-                'item_no'    => $item->number,
-                'item_name'  => $item->display_name,
-                'qty'        => $qty,
-                'unit_price' => $item->unit_price,
-                'line_total' => $linePricing['line_total'],
-            ]);
-        }
+    }
 
     $itemCount = $cart->items()->sum('qty');
 
-return response()->json([
-    'success' => true,
-    'cartCount' => $itemCount
-]);
-    }
+    return response()->json([
+        'success'    => true,
+        'cartCount'  => $itemCount,
+        'variant_id_received' => $variantId, 
+    ]);
+}
 
     public function updateQty(Request $request, $id)
     {

@@ -1,3 +1,7 @@
+/* ============================================================
+   ROOT / PAGE CONTAINER
+   ============================================================ */
+
 #order-detail-page {
     --od-bg: white;
     --od-card: #ffffff;
@@ -13,16 +17,22 @@
     --od-warning-bg: #fffbeb;
     --od-radius: 12px;
     --od-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
-    background: var(--od-bg);
-    border-radius: 12px;
-    margin: 0;
-    padding: 24px;
+
     width: 100%;
     min-height: 100%;
+    margin: 0;
+    /* padding: 24px; */
+    padding: 10px 14px;
     color: var(--od-text);
-    overflow-y: auto;
+    background: var(--od-bg);
+    border-radius: 12px;
     overflow-x: hidden;
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+}
+
+#order-detail-page * {
+    box-sizing: border-box;
 }
 
 /* Make sure the surrounding app shell never clips this page's content —
@@ -32,10 +42,6 @@
 .content-area {
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
-}
-
-#order-detail-page * {
-    box-sizing: border-box;
 }
 
 /* Mobile-only header/footer partials — hidden on desktop/tablet by default.
@@ -50,13 +56,18 @@
     display: none !important;
 }
 
+
+/* ============================================================
+   ALERTS
+   ============================================================ */
+
 #order-detail-page .od-alert {
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 600;
     border: 1px solid;
     border-radius: 10px;
-    padding: 10px 14px;
-    margin-bottom: 14px;
-    font-size: 14px;
-    font-weight: 600;
 }
 
 #order-detail-page .od-alert.success {
@@ -71,43 +82,58 @@
     border-color: #fecaca;
 }
 
+
+/* ============================================================
+   DESKTOP HEADER (back button, title, status badge, actions)
+   ============================================================ */
+
 #order-detail-page .od-header {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 14px;
-    margin-bottom: 20px;
     flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    /* margin-bottom: 15px; */
 }
 
+/* Circular icon-only back button */
 #order-detail-page .od-back {
-    color: var(--od-muted);
-    text-decoration: none;
-    font-size: 13px;
-    font-weight: 600;
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
     margin-bottom: 8px;
+    color: #1f2937;
+    font-size: 18px;
+    text-decoration: none;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgb(15 23 42 / 0.08);
+    transition: all 0.2s;
 }
 
 #order-detail-page .od-back:hover {
     color: var(--od-primary);
+    border-color: var(--od-primary);
 }
 
+/* Page heading — kept larger than the 14px title scale since this is the
+   hero heading for the whole page, not a section/card title. */
 #order-detail-page .od-title {
     margin: 0;
-    font-size: 28px;
-    line-height: 1.2;
-    font-weight: 800;
     color: #0b162b;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.2;
     word-break: break-word;
 }
 
 #order-detail-page .od-subtitle {
     margin: 6px 0 0;
     color: var(--od-muted);
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 500;
 }
 
@@ -120,12 +146,12 @@
 
 #order-detail-page .od-badge {
     padding: 5px 10px;
-    border-radius: 999px;
     font-size: 11px;
     font-weight: 700;
-    text-transform: uppercase;
     letter-spacing: 0.05em;
+    text-transform: uppercase;
     border: 1px solid transparent;
+    border-radius: 5px;
 }
 
 #order-detail-page .od-badge.pending {
@@ -152,14 +178,41 @@
     border-color: #e2e8f0;
 }
 
-#order-detail-page .od-cancel-btn {
-    border: 1px solid var(--od-danger);
-    color: var(--od-danger);
-    background: #fff;
-    border-radius: 10px;
-    font-weight: 700;
-    font-size: 14px;
+#order-detail-page .od-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+#order-detail-page .od-download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     padding: 9px 14px;
+    color: #00b5cc;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    background: #e6f7fb;
+    border: 1px solid #b9e7f0;
+    border-radius: 5px;
+}
+
+#order-detail-page .od-download-btn:hover {
+    color: #fff;
+    background: #00b5cc;
+    border-color: #00b5cc;
+}
+
+#order-detail-page .od-cancel-btn {
+    padding: 9px 14px;
+    color: var(--od-danger);
+    font-size: 14px;
+    font-weight: 700;
+    background: #fff;
+    border: 1px solid var(--od-danger);
+    border-radius: 5px;
     cursor: pointer;
 }
 
@@ -167,112 +220,146 @@
     background: var(--od-danger-bg);
 }
 
-#order-detail-page .od-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
 
-#order-detail-page .od-download-btn {
-    background: #e6f7fb;
-    color: #00b5cc;
-    border: 1px solid #b9e7f0;
-    padding: 9px 14px;
-    border-radius: 20px;
-    font-weight: 700;
-    font-size: 14px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-
-#order-detail-page .od-download-btn:hover {
-    background: #00b5cc;
-    color: #fff;
-    border-color: #00b5cc;
-}
-
-/* ===================================================
-   GRID ARRANGEMENT — cleaner card layout on desktop
+/* ============================================================
+   DESKTOP GRID — cleaner card layout
    Left: item table (tall). Right: Payment Summary +
    Order Details side-by-side, Approval/Cancel full width below.
-=================================================== */
+   ============================================================ */
+
 #order-detail-page .od-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: 18px;
     align-items: start;
+    gap: 18px;
 }
 
 #order-detail-page .od-card {
+    height: 100%;
     background: var(--od-card);
     border: 1px solid var(--od-border);
     border-radius: var(--od-radius);
     box-shadow: var(--od-shadow);
     overflow: hidden;
-    height: 100%;
 }
 
 #order-detail-page .od-card-head {
     padding: 14px 16px;
-    border-bottom: 1px solid #eef2f7;
+    color: #1e293b;
     font-size: 14px;
     font-weight: 700;
-    color: #1e293b;
+    border-bottom: 1px solid #eef2f7;
 }
 
 #order-detail-page .od-card-content {
     padding: 16px;
 }
 
+
+/* ============================================================
+   ORDER ITEMS TABLE (desktop)
+   All body text inside the table is unified to 11px.
+   ============================================================ */
+
 #order-detail-page .od-table-card-body {
     padding: 0;
 }
 
 #order-detail-page .od-table-wrap {
-    overflow: auto;
     max-height: 460px;
+    overflow: auto;
     border-radius: 10px;
 }
-#order-detail-page .od-table-wrap::-webkit-scrollbar{
-    width:0px;
+
+#order-detail-page .od-table-wrap::-webkit-scrollbar {
+    width: 0px;
 }
 
 #order-detail-page .od-table {
     width: 100%;
-    border-collapse: collapse;
     min-width: 0;
+    border-collapse: collapse;
     table-layout: fixed;
 }
 
 #order-detail-page .od-table th {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--od-muted);
-    text-align: left;
-    padding: 12px 12px;
-    border-bottom: 2px solid #eef2f7;
     position: sticky;
     top: 0;
-    background: #f8fafc;
     z-index: 2;
+    padding: 12px 12px;
+    color: var(--od-muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-align: left;
+    text-transform: uppercase;
+    background: #f8fafc;
+    border-bottom: 2px solid #eef2f7;
 }
 
 #order-detail-page .od-table td {
-    font-size: 14px;
-    color: #1f2937;
     padding: 12px;
-    border-bottom: 1px solid #f1f5f9;
+    color: #1f2937;
+    font-size: 11px;
     vertical-align: middle;
+    border-bottom: 1px solid #f1f5f9;
 }
 
 #order-detail-page .od-table tr:last-child td {
     border-bottom: none;
 }
 
+/* ---- Column widths ----
+   7 columns: Product, Variant, Qty, Unit Price, Discount, VAT, Line Total.
+   table-layout:fixed requires every column to be sized explicitly, or
+   text will overflow/clip instead of wrapping cleanly. Widths sum to 100%. */
+#order-detail-page .od-table th:nth-child(1),
+#order-detail-page .od-table td:nth-child(1) {
+    width: 26%;
+}
+
+#order-detail-page .od-table th:nth-child(2),
+#order-detail-page .od-table td:nth-child(2) {
+    width: 12%;
+    white-space: nowrap;
+}
+
+#order-detail-page .od-table th:nth-child(3),
+#order-detail-page .od-table td:nth-child(3) {
+    width: 7%;
+    white-space: nowrap;
+    text-align: center;
+}
+
+#order-detail-page .od-table th:nth-child(4),
+#order-detail-page .od-table td:nth-child(4) {
+    width: 14%;
+    white-space: nowrap;
+    text-align: right;
+}
+
+#order-detail-page .od-table th:nth-child(5),
+#order-detail-page .od-table td:nth-child(5) {
+    width: 16%;
+    white-space: nowrap;
+    text-align: right;
+}
+
+#order-detail-page .od-table th:nth-child(6),
+#order-detail-page .od-table td:nth-child(6) {
+    width: 11%;
+    white-space: nowrap;
+    text-align: right;
+}
+
+#order-detail-page .od-table th:nth-child(7),
+#order-detail-page .od-table td:nth-child(7) {
+    width: 14%;
+    white-space: nowrap;
+    text-align: right;
+}
+
+/* Product cell (image + name/sku) */
 #order-detail-page .od-item {
     display: flex;
     align-items: center;
@@ -283,53 +370,36 @@
 #order-detail-page .od-item-img {
     width: 44px;
     height: 44px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
     border-radius: 10px;
     object-fit: cover;
-    border: 1px solid #e2e8f0;
-    background: #f8fafc;
+    flex-shrink: 0;
 }
 
 #order-detail-page .od-item-name {
-    font-size: 14px;
-    font-weight: 700;
+    overflow: hidden;
     color: #0f172a;
+    font-size: 11px;
+    font-weight: 700;
     line-height: 1.2;
     white-space: nowrap;
-    overflow: hidden;
     text-overflow: ellipsis;
 }
 
 #order-detail-page .od-item-sku {
-    font-size: 12px;
-    color: var(--od-muted);
     margin-top: 2px;
-    white-space: nowrap;
     overflow: hidden;
+    color: var(--od-muted);
+    font-size: 11px;
+    white-space: nowrap;
     text-overflow: ellipsis;
 }
 
-#order-detail-page .od-table th:nth-child(1),
-#order-detail-page .od-table td:nth-child(1) {
-    width: 52%;
-}
 
-#order-detail-page .od-table th:nth-child(2),
-#order-detail-page .od-table td:nth-child(2) {
-    width: 32px;
-    white-space: nowrap;
-}
-
-#order-detail-page .od-table th:nth-child(3),
-#order-detail-page .od-table td:nth-child(3) {
-    width: 100px;
-    white-space: nowrap;
-}
-
-#order-detail-page .od-table th:nth-child(4),
-#order-detail-page .od-table td:nth-child(4) {
-    width: 108px;
-    white-space: nowrap;
-}
+/* ============================================================
+   RIGHT COLUMN — Payment Summary / Order Details / Approval
+   ============================================================ */
 
 #order-detail-page .od-right {
     display: flex;
@@ -346,11 +416,11 @@
 
 #order-detail-page .od-sum-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    font-size: 14px;
-    color: #334155;
+    justify-content: space-between;
     margin-bottom: 10px;
+    color: #334155;
+    font-size: 11px;
 }
 
 #order-detail-page .od-sum-row:last-child {
@@ -363,10 +433,10 @@
 
 #order-detail-page .od-sum-total {
     margin-top: 12px;
-    border-top: 1px solid #e2e8f0;
     padding-top: 12px;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 800;
+    border-top: 1px solid #e2e8f0;
 }
 
 #order-detail-page .od-info {
@@ -382,47 +452,52 @@
 }
 
 #order-detail-page .od-info-label {
+    margin-bottom: 4px;
+    color: #64748b;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #64748b;
-    margin-bottom: 4px;
 }
 
 #order-detail-page .od-info-value {
-    font-size: 14px;
-    font-weight: 600;
     color: #0f172a;
+    font-size: 11px;
+    font-weight: 600;
 }
 
 #order-detail-page .od-report-row {
     display: flex;
-    justify-content: space-between;
     align-items: flex-start;
+    justify-content: space-between;
     gap: 10px;
     padding: 10px 0;
     border-bottom: 1px solid #eef2f7;
 }
 
 #order-detail-page .od-report-row:last-child {
-    border-bottom: none;
     padding-bottom: 0;
+    border-bottom: none;
 }
 
 #order-detail-page .od-report-label {
-    font-size: 12px;
-    color: #64748b;
-    font-weight: 700;
     min-width: 88px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
 }
 
 #order-detail-page .od-report-value {
-    font-size: 13px;
     color: #0f172a;
-    text-align: right;
+    font-size: 11px;
     line-height: 1.45;
+    text-align: right;
 }
+
+
+/* ============================================================
+   DESKTOP RESPONSIVE BREAKPOINTS
+   ============================================================ */
 
 /* Very wide screens: give Payment Summary / Order Details their own row */
 @media (min-width: 1400px) {
@@ -441,13 +516,16 @@
     }
 }
 
-/* =========================================================
-   MOBILE-ONLY BLOCKS — hidden on desktop/tablet by default
+
+/* ============================================================
+   MOBILE LAYOUT
    NOTE: breakpoint raised from 576px -> 768px so the clean
    single-column mobile layout covers all phones (incl. large
    Android phones / landscape), instead of falling back to the
    cramped multi-card desktop grid between 576-768px.
-========================================================= */
+   ============================================================ */
+
+/* Mobile-only blocks — hidden on desktop/tablet by default */
 #order-detail-page .od-mobile-header,
 #order-detail-page .od-mobile-banner,
 #order-detail-page .od-mobile-info,
@@ -461,9 +539,9 @@
 
 @media (max-width: 768px) {
     #order-detail-page {
+        min-height: auto;
         padding: 16px;
         background: #fff;
-        min-height: auto;
     }
 
     /* Hide the desktop header + two-column grid entirely on phone */
@@ -481,27 +559,27 @@
     }
 
     #order-detail-page .od-mobile-back {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-        background: #eef2f7;
-        color: #0f172a;
         display: flex;
+        flex: 0 0 40px;
         align-items: center;
         justify-content: center;
+        width: 40px;
+        height: 40px;
+        color: #0f172a;
         font-size: 18px;
         text-decoration: none;
-        flex: 0 0 40px;
+        background: #eef2f7;
+        border-radius: 12px;
     }
 
     #order-detail-page .od-mobile-title {
-        margin: 0;
         flex: 1;
-        text-align: center;
+        margin: 0;
         margin-right: 40px;
-        font-size: 20px;
-        font-weight: 800;
         color: #0b162b;
+        font-size: 14px;
+        font-weight: 800;
+        text-align: center;
     }
 
     /* ---------- Status banner ---------- */
@@ -509,11 +587,11 @@
         display: flex;
         align-items: center;
         gap: 14px;
-        border-radius: 16px;
-        padding: 16px;
         margin-bottom: 20px;
-        background: var(--od-primary);
+        padding: 16px;
         color: #fff;
+        background: var(--od-primary);
+        border-radius: 16px;
     }
 
     #order-detail-page .od-mobile-banner.cancelled {
@@ -525,26 +603,26 @@
     }
 
     #order-detail-page .od-mobile-banner-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.2);
         display: flex;
+        flex: 0 0 40px;
         align-items: center;
         justify-content: center;
+        width: 40px;
+        height: 40px;
         font-size: 18px;
-        flex: 0 0 40px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
     }
 
     #order-detail-page .od-mobile-banner-title {
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 800;
     }
 
     #order-detail-page .od-mobile-banner-sub {
-        font-size: 12px;
-        opacity: 0.9;
         margin-top: 2px;
+        font-size: 11px;
+        opacity: 0.9;
     }
 
     /* ---------- Info rows ---------- */
@@ -555,12 +633,12 @@
 
     #order-detail-page .od-mobile-info-row {
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        justify-content: space-between;
         padding: 12px 0;
-        border-bottom: 1px solid #eef2f7;
-        font-size: 14px;
         color: #1f2937;
+        font-size: 11px;
+        border-bottom: 1px solid #eef2f7;
     }
 
     #order-detail-page .od-mobile-info-row:last-child {
@@ -575,22 +653,22 @@
     /* ---------- Section titles ---------- */
     #order-detail-page .od-mobile-section-title {
         display: block;
-        font-size: 17px;
-        font-weight: 800;
-        color: #0b162b;
         margin: 0 0 14px;
+        color: #0b162b;
+        font-size: 14px;
+        font-weight: 800;
     }
 
     /* ---------- Purchased items ---------- */
     #order-detail-page .od-mobile-items {
         display: flex;
         flex-direction: column;
+        max-height: 45vh;
         gap: 14px;
         margin-bottom: 24px;
-        max-height: 45vh;
+        padding-right: 2px;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        padding-right: 2px;
     }
 
     #order-detail-page .od-mobile-items::-webkit-scrollbar {
@@ -609,12 +687,12 @@
     }
 
     #order-detail-page .od-mobile-item-img {
+        flex: 0 0 48px;
         width: 48px;
         height: 48px;
+        border: 1px solid #e2e8f0;
         border-radius: 12px;
         object-fit: cover;
-        border: 1px solid #e2e8f0;
-        flex: 0 0 48px;
     }
 
     #order-detail-page .od-mobile-item-info {
@@ -622,33 +700,35 @@
         min-width: 0;
     }
 
+    /* Product name inside the card row — kept as a "title" style, unlike
+       the desktop table's item-name which is unified to 11px. */
     #order-detail-page .od-mobile-item-name {
+        overflow: hidden;
+        color: #0f172a;
         font-size: 14px;
         font-weight: 700;
-        color: #0f172a;
         white-space: nowrap;
-        overflow: hidden;
         text-overflow: ellipsis;
     }
 
     #order-detail-page .od-mobile-item-qty {
-        font-size: 12px;
-        color: #64748b;
         margin-top: 2px;
+        color: #64748b;
+        font-size: 11px;
     }
 
     #order-detail-page .od-mobile-item-total {
-        font-size: 14px;
-        font-weight: 700;
         color: #0f172a;
+        font-size: 11px;
+        font-weight: 700;
         white-space: nowrap;
     }
 
     #order-detail-page .od-mobile-empty {
-        font-size: 13px;
-        color: #64748b;
-        text-align: center;
         padding: 20px 0;
+        color: #64748b;
+        font-size: 11px;
+        text-align: center;
     }
 
     /* ---------- Payment ---------- */
@@ -659,11 +739,11 @@
 
     #order-detail-page .od-mobile-pay-row {
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        justify-content: space-between;
         padding: 8px 0;
-        font-size: 14px;
         color: #64748b;
+        font-size: 11px;
     }
 
     #order-detail-page .od-mobile-pay-row strong {
@@ -676,16 +756,16 @@
     }
 
     #order-detail-page .od-mobile-pay-row.total {
-        border-top: 1px solid #e2e8f0;
         margin-top: 8px;
         padding-top: 14px;
-        font-size: 15px;
         color: #0f172a;
+        font-size: 14px;
         font-weight: 800;
+        border-top: 1px solid #e2e8f0;
     }
 
     #order-detail-page .od-mobile-pay-row.total strong {
-        font-size: 16px;
+        font-size: 14px;
     }
 
     /* ---------- Approval / Cancel report ---------- */
@@ -696,8 +776,8 @@
 
     #order-detail-page .od-mobile-approval-row {
         padding: 10px 0;
+        font-size: 11px;
         border-bottom: 1px solid #eef2f7;
-        font-size: 13px;
     }
 
     #order-detail-page .od-mobile-approval-row:last-child {
@@ -706,10 +786,10 @@
 
     #order-detail-page .od-mobile-approval-row span {
         display: block;
-        color: #64748b;
-        font-weight: 700;
-        font-size: 12px;
         margin-bottom: 4px;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
     }
 
     #order-detail-page .od-mobile-approval-row strong {
@@ -729,18 +809,18 @@
     }
 
     #order-detail-page .od-mobile-download-btn {
-        background: var(--od-primary);
-        color: #fff;
-        text-align: center;
-        padding: 13px;
-        border-radius: 14px;
-        font-weight: 700;
-        font-size: 14px;
-        text-decoration: none;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
+        padding: 13px;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        text-align: center;
+        text-decoration: none;
+        background: var(--od-primary);
+        border-radius: 14px;
     }
 
     #order-detail-page .od-mobile-cancel-form {
@@ -749,22 +829,24 @@
 
     #order-detail-page .od-mobile-cancel-btn {
         width: 100%;
-        border: 1px solid var(--od-danger);
-        color: var(--od-danger);
-        background: #fff;
         padding: 13px;
-        border-radius: 14px;
-        font-weight: 700;
+        color: var(--od-danger);
         font-size: 14px;
+        font-weight: 700;
+        background: #fff;
+        border: 1px solid var(--od-danger);
+        border-radius: 14px;
         cursor: pointer;
     }
 }
 
-/* =========================================================
+
+/* ============================================================
    APP-SHELL MOBILE HEADER / BOTTOM NAV — phone only.
    Kept on a stricter breakpoint than the 768px card layout
    above so it never appears on tablet or desktop widths.
-========================================================= */
+   ============================================================ */
+
 @media (max-width: 576px) {
     /* Hide sidebar, show mobile header/footer */
     .sidebar,

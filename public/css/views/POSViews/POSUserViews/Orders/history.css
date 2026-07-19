@@ -1,5 +1,3 @@
-
-
 body {
     background: #f4f6f8;
 }
@@ -16,8 +14,9 @@ body {
 }
 
 .page-wrap {
-    padding-left: 20px;
-    padding-right: 20px;
+    padding: 15px;
+    /* padding-left: 20px;
+    padding-right: 20px; */
     padding-top: 0;
     background: var(--card);
     border-radius: 14px;
@@ -28,15 +27,15 @@ body {
 }
 
 .history-title {
-    padding: 10px 10px 10px 0px;
-    font-size: 18px;
+    padding: 10px 0px;
+    font-size: 20px;
     font-weight: 700;
     color: #18bfd0;
 }
 
 .order-history-container {
     width: 100%;
-    padding: 0 10px;
+    /* padding: 0 10px; */
 }
 
 .filter-form {
@@ -259,14 +258,22 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     background: #18bfd0 !important;
     color: #fff;
     border: none;
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 500;
     padding: 9px 6px;
     text-align: left;
     white-space: nowrap;
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 20;
+}
+
+.table thead th.text-center {
+    text-align: center;
+}
+
+.table tbody td.text-center {
+    text-align: center;
 }
 
 .table tbody td {
@@ -283,25 +290,25 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .order-link {
     color: #18bfd0;
-    font-weight: 600;
+    font-weight: 500;
     text-decoration: none;
     font-size: 11px;
 }
 
 .date-text {
-    font-weight: 600;
+    font-weight: 500;
     color: #0f172a;
     font-size: 11px;
 }
 
 .time-text {
-    font-size: 10px;
+    font-size: 11px;
     color: #64748b;
     margin-top: 2px;
 }
 
 .total-text {
-    font-weight: 700;
+    font-weight: 500;
     font-size: 11px;
     color: #334155;
 }
@@ -311,59 +318,99 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     align-items: center;
     justify-content: center;
     min-width: 88px;
-    height: 22px;
-    padding: 0 8px;
-    border-radius: 999px;
-    font-size: 10px;
-    font-weight: 700;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    font-size: 11px;
+    font-weight: 500;
+    background: transparent;
 }
 
 .status-badge.pending {
-    background: #fef3c7;
-    color: #d97706;
+    background: #fef9ec;
+    border-color: #f3d99b;
+    color: #b8860b;
 }
 
 .status-badge.confirmed {
-    background: #ede9fe;
+    background: #f3effc;
+    border-color: #d5c5f5;
     color: #6d28d9;
 }
 
 .status-badge.shipping,
 .status-badge.on-the-way {
-    background: #dbeafe;
+    background: #eaf5fd;
+    border-color: #bfe1f7;
     color: #0284c7;
 }
 
 .status-badge.delivery,
 .status-badge.delivered {
-    background: #dcfce7;
-    color: #166534;
+    background: #00a81f42;
+    border-color: #027D18;
+    color: #00A81F;
 }
 
 .status-badge.cancelled,
 .status-badge.canceled,
+.status-badge.cancel,
 .status-badge.failed {
-    background: #fee2e2;
-    color: #991b1b;
+    background: #fdecec;
+    border-color: #f5c2c2;
+    color: #dc2626;
 }
 
 .btn-download {
-    background: #e6f7fb;
-    color: #18bfd0;
+    background: #18bfd0;
+    color: #fff;
     border: none;
-    padding: 0 12px;
-    height: 26px;
+    padding: 0 14px;
+    height: 30px;
     display: inline-flex;
     align-items: center;
+    gap: 8px;
     border-radius: 5px;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
 }
 
+.btn-download i {
+    font-size: 11px;
+}
+
 .btn-download:hover {
-    background: #18bfd0;
+    background: #14a7b6;
     color: #fff;
+}
+
+.item-thumb-stack {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    align-items: center;
+}
+
+.item-thumb-stack .item-thumb + .item-thumb {
+    margin-right: -30px;
+}
+
+.item-thumb {
+    display: inline-flex;
+    width: 44px;
+    height: 44px;
+    border-radius: 5px;
+    overflow: hidden;
+    background: #f2f4f7;
+    border: 1.5px solid white;
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 0px 0px 1px;
+}
+
+.item-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .search-suggestions {
@@ -399,7 +446,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .badge-small {
-    font-size: 10px;
+    font-size: 11px;
     padding: 2px 6px;
     background: #e0f2fe;
     color: #0369a1;
@@ -442,7 +489,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     padding: 0 12px;
     border-radius: 5px;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     transition: 0.2s ease;
 }
@@ -529,6 +576,43 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     color: #64748b;
     white-space: nowrap;
 }
+
+/* =====================================================
+   ORDER HISTORY — EMPTY STATE
+===================================================== */
+.order-empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 30px 20px 60px;
+    margin-top: 12px;
+}
+
+.order-empty-state-img {
+    width: 260px;
+    max-width: 60%;
+    height: auto;
+    margin-bottom: 20px;
+}
+
+.order-empty-state-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 8px;
+}
+
+.order-empty-state-subtitle {
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.6;
+    margin: 0;
+    max-width: 360px;
+}
+
 @media screen and (max-width: 1024px) {
     .order-image img {
         position: relative;
@@ -596,7 +680,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     }
 
     .history-title {
-        font-size: 16px;
+        font-size: 20px;
         padding: 8px 0;
     }
 
@@ -695,18 +779,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     }
 
     .order-card-img {
-        width: 56px;
-        height: 56px;
-        flex: 0 0 56px;
-        border-radius: 50%;
-        overflow: hidden;
-        background: #f2f4f7;
-    }
-
-    .order-card-img img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+        flex: 0 0 auto;
+        display: inline-flex;
     }
 
     .order-card-info {
@@ -728,7 +802,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     }
 
     .order-card-price {
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 800;
         color: #18bfd0;
         margin-top: 2px;
@@ -748,7 +822,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     }
 
     .status-pill {
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 700;
         padding: 4px 10px;
         border-radius: 999px;
@@ -796,5 +870,17 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     .mobile-download-btn:active {
         background: #18bfd0;
         color: #fff;
+    }
+
+    .order-empty-state {
+        padding: 20px 12px 60px;
+    }
+
+    .order-empty-state-img {
+        width: 200px;
+    }
+
+    .order-empty-state-title {
+        font-size: 14px;
     }
 }
