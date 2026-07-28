@@ -1,4 +1,4 @@
-    @extends('ManagementSystemViews.UserViews.Layouts.app')
+@extends('ManagementSystemViews.UserViews.Layouts.app')
 
     @section('title', 'POS Cart')
 
@@ -24,7 +24,7 @@
                         <div class="empty-state desktop-only">
                             <img src="{{ asset('images/pos/Empty.png') }}" class="empty-state-image">
                             <h3 style="color: #ccc;">Your cart is Empty</h3>
-                            <p class="empty-description">Looks like you haven’t <br> added anything to your cart yet</p>
+                            <p class="empty-description">Looks like you haven't <br> added anything to your cart yet</p>
                             <button class="shopingBtn">
                                 <a href="/pos-system" class="empty-state-link">Continue Shopping</a>
                             </button>
@@ -41,7 +41,7 @@
                                 <h3 class="empty-title">Your cart is empty</h3>
 
                                 <p class="empty-desc">
-                                    Looks like you haven’t added anything<br>
+                                    Looks like you haven't added anything<br>
                                     to your cart yet
                                 </p>
 
@@ -49,62 +49,73 @@
                                     Shop now <i class="bi bi-chevron-right"></i>
                                 </a>
                             </div>
-
-                            <div class="empty-cart-footer">
-                                <div class="empty-summary-card">
-                                    <div><span>Subtotal</span><span>$0</span></div>
-                                    <div><span>Discount</span><span>$0</span></div>
-                                    <div><span>Delivery Fee</span><span>$0</span></div>
-                                    <div><span>Estimated Tax</span><span>$0</span></div>
-                                    <hr>
-                                    <div class="total"><span>Total in USD</span><span>$0</span></div>
-                                    <div class="total"><span>Total in Riel</span><span>Riel 0</span></div>
-                                </div>
-                                <button class="checkout-disabled" disabled>
-                                    Checkout
-                                </button>
-                            </div>
                         </div>
                     @else
-                        @php
-                            $count = $cart->items->count();
-                            $scrollClass = '';
-                            if ($count > 10) {
-                                $scrollClass = 'scroll-limit-10';
-                            } elseif ($count > 5) {
-                                $scrollClass = 'scroll-limit-5';
-                            }
-                        @endphp
-
                         <!-- CART ITEM LIST -->
-                        <div class="cart-list {{ $scrollClass }}">
-                            @foreach ($cart->items as $cartItem)
-                                <!-- SINGLE CART ITEM -->
-                                <div class="item-card" data-cart-item-id="{{ $cartItem->id }}" data-qty="{{ $cartItem->qty }}">
+                        <div class="cart-list-wrapper">
+                            <div class="cart-list">
+                                @foreach ($cart->items as $cartItem)
+                                    @php
+                                        $originalUnitPrice = $cartItem->unit_price;
 
-                                    <img src="{{ optional($cartItem->item)->image_url ?? asset('images/no-image.png') }}"
-                                        class="item-image">
+                                        // Discount % lives on Item::active_discount_percent
+                                        // (handles the start/end date range check internally).
+                                        $discountPercent = optional($cartItem->item)->active_discount_percent ?? 0;
+                                        $unitDiscount = round($originalUnitPrice * ($discountPercent / 100), 2);
+                                        $finalUnitPrice = max($originalUnitPrice - $unitDiscount, 0);
 
-                                    <div class="item-details">
-                                        <div class="cart">
-                                            <div class="cart-name">{{ $cartItem->item_name }} (L)</div>
-                                            <div class="cart-price"><b>${{ number_format($cartItem->unit_price, 2) }}</b></div>
+                                        $itemVatPercent = (!empty(optional($cartItem->item)->price_includes_tax))
+                                            ? 0
+                                            : max(0, (float) (optional($cartItem->item)->vat_percent ?? 0));
+                                        $lineTotal = $finalUnitPrice * $cartItem->qty;
+                                        $lineVat = round($lineTotal * ($itemVatPercent / 100), 2);
+                                        $resolveImg = fn ($path) => $path
+                                            ? (str_starts_with($path, 'http') ? $path : asset($path))
+                                            : null;
+
+                                        $cartItemImage = $resolveImg(optional($cartItem->itemVariant)->image_url)
+                                            ?? $resolveImg(optional($cartItem->item)->custom_image_url)
+                                            ?? $resolveImg(optional($cartItem->item)->image_url)
+                                            ?? asset('images/no-image.png');
+                                    @endphp
+
+                                    <!-- SINGLE CART ITEM -->
+                                    <div class="item-card" data-cart-item-id="{{ $cartItem->id }}" data-qty="{{ $cartItem->qty }}">
+
+                                        <img src="{{ $cartItemImage }}"
+                                            class="item-image"
+                                            onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
+
+                                        <!-- Group 1: name / variant / vat -->
+                                        <div class="item-info">
+                                            <div class="cart-name">{{ $cartItem->item_name }}</div>
+                                            <div class="cart-variant">Variant: {{ optional($cartItem->itemVariant)->code ?? 'Default' }}</div>
+                                            <div class="cart-vat-cell">
+                                                <span class="cart-vat-chip cart-variant ">VAT: {{ $itemVatPercent }}%: ${{ number_format($lineVat, 2) }}</span>
+                                            </div>
+                                            <span class="cart-discount-chip cart-variant">Discount: -{{ $discountPercent }}% off</span>
+                                        </div>
+                                        <!-- Group 3: qty controls / remove -->
+                                        <div class="item-qty-block">
+                                            <div class="qty-controls">
+                                                <button class="qty-btn qty-update" data-id="{{ $cartItem->id }}"
+                                                    data-action="minus">−</button>
+
+                                                <input type="number" class="qty-val" data-id="{{ $cartItem->id }}"
+                                                    value="{{ $cartItem->qty }}" min="1" inputmode="numeric">
+
+                                                <button class="qty-btn qty-update" data-id="{{ $cartItem->id }}"
+                                                    data-action="plus">+</button>
+                                            </div>
+
+                                            <p class="remove-item" data-id="{{ $cartItem->id }}">Remove</p>
                                         </div>
 
-                                        <div class="qty-controls">
-                                            <button class="qty-btn qty-update" data-id="{{ $cartItem->id }}"
-                                                data-action="minus">−</button>
-
-                                            <span class="qty-val">{{ $cartItem->qty }}</span>
-
-                                            <button class="qty-btn qty-update" data-id="{{ $cartItem->id }}"
-                                                data-action="plus">+</button>
-                                        </div>
-                                        <p class="remove-item" data-id="{{ $cartItem->id }}">Remove</p>
+                                        <!-- Group 4: subtotal -->
+                                        <div class="cart-subtotal">${{ number_format($lineTotal, 2) }}</div>
                                     </div>
-                                    {{-- <i class="bi bi-x-circle remove-icon remove-item" data-id="{{ $cartItem->id }}"></i> --}}
-                                </div>
-                            @endforeach
+                                @endforeach
+                            </div>
                         </div>
 
                         <!-- CART SUMMARY BOX -->
@@ -115,32 +126,37 @@
                                 <span id="subtotalAmount">${{ number_format($subtotal ?? 0, 2) }}</span>
                             </div>
 
+                            <div class="summary-line discount-line">
+                                <span>Discount</span>
+                                <span id="discountAmount">-${{ number_format($discount ?? 0, 2) }}</span>
+                            </div>
+
                             <div class="summary-line">
                                 <span>Delivery</span>
                                 <span id="deliveryAmount">$0.00</span>
                             </div>
 
                             <div class="summary-line">
-                                <span>Estimated Tax <i class="bi bi-question-circle"></i></span>
+                                <span>VAT <i class="bi bi-question-circle"></i></span>
                                 <span id="taxAmount">${{ number_format($taxAmount ?? 0, 2) }}</span>
                             </div>
 
                             <div class="summary-line total-usd">
-                                <span>Total in USD</span>
+                                <span>Order total in USD</span>
                                 <span id="totalUsd">${{ number_format($total ?? 0, 2) }}</span>
                             </div>
 
                             <div class="summary-line total-riel">
-                                <span>Total in Khmer Riel</span>
-                                <span id="totalRiel">riel {{ number_format(($total ?? 0) * 4100, 0) }}</span>
+                                <span>Order total in Khmer Riel</span>
+                                <span id="totalRiel">Riel {{ number_format(($total ?? 0) * 4100, 0) }}</span>
                             </div>
                         </div>
 
                         <!---------------------------- DESKTOP CHECKOUT BUTTON -->
                         <button id="checkoutDesktopBtn" type="button" class="place-order-btn desktop-only">
-                            PLACE ORDER >
+                            PLACE ORDER <i class="bi bi-chevron-right"></i>
                         </button>
-                        <p class="or-text desktop">Or <b>Continue Shopping ➡️</b></p>
+                        <p class="or-text desktop">or <a href="/pos-system" class="continue-link">Continue Shopping <i class="bi bi-arrow-right"></i></a></p>
 
                         <!-- MOBILE CHECKOUT BUTTON -->
                         <button id="checkoutMobileBtn" type="button" class="place-order-btn mobile-only">
@@ -191,70 +207,104 @@
                 <div class="checkout-container" id="checkoutContent" style="display:none;">
 
                     <div class="cart-nav_mobile">
-                        <a href="/pos-system" class="icon-btn_mobile"><i class="bi bi-arrow-left"></i></a>
+                        <button type="button" id="checkoutBackBtn" class="icon-btn_mobile"><i class="bi bi-arrow-left"></i></button>
                         <span class="nav-title"><b> Checkout</b></span>
                     </div>
 
-                    <!-- ITEMS IN CHECKOUT -->
-                    <div class="checkout-section">
-                        <h4 class="section-title">Items</h4>
+                    <!-- ITEMS IN CHECKOUT (scrollable) -->
+                    <div class="checkout-items-wrapper">
+                        <div class="checkout-section">
+                            <h4 class="section-title">Items</h4>
 
-                        @if ($cart && $cart->items->isNotEmpty())
-                            @foreach ($cart->items as $cartItem)
-                                <div class="checkout-item-card">
-                                    <img src="{{ optional($cartItem->item)->image_url ?? asset('images/no-image.png') }}">
+                            @if ($cart && $cart->items->isNotEmpty())
+                                @foreach ($cart->items as $cartItem)
+                                    @php
+                                        $coUnitPrice = $cartItem->unit_price;
 
-                                    <div class="item-content">
-                                        <div class="item-top">
-                                            <strong>{{ $cartItem->item_name }}</strong>
-                                            <span class="item-price">
-                                                ${{ number_format($cartItem->price * $cartItem->qty, 0) }}
-                                            </span>
+                                        // Discount % lives on Item::active_discount_percent
+                                        // (handles the start/end date range check internally).
+                                        $coDiscountPercent = optional($cartItem->item)->active_discount_percent ?? 0;
+                                        $coUnitDiscount = round($coUnitPrice * ($coDiscountPercent / 100), 2);
+                                        $coFinalUnitPrice = max($coUnitPrice - $coUnitDiscount, 0);
+
+                                        $coVatPercent = (!empty(optional($cartItem->item)->price_includes_tax))
+                                            ? 0
+                                            : max(0, (float) (optional($cartItem->item)->vat_percent ?? 0));
+                                        $coLineTotal = $coFinalUnitPrice * $cartItem->qty;
+                                        $coLineVat = round($coLineTotal * ($coVatPercent / 100), 2);
+
+                                        // Priority: selected variant's own image, then the
+                                        // item's admin-set custom_image_url override, then the
+                                        // item's synced image_url, then placeholder.
+                                        // image_url may be stored either as a full URL or
+                                        // a relative storage path, so resolve either shape.
+                                        $coResolveImg = fn ($path) => $path
+                                            ? (str_starts_with($path, 'http') ? $path : asset($path))
+                                            : null;
+
+                                        $coItemImage = $coResolveImg(optional($cartItem->itemVariant)->image_url)
+                                            ?? $coResolveImg(optional($cartItem->item)->custom_image_url)
+                                            ?? $coResolveImg(optional($cartItem->item)->image_url)
+                                            ?? asset('images/no-image.png');
+                                    @endphp
+                                    <div class="checkout-item-card">
+                                        <img src="{{ $coItemImage }}"
+                                            onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
+
+                                        <div class="item-content">
+                                            <div class="item-top">
+                                                <strong>{{ $cartItem->item_name }}</strong>
+                                                <span class="item-price">
+                                                    ${{ number_format($coLineTotal, 2) }}
+                                                </span>
+                                            </div>
+                                            <div class="cart-variant">{{ optional($cartItem->itemVariant)->code ?? 'Default' }}</div>
+                                            <div class="item-meta">x{{ $cartItem->qty }}</div>
+
+                                            <div class="item-meta-row">
+                                                @if ($coUnitDiscount > 0)
+                                                    <span class="cart-discount-chip">-{{ $coDiscountPercent }}% off</span>
+                                                @endif
+                                                <span class="cart-vat-chip">VAT {{ $coVatPercent }}%: ${{ number_format($coLineVat, 2) }}</span>
+                                            </div>
                                         </div>
-
-                                        <div class="item-meta">Variant: {{ $cartItem->variant ?? 'default' }}</div>
-                                        <div class="item-meta">x{{ $cartItem->qty }}</div>
                                     </div>
-                                </div>
-                            @endforeach
-                        @else
-                            <p class="text-muted">No items in the cart.</p>
-                        @endif
-                    </div>
-
-                    <!-- PAYMENT SUMMARY -->
-                    <div class="checkout-section payment-box">
-                        <h4 class="section-title">Payment</h4>
-
-                        <div class="payment-row"><span>Subtotal</span><span>${{ number_format($subtotal ?? 0, 2) }}</span></div>
-                        <div class="payment-row"><span>Discount</span><span>$0</span></div>
-                        <div class="payment-row"><span>Delivery Fee</span><span>$0</span></div>
-                        <div class="payment-row"><span>Estimated Tax</span><span>${{ number_format($taxAmount ?? 0, 2) }}</span>
-                        </div>
-
-                        <div class="divider"></div>
-
-                        <div class="payment-row total">
-                            <span>Total in USD</span>
-                            <span>${{ number_format($total ?? 0, 2) }}</span>
-                        </div>
-
-                        <div class="payment-row riel">
-                            <span>Total in Riel</span>
-                            <span>riel {{ number_format(($total ?? 0) * 4100, 0) }}</span>
+                                @endforeach
+                            @else
+                                <p class="text-muted">No items in the cart.</p>
+                            @endif
                         </div>
                     </div>
 
-                    <div class="bottom-space"></div>
+                    <!-- STICKY BOTTOM: PAYMENT + PLACE ORDER -->                    <div class="checkout-bottom">
+                        <!-- PAYMENT SUMMARY -->
+                        <div class="checkout-section payment-box">
+                            <h4 class="section-title">Payment</h4>
 
-                    <button id="placeOrderBtn" class="placeOrderBtn" type="button">
-                        Place Order
-                    </button>
+                            <div class="payment-row"><span>Subtotal</span><span>${{ number_format($subtotal ?? 0, 2) }}</span></div>
+                            <div class="payment-row discount"><span>Discount</span><span>-${{ number_format($discount ?? 0, 2) }}</span></div>
+                            <div class="payment-row"><span>Delivery Fee</span><span>$0</span></div>
+                            <div class="payment-row"><span>Estimated Tax</span><span>${{ number_format($taxAmount ?? 0, 2) }}</span>
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <div class="payment-row total">
+                                <span>Total in USD</span>
+                                <span>${{ number_format($total ?? 0, 2) }}</span>
+                            </div>
+
+                            <div class="payment-row riel">
+                                <span>Total in Riel</span>
+                                <span>riel {{ number_format(($total ?? 0) * 4100, 0) }}</span>
+                            </div>
+                        </div>
+
+                        <button id="placeOrderBtn" class="placeOrderBtn" type="button">
+                            Place Order
+                        </button>
+                    </div>
                 </div>
-
-                <!-- =========================
-                                            SCREEN 4: ORDER SUCCESS MOBILE SCREEN
-                                        ========================== -->
                 <div class="order-success-wrapper hidden-success" id="successContent">
 
                     <div class="order-success-header">
@@ -331,13 +381,32 @@
                     @if (optional($orderDetail ?? null)->items)
                         <h5 class="section-title">Purchased Item</h5>
                         @foreach (optional($orderDetail ?? null)->items as $item)
+                            @php
+                                $odUnitPrice = $item->unit_price ?? ($item->qty > 0 ? $item->line_total / $item->qty : 0);
+                                $odVatPercent = (!empty(optional($item->item)->price_includes_tax))
+                                    ? 0
+                                    : max(0, (float) (optional($item->item)->vat_percent ?? 0));
+                                $odLineVat = round(($item->line_total ?? 0) * ($odVatPercent / 100), 2);
+                                $odResolveImg = fn ($path) => $path
+                                    ? (str_starts_with($path, 'http') ? $path : asset($path))
+                                    : null;
+
+                                $odImage = $odResolveImg(optional($item->itemVariant)->image_url)
+                                    ?? $odResolveImg(optional($item->item)->custom_image_url)
+                                    ?? $odResolveImg(optional($item->item)->image_url)
+                                    ?? asset('images/pos/product-placeholder.png');
+                            @endphp
                             <div class="item-card">
-                                <img src="{{ optional($item->item)->image_url ? asset($item->item->image_url) : asset('images/pos/product-placeholder.png') }}"
-                                    alt="{{ $item->item_name }}">
+                                <img src="{{ $odImage }}"
+                                    alt="{{ $item->item_name }}"
+                                    onerror="this.onerror=null;this.src='{{ asset('images/pos/product-placeholder.png') }}';">
                                 <div class="item-info">
                                     <strong>{{ $item->item_name }}</strong>
-                                    <p>Variant: default</p>
+                                    <p>Variant: {{ $item->variant ?? 'Default' }}</p>
                                     <span>x{{ $item->qty }}</span>
+                                    <div class="item-meta-row">
+                                        <span class="cart-vat-chip">VAT {{ $odVatPercent }}%: ${{ number_format($odLineVat, 2) }}</span>
+                                    </div>
                                 </div>
                                 <strong>${{ number_format($item->line_total, 0) }}</strong>
                             </div>
@@ -389,59 +458,61 @@
 
     @push('scripts')
         <script>
-            const handleDesktopScreenRedirect = () => {
-
-                // MOBILE CHECKOUT SCREEN
-                const isCheckoutOpen =
-                    checkoutContent &&
-                    checkoutContent.style.display === 'block';
-
-                // MOBILE SUCCESS SCREEN
-                const isSuccessOpen =
-                    successContent &&
-                    !successContent.classList.contains('hidden-success');
-
-                // MOBILE ORDER DETAIL SCREEN
-                const isOrderDetailOpen =
-                    orderDetailPage &&
-                    !orderDetailPage.classList.contains('hidden-order-detail');
-
-                // IF DESKTOP SCREEN
-                if (
-                    window.innerWidth >= 768 &&
-                    (isCheckoutOpen || isSuccessOpen || isOrderDetailOpen)
-                ) {
-                    window.location.href = "{{ route('user.pos.cart') }}";
-                }
-            };
-
-            // RUN WHEN RESIZE
-            window.addEventListener('resize', handleDesktopScreenRedirect);
-
-            // RUN ON PAGE LOAD
-            handleDesktopScreenRedirect();
-        </script>
-
-        <script>
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             const cartMainContent = document.getElementById('cartMainContent');
             const checkoutContent = document.getElementById('checkoutContent');
             const successContent = document.getElementById('successContent');
             const orderDetailPage = document.getElementById('orderDetailPage');
-            const cartListWrapper = document.querySelector('.cart-list-wrapper');
             const pendingQtyByItem = new Map();
             const syncingItems = new Set();
             const debounceTimerByItem = new Map();
             const rielRate = 4100;
             const showCheckout = {{ isset($showCheckout) && $showCheckout ? 'true' : 'false' }};
             const showOrderDetail = {{ isset($showOrderDetail) && $showOrderDetail ? 'true' : 'false' }};
+            const CHECKOUT_STEP_KEY = 'posCheckoutStep';
+
+            const goToCheckoutStep = () => {
+                cartMainContent.style.display = 'none';
+                checkoutContent.style.display = 'flex';
+                sessionStorage.setItem(CHECKOUT_STEP_KEY, '1');
+            };
+
+            const goToCartStep = () => {
+                checkoutContent.style.display = 'none';
+                cartMainContent.style.display = 'flex';
+                sessionStorage.removeItem(CHECKOUT_STEP_KEY);
+            };
+            const handleDesktopScreenRedirect = () => {
+                if (window.innerWidth < 768) return;
+                const isCheckoutOpen =
+                    checkoutContent &&
+                    checkoutContent.style.display !== 'none' &&
+                    checkoutContent.style.display !== '';
+                if (isCheckoutOpen) {
+                    goToCartStep();
+                }
+                const isSuccessOpen =
+                    successContent &&
+                    !successContent.classList.contains('hidden-success');
+                const isOrderDetailOpen =
+                    orderDetailPage &&
+                    !orderDetailPage.classList.contains('hidden-order-detail');
+
+                if (isSuccessOpen || isOrderDetailOpen) {
+                    window.location.href = "{{ route('user.pos.cart') }}";
+                }
+            };
+
+            window.addEventListener('resize', handleDesktopScreenRedirect);
+            handleDesktopScreenRedirect();
 
             const formatUsd = (value) =>
                 `$${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-            const formatRiel = (value) => `riel ${Math.round(Number(value || 0)).toLocaleString('en-US')}`;
+            const formatRiel = (value) => `Riel ${Math.round(Number(value || 0)).toLocaleString('en-US')}`;
 
             const updateSummary = (summary) => {
                 const subtotalEl = document.getElementById('subtotalAmount');
+                const discountEl = document.getElementById('discountAmount');
                 const taxEl = document.getElementById('taxAmount');
                 const totalUsdEl = document.getElementById('totalUsd');
                 const totalRielEl = document.getElementById('totalRiel');
@@ -449,17 +520,12 @@
                 if (!subtotalEl || !taxEl || !totalUsdEl || !totalRielEl || !summary) return;
 
                 subtotalEl.textContent = formatUsd(summary.subtotal);
+                if (discountEl) {
+                    discountEl.textContent = `-${formatUsd(summary.discount || 0)}`;
+                }
                 taxEl.textContent = formatUsd(summary.tax_amount);
                 totalUsdEl.textContent = formatUsd(summary.total);
                 totalRielEl.textContent = formatRiel(summary.total * rielRate);
-            };
-
-            const applyScrollClass = () => {
-                if (!cartListWrapper) return;
-                const itemCount = document.querySelectorAll('.item-card').length;
-                cartListWrapper.classList.remove('scroll-limit-5', 'scroll-limit-10');
-                if (itemCount > 10) cartListWrapper.classList.add('scroll-limit-10');
-                else if (itemCount > 5) cartListWrapper.classList.add('scroll-limit-5');
             };
 
             if (showOrderDetail && orderDetailPage) {
@@ -544,18 +610,18 @@
                 }
             };
 
-            // Update Quantity
+            // Update Quantity (+ / − buttons)
             document.querySelectorAll('.qty-update').forEach(btn => {
                 btn.onclick = async function() {
                     const id = this.dataset.id;
                     const row = this.closest('.item-card');
-                    const qtyLabel = row.querySelector('.qty-val');
-                    const currentQty = parseInt(qtyLabel.innerText, 10);
+                    const qtyInput = row.querySelector('.qty-val');
+                    const currentQty = parseInt(qtyInput.value, 10) || 1;
                     const newQty = this.dataset.action === 'plus' ? currentQty + 1 : currentQty - 1;
 
                     if (newQty < 1) return;
 
-                    qtyLabel.innerText = newQty;
+                    qtyInput.value = newQty;
                     row.dataset.qty = newQty;
                     pendingQtyByItem.set(id, newQty);
 
@@ -567,6 +633,28 @@
                     }, 180);
                     debounceTimerByItem.set(id, timer);
                 }
+            });
+
+            // Update Quantity (typed directly into the input)
+            document.querySelectorAll('.qty-val').forEach(input => {
+                input.addEventListener('change', function() {
+                    const id = this.dataset.id;
+                    const row = this.closest('.item-card');
+                    let newQty = parseInt(this.value, 10);
+
+                    if (isNaN(newQty) || newQty < 1) {
+                        newQty = 1;
+                    }
+
+                    this.value = newQty;
+                    row.dataset.qty = newQty;
+                    pendingQtyByItem.set(id, newQty);
+
+                    const oldTimer = debounceTimerByItem.get(id);
+                    if (oldTimer) clearTimeout(oldTimer);
+
+                    syncQty(id, row);
+                });
             });
 
             // Remove Item
@@ -588,7 +676,6 @@
                     }
 
                     row.remove();
-                    applyScrollClass();
                     await refreshCartSummary();
 
                     if (document.querySelectorAll('.item-card').length === 0) {
@@ -649,17 +736,22 @@
             if (checkoutMobileBtn) {
                 checkoutMobileBtn.onclick = function() {
                     if (checkoutContent) {
-                        cartMainContent.style.display = 'none';
-                        checkoutContent.style.display = 'block';
+                        goToCheckoutStep();
                     } else {
                         window.location.href = '/pos-system/checkout';
                     }
                 };
             }
 
-            if (showCheckout && checkoutContent) {
-                cartMainContent.style.display = 'none';
-                checkoutContent.style.display = 'block';
+            // Back button on the checkout header — goes back to the cart step,
+            // not out to the product page.
+            const checkoutBackBtn = document.getElementById('checkoutBackBtn');
+            if (checkoutBackBtn) {
+                checkoutBackBtn.onclick = goToCartStep;
+            }
+
+            if (checkoutContent && (showCheckout || sessionStorage.getItem(CHECKOUT_STEP_KEY) === '1')) {
+                goToCheckoutStep();
             }
 
             const orderDetailBtn = document.getElementById('orderDetailBtn');
@@ -704,6 +796,7 @@
                         if (!data.success) {
                             throw new Error(data.message || 'Checkout failed');
                         }
+                        sessionStorage.removeItem(CHECKOUT_STEP_KEY);
 
                         setTimeout(() => {
                             if (processing) {

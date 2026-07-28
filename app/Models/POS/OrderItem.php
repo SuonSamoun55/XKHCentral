@@ -27,9 +27,10 @@ class OrderItem extends Model
     {
         return $this->belongsTo(\App\Models\POS\Item::class, 'item_id');
     }
+    
     public function itemVariant()
     {
-        return $this->belongsTo(ItemVariant::class, 'item_variant_id');
+        return $this->belongsTo(\App\Models\POS\ItemVariant::class, 'item_variant_id');
     }
     public function company()
     {

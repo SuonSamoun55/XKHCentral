@@ -4,6 +4,7 @@ namespace App\Models\ManagementSystem;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\POS\OrderItem;
 
 class Notification extends Model
 {
@@ -40,5 +41,16 @@ class Notification extends Model
     public function sender()
     {
         return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class, 'order_id');
+    }
+
+    public function relatedOrderItems()
+    {
+        return $this->hasMany(OrderItem::class, 'order_id', 'order_id')
+            ->with(['item', 'itemVariant']);
     }
 }

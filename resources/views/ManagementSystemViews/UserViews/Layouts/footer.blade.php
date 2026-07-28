@@ -28,4 +28,4 @@
     <span>user</span>
 </a>
         </div>
-        <link rel="stylesheet" href="{{ asset('css/views/ManagementSystemViews/UserViews/Layouts/footer.css') }}">
+<link rel="stylesheet" href="{{ asset('css/views/ManagementSystemViews/UserViews/Layouts/footer.css') }}">

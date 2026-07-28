@@ -34,19 +34,6 @@ class ItemListController extends Controller
             })
             ->orderBy('display_name')
             ->get();
-
-        // ── Batch-load variants for every item in one query (avoids N+1) ──
-        // Item has no `variants()` relationship defined, so `$item->variants`
-        // in the Blade view previously always returned null. We fetch every
-        // variant for the visible items here and manually attach it to each
-        // Item instance via setRelation(), which makes `$item->variants`
-        // work in Blade exactly as if a real relationship existed.
-        //
-        // NOTE: unlike detail(), we intentionally do NOT filter out
-        // blocked=true variants here — the popup wants to show blocked
-        // variants too (disabled/struck-through), same as your screenshot
-        // treats out-of-stock options. If you don't want blocked variants
-        // to appear at all in the popup, add ->where('blocked', false) below.
         $itemIds = $items->pluck('id');
 
         $variantsByItem = ItemVariant::whereIn('item_id', $itemIds)
@@ -283,113 +270,211 @@ class ItemListController extends Controller
             'categories'
         ));
     }
-public function add(Request $request)
-{
-    $user = Auth::user();
 
-    if (!$user) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Not authenticated'
-        ], 401);
-    }
+    public function add(Request $request)
+    {
+        $user = Auth::user();
 
-    $qty = max(1, (int) $request->input('qty', 1));
-    $variantId = $request->input('variant_id')
-        ?? $request->input('variantId')
-        ?? $request->input('selected_variant_id')
-        ?? $request->input('selectedVariantId');
-    if (!$variantId) {
-        $variantIds = $request->input('variant_ids') ?? $request->input('variantIds');
-        if (is_array($variantIds) && count($variantIds) > 0) {
-            $variantId = $variantIds[0];
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Not authenticated'
+            ], 401);
         }
-    }
-    Log::info('CART ADD DEBUG', [
-        'raw_all' => $request->all(),
-        'resolved_variant_id' => $variantId,
-        'item_id' => $request->item_id,
-        'qty' => $qty,
-    ]);
 
-    $cart = Cart::firstOrCreate([
-        'user_id' => $user->id,
-        'status' => 'active'
-    ]);
-
-    $cartItem = $cart->items()
-        ->where('item_id', $request->item_id)
-        ->where('item_variant_id', $variantId)
-        ->first();
-
-    if ($cartItem) {
-        $cartItem->increment('qty', $qty);
-    } else {
-        $cart->items()->create([
+        $qty = max(1, (int) $request->input('qty', 1));
+        $variantId = $request->input('variant_id')
+            ?? $request->input('variantId')
+            ?? $request->input('selected_variant_id')
+            ?? $request->input('selectedVariantId');
+        if (!$variantId) {
+            $variantIds = $request->input('variant_ids') ?? $request->input('variantIds');
+            if (is_array($variantIds) && count($variantIds) > 0) {
+                $variantId = $variantIds[0];
+            }
+        }
+        Log::info('CART ADD DEBUG', [
+            'raw_all' => $request->all(),
+            'resolved_variant_id' => $variantId,
             'item_id' => $request->item_id,
-            'item_variant_id' => $variantId,
             'qty' => $qty,
+        ]);
+
+        $cart = Cart::firstOrCreate([
+            'user_id' => $user->id,
+            'status' => 'active'
+        ]);
+
+        $cartItem = $cart->items()
+            ->where('item_id', $request->item_id)
+            ->where('item_variant_id', $variantId)
+            ->first();
+
+        if ($cartItem) {
+            $cartItem->increment('qty', $qty);
+        } else {
+            $cart->items()->create([
+                'item_id' => $request->item_id,
+                'item_variant_id' => $variantId,
+                'qty' => $qty,
+            ]);
+        }
+
+        $count = (int) $cart->items()->sum('qty');
+
+        return response()->json([
+            'success' => true,
+            'count' => $count,
+            'cartCount' => $count,
+            'variant_id_received' => $variantId, // temporary, for debugging
+            'message' => 'Added to cart successfully.'
         ]);
     }
 
-    $count = (int) $cart->items()->sum('qty');
+    public function detail($id)
+    {
+        $user = Auth::user();
 
-    return response()->json([
-        'success' => true,
-        'count' => $count,
-        'cartCount' => $count,
-        'variant_id_received' => $variantId, // temporary, for debugging
-        'message' => 'Added to cart successfully.'
-    ]);
-}
- public function detail($id)
-{
-    $user = Auth::user();
+        $item = Item::query()
+            ->where('id', $id)
+            ->where(function ($q) {
+                $q->where('blocked', false)->orWhereNull('blocked');
+            })
+            ->where(function ($q) {
+                $q->where('is_visible', true)->orWhereNull('is_visible');
+            })
+            ->where(function ($q) {
+                $q->where('category_visible', true)->orWhereNull('category_visible');
+            })
+            ->firstOrFail();
 
-    $item = Item::query()
-        ->where('id', $id)
-        ->where(function ($q) {
-            $q->where('blocked', false)->orWhereNull('blocked');
-        })
-        ->where(function ($q) {
-            $q->where('is_visible', true)->orWhereNull('is_visible');
-        })
-        ->where(function ($q) {
-            $q->where('category_visible', true)->orWhereNull('category_visible');
-        })
-        ->firstOrFail();
+        $item = $this->decorateItem($item);
 
-    $item = $this->decorateItem($item);
+        $discountPercent = $item->effective_discount_percent;
+        $finalPrice = $item->final_price;
+        $unitPrice = (float) ($item->unit_price ?? 0);
+        $cartCount = 0;
 
-    $discountPercent = $item->effective_discount_percent;
-    $finalPrice = $item->final_price;
-    $unitPrice = (float) ($item->unit_price ?? 0);
-    $cartCount = 0;
+        if ($user) {
+            $activeCart = Cart::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->first();
 
-    if ($user) {
-        $activeCart = Cart::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->first();
-
-        if ($activeCart) {
-            $cartCount = (int) $activeCart->items()->sum('qty');
+            if ($activeCart) {
+                $cartCount = (int) $activeCart->items()->sum('qty');
+            }
         }
+
+        // ✅ FIX: this was missing entirely — the blade view reads
+        // $favoriteIds to decide whether to render the heart as filled on
+        // load, but it was never fetched or passed here, so the heart
+        // always reset to "not favorited" on every page refresh.
+        $favoriteIds = [];
+        if ($user) {
+            $favoriteIds = Favorite::where('user_id', $user->id)
+                ->pluck('item_id')
+                ->toArray();
+        }
+
+        // Pulled directly from item_variants, same pattern as ItemVariantPosController::index()
+        $variants = ItemVariant::where('item_id', $item->id)
+            ->where('blocked', false)
+            ->get();
+
+        // ✅ Related products: up to 10 other items from the SAME category
+        // (item_category_code), same visibility rules as the main listing,
+        // current product excluded.
+        $relatedItems = Item::query()
+            ->where('id', '!=', $item->id)
+            ->when($item->item_category_code, function ($q) use ($item) {
+                $q->where('item_category_code', $item->item_category_code);
+            }, function ($q) {
+                // current product has no category — don't show unrelated items
+                $q->whereRaw('1 = 0');
+            })
+            ->where(function ($q) {
+                $q->where('blocked', false)->orWhereNull('blocked');
+            })
+            ->where(function ($q) {
+                $q->where('is_visible', true)->orWhereNull('is_visible');
+            })
+            ->where(function ($q) {
+                $q->where('category_visible', true)->orWhereNull('category_visible');
+            })
+            ->orderBy('display_name')
+            ->limit(10)
+            ->get();
+
+        // Same batch-load-and-attach pattern as getItems(), so the
+        // quick-add "+" button on each related card can also open the
+        // variant popup instead of always adding straight to cart.
+        $relatedItemIds = $relatedItems->pluck('id');
+
+        $relatedVariantsByItem = ItemVariant::whereIn('item_id', $relatedItemIds)
+            ->get()
+            ->groupBy('item_id');
+
+        $relatedItems->transform(function (Item $relatedItem) use ($relatedVariantsByItem) {
+            $relatedItem->setRelation(
+                'variants',
+                $relatedVariantsByItem->get($relatedItem->id, collect())
+            );
+
+            return $this->decorateItem($relatedItem);
+        });
+
+        return view('POSViews.POSUserViews.Products.show', compact(
+            'item', 'discountPercent', 'finalPrice', 'unitPrice', 'cartCount', 'variants', 'favoriteIds', 'relatedItems'
+        ));
     }
 
-    // Pulled directly from item_variants, same pattern as ItemVariantPosController::index()
-    $variants = ItemVariant::where('item_id', $item->id)
-        ->where('blocked', false)
-        ->get();
-
-    return view('POSViews.POSUserViews.Products.show', compact(
-    'item', 'discountPercent', 'finalPrice', 'unitPrice', 'cartCount', 'variants'
-));
-}
     /**
-     * Apply discount/price + resolved image_url to a single item.
-     * Prefers custom_image_url (manually uploaded) over image_url (synced from BC),
-     * so a custom photo is never hidden by the default BC photo.
+     * Toggle favorite status for the given item for the current user.
+     * Returns { success: true, favorited: bool } so the frontend can
+     * reliably read the new state under the "favorited" key.
      */
+    public function toggleFavorite(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Not authenticated'
+            ], 401);
+        }
+
+        $itemId = $request->input('item_id');
+
+        if (!$itemId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'item_id is required'
+            ], 422);
+        }
+
+        $existing = Favorite::where('user_id', $user->id)
+            ->where('item_id', $itemId)
+            ->first();
+
+        if ($existing) {
+            $existing->delete();
+            $favorited = false;
+        } else {
+            Favorite::create([
+                'user_id' => $user->id,
+                'item_id' => $itemId,
+            ]);
+            $favorited = true;
+        }
+
+        return response()->json([
+            'success' => true,
+            'favorited' => $favorited,
+            'message' => $favorited ? 'Added to favorites.' : 'Removed from favorites.',
+        ]);
+    }
+
     private function decorateItem(Item $item): Item
     {
         $discountPercent = $this->resolveDiscountPercent($item);

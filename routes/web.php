@@ -1,12 +1,11 @@
 <?php
-
 use Illuminate\Support\Facades\Route;
 use App\Models\ManagementSystem\User;
 use App\Http\Controllers\Api\ManagementSystem\WebUserController;
 use App\Http\Controllers\Api\ManagementSystem\AuthController;
 use App\Http\Controllers\Api\POS\Admin\Items\ItemPosController;
 use App\Http\Controllers\Api\ManagementSystem\DashboardController;
-use App\Http\Controllers\Api\ManagementSystem\DashboardUserController;
+use App\Http\Controllers\Api\POS\User\Daskboard\DashboardUserController;
 use App\Http\Controllers\Api\POS\User\Cart\CartController;
 use App\Http\Controllers\Api\POS\User\Products\ItemListController;
 use App\Http\Controllers\Api\POS\User\Orders\OrderController;
@@ -109,18 +108,20 @@ Route::post('/store/management/products/{id}/image', [StoreManagementController:
     [ItemListController::class, 'showProduct'])->name('user.pos.product.detail');
     Route::get('/pos-system/favorites', [FavoriteController::class, 'getFavorites'])->name('user.pos.favorites');
     Route::post('/pos-system/favorite-toggle', [FavoriteController::class, 'toggle'])->name('user.pos.favorite.toggle');
+    Route::post('/pos/favorite/toggle', [ItemListController::class, 'toggleFavorite'])->name('user.pos.favorite.toggle');
 
-    Route::get('/pos-system/notifications', [NotificationController::class, 'getNotifications'])->name('user.notifications');
-    Route::get('/pos-system/chat', [ChatController::class, 'userIndex'])->name('user.chat.index');
-    Route::post('/pos-system/chat/send', [ChatController::class, 'userSend'])->name('user.chat.send');
-    Route::get('/pos-system/chat/messages', [ChatController::class, 'userMessages'])->name('user.chat.messages');
-    Route::get('/pos-system/notifications/unread', [NotificationController::class, 'unreadNotifications'])->name('user.notifications.unread');
-    Route::get('/pos-system/notifications/{id}', [NotificationController::class, 'show'])->name('user.notifications.show');
-    Route::post('/pos-system/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('user.notifications.read');
-    Route::post('/pos-system/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('user.notifications.markAllRead');
-    Route::delete('/pos-system/notifications/delete-selected', [NotificationController::class, 'deleteSelected'])->name('user.notifications.deleteSelected');
-// variant
-
+Route::get('/pos-system/notifications', [NotificationController::class, 'getNotifications'])->name('user.notifications');
+Route::get('/pos-system/chat', [ChatController::class, 'userIndex'])->name('user.chat.index');
+Route::post('/pos-system/chat/send', [ChatController::class, 'userSend'])->name('user.chat.send');
+Route::get('/pos-system/chat/messages', [ChatController::class, 'userMessages'])->name('user.chat.messages');
+Route::get('/pos-system/notifications/unread', [NotificationController::class, 'unreadNotifications'])->name('user.notifications.unread');
+Route::get('/pos-system/notifications/{id}', [NotificationController::class, 'show'])->name('user.notifications.show');
+Route::get('/pos-system/notifications/{id}/items', [NotificationController::class, 'getNotificationItems'])->name('user.notifications.items');
+Route::post('/pos-system/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('user.notifications.read');
+Route::post('/pos-system/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('user.notifications.markAllRead');
+Route::delete('/pos-system/notifications/delete-selected', [NotificationController::class, 'deleteSelected'])->name('user.notifications.deleteSelected');
+Route::get('/pos-system/notifications/{id}', [NotificationController::class, 'show'])->name('user.notifications.show');
+Route::get('/pos-system/notifications/unread', [NotificationController::class, 'unreadNotifications'])->name('user.notifications.unread');
     Route::get('/store/management/variants', [ItemVariantPosController::class, 'manage'])
         ->name('store.management.variants');
 

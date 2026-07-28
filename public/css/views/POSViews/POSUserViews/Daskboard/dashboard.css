@@ -1,0 +1,877 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100%;
+}
+
+:root {
+  --bg: white;
+  --card: #fbfbf8;
+  --line: #ece8df;
+  --text: #1f1f1f;
+  --muted: #7f7f7f;
+
+  --primary: #09bfd3;
+  --primary-dark: #10b5c1;
+  --primary-soft: #cfeef2;
+  --primary-faint: #d9f2f2;
+
+  --danger: #e33b32;
+  --success: #1fb27a;
+  --gold:#00C3D0;
+  --gold-soft: #00C3D0;
+
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+
+  --fs-title: 20px;
+  --fs-header: 16px;
+  --fs-table: 11px;
+  --fs-normal: 11px;
+  --gap: 15px;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+
+  --bp-tablet: 1024px;
+  --bp-mobile: 640px;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+.no_top_item{
+    width: 50%;
+    margin: 0 auto;
+}
+.mobile>.cart-boxM{
+    display: none;
+}
+.small-text,
+.small-sub {
+  font-size: var(--fs-normal);
+  color: #707070;
+}
+body{
+    width: 100%;
+}
+
+/* =======================================================================
+   MOBILE-ONLY TOP BAR (hamburger / logo / cart) — left untouched
+======================================================================= */
+.mobile-topbar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #fff;
+}
+
+.topbar-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #e9e9e9;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--text);
+  position: relative;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+}
+
+.topbar-logo {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: 0.3px;
+}
+
+.topbar-logo span {
+  color: var(--primary);
+}
+
+/* =======================================================================
+   SIDEBAR — hidden on mobile by default.
+======================================================================= */
+@media (max-width: 640px), (max-width: 926px) and (orientation: landscape) {
+  .sidebar,
+  .app-sidebar,
+  #sidebar,
+  aside {
+    display: none;
+  }
+
+  .sidebar.mobile-open,
+  .app-sidebar.mobile-open,
+  #sidebar.mobile-open,
+  aside.mobile-open {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 2000;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+  }
+
+  .content-scroll {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+/* =======================================================================
+   DASHBOARD GRID
+======================================================================= */
+
+.content-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  border-radius: var(--radius-md);
+}
+
+.dashboard {
+  display: grid;
+
+  width: 100%;
+  gap: var(--gap);
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "actions actions"
+    "recent  report"
+    "recent  notif"
+    "topitem topitem";
+}
+
+.area-actions   { grid-area: actions; }
+.area-stat      { grid-area: stat; }
+.area-recent    { grid-area: recent; }
+.area-report    { grid-area: report; }
+.area-notif     { grid-area: notif; }
+.area-topitem   { grid-area: topitem; }
+.area-promo             { grid-area: promo; }
+.area-products-summary  { grid-area: productsSummary; }
+.area-date-filter       { grid-area: dateFilter; }
+.area-budget            { grid-area: budget; }
+
+/* Hidden on desktop — these are mobile-only sections in the blade
+   (actions bar, total-order stat, and the new mobile mockup sections:
+   promo carousel, products summary, date filter, budget widget). */
+.area-actions,
+.area-stat,
+.area-promo,
+.area-products-summary,
+.area-date-filter,
+.area-budget {
+  display: none;
+}
+
+.mobile-topbar { display: none; }
+
+.area-hero {
+  display: grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap: var(--gap);
+  width: 100%;
+  padding: 0px 10px 0px 0px;
+  /* margin-bottom: var(--gap); */
+}
+
+.main-row-right {
+  display: contents;
+}
+
+.card {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 10px 15px;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+}
+.area-topitem{
+    margin: 0px 10px 0px 0px;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  /* margin-bottom: 12px; */
+}
+
+.card h3,
+.hero-title,
+.report-title {
+  font-size: var(--fs-header);
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.year-filter {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-normal);
+  color: #6b6b6b;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.year-filter i {
+  font-size: 11px;
+}
+
+.period-filter {
+  border: 1px solid #ddd4c4;
+  border-radius: 6px;
+  background: #fff;
+  padding: 6px 10px;
+  font-size: var(--fs-table);
+  color: #595959;
+  outline: none;
+  cursor: pointer;
+}
+
+/* =======================================================================
+   HERO CARDS (Products / Order / Pending) — shown on desktop AND mobile
+======================================================================= */
+.content-scroll>.mobile-bottom-nav{
+    display: none;
+}
+.hero-card {
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid #e7f3f4;
+  padding: 0;
+}
+
+.hero-card-link {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  color: inherit;
+}
+
+.hero-card-image {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+    padding:10px;
+}
+
+.hero-card-image img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 16px;
+  padding: 10px;
+  border-radius: 26px;
+
+}
+
+.hero-card-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid #eef2f2; */
+}
+
+.hero-card-label {
+  font-size: var(--fs-header);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.hero-card-value {
+  font-size: var(--fs-header);
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.order-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid #aeaeae33;
+  border-radius: var(--radius-sm);
+  padding: 0px 5px;
+}
+
+.order-item {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 4px;
+  border-bottom: 1px solid #f0f0ea;
+  transition: background 0.2s ease;
+}
+
+.order-item:last-child { border-bottom: none; }
+.order-item:hover { background: #f5f2eb; }
+.order-item.active { background: var(--gold-soft); }
+
+.order-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.order-name { font-size: var(--fs-table); font-weight: 600; }
+.order-sub { font-size: var(--fs-normal); color: #8a8a8a; margin-top: 2px; }
+
+.order-name,
+.order-sub {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.order-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  font-weight: 700;
+  font-size: var(--fs-table);
+  flex-shrink: 0;
+}
+
+.gold-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: var(--fs-normal);
+  color: #00C3D0;
+}
+
+.order-thumb-stack {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+}
+
+.order-thumb-stack img {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.order-thumb-stack.single img { top: 4px; left: 4px; width: 38px; height: 38px; }
+.order-thumb-stack.stacked img:nth-child(1) { top: 10px; left: 12px; z-index: 3; }
+.order-thumb-stack.stacked img:nth-child(2) { top: 5px;  left: 6px;  z-index: 2; }
+.order-thumb-stack.stacked img:nth-child(3) { top: 0;    left: 0;    z-index: 1; }
+
+/* =======================================================================
+   REPORT — CHART
+======================================================================= */
+
+.chart-box {
+  flex: 1;
+  min-height: 180px;
+  position: relative;
+  padding: 10px;
+  border: 1px solid #7d7d7d33;
+  border-radius: var(--radius-sm);
+}
+
+.chart-box canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* =======================================================================
+   NOTIFICATIONS
+======================================================================= */
+
+.notification-card .notification {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+
+}
+.img_notification{
+    width: 45%;
+    height: 90%;
+}
+
+.notification-card{
+    height: 50vh;
+    margin: 0px 10px 0px 0px;
+    /* width: 100%; */
+
+}
+.report-card{
+    margin: 0px 10px 0px 0px;
+}
+.report-card{
+    max-height: 48vh;
+}
+.summary-card{
+    /* margin-top: 10px; */
+    height: 100vh;
+}
+.recent-card {
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
+  /* margin: 10px 0px; */
+}
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f2f0e9;
+}
+
+.notif-item:last-child { border-bottom: none; }
+
+.notif-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.notif-badge {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 50%;
+  background: var(--primary-faint);
+  color: var(--primary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-table);
+  font-weight: 700;
+  overflow: hidden;
+}
+
+.notif-badge i {
+  font-size: 16px;
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .recent-card {
+  display: flex;
+  flex-direction: column;
+  height: 50vh;
+}
+  .report-card{
+    max-height: 26vh;
+}
+
+  .notification-card {
+    max-height: 23vh;
+  }
+
+  .summary-card {
+    height: auto;
+    min-height: 320px;
+  }
+}
+
+.notif-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.notif-title { font-size: var(--fs-table); font-weight: 700; color: var(--text); line-height: 1.3; }
+.notif-sub { font-size: var(--fs-normal); color: #8a8a8a; margin-top: 2px; line-height: 1.35; }
+.notif-time { font-size: var(--fs-normal); color: #9a9a9a; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+.unread-count { font-size: var(--fs-normal); color: #707070; }
+
+.notif-title,
+.notif-sub {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* =======================================================================
+   MOBILE-ONLY EXTRAS — matches only what's actually in the blade:
+   actions-bar and the total-order stat pill.
+======================================================================= */
+
+.actions-bar {
+  background: #eaf7f8;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px 10px;
+  border-radius: 14px;
+}
+
+.actions-bar .action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  color: var(--primary-dark);
+  font-weight: 700;
+  font-size: var(--fs-normal);
+  text-align: center;
+}
+
+.actions-bar .action-btn img { width: 22px; height: 22px; object-fit: contain; }
+.actions-bar .action-btn i { font-size: 20px; }
+
+/* ---- mobile total-order stat pill ---- */
+.stat-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #fff;
+  background: #14b8a6;
+  border-radius: 12px;
+}
+
+.stat-card .card-icon {
+  background: #ffffff30;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: var(--fs-header);
+  margin-right: 10px;
+}
+
+.stat-card h2 { font-size: var(--fs-title); margin: 0; }
+.stat-card p { font-size: var(--fs-normal); margin: 0 0 4px; }
+
+/* =======================================================================
+   MOBILE-ONLY: new dashboard sections added to match updated mockup
+   (promo carousel / products summary / date filter / budget widget).
+   All hidden by default above; only shown inside the mobile media
+   query further down.
+======================================================================= */
+
+.promo-card {
+  padding: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: linear-gradient(135deg, #10c7c7, #0aa7a7);
+  color: #fff;
+}
+
+.promo-viewport {
+  overflow: hidden;
+  width: 100%;
+}
+
+.promo-track {
+  display: flex;
+  transition: transform 0.4s ease;
+}
+
+.promo-slide {
+  flex: 0 0 100%;
+  min-width: 100%;
+  padding: 20px 18px;
+}
+
+.promo-text h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  max-width: 70%;
+}
+
+.promo-link {
+  font-size: var(--fs-normal);
+  font-weight: 700;
+  color: #fff;
+  text-decoration: underline;
+}
+
+.promo-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 0 14px;
+}
+
+.promo-dot {
+  width: 16px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.promo-dot.active {
+  background: #fff;
+}
+
+.products-summary .card-head { margin-bottom: 10px; }
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.summary-stat {
+  border-radius: var(--radius-md);
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #fff;
+  min-width: 0;
+}
+
+.summary-stat .stat-icon { font-size: 14px; opacity: 0.9; }
+.summary-stat .stat-label {
+  font-size: 9px;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.summary-stat .stat-value {
+  font-size: 12px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.stat-blue { background: #1fa9e0; }
+.stat-teal { background: #12b8a6; }
+
+.date-filter-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid #e3e3e3;
+  color: #9a9a9a;
+  font-size: var(--fs-normal);
+  background: #fff;
+}
+
+.date-filter-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #9a9a9a;
+  font-size: var(--fs-normal);
+}
+
+.budget-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  background: #fff;
+}
+
+.budget-label { display: block; font-size: var(--fs-normal); color: #8a8a8a; }
+.budget-value { display: block; font-size: 15px; font-weight: 700; margin-top: 4px; }
+
+.budget-ring {
+  --pct: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  background: conic-gradient(var(--primary) calc(var(--pct) * 1%), #eef2f2 0);
+}
+
+.budget-ring span {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =======================================================================
+   MOBILE NAV — left untouched
+======================================================================= */
+
+.mobile-nav {
+  display: none;
+}
+
+/* =======================================================================
+   RESPONSIVE — ONE BREAKPOINT SYSTEM
+======================================================================= */
+
+@media (max-width: 640px), (max-width: 926px) and (orientation: landscape) {
+  body {
+    padding-bottom: 70px;
+    background: #eef9fa;
+  }
+
+  .mobile-topbar {
+    display: flex;
+  }
+
+  .dashboard {
+    padding: 12px;
+    padding-bottom: 90px;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "actions"
+      "promo"
+      "productsSummary"
+      "dateFilter"
+      "report"
+      "budget"
+      "recent"
+      "notif"
+      "topitem";
+  }
+
+  .area-actions,
+  .area-stat {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Row-based components need to stay row-direction. */
+  .area-actions.actions-bar {
+    flex-direction: row;
+  }
+
+  /* New mobile-only sections from the updated mockup. */
+  .area-promo,
+  .area-date-filter,
+  .area-budget {
+    display: flex;
+  }
+
+  .area-products-summary {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .area-hero {
+    display: none;
+  }
+  .recent-card {
+    max-height: 100%;
+  }
+
+  .report-card {
+    max-height: 32vh;
+  }
+  .card {
+    margin: 0;
+  }
+
+  .report-card .chart-box {
+    border: none;
+    padding: 0;
+  }
+
+  .notification-card {
+    height: auto;
+    max-height: 100%;
+  }
+
+  .summary-card {
+    height: auto;
+    min-height: 260px;
+  }
+
+  .mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--line);
+    padding: 10px 0;
+    justify-content: space-around;
+    z-index: 1000;
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .mobile-nav a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--muted);
+    font-size: var(--fs-normal);
+  }
+
+  .mobile-nav a.active,
+  .mobile-nav a:hover {
+    color: var(--primary);
+  }
+
+  .mobile-nav i {
+    font-size: 20px;
+    margin-bottom: 2px;
+  }
+  .app-shell> .sidebar-wrap{display: none;}
+.dashboard{
+    background-color: white;
+}
+.mobile>.cart-boxM{
+    display: block;
+    display: flex;
+}
+.card {
+box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 5px 0px, rgba(0, 0, 0, 0.1) 0px 0px 1px 0px;
+}
+}

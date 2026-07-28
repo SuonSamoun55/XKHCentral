@@ -32,6 +32,20 @@
         $cancelledAction = $orderActions->first(function ($action) {
             return in_array(strtolower((string) $action->action_type), ['cancelled', 'canceled'], true);
         });
+
+        // Priority: line's variant image, then the item's admin-set
+        // custom_image_url override, then the item's synced image_url,
+        // then placeholder. image_url may be stored either as a full URL
+        // or a relative storage path, so resolve either shape.
+        $resolveLineImg = fn ($path) => $path
+            ? (str_starts_with($path, 'http') ? $path : asset($path))
+            : null;
+
+        $lineImage = fn ($line) =>
+            $resolveLineImg(optional($line->itemVariant)->image_url)
+                ?? $resolveLineImg(optional($line->item)->custom_image_url)
+                ?? $resolveLineImg(optional($line->item)->image_url)
+                ?? asset('images/no-image.png');
     @endphp
 
     <div id="order-detail-page">
@@ -105,7 +119,7 @@
                 @endphp
                 <div class="od-mobile-item-row">
                     <img class="od-mobile-item-img"
-                        src="{{ optional($line->item)->image_url ?: asset('images/no-image.png') }}"
+                        src="{{ $lineImage($line) }}"
                         alt="{{ $line->item_name ?? 'Item' }}"
                         onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
                     <div class="od-mobile-item-info">
@@ -274,7 +288,7 @@
                                     <td>
                                         <div class="od-item">
                                             <img class="od-item-img"
-                                                src="{{ optional($line->item)->image_url ?: asset('images/no-image.png') }}"
+                                                src="{{ $lineImage($line) }}"
                                                 alt="{{ $line->item_name ?? 'Item' }}"
                                                 onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
                                             <div>

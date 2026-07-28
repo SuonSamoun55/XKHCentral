@@ -242,8 +242,8 @@
                     @csrf
                     <input type="hidden" name="receiver_id" value="{{ $activeContactId }}">
                     <input type="file" id="imageInput" accept="image/*" class="d-none">
-                    <input type="text" id="chatMessageInput" name="message" class="composer-input"
-                        placeholder="Type a message...">
+                    <textarea id="chatMessageInput" name="message" class="composer-input"
+                        placeholder="Type a message..." rows="1"></textarea>
 
                     <button type="button" id="attachButton" class="icon-btn" title="Send image">
                         <i class="bi bi-paperclip"></i>
@@ -368,6 +368,24 @@
             let lbZoomed = false;
             let lightboxImages = [];
             let lightboxIndex = 0;
+
+            // ===== Auto-grow composer textarea (caps at 15vh) =====
+            function autoGrowInput() {
+                if (!input) return;
+                input.style.height = 'auto';
+                const maxHeight = window.innerHeight * 0.15; // 15vh
+                const newHeight = Math.min(input.scrollHeight, maxHeight);
+                input.style.height = newHeight + 'px';
+                input.style.overflowY = input.scrollHeight > maxHeight ? 'auto' : 'hidden';
+            }
+
+            if (input) {
+                input.addEventListener('input', autoGrowInput);
+                window.addEventListener('resize', autoGrowInput);
+                autoGrowInput(); // set initial size
+
+                // Enter just creates a new line (same as on phone) — only the Send button submits.
+            }
 
             if (contactSearch && contactList) {
                 contactSearch.addEventListener('input', function() {
@@ -727,6 +745,7 @@
                     }
 
                     input.value = '';
+                    autoGrowInput(); // reset height after clearing
                     selectedImageFile = null;
                     selectedVoiceFile = null;
                     setHint('');

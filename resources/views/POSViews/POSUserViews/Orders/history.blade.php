@@ -72,7 +72,20 @@
                         <div class="order-card-img item-thumb-stack">
                             @foreach ($order->items->take(3) as $index => $oi)
                                 @php
-                                    $thumb = $oi->item->image_url ?? $oi->item->image ?? null;
+                                    // Priority: ordered variant's own image, then the
+                                    // item's admin-set custom_image_url override, then the
+                                    // item's synced image_url/image, then null (placeholder
+                                    // handled by onerror below).
+                                    // image_url may be stored either as a full URL or a
+                                    // relative storage path, so resolve either shape.
+                                    $resolveThumb = fn ($path) => $path
+                                        ? (str_starts_with($path, 'http') ? $path : asset($path))
+                                        : null;
+
+                                    $thumb = $resolveThumb(optional($oi->itemVariant)->image_url)
+                                        ?? $resolveThumb($oi->item->custom_image_url ?? null)
+                                        ?? $resolveThumb($oi->item->image_url ?? null)
+                                        ?? $resolveThumb($oi->item->image ?? null);
                                 @endphp
                                 <div class="item-thumb" style="z-index: {{ 10 - $index }};">
                                     <img
@@ -167,9 +180,21 @@
                                     <div class="item-thumb-stack">
                                         @foreach ($orderItems as $index => $oi)
                                             @php
-                                                // Adjust this accessor to match whatever field your
-                                                // Item model stores its image on.
-                                                $thumb = $oi->item->image_url ?? $oi->item->image ?? null;
+                                                // Priority: ordered variant's own image, then the
+                                                // item's admin-set custom_image_url override, then
+                                                // the item's synced image field. Adjust the final
+                                                // accessor to match whatever field your Item model
+                                                // stores its image on. image_url may be stored
+                                                // either as a full URL or a relative storage path,
+                                                // so resolve either shape.
+                                                $tblResolveThumb = fn ($path) => $path
+                                                    ? (str_starts_with($path, 'http') ? $path : asset($path))
+                                                    : null;
+
+                                                $thumb = $tblResolveThumb(optional($oi->itemVariant)->image_url)
+                                                    ?? $tblResolveThumb($oi->item->custom_image_url ?? null)
+                                                    ?? $tblResolveThumb($oi->item->image_url ?? null)
+                                                    ?? $tblResolveThumb($oi->item->image ?? null);
                                             @endphp
                                             <div class="item-thumb" style="z-index: {{ 10 - $index }};">
                                                 <img

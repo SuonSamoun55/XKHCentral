@@ -1,6 +1,7 @@
 @php
     use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\Storage;
+    use Illuminate\Support\Facades\Route;
     use App\Models\ManagementSystem\Company;
 
     $authUser = Auth::user();
@@ -75,6 +76,9 @@
     // 3. Setup User Avatar Logic
     $userAvatar = $authUser->profile_image_display ?? asset('images/default-user.png');
 
+    // Role check — used to conditionally show the "Open Admin" link below.
+    $isAdmin = strtolower($authUser->role ?? '') === 'admin';
+
     // ------------------------------------------------------------------
     // Sidebar nav items — one array entry per link.
     // 'match' is the list of URL patterns (request()->is()) that should
@@ -123,9 +127,10 @@
 
     ];
 @endphp
-
 <div class="sidebar-wrap">
-    <aside class="sidebar">
+    {{-- id="appSidebar" added so the mobile hamburger (header_mobile.blade.php)
+         has a stable, unambiguous target instead of guessing by tag/class. --}}
+    <aside class="sidebar" id="appSidebar">
         <div class="sidebar-top">
             <div class="brand">
                 <div class="company-logo-box">
@@ -152,7 +157,7 @@
                             $iconToShow = $item['icon_active'];
                         }
                     @endphp
-                    <a href="{{ $item['url'] }}">
+                    <a href="{{ $item['url'] }}" class="nav-link-mobile-close">
                         <button class="nav-btn {{ $isActive ? 'active' : '' }}" type="button">
                             <span class="nav-icon {{ !empty($item['notification']) ? 'nav-icon-notification' : '' }}">
                                 <img src="{{ asset($iconToShow) }}" alt="{{ $item['name'] }} Icon">
@@ -173,7 +178,7 @@
             @php
                 $avatarUrl = $userAvatar;
             @endphp
-            <div class="profile">
+            <div class="profiles">
                 <img src="{{ $avatarUrl }}" alt="User" id="sidebarProfileImage"
                     onerror="this.onerror=null;this.src='{{ asset('images/default-user.png') }}';">
                 <div class="profile-text">
@@ -187,16 +192,20 @@
             <div class="settings-box" id="settingsBox">
                 <button class="settings-btn" id="settingsBtn" type="button">
                     <span class="nav-icon">
-                        <img src="{{ asset('images/aside/setting.png') }}" alt="Settings Icon">
+                        <img src="{{ asset('/images/aside/setting.png') }}" alt="Settings Icon">
                     </span>
                     <span class="nav-label">Settings</span>
                     <span class="settings-arrow">⌄</span>
                 </button>
 
                 <div class="settings-menu">
-                    <a href="{{ route('profile') }}" class="settings-link">Edit Profile</a>
-                    <a href="{{ route('user.password.change') }}" class="settings-link">Change new password</a>
+                    <a href="{{ route('profile') }}" class="settings-link nav-link-mobile-close">Edit Profile</a>
+                    <a href="{{ route('user.password.change') }}" class="settings-link nav-link-mobile-close">Change new password</a>
                     <a href="#" class="settings-link">Policy</a>
+
+                    @if ($isAdmin)
+                        <a href="{{ url('/admin') }}" class="settings-link nav-link-mobile-close">Open Admin</a>
+                    @endif
                 </div>
             </div>
 
@@ -219,9 +228,9 @@
     <div id="globalToastContainer" class="global-toast-container"></div>
 </div>
 {{-- <link rel="stylesheet" href="{{ asset('css/management-system/dashboard.css') }}" /> --}}
-<link rel="stylesheet" href="{{ asset('css/management-system/aside.css') }}" />
+{{-- <link rel="stylesheet" href="{{ asset('css/management-system/aside.css') }}" /> --}}
 
-<link rel="stylesheet" href="{{ asset('css/views/ManagementSystemViews/UserViews/Layouts/aside.css') }}">
+<link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSUserViews/Layout/aside.css') }}">
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -232,6 +241,7 @@
         const settingsBox = document.getElementById('settingsBox');
         const navButtons = document.querySelectorAll('.nav-btn');
         const unreadNotiDot = document.getElementById('unreadNotiDot');
+        const appSidebar = document.getElementById('appSidebar');
 
         if (collapseHandle && appShell) {
             collapseHandle.addEventListener('click', () => {
@@ -250,6 +260,19 @@
                 appShell.classList.toggle('settings-active');  // ✅ ADD THIS
             });
         };
+
+        // Tapping any nav/settings/logout link inside the sidebar while
+        // it's open as a mobile overlay should close the menu, same as
+        // tapping the backdrop. No-ops harmlessly on desktop since the
+        // sidebar there isn't in the mobile-open overlay state.
+        document.querySelectorAll('.nav-link-mobile-close').forEach((link) => {
+            link.addEventListener('click', () => {
+                if (appSidebar?.classList.contains('mobile-open') && typeof toggleMobileSidebar === 'function') {
+                    toggleMobileSidebar();
+                }
+            });
+        });
+
         const toastContainer = document.getElementById('globalToastContainer');
         let shownNotificationIds = new Set(JSON.parse(localStorage.getItem('shownNotificationIds') || '[]'));
 

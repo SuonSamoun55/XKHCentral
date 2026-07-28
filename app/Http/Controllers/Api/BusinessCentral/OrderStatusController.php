@@ -170,12 +170,6 @@ class OrderStatusController extends Controller
         return str_replace('{documentNo}', rawurlencode($escaped), $endpoint);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | POSTED INVOICE SEARCH (FIXED QUERY BUILD)
-    |--------------------------------------------------------------------------
-    */
-
     private function findPostedSalesInvoice(string $token, string $doc): ?array
     {
         $url = $this->bcUrl('postedSalesInvoices');

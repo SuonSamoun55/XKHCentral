@@ -77,11 +77,11 @@ class AdminOrderController extends Controller
             return back()->with('error', 'Unauthorized.');
         }
 
-        $order = Order::with(['user', 'items.item'])->find($id);
+            $order = Order::with(['user', 'items.item', 'items.itemVariant'])->find($id);
 
-        if (!$order) {
-            return back()->with('error', 'Order not found.');
-        }
+            if (!$order) {
+                return back()->with('error', 'Order not found.');
+            }
 
         if ($order->status !== 'pending') {
             return back()->with('error', 'Only pending orders can be confirmed.');
@@ -129,14 +129,25 @@ class AdminOrderController extends Controller
                 throw new \Exception('BC sales order ID not returned.');
             }
 
+            // Process each order line and attempt to create in BC
             foreach ($orderItems as $item) {
                 $discountPercent = $this->resolveDiscountPercent($item->item);
 
+                // Get the actual variant code from the item's variant relation
+                // This will be null if the item doesn't have a variant selected
+                $variantCode = optional($item->itemVariant)->code ?? '';
+
+                // Build payload for line creation with required fields
+                // All seven fields (lineType, lineObjectNumber, quantity, unitPrice, locationCode, discountPercent, variantCode)
+                // must be present or BC will reject with "Expected a parameter with name 'x'\" error
                 $linePayload = [
                     'lineType'         => 'Item',
-                    'lineObjectNumber' => $item->item_no,
-                    'quantity'         => (int) $item->qty,
-                    'discountPercent'  => round($discountPercent, 2), // always send, 0 = no discount
+                    'lineObjectNumber' => $item->item_no, // item number, required
+                    'quantity'         => (int) $item->qty, // must be > 0
+                    'unitPrice'       => 0, // 0 = let BC resolve from price list, always send
+                    'locationCode'    => '', // '' = use order-level location, always send
+                    'discountPercent' => round($discountPercent, 2), // 0 = no discount, always send
+                    'variantCode'     => $variantCode, // '' = no variant, required field for products with variants, always send
                 ];
 
                 $lineResponse = $this->createBusinessCentralSalesOrderLine(
@@ -358,30 +369,38 @@ class AdminOrderController extends Controller
             $configuredPayload = array_merge(['documentId' => $salesOrderId], $linePayload);
         }
 
+        // First, try the custom [ServiceEnabled] bound action that supports ALL fields
         $attempts = [
             [
-                'endpoint' => $configuredEndpoint,
-                'payload'  => $configuredPayload,
-            ],
-            [
-                'endpoint' => $this->bcUrl('salesOrderLines'),
-                'payload'  => array_merge(['documentId' => $salesOrderId], $linePayload),
-            ],
-            [
-                'endpoint' => $this->bcUrl('salesOrderLines'),
-                'payload'  => array_merge(['salesOrderId' => $salesOrderId], $linePayload),
-            ],
-            [
-                // Custom [ServiceEnabled] bound action — all 5 params always required
+                // Custom [ServiceEnabled] bound action — all 6 params always required
                 'endpoint' => $this->bcUrl("salesOrders({$salesOrderId})/Microsoft.NAV.addLine"),
                 'payload'  => $this->serviceEnabledAddLinePayload($linePayload),
+                'originalPayload' => $linePayload, // Keep original for logging
             ],
+        ];
+
+        // Add generic fallback attempts
+        $attempts[] = [
+            'endpoint' => $configuredEndpoint,
+            'payload'  => $configuredPayload,
+            'originalPayload' => $linePayload,
+        ];
+        $attempts[] = [
+            'endpoint' => $this->bcUrl('salesOrderLines'),
+            'payload'  => array_merge(['documentId' => $salesOrderId], $linePayload),
+            'originalPayload' => $linePayload,
+        ];
+        $attempts[] = [
+            'endpoint' => $this->bcUrl('salesOrderLines'),
+            'payload'  => array_merge(['salesOrderId' => $salesOrderId], $linePayload),
+            'originalPayload' => $linePayload,
         ];
 
         if ($salesOrderNo) {
             $attempts[] = [
                 'endpoint' => $this->bcUrl('salesOrderLines'),
                 'payload'  => array_merge(['documentNo' => $salesOrderNo], $linePayload),
+                'originalPayload' => $linePayload,
             ];
         }
 
@@ -399,6 +418,8 @@ class AdminOrderController extends Controller
             );
 
             if ($lastResponse->successful()) {
+                // Check if fields were dropped before logging success
+                $this->logFieldDropIfNeeded($attempt['originalPayload'], $attempt['payload'], $attempt['endpoint']);
                 return $lastResponse;
             }
 
@@ -422,6 +443,8 @@ class AdminOrderController extends Controller
                 );
 
                 if ($lastResponse->successful()) {
+                    // Check if fields were dropped before logging success
+                    $this->logFieldDropIfNeeded($attempt['originalPayload'], $payloadWithoutDiscount, $attempt['endpoint']);
                     return $lastResponse;
                 }
             }
@@ -446,14 +469,15 @@ class AdminOrderController extends Controller
     /**
      * Build the payload for the custom [ServiceEnabled] AddLine bound action.
      *
-     * ALL five parameters declared in the AL signature must always be present.
-     * BC rejects the call with "Expected a parameter with name 'x'" if any is missing.
+     * ALL six parameters declared in the AL signature must always be present.
+     * BC rejects the call with "Expected a parameter with name 'x'\" if any is missing.
      *
      *   itemNo          Code[20]   — item number, required
      *   quantity        Decimal    — must be > 0
      *   unitPrice       Decimal    — 0 = let BC resolve from price list
      *   locationCode    Code[10]   — '' = use order-level location
      *   discountPercent Decimal    — 0 = no discount
+     *   variantCode     Code[10]   — '' = no variant, required parameter for products with variants
      */
     private function serviceEnabledAddLinePayload(array $linePayload): array
     {
@@ -463,6 +487,7 @@ class AdminOrderController extends Controller
             'unitPrice'       => (float)   ($linePayload['unitPrice']        ?? 0),   // always send
             'locationCode'    => (string)  ($linePayload['locationCode']     ?? ''),  // always send
             'discountPercent' => (float)   ($linePayload['discountPercent']  ?? 0),   // always send
+            'variantCode'     => (string)  ($linePayload['variantCode']     ?? ''),  // always send
         ];
     }
 
@@ -515,5 +540,35 @@ class AdminOrderController extends Controller
         }
 
         return false;
+    }
+
+    /**
+     * Log when a line insert succeeds but critical fields were dropped from the payload.
+     * This ensures we don't silently lose discountPercent or variantCode when falling back
+     * to endpoints that don't support these required fields.
+     */
+    private function logFieldDropIfNeeded(array $originalPayload, array $actualPayload, string $endpoint): void
+    {
+        // Check if discount was present in original but missing in actual
+        $discountDropped = (
+            array_key_exists('discountPercent', $originalPayload) 
+            && $originalPayload['discountPercent'] > 0
+            && (!array_key_exists('discountPercent', $actualPayload) || $actualPayload['discountPercent'] == 0)
+        );
+
+        // Check if variantCode was present in original but missing or empty in actual
+        $variantDropped = (
+            array_key_exists('variantCode', $originalPayload)
+            && $originalPayload['variantCode'] !== ''
+            && (!array_key_exists('variantCode', $actualPayload) || $actualPayload['variantCode'] == '')
+        );
+
+        if ($discountDropped || $variantDropped) {
+            $logMessage = 'Line insert succeeded but fields were dropped: ';
+            if ($discountDropped) $logMessage .= 'discountPercent ';
+            if ($variantDropped) $logMessage .= 'variantCode ';
+            $logMessage .= 'in endpoint: ' . $endpoint;
+            logger()->warning($logMessage);
+        }
     }
 }

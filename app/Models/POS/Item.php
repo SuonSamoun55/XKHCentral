@@ -64,4 +64,24 @@ class Item extends Model
     {
         return $this->hasMany(InventoryMovement::class, 'item_id');
     }
+    public function getActiveDiscountPercentAttribute(): float
+    {
+        $discount = max(0, (float) ($this->discount_amount ?? 0));
+        if ($discount <= 0) {
+            return 0.0;
+    }
+
+    $today = \Carbon\Carbon::today();
+    $start = $this->discount_start_date ? \Carbon\Carbon::parse($this->discount_start_date)->startOfDay() : null;
+    $end = $this->discount_end_date ? \Carbon\Carbon::parse($this->discount_end_date)->endOfDay() : null;
+
+    if ($start && $today->lt($start)) {
+        return 0.0;
+    }
+    if ($end && $today->gt($end)) {
+        return 0.0;
+    }
+
+    return min(100, $discount);
+}
 }

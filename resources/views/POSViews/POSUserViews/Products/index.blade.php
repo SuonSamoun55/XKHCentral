@@ -16,67 +16,67 @@
                 ->values();
         @endphp
 
-        <div class="page-wrap">
-            <main class="content-area">
-                @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
-                @include('ManagementSystemViews.UserViews.Layouts.footer')
-
+        <div class="pl-page-wrap">
+           
+            <main class="pl-content-area">
+            @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
+            @include('ManagementSystemViews.UserViews.Layouts.footer')
                 {{-- ===== MOBILE FILTERS (phone only) ===== --}}
-                <div class="mobile-product-filters" id="mobileProductFilters">
-                    <div class="mobile-search-box">
+                <div class="pl-mobile-product-filters" id="mobileProductFilters">
+                    <div class="pl-mobile-search-box">
                         <i class="bi bi-search"></i>
                         <input type="text" id="mobileSearchInput" placeholder="Search products ...">
                     </div>
-                    <div class="mobile-category-row" aria-label="Product categories">
-                        <button type="button" class="category-filter-btn active" data-category="">
+                    <div class="pl-mobile-category-row" aria-label="Product categories">
+                        <button type="button" class="pl-category-filter-btn active" data-category="">
                             All categories
                         </button>
                         @foreach ($categoryOptions as $category)
-                            <button type="button" class="category-filter-btn"
+                            <button type="button" class="pl-category-filter-btn"
                                 data-category="{{ strtolower($category) }}">
                                 {{ ucwords(str_replace(['_', '-'], ' ', $category)) }}
                             </button>
                         @endforeach
                     </div>
                 </div>
-                <div class="header">
-                    <div class="topbar">
+                <div class="pl-header">
+                    <div class="pl-topbar">
 
                         {{-- Title + Cart --}}
-                        <div class="top">
-                            <h1 class="title">Products</h1>
-                            <a href="{{ route('user.pos.cart') }}" class="cart-box">
+                        <div class="pl-top">
+                            <h1 class="pl-title">Products</h1>
+                            <a href="{{ route('user.pos.cart') }}" class="pl-cart-box">
                                 <i class="bi bi-cart3"></i>
-                                <span class="cart-count" id="desktopCartCount">{{ (int) ($cartCount ?? 0) }}</span>
+                                <span class="pl-cart-count" id="desktopCartCount">{{ (int) ($cartCount ?? 0) }}</span>
                             </a>
                         </div>
 
                         {{-- Search row: filter btn + pill search --}}
-                        <div class="desktop-search-row">
+                        <div class="pl-desktop-search-row">
 
                             {{-- Teal filter toggle button --}}
-                            <button type="button" class="desktop-filter-btn" id="desktopFilterBtn"
+                            <button type="button" class="pl-desktop-filter-btn" id="desktopFilterBtn"
                                 title="Filter by category">
                                 <i class="bi bi-sliders2"></i>
                             </button>
 
                             {{-- Pill search with teal send button --}}
-                            <div class="search-area">
-                                <div class="search-wrapper">
-                                    <div class="search-box">
+                            <div class="pl-search-area">
+                                <div class="pl-search-wrapper">
+                                    <div class="pl-search-box">
                                         <i class="bi bi-search"></i>
                                         <input type="text" id="searchInput" placeholder="Search products...">
                                     </div>
 
                                     {{-- Search dropdown --}}
-                                    <div class="search-dropdown" id="searchDropdown">
-                                        <div class="search-dropdown-left">
-                                            <div class="search-section-title">Your Searches</div>
+                                    <div class="pl-search-dropdown" id="searchDropdown">
+                                        <div class="pl-search-dropdown-left">
+                                            <div class="pl-search-section-title">Your Searches</div>
                                             <div id="searchSuggestions"></div>
                                         </div>
-                                        <div class="search-dropdown-right">
-                                            <div class="search-section-title">Products</div>
-                                            <div id="searchPreviewProducts" class="search-preview-products"></div>
+                                        <div class="pl-search-dropdown-right">
+                                            <div class="pl-search-section-title">Products</div>
+                                            <div id="searchPreviewProducts" class="pl-search-preview-products"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -84,12 +84,12 @@
                         </div>
 
                         {{-- Desktop category pills (toggled by filter btn) --}}
-                        <div class="desktop-category-row" id="desktopCategoryRow">
-                            <button type="button" class="category-filter-btn active" data-category="">
+                        <div class="pl-desktop-category-row" id="desktopCategoryRow">
+                            <button type="button" class="pl-category-filter-btn active" data-category="">
                                 All
                             </button>
                             @foreach ($categoryOptions as $category)
-                                <button type="button" class="category-filter-btn"
+                                <button type="button" class="pl-category-filter-btn"
                                     data-category="{{ strtolower($category) }}">
                                     {{ ucwords(str_replace(['_', '-'], ' ', $category)) }}
                                 </button>
@@ -99,13 +99,13 @@
                     </div>
                 </div>
 
-                <div id="messageBox" class="message-box"></div>
-                <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
+                <div id="messageBox" class="pl-message-box"></div>
+                <div id="toast" class="pl-toast" aria-live="polite" aria-atomic="true"></div>
 
                 @if ($items->isEmpty())
-                    <div class="empty-box">No items found.</div>
+                    <div class="pl-empty-box">No items found.</div>
                 @else
-                    <div class="products-grid" id="productsGrid">
+                    <div class="pl-products-grid" id="productsGrid">
                         @foreach ($items as $item)
                             @php
                                 $normalPrice     = (float) ($item->unit_price ?? 0);
@@ -135,7 +135,7 @@
                                 ])->values();
                             @endphp
 
-                            <div class="product-card product-item"
+                            <div class="pl-product-card pl-product-item"
                                 data-id="{{ $item->id }}"
                                 data-detail-url="{{ route('user.pos.product.detail', $item->id) }}"
                                 data-name="{{ strtolower($item->display_name ?? '') }}"
@@ -148,14 +148,14 @@
                                 data-image="{{ $item->image_url ?: asset('images/no-image.png') }}"
                                 data-variants="{{ $itemVariants->toJson() }}">
 
-                                <div class="product-img-box">
+                                <div class="pl-product-img-box">
                                     @if ($discountPercent > 0)
-                                        <div class="discount-badge">
+                                        <div class="pl-discount-badge">
                                             SAVE {{ rtrim(rtrim(number_format($discountPercent, 2), '0'), '.') }} %
                                         </div>
                                     @endif
 
-                                    <button class="fav-btn" data-item-id="{{ $item->id }}">
+                                    <button class="pl-fav-btn" data-item-id="{{ $item->id }}">
                                         <i class="bi {{ in_array($item->id, $favoriteIds) ? 'bi-heart-fill text-danger' : 'bi-heart' }}"></i>
                                     </button>
 
@@ -164,34 +164,34 @@
                                         onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
                                 </div>
 
-                                <div class="product-info">
-                                    <div class="product-title">{{ $item->display_name ?: 'No Name' }}</div>
-                                    {{-- <div class="product-subtitle">Size {{ $sizeLabel }}</div> --}}
+                                <div class="pl-product-info">
+                                    <div class="pl-product-title">{{ $item->display_name ?: 'No Name' }}</div>
+                                    {{-- <div class="pl-product-subtitle">Size {{ $sizeLabel }}</div> --}}
 
-                                    <div class="price-row {{ $oldPrice > $salePrice ? 'has-discount' : 'no-discount' }}">
-                                        <div class="old-price">
+                                    <div class="pl-price-row {{ $oldPrice > $salePrice ? 'has-discount' : 'no-discount' }}">
+                                        <div class="pl-old-price">
                                             @if ($oldPrice > $salePrice)
                                                 ${{ number_format($oldPrice, 2) }}
                                             @endif
                                         </div>
-                                        <div class="new-price">${{ number_format($salePrice, 2) }}</div>
+                                        <div class="pl-new-price">${{ number_format($salePrice, 2) }}</div>
                                     </div>
 
-                                    <div class="qty-section">
-                                        <span class="qty-label">Quantity:</span>
-                                        <div class="qty-box">
-                                            <button type="button" class="qty-btn minus">−</button>
-                                            <span class="qty">1</span>
-                                            <button type="button" class="qty-btn plus">+</button>
+                                    <div class="pl-qty-section">
+                                        <span class="pl-qty-label">Quantity:</span>
+                                        <div class="pl-qty-box">
+                                            <button type="button" class="pl-qty-btn minus">−</button>
+                                            <span class="pl-qty">1</span>
+                                            <button type="button" class="pl-qty-btn plus">+</button>
                                         </div>
                                     </div>
 
-                                    <button type="button" class="add-cart-btn mobile-action"
+                                    <button type="button" class="pl-add-cart-btn mobile-action"
                                         data-id="{{ $item->id }}">
-                                        <span class="add-cart-text">Add to cart</span>
+                                        <span class="pl-add-cart-text">Add to cart</span>
                                     </button>
 
-                                    <a href="{{ route('user.pos.product.detail', $item->id) }}" class="view-detail-btn">
+                                    <a href="{{ route('user.pos.product.detail', $item->id) }}" class="pl-view-detail-btn">
                                         View detail
                                     </a>
                                 </div>
@@ -199,7 +199,7 @@
                         @endforeach
                     </div>
 
-                    <div id="noSearchResult" class="empty-box" style="display:none; margin-top:16px;">
+                    <div id="noSearchResult" class="pl-empty-box" style="display:none; margin-top:16px;">
                         No matching products found.
                     </div>
                 @endif
@@ -208,42 +208,42 @@
         </div>
 
         {{-- ===== VARIANT SELECTION POPUP ===== --}}
-        <div class="variant-modal-overlay" id="variantModalOverlay">
-            <div class="variant-modal" role="dialog" aria-modal="true" aria-labelledby="variantModalTitle">
-                <button type="button" class="variant-modal-close" id="variantModalClose" title="Close">
+        <div class="pl-variant-modal-overlay" id="variantModalOverlay">
+            <div class="pl-variant-modal" role="dialog" aria-modal="true" aria-labelledby="variantModalTitle">
+                <button type="button" class="pl-variant-modal-close" id="variantModalClose" title="Close">
                     <i class="bi bi-x-lg"></i>
                 </button>
 
-                <div class="variant-modal-body">
-                    <div class="variant-modal-image-col">
+                <div class="pl-variant-modal-body">
+                    <div class="pl-variant-modal-image-col">
                         <img id="variantModalImage" src="" alt="">
                     </div>
 
-                    <div class="variant-modal-info">
+                    <div class="pl-variant-modal-info">
                         <h3 id="variantModalTitle"></h3>
 
-                        <div class="variant-modal-price-row">
-                            <span class="variant-modal-old-price" id="variantModalOldPrice"></span>
-                            <div class="variant-modal-price" id="variantModalPrice"></div>
+                        <div class="pl-variant-modal-price-row">
+                            <span class="pl-variant-modal-old-price" id="variantModalOldPrice"></span>
+                            <div class="pl-variant-modal-price" id="variantModalPrice"></div>
                         </div>
 
                         {{-- Option groups (Size, Beef Type, etc.) are injected here dynamically,
                              one label + one button-row per group, mirroring the screenshot. --}}
                         <div id="variantModalOptions"></div>
 
-                        <div class="variant-modal-qty">
-                            <div class="qty-box">
-                                <button type="button" class="qty-btn" id="variantModalQtyMinus">−</button>
-                                <span class="qty" id="variantModalQty">1</span>
-                                <button type="button" class="qty-btn" id="variantModalQtyPlus">+</button>
+                        <div class="pl-variant-modal-qty">
+                            <div class="pl-qty-box">
+                                <button type="button" class="pl-qty-btn" id="variantModalQtyMinus">−</button>
+                                <span class="pl-qty" id="variantModalQty">1</span>
+                                <button type="button" class="pl-qty-btn" id="variantModalQtyPlus">+</button>
                             </div>
                         </div>
 
-                        <button type="button" class="add-cart-btn variant-modal-confirm" id="variantModalConfirm">
-                            <span class="add-cart-text">Add to cart</span>
+                        <button type="button" class="pl-add-cart-btn pl-variant-modal-confirm" id="variantModalConfirm">
+                            <span class="pl-add-cart-text">Add to cart</span>
                         </button>
 
-                        <a href="#" class="view-detail-btn variant-modal-view-detail" id="variantModalViewDetail">
+                        <a href="#" class="pl-view-detail-btn pl-variant-modal-view-detail" id="variantModalViewDetail">
                             View detail
                         </a>
                     </div>
@@ -251,12 +251,12 @@
             </div>
 
             {{-- floating prev/next pill — switches between currently visible products --}}
-            <div class="variant-modal-nav" id="variantModalNav">
-                <button type="button" class="variant-modal-nav-btn" id="variantModalPrev" title="Previous product">
+            <div class="pl-variant-modal-nav" id="variantModalNav">
+                <button type="button" class="pl-variant-modal-nav-btn" id="variantModalPrev" title="Previous product">
                     <i class="bi bi-chevron-left"></i>
                 </button>
-                <span class="variant-modal-nav-divider"></span>
-                <button type="button" class="variant-modal-nav-btn" id="variantModalNext" title="Next product">
+                <span class="pl-variant-modal-nav-divider"></span>
+                <button type="button" class="pl-variant-modal-nav-btn" id="variantModalNext" title="Next product">
                     <i class="bi bi-chevron-right"></i>
                 </button>
             </div>
@@ -270,10 +270,6 @@
 
         const els = {
             appShell:              document.getElementById("appShell"),
-            collapseHandle:        document.getElementById("collapseHandle"),
-            settingsBtn:           document.getElementById("settingsBtn"),
-            settingsBox:           document.getElementById("settingsBox"),
-            navButtons:            document.querySelectorAll(".nav-btn"),
 
             cartCount:             document.getElementById("desktopCartCount"),
             mobileCartCount:       document.getElementById("cartCount"),
@@ -284,21 +280,21 @@
             searchDropdown:        document.getElementById("searchDropdown"),
             searchSuggestions:     document.getElementById("searchSuggestions"),
             searchPreviewProducts: document.getElementById("searchPreviewProducts"),
-            searchWrapper:         document.querySelector(".search-wrapper"),
+            searchWrapper:         document.querySelector(".pl-search-wrapper"),
 
             mobileProductFilters:  document.getElementById("mobileProductFilters"),
             mobileSearchInput:     document.getElementById("mobileSearchInput"),
-            mobileCategoryRow:     document.querySelector(".mobile-category-row"),
+            mobileCategoryRow:     document.querySelector(".pl-mobile-category-row"),
 
             desktopFilterBtn:      document.getElementById("desktopFilterBtn"),
             desktopCategoryRow:    document.getElementById("desktopCategoryRow"),
 
-            categoryButtons:       [...document.querySelectorAll(".category-filter-btn")],
+            categoryButtons:       [...document.querySelectorAll(".pl-category-filter-btn")],
             noSearchResult:        document.getElementById("noSearchResult"),
             productsGrid:          document.getElementById("productsGrid"),
 
-            productCards:          [...document.querySelectorAll(".product-card")],
-            favButtons:            [...document.querySelectorAll(".fav-btn")],
+            productCards:          [...document.querySelectorAll(".pl-product-card")],
+            favButtons:            [...document.querySelectorAll(".pl-fav-btn")],
 
             // variant modal
             variantModalOverlay:   document.getElementById("variantModalOverlay"),
@@ -334,13 +330,13 @@
             const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill';
             const title     = type === 'success' ? 'Success!' : 'Error!';
             els.messageBox.innerHTML = `
-                <i class="bi ${iconClass} main-icon"></i>
-                <div class="message-content"><strong>${title}</strong> ${text}</div>
-                <button type="button" class="close-alert-btn"
+                <i class="bi ${iconClass} pl-main-icon"></i>
+                <div class="pl-message-content"><strong>${title}</strong> ${text}</div>
+                <button type="button" class="pl-close-alert-btn"
                     onclick="this.parentElement.classList.remove('show')">
                     <i class="bi bi-x"></i>
                 </button>`;
-            els.messageBox.className = `message-box ${type} show`;
+            els.messageBox.className = `pl-message-box ${type} show`;
             setTimeout(() => els.messageBox.classList.remove('show'), 4000);
         }
 
@@ -348,8 +344,8 @@
             const toastEl = document.getElementById('toast');
             if (!toastEl) return;
             toastEl.textContent = text;
-            toastEl.className = `toast show ${type}`;
-            setTimeout(() => { toastEl.className = 'toast'; }, 2500);
+            toastEl.className = `pl-toast show ${type}`;
+            setTimeout(() => { toastEl.className = 'pl-toast'; }, 2500);
         }
 
         function escapeHtml(text = "") {
@@ -363,7 +359,7 @@
                 id:          card.dataset.id || "",
                 name:        (card.dataset.name || "").toLowerCase(),
                 displayName: card.dataset.displayName ||
-                            card.querySelector(".product-title")?.textContent?.trim() || "No Name",
+                            card.querySelector(".pl-product-title")?.textContent?.trim() || "No Name",
                 desc:        (card.dataset.desc || "").toLowerCase(),
                 category:    (card.dataset.category || "").toLowerCase(),
                 uom:         (card.dataset.uom || "").toLowerCase(),
@@ -437,25 +433,25 @@
             const text = keyword.trim().toLowerCase();
             let suggestions = text ? recentSearches.filter(i => i.includes(text)) : recentSearches;
             if (!suggestions.length) {
-                els.searchSuggestions.innerHTML = `<div class="search-empty">No search history</div>`;
+                els.searchSuggestions.innerHTML = `<div class="pl-search-empty">No search history</div>`;
                 return;
             }
             els.searchSuggestions.innerHTML = suggestions.map(item => `
-                <div class="search-suggestion-item" data-value="${escapeHtml(item)}">
-                    <div class="search-suggestion-left">
+                <div class="pl-search-suggestion-item" data-value="${escapeHtml(item)}">
+                    <div class="pl-search-suggestion-left">
                         <i class="bi bi-clock-history"></i>
                         <span>${escapeHtml(item)}</span>
                     </div>
-                    <div class="search-item-actions">
-                        <button type="button" class="delete-history-btn" data-value="${escapeHtml(item)}">
+                    <div class="pl-search-item-actions">
+                        <button type="button" class="pl-delete-history-btn" data-value="${escapeHtml(item)}">
                             <i class="bi bi-x"></i>
                         </button>
                     </div>
                 </div>`).join("");
 
-            els.searchSuggestions.querySelectorAll(".search-suggestion-item").forEach(item => {
+            els.searchSuggestions.querySelectorAll(".pl-search-suggestion-item").forEach(item => {
                 item.addEventListener("click", (e) => {
-                    if (e.target.closest('.delete-history-btn')) return;
+                    if (e.target.closest('.pl-delete-history-btn')) return;
                     const value = item.dataset.value || "";
                     syncSearchInputs(value);
                     addRecentSearch(value);
@@ -463,7 +459,7 @@
                     renderSearchPanel(value);
                 });
             });
-            els.searchSuggestions.querySelectorAll(".delete-history-btn").forEach(btn => {
+            els.searchSuggestions.querySelectorAll(".pl-delete-history-btn").forEach(btn => {
                 btn.addEventListener("click", (e) => {
                     e.stopPropagation();
                     removeRecentSearch(btn.dataset.value);
@@ -475,31 +471,31 @@
             if (!els.searchPreviewProducts) return;
             const matchedCards = getMatchedCards(keyword);
             if (!matchedCards.length) {
-                els.searchPreviewProducts.innerHTML = `<div class="search-empty">No product found</div>`;
+                els.searchPreviewProducts.innerHTML = `<div class="pl-search-empty">No product found</div>`;
                 return;
             }
             els.searchPreviewProducts.innerHTML = matchedCards.slice(0, 3).map(card => {
                 const data = getCardData(card);
                 return `
-                    <div class="search-preview-card" data-id="${escapeHtml(data.id)}">
+                    <div class="pl-search-preview-card" data-id="${escapeHtml(data.id)}">
                         <img src="${escapeHtml(data.image)}" alt="${escapeHtml(data.displayName)}">
-                        <div class="search-preview-info">
-                            <div class="search-preview-name">${escapeHtml(data.displayName)}</div>
-                            <div class="search-preview-price">$${escapeHtml(data.price)}</div>
-                            <button type="button" class="search-preview-btn">View</button>
+                        <div class="pl-search-preview-info">
+                            <div class="pl-search-preview-name">${escapeHtml(data.displayName)}</div>
+                            <div class="pl-search-preview-price">$${escapeHtml(data.price)}</div>
+                            <button type="button" class="pl-search-preview-btn">View</button>
                         </div>
                     </div>`;
             }).join("");
 
-            els.searchPreviewProducts.querySelectorAll(".search-preview-card").forEach(preview => {
-                preview.querySelector(".search-preview-btn")?.addEventListener("click", () => {
+            els.searchPreviewProducts.querySelectorAll(".pl-search-preview-card").forEach(preview => {
+                preview.querySelector(".pl-search-preview-btn")?.addEventListener("click", () => {
                     const card = els.productCards.find(c => c.dataset.id === preview.dataset.id);
                     if (!card) return;
                     filterProducts(keyword);
                     closeSearchDropdown();
                     card.scrollIntoView({ behavior: "smooth", block: "center" });
-                    card.classList.add("highlight-product");
-                    setTimeout(() => card.classList.remove("highlight-product"), 1500);
+                    card.classList.add("pl-highlight-product");
+                    setTimeout(() => card.classList.remove("pl-highlight-product"), 1500);
                 });
             });
         }
@@ -513,7 +509,7 @@
             } else {
                 if (els.searchPreviewProducts)
                     els.searchPreviewProducts.innerHTML =
-                        `<div class="search-empty">Start typing to find products...</div>`;
+                        `<div class="pl-search-empty">Start typing to find products...</div>`;
                 filterProducts("");
             }
             openSearchDropdown();
@@ -528,31 +524,20 @@
             });
         }
 
-        function bindSidebar() {
-            try {
-                if (els.settingsBtn && els.settingsBox) {
-                    els.settingsBtn.addEventListener("click", (e) => {
-                        e.preventDefault();
-                        if (els.appShell?.classList.contains("collapsed")) return;
-                        els.settingsBox.classList.toggle("open");
-                    });
-                }
-                if (els.navButtons && els.navButtons.length > 0) {
-                    els.navButtons.forEach(button => {
-                        button.addEventListener("click", () => {
-                            els.navButtons.forEach(btn => btn.classList.remove("active"));
-                            button.classList.add("active");
-                        });
-                    });
-                }
-            } catch (error) { console.error("Sidebar Error:", error); }
-        }
+        // Sidebar settings toggle + nav active-state (Dashboard/Cart/Favorite/etc.)
+        // are already handled by aside.blade.php's own inline script — that
+        // partial is included once per page and owns #settingsBtn, #settingsBox,
+        // and the nav buttons. Re-binding those same IDs here previously caused
+        // TWO click listeners to fire on one click, so the settings menu would
+        // open then immediately toggle closed again. Left as a no-op so nothing
+        // else in this file that calls bindSidebar() needs to change.
+        function bindSidebar() {}
 
         function bindQuantityButtons() {
             els.productCards.forEach(card => {
                 const plusBtn = card.querySelector(".plus");
                 const minusBtn = card.querySelector(".minus");
-                const qtyEl   = card.querySelector(".qty");
+                const qtyEl   = card.querySelector(".pl-qty");
                 plusBtn?.addEventListener("click",  () => {
                     if (qtyEl) qtyEl.textContent = parseInt(qtyEl.textContent || "0", 10) + 1;
                 });
@@ -599,8 +584,8 @@
            ───────────────────────────────────────────────────────────── */
         function bindAddToCart() {
             els.productCards.forEach(card => {
-                const addBtn = card.querySelector(".add-cart-btn");
-                const qtyEl  = card.querySelector(".qty");
+                const addBtn = card.querySelector(".pl-add-cart-btn");
+                const qtyEl  = card.querySelector(".pl-qty");
                 addBtn?.addEventListener("click", async function () {
                     const data = getCardData(card);
                     if (!data.id) { showMessage("error", "Item ID not found."); return; }
@@ -612,7 +597,7 @@
 
                     const qty = parseInt(qtyEl?.textContent || "1", 10);
                     this.disabled = true;
-                    const textEl = this.querySelector(".add-cart-text");
+                    const textEl = this.querySelector(".pl-add-cart-text");
                     if (textEl) textEl.textContent = "Adding..."; else this.textContent = "Adding...";
                     try {
                         const result = await sendAddToCart({ itemId: data.id, variantId: null, variantIds: null, qty });
@@ -692,16 +677,16 @@
                     if (!firstGroupImage && firstAvailable.image) firstGroupImage = firstAvailable.image;
 
                     const label = document.createElement("div");
-                    label.className = "variant-modal-label";
+                    label.className = "pl-variant-modal-label";
                     label.textContent = groupName;
 
                     const optionsRow = document.createElement("div");
-                    optionsRow.className = "variant-modal-options"; // reuse existing flex-row styling
+                    optionsRow.className = "pl-variant-modal-options"; // reuse existing flex-row styling
 
                     groupList.forEach(v => {
                         const btn = document.createElement("button");
                         btn.type = "button";
-                        btn.className = "variant-btn" +
+                        btn.className = "pl-variant-btn" +
                             (v.id === activeVariantSelections[groupName] ? " active" : "") +
                             (v.blocked ? " disabled" : "");
                         btn.textContent = v.label;
@@ -714,7 +699,7 @@
                             if (btn.disabled) return;
                             activeVariantSelections[groupName] = v.id;
                             if (v.image) els.variantModalImage.src = v.image;
-                            optionsRow.querySelectorAll(".variant-btn").forEach(b => b.classList.remove("active"));
+                            optionsRow.querySelectorAll(".pl-variant-btn").forEach(b => b.classList.remove("active"));
                             btn.classList.add("active");
                         });
 
@@ -797,7 +782,7 @@
                 const singleVariantId = selectedIds.length === 1 ? selectedIds[0] : null;
 
                 this.disabled = true;
-                const textEl = this.querySelector(".add-cart-text");
+                const textEl = this.querySelector(".pl-add-cart-text");
                 if (textEl) textEl.textContent = "Adding...";
 
                 try {
@@ -885,7 +870,6 @@
             });
 
             document.addEventListener("click", e => {
-                if (els.collapseHandle?.contains(e.target)) return;
                 if (!els.searchWrapper?.contains(e.target)) closeSearchDropdown();
             });
         }
@@ -894,8 +878,8 @@
             els.categoryButtons.forEach(button => {
                 button.addEventListener("click", () => {
                     selectedCategory = normalizeCategory(button.dataset.category || "");
-                    const parent = button.closest(".desktop-category-row, .mobile-category-row");
-                    if (parent) parent.querySelectorAll(".category-filter-btn").forEach(b => b.classList.remove("active"));
+                    const parent = button.closest(".pl-desktop-category-row, .pl-mobile-category-row");
+                    if (parent) parent.querySelectorAll(".pl-category-filter-btn").forEach(b => b.classList.remove("active"));
                     button.classList.add("active");
                     filterProducts();
                     closeSearchDropdown();
@@ -919,7 +903,7 @@
         function bindProductDetailNavigation() {
             els.productCards.forEach(card => {
                 card.addEventListener("click", (e) => {
-                    if (e.target.closest(".qty-btn, .add-cart-btn, .fav-btn, .search-preview-btn, .view-detail-btn")) return;
+                    if (e.target.closest(".pl-qty-btn, .pl-add-cart-btn, .pl-fav-btn, .pl-search-preview-btn, .pl-view-detail-btn")) return;
                     const isMobile = window.matchMedia("(max-width: 768px)").matches;
                     if (!isMobile) return;
                     const detailUrl = card.dataset.detailUrl;

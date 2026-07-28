@@ -19,13 +19,13 @@ public function index()
 {
     $user = Auth::user();
 
-    $cart = Cart::with('items.item')
+    $cart = Cart::with('items.item','items.itemVariant')
         ->where('user_id', $user->id)
         ->where('status', 'active')
         ->first();
 
     $subtotal = 0;
-    $discountAmount = 0;
+    $discount = 0;
     $taxAmount = 0;
     $total = 0;
     $itemCount = 0;
@@ -33,7 +33,7 @@ public function index()
     if ($cart && $cart->items->count()) {
         $totals = $this->calculateCartTotals($cart);
         $subtotal = $totals['subtotal'];
-        $discountAmount = $totals['discount_amount'];
+        $discount = $totals['discount_amount'];
         $taxAmount = $totals['tax_amount'];
         $total = $totals['total'];
         $itemCount = $cart->items->sum('qty');
@@ -42,7 +42,7 @@ public function index()
     return view('POSViews.POSUserViews.Cart.index', compact(
         'cart',
         'subtotal',
-        'discountAmount',
+        'discount',
         'taxAmount',
         'total',
         'itemCount'
@@ -52,7 +52,7 @@ public function checkout()
 {
     $user = Auth::user();
 
-    $cart = Cart::with('items.item')
+    $cart = Cart::with('items.item', 'items.itemVariant')
         ->where('user_id', $user->id)
         ->where('status', 'active')
         ->first();
@@ -66,14 +66,17 @@ public function checkout()
     return view('POSViews.POSUserViews.Cart.index', [
         'cart' => $cart,
         'subtotal' => $totals['subtotal'],
-        'discountAmount' => $totals['discount_amount'],
+        'discount' => $totals['discount_amount'],
         'taxAmount' => $totals['tax_amount'],
         'total' => $totals['total'],
         'itemCount' => $cart->items->sum('qty'),
         'showCheckout' => true,
     ]);
 }
-
+public function itemVariant()
+{
+    return $this->belongsTo(\App\Models\POS\ItemVariant::class, 'item_variant_id');
+}
 public function success(Request $request)
 {
     $order = Order::where('id', $request->order)
@@ -97,7 +100,7 @@ public function success(Request $request)
             ], 401);
         }
 
-        $cart = Cart::with('items.item')->firstOrCreate(
+        $cart = Cart::with('items.item','items.itemVariant')->firstOrCreate(
             [
                 'user_id' => $user->id,
                 'status'  => 'active',
@@ -115,7 +118,7 @@ public function success(Request $request)
             'success'    => true,
             'cart'       => $cart,
             'subtotal'   => $totals['subtotal'],
-            'discount_amount' => $totals['discount_amount'],
+            'discount'   => $totals['discount_amount'],
             'tax_amount' => $totals['tax_amount'],
             'total'      => $totals['total'],
             'item_count' => $itemCount,
@@ -204,7 +207,7 @@ public function success(Request $request)
     return response()->json([
         'success'    => true,
         'cartCount'  => $itemCount,
-        'variant_id_received' => $variantId, 
+        'variant_id_received' => $variantId,
     ]);
 }
 
@@ -355,25 +358,8 @@ public function success(Request $request)
         ];
     }
 
-    private function resolveDiscountPercent(Item $item): float
-    {
-        $discount = max(0, (float) ($item->discount_amount ?? 0));
-        if ($discount <= 0) {
-            return 0.0;
-        }
-
-        $today = Carbon::today();
-        $start = $item->discount_start_date ? Carbon::parse($item->discount_start_date)->startOfDay() : null;
-        $end = $item->discount_end_date ? Carbon::parse($item->discount_end_date)->endOfDay() : null;
-
-        if ($start && $today->lt($start)) {
-            return 0.0;
-        }
-
-        if ($end && $today->gt($end)) {
-            return 0.0;
-        }
-
-        return min(100, $discount);
-    }
+   private function resolveDiscountPercent(Item $item): float
+{
+    return $item->active_discount_percent;
+}
 }

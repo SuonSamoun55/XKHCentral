@@ -17,7 +17,10 @@ class AuthController extends Controller
             return $this->redirectUser($user);
         }
 
-        return view('AUTH.Login');
+        return response(view('AUTH.Login'))
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     public function login(Request $request)
@@ -29,12 +32,14 @@ class AuthController extends Controller
 
         $credentials['email'] = strtolower(trim($credentials['email']));
 
-        if (!Auth::attempt($credentials)) {
+        if (!Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()->withErrors([
                 'email' => 'Invalid credentials.',
-            ]);
+            ])->onlyInput('email');
         }
 
+        // Regenerate session ID to prevent session fixation
+        // and to issue a FRESH CSRF token tied to the new session.
         $request->session()->regenerate();
 
         /** @var \App\Models\ManagementSystem\User $user */
