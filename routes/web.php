@@ -108,7 +108,7 @@ Route::post('/store/management/products/{id}/image', [StoreManagementController:
     [ItemListController::class, 'showProduct'])->name('user.pos.product.detail');
     Route::get('/pos-system/favorites', [FavoriteController::class, 'getFavorites'])->name('user.pos.favorites');
     Route::post('/pos-system/favorite-toggle', [FavoriteController::class, 'toggle'])->name('user.pos.favorite.toggle');
-    Route::post('/pos/favorite/toggle', [ItemListController::class, 'toggleFavorite'])->name('user.pos.favorite.toggle');
+    // Route::post('/pos/favorite/toggle', [ItemListController::class, 'toggleFavorite'])->name('user.pos.favorite.toggle');
 
 Route::get('/pos-system/notifications', [NotificationController::class, 'getNotifications'])->name('user.notifications');
 Route::get('/pos-system/chat', [ChatController::class, 'userIndex'])->name('user.chat.index');
