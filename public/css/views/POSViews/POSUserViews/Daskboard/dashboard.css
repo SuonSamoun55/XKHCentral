@@ -1,14 +1,11 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+.app-shell>.mobile-bottom-nav{
+    display: none;
 }
-
-html,
-body {
-  margin: 0 !important;
-  padding: 0 !important;
-  height: 100%;
+.mobile-bottom-nav{
+    display: none;
+}
+.mobile{
+    display: none;
 }
 
 :root {
@@ -31,9 +28,9 @@ body {
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 
   --fs-title: 20px;
-  --fs-header: 16px;
-  --fs-table: 11px;
-  --fs-normal: 11px;
+  --fs-header: 18px;
+  --fs-table: 12px;
+  --fs-normal: 12px;
   --gap: 15px;
   --radius-lg: 16px;
   --radius-md: 12px;
@@ -64,87 +61,8 @@ body{
 }
 
 /* =======================================================================
-   MOBILE-ONLY TOP BAR (hamburger / logo / cart) — left untouched
-======================================================================= */
-.mobile-topbar {
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  background: #fff;
-}
-
-.topbar-icon-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid #e9e9e9;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  color: var(--text);
-  position: relative;
-}
-
-.cart-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  background: var(--danger);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  min-width: 16px;
-  height: 16px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 3px;
-}
-
-.topbar-logo {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--text);
-  letter-spacing: 0.3px;
-}
-
-.topbar-logo span {
-  color: var(--primary);
-}
-
-/* =======================================================================
    SIDEBAR — hidden on mobile by default.
 ======================================================================= */
-@media (max-width: 640px), (max-width: 926px) and (orientation: landscape) {
-  .sidebar,
-  .app-sidebar,
-  #sidebar,
-  aside {
-    display: none;
-  }
-
-  .sidebar.mobile-open,
-  .app-sidebar.mobile-open,
-  #sidebar.mobile-open,
-  aside.mobile-open {
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    z-index: 2000;
-    box-shadow: 0 0 20px rgba(0,0,0,0.2);
-  }
-
-  .content-scroll {
-    margin-left: 0 !important;
-    width: 100% !important;
-  }
-}
 
 /* =======================================================================
    DASHBOARD GRID
@@ -202,7 +120,6 @@ body{
   gap: var(--gap);
   width: 100%;
   padding: 0px 10px 0px 0px;
-  /* margin-bottom: var(--gap); */
 }
 
 .main-row-right {
@@ -228,6 +145,7 @@ body{
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  padding: 5px 0px;
   /* margin-bottom: 12px; */
 }
 
@@ -266,12 +184,7 @@ body{
   cursor: pointer;
 }
 
-/* =======================================================================
-   HERO CARDS (Products / Order / Pending) — shown on desktop AND mobile
-======================================================================= */
-.content-scroll>.mobile-bottom-nav{
-    display: none;
-}
+
 .hero-card {
   overflow: hidden;
   border-radius: var(--radius-lg);
@@ -478,13 +391,12 @@ body{
   gap: 10px;
   min-width: 0;
 }
-
 .notif-badge {
   width: 34px;
   height: 34px;
   min-width: 34px;
   border-radius: 50%;
-  background: var(--primary-faint);
+  background: var(--primary);
   color: var(--primary-dark);
   display: flex;
   align-items: center;
@@ -525,8 +437,13 @@ body{
   border-radius: 50%;
 }
 
-.notif-title { font-size: var(--fs-table); font-weight: 700; color: var(--text); line-height: 1.3; }
-.notif-sub { font-size: var(--fs-normal); color: #8a8a8a; margin-top: 2px; line-height: 1.35; }
+.notif-title {
+    font-size:var(--fs-table);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3; }
+.notif-sub {
+    font-size: var(--fs-normal); color: #8a8a8a; margin-top: 2px; line-height: 1.35; }
 .notif-time { font-size: var(--fs-normal); color: #9a9a9a; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
 .unread-count { font-size: var(--fs-normal); color: #707070; }
 
@@ -588,10 +505,117 @@ body{
 .stat-card p { font-size: var(--fs-normal); margin: 0 0 4px; }
 
 /* =======================================================================
-   MOBILE-ONLY: new dashboard sections added to match updated mockup
-   (promo carousel / products summary / date filter / budget widget).
-   All hidden by default above; only shown inside the mobile media
-   query further down.
+   PRODUCTS SUMMARY — 3 cards: Admin Confirmed (full width) +
+   Pending / Cancel (side by side row). Ring % is driven by --pct
+   (0-100) passed inline from the blade. Icon slot is a plain <img>
+   the caller fills with their own icon image.
+======================================================================= */
+
+.products-summary .card-head { margin-bottom: 10px; }
+
+.summary-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.summary-stat {
+  background: #fff;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  box-shadow: rgba(0, 0, 0, 0.06) 0px 0px 6px 0px;
+}
+
+/* Pending + Cancel sit side by side, stacked vertically inside each card */
+.summary-stat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.summary-stat-row .summary-stat {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* Colored progress ring behind the icon, using conic-gradient + --pct */
+.stat-ring {
+  --pct: 0;
+  --ring-color: var(--primary);
+  width: 50px;
+  height: 50px;
+  min-width: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: conic-gradient(var(--ring-color) calc(var(--pct) * 1%), #eef1f1 0);
+}
+
+/* Inner white circle that holds the icon image, so the ring only
+   shows as a thin colored arc around the edge. */
+.stat-ring .ring-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Icon image itself — swap the src in the blade for your own icon.
+   Sized to sit comfortably inside the 38px white inner circle. */
+.stat-ring .ring-icon img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Ring colors follow the item they represent */
+.ring-confirmed { --ring-color: #12b8a6; }
+.ring-pending   { --ring-color: #f5a623; }
+.ring-cancel    { --ring-color: #e33b32; }
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.stat-info .stat-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.stat-info .stat-sub {
+  font-size: 12px;
+  color: #9a9a9a;
+}
+
+.stat-info .stat-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* =======================================================================
+   NOTE: promo-card / date-filter-card / budget-card styles below are
+   currently unused — the blade view has no matching .area-promo,
+   .area-date-filter, or .area-budget markup. They're kept here for
+   when those sections get built, but they are intentionally left OUT
+   of the mobile grid-template-areas further down so they don't create
+   empty grid rows / extra gaps. If you add the matching HTML back,
+   also add the area name back into grid-template-areas at that time.
 ======================================================================= */
 
 .promo-card {
@@ -649,41 +673,6 @@ body{
 .promo-dot.active {
   background: #fff;
 }
-
-.products-summary .card-head { margin-bottom: 10px; }
-
-.summary-stats {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-
-.summary-stat {
-  border-radius: var(--radius-md);
-  padding: 10px 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  color: #fff;
-  min-width: 0;
-}
-
-.summary-stat .stat-icon { font-size: 14px; opacity: 0.9; }
-.summary-stat .stat-label {
-  font-size: 9px;
-  opacity: 0.9;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.summary-stat .stat-value {
-  font-size: 12px;
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-
-.stat-blue { background: #1fa9e0; }
-.stat-teal { background: #12b8a6; }
 
 .date-filter-card {
   display: flex;
@@ -756,7 +745,7 @@ body{
 
 @media (max-width: 640px), (max-width: 926px) and (orientation: landscape) {
   body {
-    padding-bottom: 70px;
+    /* padding-bottom: 70px; */
     background: #eef9fa;
   }
 
@@ -768,13 +757,11 @@ body{
     padding: 12px;
     padding-bottom: 90px;
     grid-template-columns: 1fr;
+
     grid-template-areas:
       "actions"
-      "promo"
       "productsSummary"
-      "dateFilter"
       "report"
-      "budget"
       "recent"
       "notif"
       "topitem";
@@ -791,13 +778,6 @@ body{
     flex-direction: row;
   }
 
-  /* New mobile-only sections from the updated mockup. */
-  .area-promo,
-  .area-date-filter,
-  .area-budget {
-    display: flex;
-  }
-
   .area-products-summary {
     display: flex;
     flex-direction: column;
@@ -811,7 +791,7 @@ body{
   }
 
   .report-card {
-    max-height: 32vh;
+    max-height: 100%;
   }
   .card {
     margin: 0;
@@ -829,41 +809,10 @@ body{
 
   .summary-card {
     height: auto;
-    min-height: 260px;
+    min-height: 100%;
   }
 
-  .mobile-nav {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--card);
-    border-top: 1px solid var(--line);
-    padding: 10px 0;
-    justify-content: space-around;
-    z-index: 1000;
-    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .mobile-nav a {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: var(--muted);
-    font-size: var(--fs-normal);
-  }
-
-  .mobile-nav a.active,
-  .mobile-nav a:hover {
-    color: var(--primary);
-  }
-
-  .mobile-nav i {
-    font-size: 20px;
-    margin-bottom: 2px;
-  }
-  .app-shell> .sidebar-wrap{display: none;}
+.app-shell> .sidebar-wrap{display: none;}
 .dashboard{
     background-color: white;
 }
@@ -872,6 +821,18 @@ body{
     display: flex;
 }
 .card {
-box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 5px 0px, rgba(0, 0, 0, 0.1) 0px 0px 1px 0px;
+ box-shadow: rgba(0, 0, 0, 0.06) 0px 0px 6px 0px;
+}
+.app-shell> .mobile-bottom-nav{
+    display: block;
+    display: flex;
+}
+.mobile{
+    display: block;
+}
+.app-shell{
+    display: flex;
+    flex-direction: column  ;
+    background-color: white;
 }
 }

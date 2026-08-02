@@ -1,5 +1,6 @@
 @php
     use Illuminate\Support\Facades\Storage;
+    use Illuminate\Support\Facades\Auth;
     use App\Models\ManagementSystem\Company;
 
     $company = null;
@@ -22,13 +23,75 @@
             $companyLogoUrl = Storage::url($company->logo);
         }
     }
+
+    $authUser = Auth::user();
+    $isAdmin = strtolower($authUser->role ?? '') === 'admin';
+
+    $mobileNavItems = [
+        [
+            'name' => 'Dashboard',
+            'route' => route('user.index'),
+            'match' => ['/'],
+            'icon' => 'images/aside/SidbarDaskboards.png',
+            'icon_active' => 'images/aside/UserDaskboardActive.png',
+        ],
+        [
+            'name' => 'Cart',
+            'route' => route('user.pos.cart'),
+            'match' => ['pos-system/cart'],
+            'icon' => 'images/aside/SidebarCarts.png',
+            'icon_active' => 'images/aside/UserCartActive.png',
+        ],
+        [
+            'name' => 'Favorite',
+            'route' => url('/pos-system/favorites'),
+            'match' => ['pos-system/favorites'],
+            'icon' => 'images/aside/SidebarFavorites.png',
+            'icon_active' => 'images/aside/FavoriteActive.png',
+        ],
+        [
+            'name' => 'Order History',
+            'route' => route('user.pos.order.history'),
+            'match' => ['pos-system/order-history'],
+            'icon' => 'images/aside/SidebarOrders.png',
+            'icon_active' => 'images/aside/OrderHistoryActive.png',
+        ],
+        [
+            'name' => 'Notification',
+            'route' => route('user.notifications'),
+            'match' => ['pos-system/notifications'],
+            'icon' => 'images/aside/SidebarNotifications.png',
+            'icon_active' => 'images/aside/NotificationActive.png',
+        ],
+        // [
+        //     'name' => 'Products',
+        //     'route' => route('user.posinterface'),
+        //     'match' => [], 
+        //     'icon' => 'images/aside/SidebarProducts.png',
+        //     'icon_active' => 'images/aside/ProductsActive.png',
+        // ],
+      
+        [
+            'name' => 'Open Admin',
+            'route' => url('/admin'),
+            'match' => ['admin', 'admin/*'],
+            'icon' => 'images/aside/open admin.png',
+            'icon_active' => 'images/aside/open admin active.png',
+            'admin_only' => true,
+        ],
+        [
+            'name' => 'Log out',
+            'route' => '/logout',
+            'match' => [],
+            'icon' => 'images/aside/logout.png',
+            'icon_active' => 'images/aside/logout.png',
+        ],
+    ];
 @endphp
 
 <div class="mobile">
 <header class="cart-boxM">
 
-    {{-- Hamburger — opens a small menu listing page name + link,
-         defined right here instead of toggling the desktop sidebar. --}}
     <button type="button" class="menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu" aria-controls="mobileMenuPanel" aria-expanded="false" aria-haspopup="true">
         <i class="bi bi-list"></i>
     </button>
@@ -46,35 +109,36 @@
     </a>
 </header>
 
-{{-- The menu itself — page name + link pairs, edit this list directly
-     to add/remove/rename pages. Kept in sync with the same routes used
-     in the sidebar. --}}
 <nav class="mobile-menu-panel" id="mobileMenuPanel">
-    <a href="{{ route('user.index') }}" class="mobile-menu-link {{ request()->is('/') ? 'active' : '' }}">
-        <i class="bi bi-house-door"></i> Dashboard
-    </a>
-    <a href="{{ route('user.pos.cart') }}" class="mobile-menu-link {{ request()->is('pos-system/cart') ? 'active' : '' }}">
-        <i class="bi bi-cart3"></i> Cart
-    </a>
-    <a href="{{ url('/pos-system/favorites') }}" class="mobile-menu-link {{ request()->is('pos-system/favorites') ? 'active' : '' }}">
-        <i class="bi bi-heart"></i> Favorite
-    </a>
-    <a href="{{ route('user.pos.order.history') }}" class="mobile-menu-link {{ request()->is('pos-system/order-history') ? 'active' : '' }}">
-        <i class="bi bi-receipt"></i> Order History
-    </a>
-    <a href="{{ route('user.notifications') }}" class="mobile-menu-link {{ request()->is('pos-system/notifications') ? 'active' : '' }}">
-        <i class="bi bi-bell"></i> Notification
-    </a>
-    <a href="{{ route('profile') }}" class="mobile-menu-link">
-        <i class="bi bi-person"></i> Edit Profile
-    </a>
-    <a href="/logout" class="mobile-menu-link">
-        <i class="bi bi-box-arrow-right"></i> Log out
-    </a>
+    @foreach ($mobileNavItems as $item)
+        @if (!empty($item['admin_only']) && !$isAdmin)
+            @continue
+        @endif
+
+        @php
+            $isActive = false;
+
+            if ($item['name'] === 'Products') {
+                $isActive = request()->routeIs('user.posinterface');
+            } else {
+                foreach ($item['match'] as $pattern) {
+                    if (request()->is($pattern)) {
+                        $isActive = true;
+                        break;
+                    }
+                }
+            }
+
+            $iconToShow = $isActive && !empty($item['icon_active']) ? $item['icon_active'] : $item['icon'];
+        @endphp
+        <a href="{{ $item['route'] }}" class="mobile-menu-link {{ $isActive ? 'active' : '' }}">
+            <img src="{{ asset($iconToShow) }}" alt="{{ $item['name'] }} Icon" class="mobile-menu-icon">
+            {{ $item['name'] }}
+        </a>
+    @endforeach
 </nav>
 </div>
 
-{{-- Backdrop behind the menu; tapping it closes the menu --}}
 <div class="mobile-menu-backdrop" id="mobileMenuBackdrop" onclick="toggleMobileMenu()"></div>
 
 <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSUserViews/Layout/header_mobile.css') }}">
@@ -91,7 +155,6 @@
         if (btn) btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
     }
 
-    // Tapping any link inside closes the menu before navigation.
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.mobile-menu-link').forEach((link) => {
             link.addEventListener('click', () => {

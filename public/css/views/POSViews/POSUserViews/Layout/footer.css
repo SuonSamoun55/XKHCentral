@@ -8,8 +8,6 @@
         display: flex;
         justify-content: space-around;
         align-items: center;
-        border-top-left-radius: 18px;
-        border-top-right-radius: 18px;
         box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08);
         z-index: 999;
     }

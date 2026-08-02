@@ -1,4 +1,4 @@
-@extends('ManagementSystemViews.AdminViews.Layouts.app')
+@extends('Layout.Management.app')
 <link rel="stylesheet" href="{{ asset('css/pos/admin/notification/admin_notification.css') }}">
 @section('title', 'Admin Notifications')
 

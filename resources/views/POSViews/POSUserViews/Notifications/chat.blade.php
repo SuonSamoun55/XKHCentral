@@ -35,7 +35,7 @@
                 </a>
                 <span class="inbox-title">Inbox</span>
 
-                <a href="{{ route('user.chat.index', ['admin_id' => $activeContactId ?: optional($contacts->first())->id]) }}"
+                <a href="{{ route('user.chat.index', ['admin_id' => $activeContactId ?: optional($contacts->first())->id]) }}">
                     @if (($orderNotificationCount ?? 0) > 0)
                         <span class="inbox-action-badge">{{ $orderNotificationCount }}</span>
                     @endif
@@ -165,13 +165,26 @@
 
                     @elseif ($type === 'voice')
                         <div class="msg-bubble msg-voice">
-                            @if ($attachmentUrl)
-                                <audio controls class="msg-audio-row">
-                                    <source src="{{ $attachmentUrl }}" type="{{ $msg->attachment_mime ?? 'audio/webm' }}">
-                                </audio>
-                                @if ($text !== '' && $text !== '[Voice message]')
-                                    <div>{{ $text }}</div>
+                            <div class="voice-player-row">
+                                <button type="button" class="voice-toggle-btn" aria-label="Play voice message">
+                                    <i class="bi bi-play-fill"></i>
+                                </button>
+                                <div class="voice-waveform-wrap">
+                                    <div class="voice-bars-track">
+                                        @for ($i = 0; $i < 24; $i++)<span></span>@endfor
+                                    </div>
+                                    <div class="voice-bars-played">
+                                        @for ($i = 0; $i < 24; $i++)<span></span>@endfor
+                                    </div>
+                                </div>
+                                <div class="voice-time">0:00</div>
+                                @if ($attachmentUrl)
+                                    <audio class="voice-audio-src d-none" preload="metadata"
+                                        src="{{ $attachmentUrl }}"></audio>
                                 @endif
+                            </div>
+                            @if ($text !== '' && $text !== '[Voice message]')
+                                <div>{{ $text }}</div>
                             @endif
                             <small class="msg-time">
                                 {{ optional($msg->created_at)->format('g:i A') }}
@@ -364,10 +377,37 @@
             const peerAvatar = @json($activeContact->chat_avatar ?? asset('images/pos/Rectangle 2.png'));
             const sendUrl = @json(route('user.chat.send'));
             const messagesUrl = @json(route('user.chat.messages'));
+            const chatListUrl = @json(route('user.chat.index'));
 
             let lbZoomed = false;
             let lightboxImages = [];
             let lightboxIndex = 0;
+
+            // ===== Step-by-step back navigation guard =====
+            // Problem this solves: if something links straight into a chat's
+            // detail view (e.g. a Notifications entry with ?admin_id=...),
+            // the contact list is never a real entry in browser history, so
+            // the device/browser Back button jumps straight past it to
+            // Notifications instead of showing the list first.
+            //
+            // Fix: remember (per tab, via sessionStorage) once the plain
+            // list view has actually been shown. If we land on a detail
+            // view *without* the list having been seen yet, we push one
+            // extra history entry and intercept the very first Back press
+            // to force a normal navigation to the list — after that, Back
+            // continues to work normally (list -> Notifications, etc).
+            if (activeContactId) {
+                const listAlreadySeen = sessionStorage.getItem('chatListSeen') === '1';
+                if (!listAlreadySeen) {
+                    history.pushState({ chatBackGuard: true }, '', location.href);
+                    window.addEventListener('popstate', function guardFirstBack() {
+                        window.removeEventListener('popstate', guardFirstBack);
+                        window.location.href = chatListUrl;
+                    }, { once: true });
+                }
+            } else {
+                sessionStorage.setItem('chatListSeen', '1');
+            }
 
             // ===== Auto-grow composer textarea (caps at 15vh) =====
             function autoGrowInput() {
@@ -502,6 +542,69 @@
             attachLightbox(chatBody);
             attachLightbox(contactInfoPane);
 
+            // ===== Custom voice player (waveform bars, play/pause) =====
+            function formatVoiceTime(seconds) {
+                if (!isFinite(seconds) || seconds < 0) return '0:00';
+                const m = Math.floor(seconds / 60);
+                const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
+            }
+
+            function initVoicePlayers(scope) {
+                if (!scope) return;
+                const rows = Array.from(scope.querySelectorAll('.voice-player-row'));
+                rows.forEach(function(row) {
+                    if (row.dataset.voiceBound === '1') return;
+                    row.dataset.voiceBound = '1';
+
+                    const btn = row.querySelector('.voice-toggle-btn');
+                    const icon = btn?.querySelector('i');
+                    const audio = row.querySelector('.voice-audio-src');
+                    const playedBars = row.querySelector('.voice-bars-played');
+                    const timeEl = row.querySelector('.voice-time');
+                    if (!btn || !audio || !playedBars || !timeEl) return;
+
+                    audio.addEventListener('loadedmetadata', function() {
+                        if (isFinite(audio.duration)) {
+                            timeEl.textContent = formatVoiceTime(audio.duration);
+                        }
+                    });
+
+                    audio.addEventListener('timeupdate', function() {
+                        const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+                        playedBars.style.width = pct + '%';
+                        timeEl.textContent = formatVoiceTime(audio.currentTime);
+                    });
+
+                    audio.addEventListener('ended', function() {
+                        icon.className = 'bi bi-play-fill';
+                        playedBars.style.width = '0%';
+                        timeEl.textContent = formatVoiceTime(audio.duration || 0);
+                    });
+
+                    btn.addEventListener('click', function() {
+                        const allAudios = document.querySelectorAll('.voice-audio-src');
+                        allAudios.forEach(function(a) {
+                            if (a !== audio && !a.paused) {
+                                a.pause();
+                                const otherIcon = a.closest('.voice-player-row')?.querySelector('.voice-toggle-btn i');
+                                if (otherIcon) otherIcon.className = 'bi bi-play-fill';
+                            }
+                        });
+
+                        if (audio.paused) {
+                            audio.play();
+                            icon.className = 'bi bi-pause-fill';
+                        } else {
+                            audio.pause();
+                            icon.className = 'bi bi-play-fill';
+                        }
+                    });
+                });
+            }
+
+            initVoicePlayers(chatBody);
+
             if (!chatBody || !form || !input || !activeContactId) {
                 return;
             }
@@ -581,7 +684,6 @@
                 const type = message.message_type || 'text';
                 const text = escapeHtml(message.message || '');
                 const attachmentUrl = message.attachment_url ? escapeHtml(message.attachment_url) : '';
-                const attachmentMime = escapeHtml(message.attachment_mime || '');
 
                 if (type === 'image' && attachmentUrl) {
                     const caption = (text && text !== '[Image]') ? `<div>${text}</div>` : '';
@@ -590,7 +692,20 @@
 
                 if (type === 'voice' && attachmentUrl) {
                     const caption = (text && text !== '[Voice message]') ? `<div>${text}</div>` : '';
-                    return `<audio controls class="msg-audio-row"><source src="${attachmentUrl}" type="${attachmentMime || 'audio/webm'}"></audio>${caption}`;
+                    const bars = '<span></span>'.repeat(24);
+                    return `
+                        <div class="voice-player-row">
+                            <button type="button" class="voice-toggle-btn" aria-label="Play voice message">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="voice-waveform-wrap">
+                                <div class="voice-bars-track">${bars}</div>
+                                <div class="voice-bars-played">${bars}</div>
+                            </div>
+                            <div class="voice-time">0:00</div>
+                            <audio class="voice-audio-src d-none" preload="metadata" src="${attachmentUrl}"></audio>
+                        </div>
+                        ${caption}`;
                 }
 
                 if (type === 'icon') {
@@ -658,6 +773,7 @@
                 }
                 removeEmptyState();
                 attachLightbox(row);
+                initVoicePlayers(row);
                 scrollToBottom();
             }
 

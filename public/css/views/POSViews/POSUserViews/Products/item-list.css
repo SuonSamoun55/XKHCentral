@@ -1001,7 +1001,7 @@
             color: #fff !important;
             box-shadow: 0 8px 16px rgba(16,184,195,0.24) !important;
             border: none !important;
-            margin: 0 !important;
+            margin: 10px 0px;
         }
         .pl-add-cart-btn::after {
             content: "+";

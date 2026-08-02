@@ -78,16 +78,7 @@
 
     // Role check — used to conditionally show the "Open Admin" link below.
     $isAdmin = strtolower($authUser->role ?? '') === 'admin';
-
-    // ------------------------------------------------------------------
-    // Sidebar nav items — one array entry per link.
-    // 'match' is the list of URL patterns (request()->is()) that should
-    // mark this item as active.
-    // 'icon' is the normal icon, 'icon_active' is shown while the item
-    // is active. If you don't have a separate active icon yet, just
-    // point 'icon_active' to the same file as 'icon'.
-    // ------------------------------------------------------------------
-    $navItems = [
+        $navItems = [
         [
             'name' => 'Dashboard',
             'url' => '/',
@@ -174,7 +165,6 @@
 
         <div class="sidebar-bottom">
             @php $authUser = Auth::user(); @endphp
-            {{-- <a href="{{ route('profile') }}" class="user-link"> --}}
             @php
                 $avatarUrl = $userAvatar;
             @endphp
@@ -227,9 +217,6 @@
 
     <div id="globalToastContainer" class="global-toast-container"></div>
 </div>
-{{-- <link rel="stylesheet" href="{{ asset('css/management-system/dashboard.css') }}" /> --}}
-{{-- <link rel="stylesheet" href="{{ asset('css/management-system/aside.css') }}" /> --}}
-
 <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSUserViews/Layout/aside.css') }}">
 
 <script>

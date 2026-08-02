@@ -519,3 +519,118 @@
 .cart-count.is-empty {
     display: none;
 }
+/* ===== Custom waveform voice player (added) ===== */
+.msg-bubble.msg-voice {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: fit-content;
+    max-width: 260px;
+    padding: 10px 12px;
+}
+
+.voice-player-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.voice-toggle-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: none;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #17c1d9;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.voice-toggle-btn i {
+    margin-left: 2px; /* optical centering for play glyph */
+}
+
+.voice-waveform-wrap {
+    position: relative;
+    flex: 1;
+    height: 24px;
+    min-width: 110px;
+}
+
+.voice-bars-track,
+.voice-bars-played {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.voice-bars-played {
+    width: 0%;
+    overflow: hidden;
+    transition: width 0.1s linear;
+}
+
+.voice-bars-track span,
+.voice-bars-played span {
+    display: block;
+    width: 2px;
+    border-radius: 1px;
+    flex-shrink: 0;
+}
+
+.voice-bars-track span {
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.voice-bars-played span {
+    background: #ffffff;
+}
+
+.voice-bars-track span:nth-child(4n+1),
+.voice-bars-played span:nth-child(4n+1) {
+    height: 8px;
+}
+
+.voice-bars-track span:nth-child(4n+2),
+.voice-bars-played span:nth-child(4n+2) {
+    height: 16px;
+}
+
+.voice-bars-track span:nth-child(4n+3),
+.voice-bars-played span:nth-child(4n+3) {
+    height: 10px;
+}
+
+.voice-bars-track span:nth-child(4n),
+.voice-bars-played span:nth-child(4n) {
+    height: 20px;
+}
+
+.voice-bars-track span:nth-child(7n),
+.voice-bars-played span:nth-child(7n) {
+    height: 6px;
+}
+
+.voice-time {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.85);
+    min-width: 34px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.msg-bubble.msg-voice .msg-time {
+    align-self: flex-end;
+    color: rgba(255, 255, 255, 0.75);
+}
+

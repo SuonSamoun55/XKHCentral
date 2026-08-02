@@ -57,7 +57,17 @@
                         <div class="nav-item"><i class="bi bi-person"></i><span>user</span></div>
                     </div>
                 </div>
-                <div class="empty-box">No favorite items found.</div>
+                <div class="empty-box">
+                    <div class="image-placeholder-desk">
+                            <img src="{{ asset('images/pos/no wishlist 1.png') }}" alt="Empty Wishlist">
+                            <h2>Your wishlist is empty</h2>
+                        <p>Looks like you haven't added anything<br>to your wishlist yet</p>
+                        <a href="{{ route('user.posinterface') }}" class="primary-btn">
+                            Explore now
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                        </div>
+                </div>
             @else
                 {{-- ===== PRODUCT GRID — mirrors item-list card markup ===== --}}
                 <div class="products-grid" id="productsGrid">

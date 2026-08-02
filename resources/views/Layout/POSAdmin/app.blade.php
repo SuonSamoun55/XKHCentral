@@ -16,7 +16,7 @@
 <body>
 
     <div class="main-wrapper">
-        @include('POSViews.POSAdminViews.aside')
+        @include('Layout.POSAdmin.aside')
 
         <div class="content-wrapper">
             @yield('content')

@@ -1,9 +1,7 @@
-@extends('ManagementSystemViews.AdminViews.Layouts.app')
-
+@extends('Layout.Management.app')
 @section('title', 'User Management')
 
 @push('styles')
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('css/views/ManagementSystemViews/AdminViews/Layouts/UserinfoView/UserList.css') }}">
 @endpush
 
@@ -11,7 +9,7 @@
 <div class="main-wrapper">
     
 
-    <div class="content-area">
+    <div class="content-areas">
         <div class="page-card">
             <div class="page-title">User Management</div>
 

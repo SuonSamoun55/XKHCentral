@@ -17,7 +17,7 @@
         @endphp
 
         <div class="pl-page-wrap">
-           
+
             <main class="pl-content-area">
             @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
             @include('ManagementSystemViews.UserViews.Layouts.footer')
@@ -829,13 +829,15 @@
                         if (data.favorited) {
                             icon.classList.remove("bi-heart");
                             icon.classList.add("bi-heart-fill", "text-danger");
+                            showToast("success", "Added to favorites.");
                         } else {
                             icon.classList.remove("bi-heart-fill", "text-danger");
                             icon.classList.add("bi-heart");
+                            showToast("success", "Removed from favorites.");
                         }
                     } catch (error) {
                         console.error(error);
-                        showMessage("error", "Favorite update failed.");
+                        showToast("error", "Favorite update failed.");
                     }
                 });
             });

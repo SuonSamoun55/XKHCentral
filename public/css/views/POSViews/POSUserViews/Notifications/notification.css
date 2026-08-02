@@ -23,7 +23,6 @@ body {
 }
 .main-content{
     background:#fff;
-    min-height: 0;
 }
 .badge-admin {
     background-color: #e0f7f9;
@@ -45,47 +44,41 @@ body {
     margin-bottom: 4px;
 }
 
-.date-filter-wrapper {
+/* Date filter pill — same look on desktop and mobile: white background,
+   light gray border, calendar icon on the left, date text on the right. */
+.date-filter-wrappers {
     position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     width: 250px;
-    margin-right: -50px;
+    height: 38px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0 10px;
+    box-sizing: border-box;
 }
 
-.date-filter-wrapper input[type="date"] {
-    width: 80%;
-    border: 2px solid #00b5cc;
-    border-radius: 10px;
-    padding: 6px 8px;
-    font-size: 12px;
+.date-filter-wrappers .calendar-custom-img {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
+.date-filter-wrappers input[type="date"] {
+    flex: 1;
+    min-width: 0;
+    height: 36px;
+    padding: 0;
+    border: none;
     outline: none;
-    background-color: white;
+    background: transparent;
+    font-size: 12px;
+    color: #64748b;
     cursor: pointer;
     box-sizing: border-box;
-    position: relative;
-    z-index: 2;
-}
-
-.floating-label {
-    position: absolute;
-    left: 12px;
-    top: -11px;
-    background: white;
-    padding: 0 5px;
-    font-size: 10px;
-    color: #333;
-    font-weight: 500;
-    z-index: 10;
-}
-
-.calendar-custom-img {
-    position: absolute;
-    right: 63px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 10px;
-    height: 10px;
-    pointer-events: none;
-    z-index: 5;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
@@ -338,9 +331,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     border-radius: 8px;
     font-weight: 600;
 }
-
-/* These are only ever revealed inside the mobile/desktop media queries
-   below, so they stay hidden by default at any viewport. */
 .mobile-notification-header,
 .mobile-tabs,
 .mp-center,
@@ -353,6 +343,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     display: none;
 }
 
+/* Wrapper around the scrollable list content. display:contents makes it
+   invisible to layout by default, so desktop/tablet flex/grid rules that
+   target the wrapper's children directly keep working unchanged. Only the
+   max-width:768px block below turns it into an actual scroll container. */
+.content-scroll {
+    display: contents;
+}
+
 .tabs {
     display: flex;
     justify-content: space-between;
@@ -361,11 +359,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     border-bottom: 1px solid #eee;
     padding-bottom: 10px;
 }
-
 .tab.active{
     color:#10c4d4;
 }
-
 .badge-new{
     background:#2f80ed;
     color:#fff;
@@ -374,7 +370,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     font-size:10px;
     margin-left:6px;
 }
-
 .tab-count-badge{
     background:#ff4d4f;
     color:white;
@@ -388,20 +383,17 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     align-items:center;
     justify-content:center;
 }
-
 .tab-icon-wrap {
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
 }
-
 .tab-icon-wrap .tab-count-badge {
     position: absolute;
     top: -8px;
     right: -12px;
 }
-
 .star-btn{
     background:none;
     border:none;
@@ -414,12 +406,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     cursor:pointer;
     flex-shrink:0;
 }
-
 .star-btn:hover,
 .star-btn.active{
     color:#f5b60a;
 }
-
 .tag {
     background: #5dd7de;
     color: #fff;
@@ -697,11 +687,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         font-size: 12px;
     }
 }
-
-
-/* =====================================================
-   MOBILE NOTIFICATION UI (<= 767px)
-   ===================================================== */
 @media screen and (max-width: 767px) {
     .sidebar,
     .sidebar-wrap,
@@ -731,7 +716,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         justify-content: space-between;
         padding: 14px 0 12px;
     }
-
     .mn-btn {
         width: 38px;
         height: 38px;
@@ -783,15 +767,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         display: flex;
         align-items: center;
         gap: 10px;
-        padding-bottom: 14px;
-        position: sticky;
-        top: 66px;
-        z-index: 999;
+        margin-top: 0;
         background: #fff;
+        flex: 0 0 auto;
     }
 
     .mt-pill {
-        background: #0e2f36;
+        background: #0ea5b7;
         color: #fff;
         border: none;
         padding: 9px 18px;
@@ -887,21 +869,20 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 12px;
+        
         margin-bottom: 12px;
-        position: sticky;
-        top: 118px;
-        z-index: 998;
         background: #ffffff;
         padding-top: 4px;
         padding-bottom: 8px;
+        flex: 0 0 auto;
     }
 
     .mobile-sub-tabs span {
         color: #94a3b8;
-        font-weight: 600;
+      
         cursor: pointer;
         padding-bottom: 6px;
+       
     }
 
     .mobile-sub-tabs .active {
@@ -913,7 +894,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     .notification-list {
         background: #ffffff;
         border-radius: 14px;
-        padding: 0;
+        padding: 0px 10px;
+    
     }
 
     .notification-card {
@@ -1241,10 +1223,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         padding:10px;
     }
 }
-
-/* =====================================================
-   DESKTOP NOTIFICATION LAYOUT (>= 769px)
-   ===================================================== */
 @media (min-width: 769px) {
     body {
         background: #ffffff;
@@ -1305,54 +1283,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
     .btn-send i {
         font-size: 12px;
-    }
-
-    .date-filter-wrapper {
-        margin: 0;
-        position: relative;
-        width: 250px;
-    }
-
-    .date-filter-wrapper .floating-label {
-        display: none;
-    }
-
-    .date-filter-wrapper input[type="date"] {
-        appearance: none;
-        background: #ffffff;
-        border: 1px solid #bcbcbc;
-        border-radius: 8px;
-        color: #8c8c8c;
-        font-size: 12px;
-        height: 30px;
-        padding: 0 46px 0 42px;
-        width: 100%;
-    }
-
-    .date-filter-wrapper::before {
-        color: #9d9d9d;
-        content: "\F1F6";
-        font-family: "bootstrap-icons";
-        font-size: 12px;
-        left: 15px;
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 4;
-    }
-
-    .date-filter-wrapper::after {
-        color: #9d9d9d;
-        font-size: 20px;
-        position: absolute;
-        right: 17px;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 4;
-    }
-
-    .calendar-custom-img {
-        display: none;
     }
 
     .tabs {
@@ -1425,7 +1355,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         border: 0;
         box-shadow: none;
         height: 100%;
-        min-height: 0;
         overflow: visible;
         width: 100%;
     }
@@ -1768,7 +1697,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         display: flex;
         flex-direction: column;
         height: 100%;
-        min-height: 0;
         overflow: hidden;
     }
 }
@@ -1778,41 +1706,59 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     .desktop-notification-pager {
         display: none !important;
     }
-}
-
-/* =====================================================
-   MOBILE OVERRIDES (kept last so mobile always wins)
-   ===================================================== */
-@media (max-width: 768px) {
     body {
         background: #ffffff;
     }
-
+    .app-shell{
+        display: flex;
+        flex-direction: column;
+        background-color: white;
+        padding: 0;
+        gap: 0px;
+    }
     .page-wrap {
         background: #ffffff;
         border-radius: 0;
-        height: auto;
-        min-height: 100dvh;
-        overflow-x: hidden;
-        overflow-y: auto;
-        padding: 0 14px 82px;
+        overflow: hidden;
+        padding: 0px;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        height: 100dvh;
     }
 
     .main-content {
         background: #ffffff;
         border-radius: 0;
-        display: block;
-        height: auto;
-        min-height: 0;
-        overflow: visible;
+        display: flex;
+        flex-direction: column;
         width: 100%;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
     }
-
     .header {
         background: #ffffff;
-        position: sticky;
-        top: 0;
-        z-index: 1000;
+        flex: 0 0 auto;
+    }
+
+    /* Everything the user scrolls through (tab lists, cards, pagination)
+       lives inside .content-scroll. This is the ONLY part that scrolls;
+       the header group above stays put because it's a fixed-size flex
+       item, not because of position. */
+    .content-scroll {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x:none ;
+        width: 100%;
+        /* -webkit-overflow-scrolling: touch; */
+    }
+
+    .mobile-bottom-nav {
+        flex: 0 0 auto;
     }
 
     .notification-header,
@@ -1826,23 +1772,20 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     .notification-lists {
         display: none !important;
     }
-
     .mobile-notification-header {
         align-items: center;
         display: flex !important;
         justify-content: space-between;
         padding: 12px 0 8px;
+        flex: 0 0 auto;
     }
-
     .mobile-tabs {
         align-items: center;
         background: #ffffff;
         display: flex !important;
         gap: 10px;
-        padding: 8px 0 14px;
-        position: sticky;
-        top: 58px;
-        z-index: 999;
+        padding: 10px;
+        flex: 0 0 auto;
     }
 
     .mf-date {
@@ -1860,13 +1803,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     .mobile-sub-tabs {
         background: #ffffff;
         display: flex !important;
-        font-size: 12px;
         justify-content: space-between;
-        margin-bottom: 10px;
-        padding: 10px 0 8px;
-        position: sticky;
-        top: 106px;
-        z-index: 998;
+        /* margin-bottom: 10px; */
+         font-size: 14px;
+         font-weight: 700;
+        padding: 10px;
+        flex: 0 0 auto;
     }
 
     .notification-list {
@@ -1874,7 +1816,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         border-radius: 14px;
         box-shadow: none;
         overflow: visible;
-        padding: 0;
         width: 100%;
     }
 
@@ -1897,7 +1838,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         box-shadow: none;
         display: flex !important;
         gap: 10px;
-        padding: 12px 4px;
+        /* padding: 12px 4px; */
         width: 100%;
     }
 

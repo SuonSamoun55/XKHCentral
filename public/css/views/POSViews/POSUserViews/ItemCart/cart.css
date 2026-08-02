@@ -50,6 +50,7 @@
     position: relative;
     width: 100%;
     border-radius: 12px;
+    /* padding: 20px; */
 }
 
 .cart-container {
@@ -57,7 +58,7 @@
     max-width: 100%;
     height: 100%;
     margin: 0 auto;
-    padding: 10px 14px;
+    padding: 20px;
     background-color: var(--bg-light);
     border-radius: var(--radius-md);
 }

@@ -1,4 +1,4 @@
-@extends('ManagementSystemViews.AdminViews.Layouts.app')
+@extends('Layout.Management.app')
 
 @section('title', 'Login - POS')
 @section('content')

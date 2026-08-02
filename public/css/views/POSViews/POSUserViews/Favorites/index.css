@@ -49,18 +49,44 @@
     overflow: visible;
     background-color: white;
     border-radius: 12px;
-    padding: 10px 14px;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .content-area {
     height: 100%;
     overflow: visible;
-    /* padding: 6px !important; */
+    padding: 0px !important;
     display: flex;
     flex-direction: column;
 }
+.image-placeholder-desk{
+    width: 80%; height: 100%; margin: auto; background: white; border-radius: 20px;
+    padding:30px;
 
-/* ── header / topbar (matches item-list) ────────────────── */
+    ; 
+    /* margin: 0 auto; */
+}
+.empty-state h2 { margin-top: 80px; font-size: 18px; font-weight: 700; }
+    .empty-state p { font-size: 13px; color: #6b7280; margin-top: 6px; }
+
+    .primary-btn {
+        margin-top: 20px;
+        padding: 12px 24px;
+        background: #10b8c3;
+        color: #fff;
+        border-radius: 14px;
+        border: none;
+        font-size: 14px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+    }
+
 .header {
     position: sticky;
     top: 0;
@@ -68,6 +94,7 @@
     z-index: 100;
     border-radius: 12px;
     flex-shrink: 0;
+    margin-bottom: 10px;
 }
 
 .topbar { display: flex; flex-direction: column; gap: 6px;}
@@ -122,7 +149,8 @@
     background: var(--primary);
     color: #fff;
     border-radius: 5px;
-    min-width: 20px; height: 20px;
+    min-width: 20px; 
+    height: 20px;
     padding: 0 5px;
     font-size: 11px;
     display: inline-flex;
@@ -145,13 +173,13 @@
 /* ── empty box ───────────────────────────────────────────── */
 .empty-box {
     background: #fff;
-    border: 1px solid #e9edf2;
+    /* border: 1px solid #e9edf2; */
     color: #6b7280;
-    border-radius: 12px;
+    /* border-radius: 12px; */
     text-align: center;
-    padding: 32px 20px;
+    /* padding: 32px 20px; */
     font-size: 16px;
-    margin: 40px 10px;
+    /* margin: 20px 10px; */
 }
 
 /* ==========================================================
@@ -220,7 +248,7 @@
     display: inline-flex; align-items: center; justify-content: center;
     cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,0.16); z-index: 3;
 }
-.fav-btn i { font-size: 13px; color: #ff4f4f; }
+.fav-btn i { font-size: 13px; color: var(--primary); }
 
 .product-info {
     padding: 8px 10px 10px;
@@ -486,7 +514,12 @@
    TABLET  768–1024px
    ========================================================== */
 @media (min-width: 768px) and (max-width: 1024px) {
-    .products-grid { grid-template-columns: repeat(3, 1fr); padding: 14px 14px 20px; gap: 12px; height: calc(100vh - 100px); }
+    .products-grid {
+         grid-template-columns: repeat(3, 1fr); 
+         padding: 14px 14px 20px; 
+         gap: 12px; 
+         height: calc(100vh - 100px); 
+        }
     .product-card    { height: 300px; }
     .product-img-box { height: 100px; min-height: 100px; }
 }
@@ -502,9 +535,6 @@
     .mobile-bottom-nav { display: none !important; }
 }
 
-/* ==========================================================
-   MOBILE ≤767px
-   ========================================================== */
 @media (max-width: 767px) {
     html { height: 100%; overflow-y: hidden; }
     body { height: 100%; overflow-x: hidden; overflow-y: hidden; background: #edf2f8; }
@@ -517,18 +547,18 @@
 
     .page-wrap {
         flex: 1;
-        height: 100dvh;
+        height: 100vh;
         min-height: 0;
-        max-height: 100dvh;
         overflow: hidden;
         background-color: white;
         border-radius: 0;
-        padding: 0 12px 82px;
+        /* padding: 0 12px 82px; */
+        padding: 20px;
     }
 
     .content-area {
         height: 100%;
-        min-height: 0;
+        width: 100%;
         display: flex;
         flex-direction: column;
         overflow: hidden;

@@ -1,206 +1,180 @@
-@extends('ManagementSystemViews.AdminViews.Layouts.app')
-
+@extends('Layout.Management.app')
 @section('title', 'Dashboard')
 
 @push('styles')
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('css/management-system/dashboard.css') }}">
+<link rel="stylesheet" href="{{ asset('/css/management-system/Daskboard/POSadminDaskboard.css') }}">
 @endpush
 
 @section('content')
-<div class="dashboard-page">
-    <div class="dashboard-grid">
+<div class="dashboard">
 
-        <section class="card hero-card">
-            <div class="hero-title">Product</div>
-            <div class="hero-image">
-                <img src="https://cdn-icons-png.flaticon.com/512/2620/2620988.png" alt="Product">
+    {{-- ============ HERO CARDS ============ --}}
+    <section class="hero-row">
+        <div class="hero-card">
+            <div class="hero-text">
+                <strong>{{ number_format($totalProducts) }}</strong>
+                <span>Total Products</span>
             </div>
-        </section>
-
-        <section class="card hero-card">
-            <div class="hero-title">Orders</div>
-            <div class="hero-image">
-                <img src="https://cdn-icons-png.flaticon.com/512/3081/3081822.png" alt="Orders">
+            <img src="https://cdn-icons-png.flaticon.com/512/2620/2620988.png" alt="Products" onerror="this.style.display='none'">
+        </div>
+        <div class="hero-card">
+            <div class="hero-text">
+                <strong>{{ number_format($totalOrders) }}</strong>
+                <span>Total Orders</span>
             </div>
-        </section>
+            <img src="https://cdn-icons-png.flaticon.com/512/3081/3081822.png" alt="Orders" onerror="this.style.display='none'">
+        </div>
+        <div class="hero-card soft-card" data-href="/pos/interface">
+            <div class="hero-text">
+                <strong>{{ number_format($pendingOrders) }}</strong>
+                <span>Pending Orders</span>
+            </div>
+            <img src="https://cdn-icons-png.flaticon.com/512/891/891462.png" alt="POS System" onerror="this.style.display='none'">
+        </div>
+    </section>
 
-        <section class="card hero-card">
-            <div class="hero-title">POS System</div>
-            <div class="soft-card bg-pos" data-href="/pos/interface">
-                <div class="hero-image">
-                    <img src="https://cdn-icons-png.flaticon.com/512/891/891462.png" alt="POS">
+    <div class="dashboard-body">
+
+        <section class="panel report-panel">
+            <div class="panel-head">
+                <h2>Report</h2>
+                <button class="dropdown-btn" type="button">
+                    {{ $selectedYear }}
+                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </div>
+
+            <div class="chart">
+                <div class="chart-y">
+                    @foreach (array_reverse($yAxisSteps) as $step)
+                        <span>{{ $step === 0 ? '0' : $step . 'K' }}</span>
+                    @endforeach
                 </div>
-            </div>
-        </section>
-
-        <section class="card recent-card">
-            <div class="card-head">
-                <h3>Recent Order</h3>
-                <div class="small-text">Sort by Newest ⌄</div>
-            </div>
-
-            <div class="order-list">
-                <div class="order-item">
-                    <div class="order-left">
-                        <img src="https://i.pravatar.cc/80?img=15" alt="">
-                        <div>
-                            <div class="order-name">Chris Friedkly</div>
-                            <div class="order-sub">Supermarket Villanova</div>
+                <div class="chart-bars">
+                    @foreach ($chartData as $bar)
+                        <div class="chart-col">
+                            <div class="chart-bar {{ $bar['muted'] ? 'muted' : '' }}" style="height:{{ $yAxisMax > 0 ? max(4, ($bar['value'] / $yAxisMax) * 100) : 4 }}%"></div>
+                            <span class="chart-label">{{ $bar['label'] }}</span>
                         </div>
-                    </div>
+                    @endforeach
                 </div>
+            </div>
+        </section>
 
-                <div class="order-item active">
-                    <div class="order-left">
-                        <img src="https://i.pravatar.cc/80?img=32" alt="">
-                        <div>
-                            <div class="order-name">Maggie Johnson</div>
-                            <div class="order-sub">Oasis Organic Inc.</div>
+        <section class="panel filter-panel">
+            <div class="panel-head panel-head-wrap">
+                <h2>Top Customers</h2>
+                <div class="panel-controls">
+                    <div class="segmented" data-target="topCustomersList" role="tablist" aria-label="Compare spend by period">
+                        <button type="button" class="segmented-btn active" data-period="week">Week</button>
+                        <button type="button" class="segmented-btn" data-period="month">Month</button>
+                        <button type="button" class="segmented-btn" data-period="year">Year</button>
+                    </div>
+                    <select class="filter-select" data-target="topCustomersList">
+                        <option value="5">Top 5</option>
+                        <option value="10" selected>Top 10</option>
+                        <option value="20">Top 20</option>
+                        <option value="all">All</option>
+                    </select>
+                </div>
+            </div>
+
+            <ul class="list-simple" id="topCustomersList">
+                @forelse ($topCustomers as $c)
+                    <li class="list-row" data-week="{{ $c['week'] }}" data-month="{{ $c['month'] }}" data-year="{{ $c['year'] }}">
+                        <img class="list-avatar" src="{{ $c['avatar'] }}" alt="{{ $c['name'] }}">
+                        <div class="list-info">
+                            <div class="list-name">{{ $c['name'] }}</div>
+                            <div class="list-sub">{{ $c['sub'] }}</div>
                         </div>
-                    </div>
-
-                    <div class="order-actions">
-                        <span>◌</span>
-                        <span>☆</span>
-                        <span>✎</span>
-                        <span>⋮</span>
-                    </div>
-                </div>
-
-                <div class="order-item">
-                    <div class="order-left">
-                        <img src="https://i.pravatar.cc/80?img=47" alt="">
-                        <div>
-                            <div class="order-name">Gael Harry</div>
-                            <div class="order-sub">New York Finest Fruits</div>
+                        <div class="list-right">
+                            <span class="list-value">{{ $c['value'] }}</span>
+                            <span class="list-change" data-period-label>
+                                <svg class="ico-up" width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M7 7L1 1M1 1V6M1 1H6" stroke="currentColor" stroke-width="1.3"/></svg>
+                                <svg class="ico-down" width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 1L7 7M7 7V2M7 7H2" stroke="currentColor" stroke-width="1.3"/></svg>
+                                <span class="list-change-value"></span>
+                            </span>
                         </div>
-                    </div>
-                </div>
-
-                <div class="order-item">
-                    <div class="order-left">
-                        <img src="https://i.pravatar.cc/80?img=49" alt="">
-                        <div>
-                            <div class="order-name">Jenna Sullivan</div>
-                            <div class="order-sub">Walmart</div>
+                    </li>
+                @empty
+                    <li class="list-row">
+                        <div class="list-info">
+                            <div class="list-sub">No customer orders yet.</div>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <a href="#" class="gold-link">summary orders →</a>
+                    </li>
+                @endforelse
+            </ul>
         </section>
 
-        <section class="card report-card">
-            <div class="card-head">
-                <h3 class="report-title">Report</h3>
-                <div class="small-text">Yearly ⌄</div>
+    </div>
+    <div class="dashboard-body dashboard-row-2">
+
+        <section class="panel notification-panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Notification</h2>
+                    <p class="panel-sub">{{ min(2, count($notifications)) }} unread messages</p>
+                </div>
             </div>
 
-            <div class="chart-box">
-                <svg viewBox="0 0 100 40" preserveAspectRatio="none">
-                    <polyline
-                        fill="none"
-                        stroke="#67cd63"
-                        stroke-width="1.7"
-                        stroke-dasharray="2 2"
-                        points="0,33 13,30 26,18 38,13 52,31 66,26 82,10 100,2" />
-                </svg>
-            </div>
-
-            <div class="chart-years">
-                <span>2016</span>
-                <span>2017</span>
-                <span>2018</span>
-                <span>2019</span>
-                <span>2020</span>
-                <span>2021</span>
-                <span>2022</span>
-                <span>2023</span>
-            </div>
+            <ul class="notif-list">
+                @forelse ($notifications as $n)
+                    <li class="notif-item">
+                        @php
+                            $initials = collect(explode(' ', $n['name']))->map(fn($w) => mb_substr($w, 0, 1))->take(2)->implode('');
+                        @endphp
+                        <span class="notif-avatar-wrap">
+                            <span class="notif-avatar-fallback">{{ strtoupper($initials) }}</span>
+                            <img class="notif-avatar" src="{{ $n['avatar'] }}" alt="{{ $n['name'] }}" onerror="this.style.display='none'">
+                        </span>
+                        <div class="notif-name-block">
+                            <div class="notif-name">{{ $n['name'] }}</div>
+                            <div class="notif-role">{{ $n['role'] }}</div>
+                        </div>
+                        <button class="chat-btn" type="button">Chat</button>
+                    </li>
+                @empty
+                    <li class="notif-item notif-empty">
+                        <div class="notif-name-block">
+                            <div class="notif-role">No notifications yet.</div>
+                        </div>
+                    </li>
+                @endforelse
+            </ul>
         </section>
 
-        <section class="mini-stats">
-            <div class="card mini-card">
-                <div class="mini-label">Top month</div>
-                <div class="mini-value">November</div>
-                <div class="mini-sub accent">2019</div>
+        <section class="panel filter-panel">
+            <div class="panel-head">
+                <h2>Top Items</h2>
+                <select class="filter-select" data-target="topItemsList">
+                    <option value="5">Top 5</option>
+                    <option value="10" selected>Top 10</option>
+                    <option value="20">Top 20</option>
+                    <option value="all">All</option>
+                </select>
             </div>
 
-            <div class="card mini-card">
-                <div class="mini-label">Top year</div>
-                <div class="mini-value">2023</div>
-                <div class="mini-sub">96K sold so far</div>
-            </div>
-
-            <div class="card mini-card">
-                <div class="mini-label">Top buyer</div>
-                <div class="top-buyer">
-                    <img src="https://i.pravatar.cc/80?img=32" alt="">
-                    <div>
-                        <div class="buyer-name">Maggie Johnson</div>
-                        <div class="buyer-sub">Oasis Organic Inc.</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="card notification-card">
-            <h3>Notification</h3>
-            <div class="small-sub">2 unread messages</div>
-
-            <div class="avatar-row">
-                <img src="https://i.pravatar.cc/80?img=32" alt="">
-                <img src="https://i.pravatar.cc/80?img=15" alt="">
-                <img src="https://i.pravatar.cc/80?img=59" alt="">
-                <img src="https://i.pravatar.cc/80?img=47" alt="">
-            </div>
-
-            <a href="#" class="gold-link">All messages →</a>
-        </section>
-
-        <section class="card states-card">
-            <h3>Top states</h3>
-
-            <div class="state-list">
-                <div class="state-item">
-                    <span class="state-code">NY</span>
-                    <div class="state-bar"><div class="state-fill" style="width:100%">120K</div></div>
-                </div>
-
-                <div class="state-item">
-                    <span class="state-code">MA</span>
-                    <div class="state-bar"><div class="state-fill" style="width:82%">80K</div></div>
-                </div>
-
-                <div class="state-item">
-                    <span class="state-code">NH</span>
-                    <div class="state-bar"><div class="state-fill" style="width:70%">70K</div></div>
-                </div>
-
-                <div class="state-item">
-                    <span class="state-code">OR</span>
-                    <div class="state-bar"><div class="state-fill" style="width:54%">50K</div></div>
-                </div>
-            </div>
-        </section>
-
-        <section class="card deals-card">
-            <h3>New deals</h3>
-
-            <div class="deal-grid">
-                <div class="deal-item"><span class="deal-plus">+</span><span>Fruit2Go</span></div>
-                <div class="deal-item"><span class="deal-plus">+</span><span>Marshall's MKT</span></div>
-                <div class="deal-item"><span class="deal-plus">+</span><span>CCNT</span></div>
-                <div class="deal-item"><span class="deal-plus">+</span><span>Joana Mini-market</span></div>
-                <div class="deal-item"><span class="deal-plus">+</span><span>Little Brazil Vegan</span></div>
-                <div class="deal-item"><span class="deal-plus">+</span><span>Target</span></div>
-                <div class="deal-item"><span class="deal-plus">+</span><span>Organic Place</span></div>
-                <div class="deal-item"><span class="deal-plus">+</span><span>Morello's</span></div>
-            </div>
+            <ul class="list-simple" id="topItemsList">
+                @forelse ($topItems as $it)
+                    <li class="list-row">
+                        <img class="list-thumb" src="{{ $it['thumb'] ?? asset('images/product-placeholder.png') }}" alt="{{ $it['name'] }}" onerror="this.style.background='var(--primary-faint)';this.src='';">
+                        <div class="list-info">
+                            <div class="list-name">{{ $it['name'] }}</div>
+                            <div class="list-sub">{{ $it['sub'] }}</div>
+                        </div>
+                        <span class="list-value">{{ $it['value'] }}</span>
+                    </li>
+                @empty
+                    <li class="list-row">
+                        <div class="list-info">
+                            <div class="list-sub">No item sales for {{ $selectedYear }}.</div>
+                        </div>
+                    </li>
+                @endforelse
+            </ul>
         </section>
 
     </div>
@@ -215,6 +189,56 @@ document.querySelectorAll('.soft-card').forEach(card => {
         const href = card.getAttribute('data-href');
         if (href) window.location.href = href;
     });
+});
+
+// Top Customers / Top Items count filter (5 / 10 / 20 / All)
+function applyListFilter(select) {
+    const list = document.getElementById(select.dataset.target);
+    if (!list) return;
+    const rows = list.querySelectorAll('.list-row');
+    const limit = select.value === 'all' ? rows.length : parseInt(select.value, 10);
+    rows.forEach((row, i) => {
+        row.style.display = i < limit ? '' : 'none';
+    });
+}
+
+document.querySelectorAll('.filter-select').forEach((select) => {
+    applyListFilter(select); // apply the default selection on load
+    select.addEventListener('change', () => applyListFilter(select));
+});
+
+// Top Customers — Week / Month / Year spend-change comparison
+function applyPeriod(list, period) {
+    list.querySelectorAll('.list-row[data-week]').forEach((row) => {
+        const changeEl = row.querySelector('.list-change');
+        const valueEl = row.querySelector('.list-change-value');
+        if (!changeEl || !valueEl) return;
+
+        const raw = row.dataset[period]; // 'week' | 'month' | 'year'
+        const pct = parseInt(raw, 10) || 0;
+        const isDown = pct < 0;
+
+        changeEl.classList.toggle('down', isDown);
+        valueEl.textContent = Math.abs(pct) + '%';
+    });
+}
+
+document.querySelectorAll('.segmented').forEach((group) => {
+    const list = document.getElementById(group.dataset.target);
+    if (!list) return;
+
+    const buttons = group.querySelectorAll('.segmented-btn');
+    buttons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            buttons.forEach((b) => b.classList.remove('active'));
+            btn.classList.add('active');
+            applyPeriod(list, btn.dataset.period);
+        });
+    });
+
+    // apply the default (Week) selection on load
+    const active = group.querySelector('.segmented-btn.active');
+    if (active) applyPeriod(list, active.dataset.period);
 });
 </script>
 @endpush

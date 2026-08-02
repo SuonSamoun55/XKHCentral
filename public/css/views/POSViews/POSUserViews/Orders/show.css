@@ -20,9 +20,9 @@
 
     width: 100%;
     min-height: 100%;
-    margin: 0;
-    /* padding: 24px; */
-    padding: 10px 14px;
+    /* margin: 0; */
+    padding: 24px;
+    /* padding: 10px 14px; */
     color: var(--od-text);
     background: var(--od-bg);
     border-radius: 12px;
@@ -131,7 +131,7 @@
 }
 
 #order-detail-page .od-subtitle {
-    margin: 6px 0 0;
+    margin: 10px 0;
     color: var(--od-muted);
     font-size: 11px;
     font-weight: 500;
@@ -540,8 +540,9 @@
 @media (max-width: 768px) {
     #order-detail-page {
         min-height: auto;
-        padding: 16px;
+        padding: 0px 15px;
         background: #fff;
+
     }
 
     /* Hide the desktop header + two-column grid entirely on phone */
@@ -550,12 +551,20 @@
         display: none !important;
     }
 
-    /* ---------- Mobile header ---------- */
+    /* ---------- Mobile header ----------
+       Sticky so the back button + title stay visible at the top of the
+       viewport while the rest of the order detail scrolls underneath it,
+       instead of scrolling away and disappearing. */
     #order-detail-page .od-mobile-header {
+        position: sticky;
+        top: 0;
+        /* z-index: 20; */
         display: flex;
         align-items: center;
         gap: 12px;
-        margin-bottom: 20px;
+        /* margin: ; */
+        padding: 16px 0px;
+        background: #fff;
     }
 
     #order-detail-page .od-mobile-back {
@@ -663,7 +672,7 @@
     #order-detail-page .od-mobile-items {
         display: flex;
         flex-direction: column;
-        max-height: 45vh;
+        /* max-height: 45vh; */
         gap: 14px;
         margin-bottom: 24px;
         padding-right: 2px;

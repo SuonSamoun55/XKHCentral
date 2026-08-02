@@ -5,29 +5,41 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSUserViews/Notifications/notification.css') }}" />
+    <style>
+        /* Toggle between default and active tab icons.
+           Move these rules into notification.css whenever convenient. */
+        .tab-icon-active {
+            display: none;
+        }
+        .tab.active .tab-icon-default {
+            display: none;
+        }
+        .tab.active .tab-icon-active {
+            display: inline-block;
+        }
+    </style>
 @endpush
 
 @section('content')
 
+@include('ManagementSystemViews.UserViews.Layouts.header_mobile')
+@include('ManagementSystemViews.UserViews.Layouts.footer')
     <div class="page-wrap">
         <div class="main-content">
             <div class="header">
-                @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
-                @include('ManagementSystemViews.UserViews.Layouts.footer')
                 <div class="notification-header">
                     <h2 class="page-title">Notification</h2>
                 </div>
                 <div class="search-date-container">
                     <div class="top-actions">
                         <a href="{{ route('user.chat.index') }}" class="btn-send">
-                            <i class="bi bi-inbox icon-img"></i> Inbox
+                            <img src="{{ asset('images/pos/inbox.png') }}" class="icon-img" alt="inbox">Inbox
                         </a>
                     </div>
 
-                    <div class="date-filter-wrapper">
-                        <label for="dateInput" class="floating-label">Date</label>
+                    <div class="date-filter-wrappers">
+                        <img src="{{ asset('/images/pos/icon-calendar.png') }}" class="calendar-custom-img" alt="calendar">
                         <input type="date" name="date" id="dateInput" value="{{ request('date') }}">
-                        <img src="{{ asset('images/pos/icon.png') }}" class="calendar-custom-img" alt="calendar">
                     </div>
                 </div>
 
@@ -35,7 +47,8 @@
                 <div class="tabs">
                     <div class="tab active" data-tab="orderNotification">
                         <span class="tab-icon-wrap">
-                            <img class="icon-img" src="{{ asset('images/pos/Notifi_cart icon.png') }}" alt="Order Notification">
+                            <img class="icon-img tab-icon-default" src="{{ asset('images/pos/Notifi_cart icon.png') }}" alt="Order Notification">
+                            <img class="icon-img tab-icon-active" src="{{ asset('images/pos/Notifi_cart icon_active.png') }}" alt="Order Notification">
                             @if ($orderUnreadCount > 0)
                                 <span class="tab-count-badge">{{ $orderUnreadCount }}</span>
                             @endif
@@ -45,7 +58,8 @@
 
                     <div class="tab" data-tab="adminMessage">
                         <span class="tab-icon-wrap">
-                            <i class="bi bi-person-circle icon-img"></i>
+                            <img class="icon-img tab-icon-default" src="{{ asset('images/pos/NoUser_adminIcon.png') }}" alt="Admin Message">
+                            <img class="icon-img tab-icon-active" src="{{ asset('images/pos/NoUser_adminIcon_active.png') }}" alt="Admin Message">
                             @if ($adminUnreadCount > 0)
                                 <span class="tab-count-badge">{{ $adminUnreadCount }}</span>
                             @endif
@@ -63,8 +77,7 @@
 
             <div class="mobile-tabs">
                 <a href="{{ route('user.chat.index') }}" class="mt-pill">
-                    <i class="bi bi-inbox icon-img"></i>
-                    Inbox
+                    <img src="{{ asset('images/pos/inbox.png') }}" class="icon-img" alt="inbox">Inbox
                 </a>
 
                 <div class="mf-date" id="mfDate">
@@ -87,370 +100,378 @@
                 <span data-mobile-subtab="adminMessage">Admin Message ({{ $adminUnreadCount }})</span>
             </div>
 
-            {{-- Notification List --}}
-            <div id="orderNotification" class="tab-content">
-                <div class="notification-table">
-                    <div class="notification-lists">
-                        @forelse($orderNotifications as $notification)
-                            <div class="table-row {{ !$notification->is_read ? 'selected' : '' }}"
-                                data-id="{{ $notification->id }}"
-                                style="cursor:pointer;"
-                                onclick="goToNotification({{ $notification->id }})">
+            {{-- Everything below this point scrolls together. On mobile,
+                 .content-scroll becomes the actual scroll container; on
+                 desktop/tablet it's display:contents and behaves exactly
+                 as before (no layout change there). --}}
+            <div class="content-scroll">
 
-                                {{-- LEFT --}}
-                                <div class="row-left">
-                                    <input type="checkbox" class="checkboxs notification-select"
-                                        name="notification_ids[]" value="{{ $notification->id }}"
-                                        onclick="event.stopPropagation();">
+                {{-- Notification List --}}
+                <div id="orderNotification" class="tab-content">
+                    <div class="notification-table">
+                        <div class="notification-lists">
+                            @forelse($orderNotifications as $notification)
+                                <div class="table-row {{ !$notification->is_read ? 'selected' : '' }}"
+                                    data-id="{{ $notification->id }}"
+                                    style="cursor:pointer;"
+                                    onclick="goToNotification({{ $notification->id }})">
 
-                                    <button type="button" class="star-btn" onclick="event.stopPropagation();" title="Favorite">
-                                        <i class="bi bi-star icon-img"></i>
-                                    </button>
+                                    {{-- LEFT --}}
+                                    <div class="row-left">
+                                        <input type="checkbox" class="checkboxs notification-select"
+                                            name="notification_ids[]" value="{{ $notification->id }}"
+                                            onclick="event.stopPropagation();">
 
-                                    <span class="tag">
-                                        <span class="avatar notification-type-icon">
-                                            @if ($notification->display_icon === 'admin')
-                                                <i class="bi bi-person-circle icon-img"></i>
-                                            @elseif ($notification->display_icon === 'global')
-                                                <i class="bi bi-percent icon-img"></i>
-                                            @elseif ($notification->display_icon === 'cancelled')
-                                                <i class="bi bi-x-circle icon-img"></i>
-                                            @elseif ($notification->display_icon === 'confirmed')
-                                                <i class="bi bi-check-circle icon-img"></i>
+                                        <button type="button" class="star-btn" onclick="event.stopPropagation();" title="Favorite">
+                                            <i class="bi bi-star icon-img"></i>
+                                        </button>
+
+                                        <span class="tag">
+                                            <span class="avatar notification-type-icon">
+                                                @if ($notification->display_icon === 'admin')
+                                                    <i class="bi bi-person-circle icon-img"></i>
+                                                @elseif ($notification->display_icon === 'global')
+                                                    <i class="bi bi-percent icon-img"></i>
+                                                @elseif ($notification->display_icon === 'cancelled')
+                                                    <i class="bi bi-x-circle icon-img"></i>
+                                                @elseif ($notification->display_icon === 'confirmed')
+                                                    <i class="bi bi-check-circle icon-img"></i>
+                                                @else
+                                                    <i class="bi bi-truck icon-img"></i>
+                                                @endif
+                                            </span>
+                                        </span>
+
+                                        <span class="status">
+                                            @if ($notification->is_admin_notification)
+                                                Admin Message
+                                            @elseif ($notification->type === 'global_message')
+                                                Global Message
                                             @else
-                                                <i class="bi bi-truck icon-img"></i>
+                                                <strong class="{{ !$notification->is_read ? 'fw-bold' : '' }}">
+                                                    {{ $notification->title }}
+                                                </strong>
                                             @endif
                                         </span>
-                                    </span>
+                                    </div>
 
-                                    <span class="status">
-                                        @if ($notification->is_admin_notification)
-                                            Admin Message
-                                        @elseif ($notification->type === 'global_message')
-                                            Global Message
-                                        @else
-                                            <strong class="{{ !$notification->is_read ? 'fw-bold' : '' }}">
-                                                {{ $notification->title }}
-                                            </strong>
+                                    {{-- CENTER --}}
+                                    <div class="row-center">
+                                        <span class="desktop-subject">
+                                            {{ $notification->display_subject }}
+                                        </span>
+                                        <span class="desktop-separator">-</span>
+                                        <span class="desktop-message">{{ Str::limit($notification->message, 118) }}</span>
+                                        <span class="notification-meta d-none">
+                                            {{ $notification->created_at->format('D d/m/Y') }}
+                                            <span>{{ $notification->created_at->format('h:i A') }}</span>
+                                        </span>
+
+                                        @if ($notification->has_attachment)
+                                            <a href="{{ route('user.notifications.show', $notification->id) }}"
+                                                onclick="event.stopPropagation();" style="color:#10c4d4; font-weight:600;">
+                                                attachment
+                                            </a>
                                         @endif
-                                    </span>
+                                    </div>
+
+                                    {{-- RIGHT --}}
+                                    <div class="row-right">
+                                        <span class="row-date">{{ $notification->created_at->format('h:i') }}
+                                            <span class="row-day">{{ $notification->created_at->format('m/d/Y') }}</span>
+                                        </span>
+
+                                        <div class="row-actions" onclick="event.stopPropagation();">
+                                            <button type="button" title="Delete"
+                                                onclick="deleteNotificationById({{ $notification->id }})">
+                                                <i class="bi bi-trash icon-img"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            @empty
+                                <div class="empty-state">
+                                    <i class="bi bi-inbox icon-img"></i>
+                                    <p>You have no notifications yet.</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+                <div class="notification-list mobile-list-active" data-mobile-list="orderNotification">
+                    @forelse($orderNotifications as $notification)
+                        <div class="notification-card {{ !$notification->is_read ? 'unread' : '' }} type-{{ $notification->type }}"
+                            data-id="{{ $notification->id }}" style="cursor: pointer;"
+                            onclick="goToNotification({{ $notification->id }})">
+
+                            <div class="notification-content">
+                                <div class="avatar notification-type-icon">
+                                    @if ($notification->display_icon === 'admin')
+                                        <i class="bi bi-person-circle icon-img"></i>
+                                    @elseif ($notification->display_icon === 'global')
+                                        <i class="bi bi-percent icon-img"></i>
+                                    @elseif ($notification->display_icon === 'cancelled')
+                                        <i class="bi bi-x-circle icon-img"></i>
+                                    @elseif ($notification->display_icon === 'confirmed')
+                                        <i class="bi bi-check-circle icon-img"></i>
+                                    @else
+                                        <i class="bi bi-truck icon-img"></i>
+                                    @endif
                                 </div>
 
-                                {{-- CENTER --}}
-                                <div class="row-center">
-                                    <span class="desktop-subject">
-                                        {{ $notification->display_subject }}
-                                    </span>
-                                    <span class="desktop-separator">-</span>
-                                    <span class="desktop-message">{{ Str::limit($notification->message, 118) }}</span>
-                                    <span class="notification-meta d-none">
-                                        {{ $notification->created_at->format('D d/m/Y') }}
-                                        <span>{{ $notification->created_at->format('h:i A') }}</span>
-                                    </span>
+                                <div class="notification-text">
+                                    <div class="notification-title-row">
+                                        <div class="notification-title">
+                                            {{ $notification->title }}
+                                        </div>
+                                        @if (!$notification->is_read)
+                                            <span class="unread-dot"></span>
+                                        @endif
+                                    </div>
+
+                                    <div class="notification-desc">
+                                        {{ Str::limit($notification->message, 60) }}
+                                    </div>
 
                                     @if ($notification->has_attachment)
                                         <a href="{{ route('user.notifications.show', $notification->id) }}"
-                                            onclick="event.stopPropagation();" style="color:#10c4d4; font-weight:600;">
+                                            class="notification-attachment" onclick="event.stopPropagation();">
                                             attachment
                                         </a>
                                     @endif
                                 </div>
-
-                                {{-- RIGHT --}}
-                                <div class="row-right">
-                                    <span class="row-date">{{ $notification->created_at->format('h:i') }}
-                                        <span class="row-day">{{ $notification->created_at->format('m/d/Y') }}</span>
-                                    </span>
-
-                                    <div class="row-actions" onclick="event.stopPropagation();">
-                                        <button type="button" title="Delete"
-                                            onclick="deleteNotificationById({{ $notification->id }})">
-                                            <i class="bi bi-trash icon-img"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
                             </div>
-                        @empty
-                            <div class="empty-state">
-                                <i class="bi bi-inbox icon-img"></i>
-                                <p>You have no notifications yet.</p>
+
+                            <div class="notification-side-meta">
+                                <span class="row-date">{{ $notification->created_at->format('H:i') }}</span>
+                                <span class="row-day">{{ $notification->created_at->format('m/d/Y') }}</span>
                             </div>
-                        @endforelse
-                    </div>
+                        </div>
+                    @empty
+                        <div class="empty-state">
+                            <i class="bi bi-inbox icon-img"></i>
+                            <p>You have no notifications yet.</p>
+                        </div>
+                    @endforelse
                 </div>
-            </div>
-            <div class="notification-list mobile-list-active" data-mobile-list="orderNotification">
-                @forelse($orderNotifications as $notification)
-                    <div class="notification-card {{ !$notification->is_read ? 'unread' : '' }} type-{{ $notification->type }}"
-                        data-id="{{ $notification->id }}" style="cursor: pointer;"
-                        onclick="goToNotification({{ $notification->id }})">
 
-                        <div class="notification-content">
-                            <div class="avatar notification-type-icon">
-                                @if ($notification->display_icon === 'admin')
-                                    <i class="bi bi-person-circle icon-img"></i>
-                                @elseif ($notification->display_icon === 'global')
-                                    <i class="bi bi-percent icon-img"></i>
-                                @elseif ($notification->display_icon === 'cancelled')
-                                    <i class="bi bi-x-circle icon-img"></i>
-                                @elseif ($notification->display_icon === 'confirmed')
-                                    <i class="bi bi-check-circle icon-img"></i>
-                                @else
-                                    <i class="bi bi-truck icon-img"></i>
-                                @endif
-                            </div>
+                <div class="pagination-container" id="paginationContainer">
+                    @if ($notifications->hasPages())
+                        {{ $notifications->links('vendor.pagination.custom-pos') }}
+                    @endif
+                </div>
 
-                            <div class="notification-text">
-                                <div class="notification-title-row">
-                                    <div class="notification-title">
-                                        {{ $notification->title }}
-                                    </div>
-                                    @if (!$notification->is_read)
-                                        <span class="unread-dot"></span>
-                                    @endif
-                                </div>
+                {{-- ADMIN MESSAGE PAGE --}}
+                <div id="adminMessage" class="tab-content" style="display:none;">
+                    <div class="notification-table">
+                        <div class="notification-lists">
+                            @forelse($adminMessagesDisplay as $notification)
+                                <div class="table-row {{ !$notification->is_read ? 'selected' : '' }}"
+                                    data-id="{{ $notification->id }}"
+                                    style="cursor:pointer;"
+                                    onclick="goToNotification({{ $notification->id }})">
 
-                                <div class="notification-desc">
-                                    {{ Str::limit($notification->message, 60) }}
-                                </div>
-
-                                @if ($notification->has_attachment)
-                                    <a href="{{ route('user.notifications.show', $notification->id) }}"
-                                        class="notification-attachment" onclick="event.stopPropagation();">
-                                        attachment
-                                    </a>
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="notification-side-meta">
-                            <span class="row-date">{{ $notification->created_at->format('H:i') }}</span>
-                            <span class="row-day">{{ $notification->created_at->format('m/d/Y') }}</span>
-                        </div>
-                    </div>
-                @empty
-                    <div class="empty-state">
-                        <i class="bi bi-inbox icon-img"></i>
-                        <p>You have no notifications yet.</p>
-                    </div>
-                @endforelse
-            </div>
-
-            <div class="pagination-container" id="paginationContainer">
-                @if ($notifications->hasPages())
-                    {{ $notifications->links('vendor.pagination.custom-pos') }}
-                @endif
-            </div>
-
-            {{-- ADMIN MESSAGE PAGE --}}
-            <div id="adminMessage" class="tab-content" style="display:none;">
-                <div class="notification-table">
-                    <div class="notification-lists">
-                        @forelse($adminMessagesDisplay as $notification)
-                            <div class="table-row {{ !$notification->is_read ? 'selected' : '' }}"
-                                data-id="{{ $notification->id }}"
-                                style="cursor:pointer;"
-                                onclick="goToNotification({{ $notification->id }})">
-
-                                <div class="row-left">
-                                    <input type="checkbox" class="checkboxs notification-select"
-                                        name="notification_ids[]" value="{{ $notification->id }}"
-                                        onclick="event.stopPropagation();">
-                                    <button type="button" class="star-btn" onclick="event.stopPropagation();" title="Favorite">
-                                        <i class="bi bi-star icon-img"></i>
-                                    </button>
-                                    <span class="tag">
-                                        <span class="avatar notification-type-icon">
-                                            @if ($notification->type === 'global_message')
-                                                <img src="{{ asset('images/pos/icon-megaphone.png') }}" class="icon-img" alt="Global Message">
-                                            @else
-                                                <i class="bi bi-chat-left-text icon-img"></i>
-                                            @endif
+                                    <div class="row-left">
+                                        <input type="checkbox" class="checkboxs notification-select"
+                                            name="notification_ids[]" value="{{ $notification->id }}"
+                                            onclick="event.stopPropagation();">
+                                        <button type="button" class="star-btn" onclick="event.stopPropagation();" title="Favorite">
+                                            <i class="bi bi-star icon-img"></i>
+                                        </button>
+                                        <span class="tag">
+                                            <span class="avatar notification-type-icon">
+                                                @if ($notification->type === 'global_message')
+                                                    <img src="{{ asset('images/pos/icon-megaphone.png') }}" class="icon-img" alt="Global Message">
+                                                @else
+                                                    <i class="bi bi-chat-left-text icon-img"></i>
+                                                @endif
+                                            </span>
                                         </span>
-                                    </span>
-                                    <span class="status">
-                                        {{ $notification->display_status }}
-                                    </span>
-                                </div>
+                                        <span class="status">
+                                            {{ $notification->display_status }}
+                                        </span>
+                                    </div>
 
-                                <div class="row-center">
-                                    <span class="desktop-subject">
-                                        {{ $notification->display_status }}
-                                    </span>
-                                    <span class="desktop-separator">-</span>
-                                    <span class="desktop-message">{{ Str::limit($notification->message, 118) }}</span>
-                                    <span class="notification-meta d-none">
-                                        {{ $notification->created_at->format('D d/m/Y') }}
-                                        <span>{{ $notification->created_at->format('h:i A') }}</span>
-                                    </span>
-                                </div>
+                                    <div class="row-center">
+                                        <span class="desktop-subject">
+                                            {{ $notification->display_status }}
+                                        </span>
+                                        <span class="desktop-separator">-</span>
+                                        <span class="desktop-message">{{ Str::limit($notification->message, 118) }}</span>
+                                        <span class="notification-meta d-none">
+                                            {{ $notification->created_at->format('D d/m/Y') }}
+                                            <span>{{ $notification->created_at->format('h:i A') }}</span>
+                                        </span>
+                                    </div>
 
-                                <div class="row-right">
-                                    <span class="row-date">{{ $notification->created_at->format('h:i') }}
-                                        <span class="row-day">{{ $notification->created_at->format('m/d/Y') }}</span>
-                                    </span>
-                                    <div class="row-actions" onclick="event.stopPropagation();">
-                                        <button type="button" title="Delete"
-                                            onclick="deleteNotificationById({{ $notification->id }})">
-                                            <i class="bi bi-trash icon-img"></i>
-                                        </button>
+                                    <div class="row-right">
+                                        <span class="row-date">{{ $notification->created_at->format('h:i') }}
+                                            <span class="row-day">{{ $notification->created_at->format('m/d/Y') }}</span>
+                                        </span>
+                                        <div class="row-actions" onclick="event.stopPropagation();">
+                                            <button type="button" title="Delete"
+                                                onclick="deleteNotificationById({{ $notification->id }})">
+                                                <i class="bi bi-trash icon-img"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        @empty
-                            <div class="empty-state">
-                                <i class="bi bi-chat-left-text icon-img"></i>
-                                <p>You have no admin messages yet.</p>
-                            </div>
-                        @endforelse
+                            @empty
+                                <div class="empty-state">
+                                    <i class="bi bi-chat-left-text icon-img"></i>
+                                    <p>You have no admin messages yet.</p>
+                                </div>
+                            @endforelse
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- Mobile Admin Message List --}}
-            <div class="notification-list" id="mobileAdminMessage" data-mobile-list="adminMessage">
-                @forelse($adminMessagesDisplay as $notification)
-                    <div class="notification-card {{ !$notification->is_read ? 'unread' : '' }} type-{{ $notification->type }}"
-                        data-id="{{ $notification->id }}" style="cursor: pointer;"
-                        onclick="goToNotification({{ $notification->id }})">
+                {{-- Mobile Admin Message List --}}
+                <div class="notification-list" id="mobileAdminMessage" data-mobile-list="adminMessage">
+                    @forelse($adminMessagesDisplay as $notification)
+                        <div class="notification-card {{ !$notification->is_read ? 'unread' : '' }} type-{{ $notification->type }}"
+                            data-id="{{ $notification->id }}" style="cursor: pointer;"
+                            onclick="goToNotification({{ $notification->id }})">
 
-                        <div class="notification-content">
-                            <div class="avatar notification-type-icon">
-                                @if ($notification->type === 'global_message')
-                                    <img src="{{ asset('images/pos/icon-megaphone.png') }}" class="icon-img" alt="Global Message">
-                                @else
-                                    <i class="bi bi-chat-left-text icon-img"></i>
-                                @endif
-                            </div>
-
-                            <div class="notification-text">
-                                <div class="notification-title-row">
-                                    <div class="notification-title">
-                                        {{ $notification->title }}
-                                    </div>
-                                    @if (!$notification->is_read)
-                                        <span class="unread-dot"></span>
+                            <div class="notification-content">
+                                <div class="avatar notification-type-icon">
+                                    @if ($notification->type === 'global_message')
+                                        <img src="{{ asset('images/pos/icon-megaphone.png') }}" class="icon-img" alt="Global Message">
+                                    @else
+                                        <i class="bi bi-chat-left-text icon-img"></i>
                                     @endif
                                 </div>
 
-                                <div class="notification-desc">
-                                    {{ Str::limit($notification->message, 60) }}
+                                <div class="notification-text">
+                                    <div class="notification-title-row">
+                                        <div class="notification-title">
+                                            {{ $notification->title }}
+                                        </div>
+                                        @if (!$notification->is_read)
+                                            <span class="unread-dot"></span>
+                                        @endif
+                                    </div>
+
+                                    <div class="notification-desc">
+                                        {{ Str::limit($notification->message, 60) }}
+                                    </div>
                                 </div>
                             </div>
+
+                            <div class="notification-side-meta">
+                                <span class="row-date">{{ $notification->created_at->format('H:i') }}</span>
+                                <span class="row-day">{{ $notification->created_at->format('m/d/Y') }}</span>
+                            </div>
                         </div>
-
-                        <div class="notification-side-meta">
-                            <span class="row-date">{{ $notification->created_at->format('H:i') }}</span>
-                            <span class="row-day">{{ $notification->created_at->format('m/d/Y') }}</span>
+                    @empty
+                        <div class="empty-state">
+                            <i class="bi bi-chat-left-text icon-img"></i>
+                            <p>You have no admin messages yet.</p>
                         </div>
-                    </div>
-                @empty
-                    <div class="empty-state">
-                        <i class="bi bi-chat-left-text icon-img"></i>
-                        <p>You have no admin messages yet.</p>
-                    </div>
-                @endforelse
-            </div>
+                    @endforelse
+                </div>
 
-            {{-- ORDER NOTIFICATION TOOLBAR --}}
-            <div class="desktop-notification-toolbar" data-pager="orderNotification">
-                <form method="GET" action="{{ route('user.notifications') }}" class="pager-size-form">
-                    @foreach (request()->except(['limit', 'page']) as $key => $value)
-                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-                    @endforeach
-
-                    <span>Show</span>
-
-                    <select name="limit" onchange="this.form.submit()">
-                        @foreach ([10, 25, 50, 100] as $size)
-                            <option value="{{ $size }}" {{ (int) request('limit', 10) === $size ? 'selected' : '' }}>
-                                {{ $size }}
-                            </option>
+                {{-- ORDER NOTIFICATION TOOLBAR --}}
+                <div class="desktop-notification-toolbar" data-pager="orderNotification">
+                    <form method="GET" action="{{ route('user.notifications') }}" class="pager-size-form">
+                        @foreach (request()->except(['limit', 'page']) as $key => $value)
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                         @endforeach
-                    </select>
 
-                    <span>items</span>
+                        <span>Show</span>
 
-                    @if ($notifications->onFirstPage())
-                        <span class="pager-page-btn disabled">Previous</span>
-                    @else
-                        <a class="pager-page-btn" href="{{ $notifications->previousPageUrl() }}">Previous</a>
-                    @endif
+                        <select name="limit" onchange="this.form.submit()">
+                            @foreach ([10, 25, 50, 100] as $size)
+                                <option value="{{ $size }}" {{ (int) request('limit', 10) === $size ? 'selected' : '' }}>
+                                    {{ $size }}
+                                </option>
+                            @endforeach
+                        </select>
 
-                    <span class="pager-page-info">Page {{ $notifications->currentPage() }} of {{ $notifications->lastPage() }}</span>
+                        <span>items</span>
 
-                    @if ($notifications->hasMorePages())
-                        <a class="pager-page-btn" href="{{ $notifications->nextPageUrl() }}">Next</a>
-                    @else
-                        <span class="pager-page-btn disabled">Next</span>
-                    @endif
-                </form>
+                        @if ($notifications->onFirstPage())
+                            <span class="pager-page-btn disabled">Previous</span>
+                        @else
+                            <a class="pager-page-btn" href="{{ $notifications->previousPageUrl() }}">Previous</a>
+                        @endif
 
-                <div class="desktop-result-count" data-result-count="orderNotification">
-                    Showing <strong>{{ $notifications->count() }}</strong> of <strong>{{ $notifications->total() }}</strong> items
+                        <span class="pager-page-info">Page {{ $notifications->currentPage() }} of {{ $notifications->lastPage() }}</span>
+
+                        @if ($notifications->hasMorePages())
+                            <a class="pager-page-btn" href="{{ $notifications->nextPageUrl() }}">Next</a>
+                        @else
+                            <span class="pager-page-btn disabled">Next</span>
+                        @endif
+                    </form>
+
+                    <div class="desktop-result-count" data-result-count="orderNotification">
+                        Showing <strong>{{ $notifications->count() }}</strong> of <strong>{{ $notifications->total() }}</strong> items
+                    </div>
                 </div>
-            </div>
 
-            {{-- ADMIN MESSAGE TOOLBAR --}}
-            <div class="desktop-notification-toolbar" data-pager="adminMessage" style="display:none;">
-                <form method="GET" action="{{ route('user.notifications') }}" class="pager-size-form">
-                    @foreach (request()->except(['limit', 'page']) as $key => $value)
-                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-                    @endforeach
-
-                    <span>Show</span>
-
-                    <select name="limit" onchange="this.form.submit()">
-                        @foreach ([10, 25, 50, 100] as $size)
-                            <option value="{{ $size }}" {{ (int) request('limit', 10) === $size ? 'selected' : '' }}>
-                                {{ $size }}
-                            </option>
+                {{-- ADMIN MESSAGE TOOLBAR --}}
+                <div class="desktop-notification-toolbar" data-pager="adminMessage" style="display:none;">
+                    <form method="GET" action="{{ route('user.notifications') }}" class="pager-size-form">
+                        @foreach (request()->except(['limit', 'page']) as $key => $value)
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                         @endforeach
-                    </select>
 
-                    <span>items</span>
+                        <span>Show</span>
 
-                    @if ($adminMessages->onFirstPage())
-                        <span class="pager-page-btn disabled">Previous</span>
-                    @else
-                        <a class="pager-page-btn" href="{{ $adminMessages->previousPageUrl() }}">Previous</a>
-                    @endif
+                        <select name="limit" onchange="this.form.submit()">
+                            @foreach ([10, 25, 50, 100] as $size)
+                                <option value="{{ $size }}" {{ (int) request('limit', 10) === $size ? 'selected' : '' }}>
+                                    {{ $size }}
+                                </option>
+                            @endforeach
+                        </select>
 
-                    <span class="pager-page-info">Page {{ $adminMessages->currentPage() }} of {{ $adminMessages->lastPage() }}</span>
+                        <span>items</span>
 
-                    @if ($adminMessages->hasMorePages())
-                        <a class="pager-page-btn" href="{{ $adminMessages->nextPageUrl() }}">Next</a>
-                    @else
-                        <span class="pager-page-btn disabled">Next</span>
-                    @endif
-                </form>
+                        @if ($adminMessages->onFirstPage())
+                            <span class="pager-page-btn disabled">Previous</span>
+                        @else
+                            <a class="pager-page-btn" href="{{ $adminMessages->previousPageUrl() }}">Previous</a>
+                        @endif
 
-                <div class="desktop-result-count" data-result-count="adminMessage">
-                    Showing <strong>{{ $adminMessages->count() }}</strong> of <strong>{{ $adminMessages->total() }}</strong> items
+                        <span class="pager-page-info">Page {{ $adminMessages->currentPage() }} of {{ $adminMessages->lastPage() }}</span>
+
+                        @if ($adminMessages->hasMorePages())
+                            <a class="pager-page-btn" href="{{ $adminMessages->nextPageUrl() }}">Next</a>
+                        @else
+                            <span class="pager-page-btn disabled">Next</span>
+                        @endif
+                    </form>
+
+                    <div class="desktop-result-count" data-result-count="adminMessage">
+                        Showing <strong>{{ $adminMessages->count() }}</strong> of <strong>{{ $adminMessages->total() }}</strong> items
+                    </div>
                 </div>
-            </div>
 
-            {{-- MOBILE PAGINATION --}}
-            <div class="mobile-pagination">
-                <div class="mp-left">
-                    {{ $notifications->firstItem() }} –
-                    {{ $notifications->lastItem() }}
-                    of {{ $notifications->total() }} Pages
+                {{-- MOBILE PAGINATION --}}
+                <div class="mobile-pagination">
+                    <div class="mp-left">
+                        {{ $notifications->firstItem() }} –
+                        {{ $notifications->lastItem() }}
+                        of {{ $notifications->total() }} Items
+                    </div>
+
+                    <div class="mp-center">
+                        <span>The page</span>
+                        <select onchange="location = this.value;">
+                            @for ($i = 1; $i <= $notifications->lastPage(); $i++)
+                                <option value="{{ $notifications->url($i) }}"
+                                    {{ $notifications->currentPage() == $i ? 'selected' : '' }}>
+                                    {{ $i }}
+                                </option>
+                            @endfor
+                        </select>
+                    </div>
                 </div>
 
-                <div class="mp-center">
-                    <span>The page</span>
-                    <select onchange="location = this.value;">
-                        @for ($i = 1; $i <= $notifications->lastPage(); $i++)
-                            <option value="{{ $notifications->url($i) }}"
-                                {{ $notifications->currentPage() == $i ? 'selected' : '' }}>
-                                {{ $i }}
-                            </option>
-                        @endfor
-                    </select>
-                </div>
-            </div>
+            </div>{{-- /.content-scroll --}}
         </div>
         @include('ManagementSystemViews.UserViews.Layouts.footer')
     </div>
@@ -581,8 +602,14 @@
             deleteNotifications([String(id)]);
         }
 
+        // FIX: this was previously commented out, which is why every row's
+        // onclick="goToNotification(...)" threw "goToNotification is not
+        // defined". Route URL is built with a placeholder id and swapped
+        // in at click time, so it stays in sync with the named route
+        // instead of a hardcoded path.
         function goToNotification(id) {
-            window.location.href = `/pos-system/notifications/${id}`;
+            const urlTemplate = "{{ route('user.notifications.show', ['id' => '__ID__']) }}";
+            window.location.href = urlTemplate.replace('__ID__', id);
         }
     </script>
 
@@ -605,31 +632,48 @@
             });
         }
 
-        // Mobile "unread" switch: no longer filters via URL. Instead:
-        //  - ON  -> hide the date filter, mark all notifications as read
-        //  - OFF -> show the date filter again
+        // Mobile "unread" switch: no longer marks as read or filters via URL.
+        // It only toggles visibility of the date filter, and remembers the
+        // toggle state in localStorage across page loads.
+        const MOBILE_UNREAD_TOGGLE_KEY = 'mobileUnreadFilterToggle';
+
         function filterUnreadMobile() {
             const checkbox = document.getElementById('mobileUnreadFilter');
             const dateFilter = document.getElementById('mfDate');
 
             if (checkbox.checked) {
                 if (dateFilter) dateFilter.classList.add('hidden');
-                markAllNotificationsRead();
             } else {
                 if (dateFilter) dateFilter.classList.remove('hidden');
             }
+
+            try {
+                localStorage.setItem(MOBILE_UNREAD_TOGGLE_KEY, checkbox.checked ? '1' : '0');
+            } catch (e) {
+                // localStorage may be unavailable (e.g. private mode) - ignore.
+            }
         }
 
-        function markAllNotificationsRead() {
-            fetch('{{ route('user.notifications.markAllRead') }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': getCsrfToken(),
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            })
-               
-        }
+        // Restore toggle state on page load
+        (function restoreMobileUnreadToggle() {
+            const checkbox = document.getElementById('mobileUnreadFilter');
+            const dateFilter = document.getElementById('mfDate');
+            if (!checkbox) return;
+
+            let saved = null;
+            try {
+                saved = localStorage.getItem(MOBILE_UNREAD_TOGGLE_KEY);
+            } catch (e) {
+                saved = null;
+            }
+
+            if (saved === '1') {
+                checkbox.checked = true;
+                if (dateFilter) dateFilter.classList.add('hidden');
+            } else {
+                checkbox.checked = false;
+                if (dateFilter) dateFilter.classList.remove('hidden');
+            }
+        })();
     </script>
 @endpush

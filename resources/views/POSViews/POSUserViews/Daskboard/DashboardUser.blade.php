@@ -10,14 +10,9 @@
 
 @section('content')
 
+@include('ManagementSystemViews.UserViews.Layouts.header_mobile')
+@include('ManagementSystemViews.UserViews.Layouts.footer')
     <main class="content-scroll">
-        @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
-        @include('ManagementSystemViews.UserViews.Layouts.footer')
-
-        {{-- ============ HERO (Products / Order / Pending) ============
-             Lives OUTSIDE .dashboard now so it doesn't inherit the
-             grid's `gap` — it has its own margin-bottom in dashboard.css
-             instead, which fixes the extra top spacing issue. --}}
         <div class="area-hero">
             <section class="card hero-card">
                 <a href="{{ route('user.posinterface') }}" class="hero-card-link">
@@ -55,18 +50,56 @@
         </div>
 
       <div class="dashboard" id="dashboardGrid">
+        {{-- ============ PRODUCTS SUMMARY (3 cards: Confirmed / Pending / Cancel) ============ --}}
         <div class="area-products-summary products-summary">
             <div class="summary-stats">
-                <div class="summary-stat stat-blue">
-                    <span class="stat-icon"><i class="bi bi-check-circle"></i></span>
-                    <span class="stat-label">Admin Confirmed</span>
-                    <span class="stat-value">${{ number_format((float) ($confirmedAmount ?? 0), 2) }}</span>
+
+                {{-- Full-width: Admin Confirmed --}}
+                <div class="summary-stat stat-confirmed">
+                    <div class="stat-ring ring-confirmed" style="--pct: {{ $confirmedPct ?? 100 }}">
+                        <span class="ring-icon">
+                            {{-- Put your confirmed/check icon image here --}}
+                            <img src="{{ asset('images/aside/dashboardConfirm.png') }}" alt="Confirmed">
+                        </span>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Admin Confirmed</span>
+                        <span class="stat-sub">{{ number_format((int) ($confirmedOrders ?? 0)) }} orders</span>
+                        <span class="stat-value">${{ number_format((float) ($confirmedAmount ?? 0), 2) }}</span>
+                    </div>
                 </div>
-                <div class="summary-stat stat-teal">
-                    <span class="stat-icon"><i class="bi bi-hourglass-split"></i></span>
-                    <span class="stat-label">Pending</span>
-                    <span class="stat-value">${{ number_format((float) ($pendingAmount ?? 0), 2) }}</span>
+
+                {{-- Row: Pending + Cancel side by side --}}
+                <div class="summary-stat-row">
+                    <div class="summary-stat stat-pending">
+                        <div class="stat-ring ring-pending" style="--pct: {{ $pendingPct ?? 40 }}">
+                            <span class="ring-icon">
+                                {{-- Put your pending/snowflake icon image here --}}
+                                <img src="{{ asset('images/aside/dashboardPending.png') }}" alt="Pending">
+                            </span>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Pending</span>
+                            <span class="stat-sub">{{ number_format((int) ($pendingItems ?? 0)) }} items</span>
+                            <span class="stat-value">${{ number_format((float) ($pendingAmount ?? 0), 2) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-stat stat-cancel">
+                        <div class="stat-ring ring-cancel" style="--pct: {{ $cancelledPct ?? 15 }}">
+                            <span class="ring-icon">
+                                {{-- Put your cancel/x icon image here --}}
+                                <img src="{{ asset('images/aside/dashbordCancelled.png') }}" alt="Cancel">
+                            </span>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Cancel</span>
+                            <span class="stat-sub">{{ number_format((int) ($cancelledOrders ?? 0)) }} orders</span>
+                            <span class="stat-value">${{ number_format((float) ($cancelledAmount ?? 0), 2) }}</span>
+                        </div>
+                    </div>
                 </div>
+
             </div>
         </div>
 
@@ -124,7 +157,7 @@
                             <div class="order-thumb-stack {{ $isStacked ? 'stacked' : 'single' }}">
                                 @forelse($thumbImages as $thumbSrc)
                                     <img src="{{ $thumbSrc }}" alt="{{ $itemName }}"
-                                        onerror="this.onerror=null;this.src='{{ asset('images/aside/history.png') }}';">
+                                        onerror="this.onerror=null;this.src='{{ asset('') }}';">
                                 @empty
                                     <img src="{{ $fallbackImage }}" alt="{{ $itemName }}">
                                 @endforelse
@@ -281,7 +314,7 @@
                         <div class="order-left">
                             <div class="order-thumb-stack single">
                                 <img src="{{ $boughtItemImage }}" alt="{{ $boughtItemName }}"
-                                    onerror="this.onerror=null;this.src='{{ asset('images/aside/history.png') }}';">
+                                    onerror="this.onerror=null;this.src='{{ asset('') }}';">
                             </div>
                             <div>
                                 <div class="order-name">{{ \Illuminate\Support\Str::limit($boughtItemName, 32) }}</div>
@@ -302,29 +335,15 @@
       </div>
     </main>
     {{-- ============ MOBILE BOTTOM NAV ============ --}}
-    <div class="mobile-nav">
-        <a href="{{ route('user.index') }}" class="active">
-            <i class="bi bi-house-door-fill"></i><span>home</span>
-        </a>
-        <a href="{{ route('user.posinterface') }}">
-            <i class="bi bi-box-seam"></i><span>product</span>
-        </a>
-        <a href="#">
-            <i class="bi bi-heart"></i><span>wishlist</span>
-        </a>
-        <a href="{{ route('profile') }}">
-            <i class="bi bi-person"></i><span>user</span>
-        </a>
-    </div>
+       {{-- @include('ManagementSystemViews.UserViews.Layouts.header_mobile') --}}
+        @include('ManagementSystemViews.UserViews.Layouts.footer')
+
 
 @endsection
 
 @push('styles')
     <style>
-        /* Minimal styling so the year/month <select>s match the old
-           button-styled ".year-filter" chip instead of the browser
-           default. Safe to delete if dashboard.css already covers a
-           select variant of this class. */
+
         select.year-filter {
             appearance: none;
             -webkit-appearance: none;
@@ -333,7 +352,7 @@
         }
         .filter-form-inline {
             display: flex;
-            gap: 8px;
+            /* gap: 8px; */
         }
     </style>
 @endpush

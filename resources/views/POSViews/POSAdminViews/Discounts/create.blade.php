@@ -1,4 +1,4 @@
-@extends('POSViews.POSAdminViews.app')
+@extends('Layout.POSAdmin.app')
 
 @section('title', 'Create Discount')
 

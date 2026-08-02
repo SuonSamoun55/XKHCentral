@@ -13,7 +13,6 @@
     --border:#e8eaed;
     --bg:white;
 
-    /* font-size scale — bump any of these to resize every matching element at once */
     --fs-normal:12px;   /* body copy, labels, summary lines, item sub-text */
     --fs-table:12px;    /* table-header style: order-meta label, message-label */
     --fs-title:14px;    /* title style: sender name, item name/price, headline total */

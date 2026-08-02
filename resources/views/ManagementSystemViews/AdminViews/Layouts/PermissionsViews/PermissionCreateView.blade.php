@@ -1,5 +1,4 @@
-@extends('ManagementSystemViews.AdminViews.Layouts.app')
-
+@extends('Layout.Management.app')
 @section('title', 'Create Permission')
 
 @section('content')
@@ -9,14 +8,14 @@
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul class="mb-0">
-                @foreach ($errors->all() as $error)
+                {{-- @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
-                @endforeach
+                @endforeach --}}
             </ul>
         </div>
     @endif
 
-    <form action="{{ route('permissions.store') }}" method="POST">
+    {{-- <form action="{{ route('permissions.store') }}" method="POST">
         @csrf
 
         <div class="mb-3">
@@ -31,6 +30,6 @@
 
         <button type="submit" class="btn btn-success">Save</button>
         <a href="{{ route('permissions.index') }}" class="btn btn-secondary">Back</a>
-    </form>
+    </form> --}}
 </div>
 @endsection

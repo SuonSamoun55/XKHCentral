@@ -1,33 +1,20 @@
     .api-setup-wrap{
-        padding:10px;
         width:100%;
+        
     }
-    .api-card{
-        background:#f8fafc;
-        border:1px solid #e5e7eb;
-        border-radius:16px;
-        padding:20px;
-    }
+   .api-card{
+    height: 100%;
+overflow: scroll;
+   }
     .api-title{
-        position: sticky;
-        top: 0;
-        padding:  20px 10px;
-        margin-top: -20px;
-        background: #f8fafc;
+       
+        
         font-size:22px;
         font-weight:700;
         color:#0f172a;
         margin-bottom:4px;
     }
-    .api-subtitle{
-        position: sticky;
-        top: 68px;
-        background: #f8fafc;
-    
-        color:#6b7280;
-        margin-bottom:18px;
-        font-size:13px;
-    }
+
     .api-grid{
         display:grid;
         grid-template-columns:1fr 1fr;

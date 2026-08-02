@@ -1,5 +1,4 @@
-@extends('POSViews.POSAdminViews.app')
-
+@extends('Layout.POSAdmin.app')
 @section('title', 'Product Detail')
 
 @push('styles')

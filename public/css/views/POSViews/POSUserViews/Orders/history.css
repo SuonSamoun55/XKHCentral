@@ -14,7 +14,7 @@ body {
 }
 
 .page-wrap {
-    padding: 15px;
+    padding: 20px;
     /* padding-left: 20px;
     padding-right: 20px; */
     padding-top: 0;
@@ -49,6 +49,7 @@ body {
 .header {
     background: var(--card);
     position: static;
+    margin-top: 10px;
 }
 
 .left-section {
@@ -645,6 +646,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     .header{
         width: 100%;
     }
+     .right-section{
+        display: none;
+    }
     .mobile{
         padding: 0px 10px;
     }
@@ -785,6 +789,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
+
+        overflow: auto;
+        height: 100%;
+        padding-bottom:75px ;
         /* padding: 4px 4px 90px; */
     }
 
@@ -797,14 +805,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         padding: 10px 12px;
         box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
         cursor: pointer;
-        /* This row is the direct cause of the cut-off badges: without
-           min-width: 0 here, a flex item's default min-width is `auto`
-           (sized to its content), so the row could never shrink below
-           the combined natural width of its children even though its
-           own children individually allow shrinking. Setting it here
-           lets the whole row — and therefore .order-card-info inside it
-           — actually shrink to fit the card, instead of pushing
-           .order-card-side off the right edge. */
         min-width: 0;
         max-width: 100%;
         box-sizing: border-box;
@@ -956,4 +956,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         height: 26px;
         font-size: 12px;
     }
+   
+
 }

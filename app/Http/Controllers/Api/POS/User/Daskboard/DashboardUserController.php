@@ -52,14 +52,42 @@ class DashboardUserController extends Controller
             ->whereMonth('created_at', $now->month)
             ->sum('total_amount') ?? 0);
 
-        $confirmedAmount = (float) ((clone $orderQuery)
-            ->where('status', 'confirmed')
-            ->sum('total_amount') ?? 0);
+        // ================================================================
+        // PRODUCTS SUMMARY (Admin Confirmed / Pending / Cancel cards)
+        // One grouped query gives us the count + amount per status in a
+        // single pass instead of three separate sum()/count() calls.
+        // ================================================================
+        $statusBreakdown = (clone $orderQuery)
+            ->select('status', DB::raw('COUNT(*) as cnt'), DB::raw('COALESCE(SUM(total_amount), 0) as amt'))
+            ->groupBy('status')
+            ->get()
+            ->keyBy('status');
 
-        $pendingAmount = (float) ((clone $orderQuery)
-            ->where('status', 'pending')
-            ->where('status', '!=', 'cancelled')
-            ->sum('total_amount') ?? 0);
+        $confirmedOrders = (int) ($statusBreakdown['confirmed']->cnt ?? 0);
+        $confirmedAmount = (float) ($statusBreakdown['confirmed']->amt ?? 0);
+
+        $pendingOrdersCount = (int) ($statusBreakdown['pending']->cnt ?? 0);
+        $pendingAmount = (float) ($statusBreakdown['pending']->amt ?? 0);
+
+        $cancelledOrders = (int) ($statusBreakdown['cancelled']->cnt ?? 0);
+        $cancelledAmount = (float) ($statusBreakdown['cancelled']->amt ?? 0);
+
+        // "Pending" card shows item count (not order count) in the mockup,
+        // so total qty across items belonging to pending orders.
+        $pendingItems = (int) (OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.user_id', $user->id)
+            ->where('orders.status', 'pending')
+            ->when($selectedCompanyId, function ($query) use ($selectedCompanyId) {
+                $query->where('orders.company_id', $selectedCompanyId);
+            })
+            ->sum('order_items.qty') ?? 0);
+
+        // Ring fill % = this status's share of all orders. Guard against
+        // divide-by-zero when the user has no orders yet.
+        $confirmedPct = $totalOrders > 0 ? (int) round(($confirmedOrders / $totalOrders) * 100) : 0;
+        $pendingPct = $totalOrders > 0 ? (int) round(($pendingOrdersCount / $totalOrders) * 100) : 0;
+        $cancelledPct = $totalOrders > 0 ? (int) round(($cancelledOrders / $totalOrders) * 100) : 0;
 
         $availableYears = (clone $orderQuery)
             ->selectRaw('DISTINCT YEAR(created_at) as yr')
@@ -200,7 +228,14 @@ class DashboardUserController extends Controller
             'thisMonthOrders',
             'thisMonthAmount',
             'confirmedAmount',
+            'confirmedOrders',
+            'confirmedPct',
             'pendingAmount',
+            'pendingItems',
+            'pendingPct',
+            'cancelledAmount',
+            'cancelledOrders',
+            'cancelledPct',
             'recentOrders',
             'recentNotifications',
             'unreadNotificationCount',
@@ -243,12 +278,6 @@ class DashboardUserController extends Controller
         ));
     }
 
-    /**
-     * Same "is this an Admin Message" rule used on the full notification
-     * list page: type is authoritative when it's explicitly
-     * admin_message/global_message; otherwise fall back to keyword
-     * sniffing on title/message, with order wording always winning.
-     */
     private function isAdminNotification(Notification $notification): bool
     {
         if ($notification->type === 'admin_message') {
@@ -281,12 +310,6 @@ class DashboardUserController extends Controller
         return false;
     }
 
-    /**
-     * Attaches display_icon (admin / global / cancelled / confirmed /
-     * default) plus a resolved sender image, so the dashboard's
-     * Notification card renders the same icon set as the full
-     * notification list page.
-     */
     private function decorateNotificationIcon(Notification $notification): Notification
     {
         $titleLower = strtolower($notification->title ?? '');

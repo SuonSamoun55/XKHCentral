@@ -20,12 +20,10 @@
                 <i class="bi bi-heart"></i>
                 <span>wishlist</span>
             </a>
-
-{{-- USER --}}
-<a href="{{ route('profile') }}"
-   class="{{ request()->routeIs('profile') ? 'active' : '' }}">
-    <i class="bi bi-person"></i>
-    <span>user</span>
-</a>
-        </div>
-<link rel="stylesheet" href="{{ asset('css/views/ManagementSystemViews/UserViews/Layouts/footer.css') }}">
+        <a href="{{ route('profile') }}"
+        class="{{ request()->routeIs('profile') ? 'active' : '' }}">
+            <i class="bi bi-person"></i>
+            <span>user</span>
+        </a>
+                </div>
+        <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSUserViews/Layout/footer.css') }}">

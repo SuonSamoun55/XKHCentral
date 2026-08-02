@@ -14,6 +14,14 @@
         <div class="header">
             <div class="order-history-container">
                 <h2 class="history-title">Order History</h2>
+
+                <!-- Bulk-select action bar (hidden until a row checkbox is checked) -->
+                <div id="actionBar" class="action-bar">
+                    <span id="selectedCount">Selected 0</span>
+                    <button type="button" id="cancelSelection">Cancel</button>
+                    <button type="submit" form="deleteForm" class="delete-btn">Delete</button>
+                </div>
+
                 <form action="{{ route('user.pos.order.history') }}" method="GET" class="filter-form">
                     <div class="left-section">
                         <div class="search-box" style="position: relative;">
@@ -47,6 +55,11 @@
                         </div>
                     </div>
                 </form>
+
+                <!-- Deletes whichever rowCheckbox inputs are checked at submit time.
+                     The checkboxes themselves live inside the table (name="ids[]"
+                     is added dynamically before submit — see script below), so
+                     this form just needs to exist as a submit target. -->
                 <form id="deleteForm" method="POST" action="{{ route('user.pos.order.deleteMultiple') }}">
                     @csrf
                     @method('DELETE')
@@ -393,11 +406,18 @@
         window.addEventListener('pagehide', () => saveScrollPosition());
     </script>
     <script>
+        // Bulk-select handling for the desktop table.
+        // All four elements below are optional in the DOM (e.g. the
+        // action bar only renders when the table is present), so every
+        // lookup is null-checked before use. This is what was crashing
+        // before: cancelBtn.addEventListener() ran even though
+        // #cancelSelection didn't exist on pages with no orders.
         const selectAll = document.getElementById('selectAll');
         const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
         const actionBar = document.getElementById('actionBar');
         const selectedCount = document.getElementById('selectedCount');
         const cancelBtn = document.getElementById('cancelSelection');
+        const deleteForm = document.getElementById('deleteForm');
 
         if (selectAll) {
             selectAll.addEventListener('change', function() {
@@ -409,22 +429,51 @@
                 cb.addEventListener('change', updateSelectionUI);
             });
 
-            cancelBtn.addEventListener('click', function() {
-                rowCheckboxes.forEach(cb => cb.checked = false);
-                selectAll.checked = false;
-                updateSelectionUI();
-            });
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function() {
+                    rowCheckboxes.forEach(cb => cb.checked = false);
+                    selectAll.checked = false;
+                    updateSelectionUI();
+                });
+            }
         }
 
         function updateSelectionUI() {
-            let checked = document.querySelectorAll('.rowCheckbox:checked').length;
-            if (checked > 0) {
-                actionBar.style.display = 'flex';
-                selectedCount.textContent = `Selected ${checked}`;
-            } else {
-                actionBar.style.display = 'none';
+            const checked = document.querySelectorAll('.rowCheckbox:checked').length;
+
+            if (actionBar) {
+                actionBar.style.display = checked > 0 ? 'flex' : 'none';
             }
-            selectAll.checked = checked === rowCheckboxes.length;
+            if (selectedCount) {
+                selectedCount.textContent = `Selected ${checked}`;
+            }
+            if (selectAll) {
+                selectAll.checked = rowCheckboxes.length > 0 && checked === rowCheckboxes.length;
+            }
+        }
+
+        // Before the delete form submits, inject the checked ids as
+        // hidden ids[] inputs so the backend receives them.
+        if (deleteForm) {
+            deleteForm.addEventListener('submit', function(e) {
+                deleteForm.querySelectorAll('input[name="ids[]"]').forEach(el => el.remove());
+
+                const checkedIds = Array.from(document.querySelectorAll('.rowCheckbox:checked'))
+                    .map(cb => cb.value);
+
+                if (checkedIds.length === 0) {
+                    e.preventDefault();
+                    return;
+                }
+
+                checkedIds.forEach(id => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'ids[]';
+                    input.value = id;
+                    deleteForm.appendChild(input);
+                });
+            });
         }
     </script>
     <script>

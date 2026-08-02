@@ -1,5 +1,4 @@
-@extends('ManagementSystemViews.AdminViews.Layouts.app')
-
+@extends('Layout.Management.app')
 @section('title', 'Profile Information')
 
 @push('styles')
@@ -10,7 +9,7 @@
 <div class="main-wrapper">
 
         {{-- Sidebar --}}
-        
+
 
     <div class="content-area">
             <div class="container mt-4">

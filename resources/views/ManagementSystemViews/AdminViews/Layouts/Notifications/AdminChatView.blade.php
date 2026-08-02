@@ -1,4 +1,4 @@
-@extends('ManagementSystemViews.AdminViews.Layouts.app')
+@extends('Layout.Management.app')
 <link rel="stylesheet" href="{{ asset('css/pos/admin/notification/admin_chat_view.css') }}">
 @section('title', 'Admin Chat')
 
@@ -7,10 +7,6 @@
 @endpush
 
 @section('content')
-
-{{-- ══════════════════════════════════════════════════════════
-     LIGHTBOX OVERLAY (global, outside chat-page)
-══════════════════════════════════════════════════════════ --}}
 <div class="lightbox-overlay" id="lightboxOverlay">
     <button class="lightbox-nav lightbox-prev" id="lightboxPrev" type="button" aria-label="Previous image">&lt;</button>
     <button class="lightbox-close" id="lightboxClose">&#x2715;</button>
