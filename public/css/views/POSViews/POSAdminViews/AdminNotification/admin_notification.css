@@ -1,0 +1,2608 @@
+* {
+    box-sizing: border-box;
+}
+
+.main-wrapper {
+    gap: 10px;
+}
+
+
+
+#appShell > .page-wrap {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+
+}
+
+#appShell .notification-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+            padding: 20px 20px 0px 20px ;
+
+    overflow: hidden;
+}
+
+#appShell .notification-page-header,
+#appShell .filter-form,
+#appShell .utility-bar,
+#appShell .pagination-wrap {
+    flex-shrink: 0;
+}
+
+#appShell #deleteForm {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+#appShell .notification-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* ============================================================
+   WRAPPER & HEADER
+   ============================================================ */
+
+.notification-wrapper {
+    min-height: 100%;
+    height: 100%;
+    background: #fff;
+    border-radius: 12px;
+}
+
+.notification-page-header {
+    border-radius: 20px 20px 0 0;
+    background: #fff;
+    /* padding: 0px 0px 10px 0px; */
+}
+
+.page-title {
+    margin-bottom: 10px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #2aaab5;
+}
+
+/* ============================================================
+   FILTER FORM / TOP ROW / DATE ROW / TABS
+   ============================================================ */
+
+.filter-form {
+    position: static;
+    background: #fff;
+}
+
+/* Row 1: search box (left) + Inbox / Send Message buttons (right) */
+
+.top-filter-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 10px;
+}
+
+.search-box-noti {
+    position: relative;
+    width: 240px;
+}
+
+.search-box-noti i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a5adb8;
+    font-size: 12px;
+}
+
+.search-box-noti input {
+    width: 100%;
+    height: 30px;
+    border: 1px solid #dadde2;
+    background: #fff;
+    border-radius: 5px;
+    outline: none;
+    padding: 0 12px 0 30px;
+    font-size: 12px;
+    color: #5b6470;
+}
+
+.search-box-noti input:focus {
+    border-color: #2aaab5;
+}
+
+.top-right-tools {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+}
+
+.search-and-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+/* Hidden on desktop — the date picker (.date-row) is already visible
+   inline there, so this toggle button only earns its place on mobile,
+   where the date row is collapsed by default to save space. */
+.mobile-date-toggle-btn,
+.mobile-tabs-toggle-btn {
+    display: none;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #1bb8c9;
+    font-size: 30px;
+    cursor: pointer;
+}
+
+.mobile-date-toggle-btn:hover,
+.mobile-tabs-toggle-btn:hover,
+.mobile-date-toggle-btn:active,
+.mobile-tabs-toggle-btn:active {
+    background: #eafafb;
+}
+
+.mobile-toggle-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+/* Row 2: date picker, right aligned */
+
+.date-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 3px;
+}
+
+.date-filter-box {
+    width: 170px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid #dadde2;
+    border-radius: 5px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.date-filter-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 12px;
+    color: #9aa3b2;
+    padding: 0;
+    cursor: pointer;
+}
+
+.date-filter-box input::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    width: 100%;
+    cursor: pointer;
+}
+
+.date-filter-box .date-icon {
+    color: #9aa3b2;
+    font-size: 13px;
+    pointer-events: none;
+}
+
+
+
+.tab-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.tabs {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.tab-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    color: #9ca3af;
+    flex: 1;
+    /* padding-bottom: 12px; */
+    position: relative;
+}
+
+/* Icon circle — holds an <img> instead of an icon font glyph */
+
+.tab-icon-wrap {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0px 0px 0px;
+    /* border: 1px solid #d1d5db; */
+    /* border-radius: 50%; */
+    color: #6b7280;
+    font-size: 15px;
+    overflow: hidden;
+}
+
+.tab-icon-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.tab-link.active .tab-icon-wrap {
+    color: #2aaab5;
+    border-color: #2aaab5;
+}
+
+
+
+.tab-label {
+    font-size: 13px;
+    color: #9ca3af;
+    font-weight: 500;
+}
+
+.tab-link.active .tab-label {
+    color: #2aaab5;
+    font-weight: 700;
+}
+
+.tab-link.active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: #2aaab5;
+}
+
+.tab-badge {
+    position: absolute;
+    top: 5px;
+    right: 0px;
+    min-width: 15px;
+    height: 15px;
+    border-radius: 999px;
+    padding: 0 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    background: #ef4444;
+    color: #fff;
+    line-height: 1;
+
+}
+
+/* Inbox / Send Message buttons */
+
+.btn-send-message {
+    height: 30px;
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: none;
+    text-decoration: none;
+}
+.btn-inbox{
+    border-radius: 100px;
+      border: 1px solid #04e6ff;
+}
+
+.btn-send-message i {
+    font-size: 12px;
+}
+
+.btn-send-message-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.btn-send-message.btn-inbox {
+    background: #0f6a72;
+}
+
+.btn-send-message.btn-send {
+    background: #11c8d7;
+}
+
+/* ============================================================
+   UTILITY BAR
+   ============================================================ */
+
+.utility-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.utility-selection {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.select-all-box {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #374151;
+    cursor: pointer;
+    user-select: none;
+}
+
+.select-all-box input {
+    width: 10px;
+    height: 10px;
+    cursor: pointer;
+}
+
+.selected-box {
+    min-width: 10%;
+    height: 24px;
+    /* padding: 0 10px; */
+    background: #fff;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: #67707b;
+}
+
+.selected-box span {
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.utility-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.utility-btn {
+    height: 24px;
+    border: none;
+    border-radius: 12px;
+    padding: 0 10px;
+    font-size: 10px;
+    background: #dce2e8;
+    color: #374151;
+    cursor: pointer;
+}
+
+.utility-btn.delete-btn {
+    background: #f2dcdc;
+    color: #b42318;
+}
+
+/* Mark all read / Delete stay hidden — on every screen size — until at
+   least one notification is checked (JS toggles .has-selection on
+   .utility-actions from updateSelectedCount()). Same behavior on phone
+   and desktop, no separate mobile UI needed. */
+.utility-btn-toggle {
+    display: none;
+}
+
+.utility-actions.has-selection .utility-btn-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ============================================================
+   NOTIFICATION LIST
+   ============================================================ */
+
+.notification-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+}
+
+.notification-item-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.notification-item {
+    min-height: 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 6px 8px 2px;
+    border-bottom: 1px solid #dadde2;
+    background: transparent;
+    transition: .2s;
+    cursor: pointer;
+}
+
+.notification-item:hover {
+    background: #e8edf7;
+}
+
+.notification-item.selected-row {
+    background: #dfe5f2;
+    border-left: 3px solid #4750ff;
+    padding-left: 0;
+}
+
+/* Row is "checked" via its checkbox — matches the highlighted row in the mockup */
+
+.notification-item.row-checked {
+    background: #dbeafe;
+    border-left: 4px solid #2aaab5;
+    padding-left: 0;
+}
+
+.notification-item.row-checked .notification-time {
+    display: none;
+}
+
+.notification-item.row-checked .row-actions-inline {
+    display: flex;
+}
+
+/* Hover-only delete — swaps in for the timestamp so hovering any row
+   reveals a quick way to remove it, without needing to select its
+   checkbox first (unlike .row-actions-inline, which stays reserved for
+   the checked-row bulk-action icons). */
+.row-hover-delete-btn {
+    display: none;
+    border: none;
+    background: transparent;
+    color: #ef4444;
+    font-size: 14px;
+    padding: 0;
+    cursor: pointer;
+}
+
+.notification-item:hover .notification-time {
+    display: none;
+}
+
+.notification-item:hover .row-hover-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mobile-only "more actions" (⋮) menu — replaces the time+delete pair
+   below 992px, since hover doesn't exist on touch. Hidden here; shown
+   in the phone media query further down. */
+.row-menu-wrap {
+    display: none;
+    position: relative;
+}
+
+.row-menu-btn {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: #7b8794;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.row-menu-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 160px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.14);
+    padding: 6px;
+    z-index: 25;
+}
+
+.row-menu-dropdown.show {
+    display: block;
+}
+
+.row-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    color: #374151;
+    text-align: left;
+    cursor: pointer;
+}
+
+.row-menu-item:hover {
+    background: #f3f4f6;
+}
+
+.row-menu-item-danger {
+    color: #b42318;
+}
+
+.notification-main-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+}
+
+.notification-checkbox {
+    width: 10px;
+    height: 10px;
+    cursor: pointer;
+    margin-left: 4px;
+}
+
+/* Star toggle, sits between checkbox and avatar */
+
+.star-btn {
+    border: none;
+    background: transparent;
+    color: #c8ccd1;
+    font-size: 14px;
+    padding: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+}
+
+.star-btn.is-active {
+    color: #f5b301;
+}
+
+.avatar-box {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #d9e6f2;
+}
+
+.avatar-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.online-dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #22c55e;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    left: 0;
+    bottom: 2px;
+}
+
+.notification-content {
+    min-width: 0;
+    flex: 1;
+}
+
+.notification-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.notification-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notification-message {
+    margin-top: 2px;
+    font-size: 9px;
+    color: #6b7280;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.order-id-highlight {
+    color: #1bb8c9;
+    font-weight: 600;
+}
+
+.notification-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    min-width: 90px;
+    padding-right: 6px;
+}
+
+/* Small unread indicator dot — just a color cue, no count text */
+.notification-counter {
+    width: 8px;
+    height: 8px;
+    min-width: 0;
+    border-radius: 50%;
+    background: #ef4444;
+    padding: 0;
+}
+
+.notification-time {
+    font-size: 9px;
+    color: #9aa3b2;
+    white-space: nowrap;
+}
+
+.empty-box {
+    text-align: center;
+    color: #7b8794;
+    padding: 30px 0;
+    font-size: 13px;
+}
+
+/* Inline action icons — shown instead of the time when the row checkbox is checked */
+
+.row-actions-inline {
+    display: none;
+    align-items: center;
+    gap: 14px;
+}
+
+.row-action-btn {
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    font-size: 14px;
+    padding: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+}
+
+.row-action-btn:hover {
+    color: #2aaab5;
+}
+.start-chat-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 22px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 999px;
+    background: #11c8d7;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s;
+}
+
+.start-chat-btn:hover {
+    background: #0fb2c0;
+    color: #fff;
+}
+
+.start-chat-btn i {
+    font-size: 13px;
+}
+
+/* ============================================================
+   PAGINATION
+   ============================================================ */
+
+.pagination-wrap {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    /* margin-bottom:10px ; */
+    padding: 10px 0px ;
+}
+
+.per-page-form {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.per-page-label {
+    font-size: 13px;
+    color: #475569;
+    font-weight: 500;
+}
+
+.per-page-select {
+    height: 30px;
+    border: 1px solid #d6deea;
+    border-radius: 5px;
+    background: #fff;
+    color: #1e293b;
+    padding: 0 12px;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+}
+
+.per-page-select:focus {
+    border-color: #11c8d7;
+    box-shadow: 0 0 0 3px rgba(17, 200, 215, 0.12);
+}
+
+.per-page-unit {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.pagination-controls {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #d6deea;
+    border-radius: 5px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.pager-btn,
+.pager-current {
+    min-height: 30px;
+    padding: 0 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.pager-btn {
+    color: #64748b;
+    text-decoration: none;
+    background: #f8fafc;
+    transition: background .2s, color .2s;
+}
+
+.pager-btn + .pager-current,
+.pager-current + .pager-btn {
+    border-left: 1px solid #d6deea;
+}
+
+.pager-btn:hover {
+    background: #eef6f8;
+    color: #334155;
+}
+
+.pager-btn.disabled {
+    color: #9ca3af;
+    background: #f8fafc;
+    pointer-events: none;
+}
+
+.pager-current {
+    color: #475569;
+    font-weight: 700;
+    background: #fff;
+}
+
+/* ============================================================
+   ALERT / TOAST
+   ============================================================ */
+
+.alert {
+    border-radius: 8px;
+    font-size: 12px;
+    margin-bottom: 12px;
+}
+
+/* Action confirmation toasts (mark as read, delete, send message, etc.) —
+   matches the floating pill toast used elsewhere in the app (e.g. Favorites
+   "added to favorites") instead of sitting inline in the page flow. */
+.alert-container {
+    position: fixed;
+    top: 60px;
+    right: 16px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: calc(100% - 32px);
+    pointer-events: none;
+}
+
+.custom-alert {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: #10b8c3;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+    opacity: 0;
+    transform: translateY(-10px);
+    animation: customAlertIn 0.25s ease forwards;
+    pointer-events: auto;
+}
+
+.custom-alert i {
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+.custom-alert.alert-danger,
+.custom-alert.alert-error {
+    background: #ef4444;
+}
+
+.custom-alert.fade-out {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+@keyframes customAlertIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.live-alert-toast {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    background: #11c8d7;
+    color: #fff;
+    padding: 12px 16px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all .25s ease;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.live-alert-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ============================================================
+   CONFIRM DELETE MODAL
+   ============================================================ */
+
+.confirm-action-modal .modal-dialog {
+    max-width: 420px;
+}
+
+.confirm-action-content {
+    border: none;
+    border-radius: 18px;
+    padding: 26px 26px 22px;
+    background: #f4f6f8;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+}
+
+.confirm-action-body {
+    padding: 0 0 22px;
+}
+
+.confirm-action-title {
+    margin: 0 0 10px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #33475b;
+}
+
+.confirm-action-message {
+    margin: 0;
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.55;
+}
+
+.confirm-action-footer {
+    padding: 0;
+    border: none;
+    display: flex;
+    gap: 12px;
+}
+
+.confirm-action-delete-btn,
+.confirm-action-cancel-btn {
+    flex: 1;
+    height: 42px;
+    margin: 0;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .18s ease;
+}
+
+.confirm-action-delete-btn {
+    background: #ef5a5f;
+    color: #fff;
+}
+
+.confirm-action-delete-btn:hover {
+    background: #e4444a;
+}
+
+.confirm-action-cancel-btn {
+    background: #d9dde3;
+    color: #4b5563;
+}
+
+.confirm-action-cancel-btn:hover {
+    background: #cbd0d8;
+}
+
+/* ============================================================
+   SEND MESSAGE MODAL
+   ============================================================ */
+
+.custom-send-modal .modal-dialog {
+    max-width: 700px;
+}
+
+.custom-send-modal .send-modal-content {
+    border: none;
+    border-radius: 20px;
+    overflow: visible;
+    background: #fff;
+    box-shadow: 0 32px 80px rgba(15, 23, 42, 0.22);
+    position: relative;
+}
+
+.custom-send-modal .send-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid #eceff3;
+    border-radius: 20px 20px 0 0;
+    background: #fff;
+}
+
+.custom-send-modal .send-to-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+}
+
+.custom-send-modal .send-label {
+    font-size: 15px;
+    color: #9ca3af;
+    line-height: 38px;
+    min-width: 16px;
+}
+
+.custom-send-modal .send-recipient-area {
+    flex: 1;
+    min-width: 0;
+}
+
+.custom-send-modal .recipient-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 0;
+}
+
+.custom-send-modal .recipient-type-select {
+    height: 36px;
+    min-width: 155px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0 12px;
+    font-size: 13px;
+    color: #374155;
+    background: #fff;
+    outline: none;
+    cursor: pointer;
+}
+
+.custom-send-modal .selected-user-preview {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+    padding: 3px 10px 3px 3px;
+    background: #fff;
+    border: none;
+    border-radius: 999px;
+}
+
+.custom-send-modal .user-avatar-mini {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e8edf5;
+    color: #374151;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.custom-send-modal .user-meta-mini {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    line-height: 1;
+}
+
+.custom-send-modal .user-name-mini {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.custom-send-modal .user-email-mini {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.custom-send-modal .send-header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    padding-top: 2px;
+}
+
+.custom-send-modal .header-icon-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 9px;
+    background: #f0f2f5;
+    color: #9aa3b2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background .15s, color .15s, border-color .15s;
+}
+
+.custom-send-modal .header-icon-btn:hover {
+    background: #e5e8ed;
+    color: #555d6b;
+}
+
+.custom-send-modal .header-icon-btn.minimize-btn {
+    border: 2px solid #d1d5db;
+    background: #fff;
+    color: #374151;
+    font-size: 18px;
+    font-weight: 400;
+    border-radius: 10px;
+}
+
+.custom-send-modal .header-icon-btn.minimize-btn:hover {
+    border-color: #9ca3af;
+    background: #f9fafb;
+}
+
+.custom-send-modal .send-modal-body {
+    padding: 0;
+}
+
+.custom-send-modal .send-subject-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 22px;
+    min-height: 54px;
+    border-bottom: 1px solid #eceff3;
+}
+
+.custom-send-modal .send-subject-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    font-weight: 500;
+    color: #111827;
+    background: transparent;
+    padding: 12px 0;
+}
+
+.custom-send-modal .send-subject-input::placeholder {
+    color: #d1d5db;
+    font-weight: 400;
+}
+
+.custom-send-modal .subject-counter {
+    font-size: 12px;
+    color: #c4cad4;
+    min-width: 26px;
+    text-align: right;
+    background: #f5f7fb;
+    padding: 3px 7px;
+    border-radius: 6px;
+}
+
+.custom-send-modal .send-editor-wrap {
+    position: relative;
+}
+
+.custom-send-modal .send-message-editor {
+    width: 100%;
+    min-height: 250px;
+    border: none;
+    outline: none;
+    padding: 16px 22px 100px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #1f2937;
+    background: #fff;
+    white-space: normal;
+    overflow-wrap: break-word;
+}
+
+.custom-send-modal .send-message-editor:empty:before {
+    content: attr(data-placeholder);
+    color: #d1d5db;
+}
+
+.custom-send-modal .send-message-editor ul,
+.custom-send-modal .send-message-editor ol {
+    padding-left: 22px;
+    margin-bottom: 0;
+}
+
+.custom-send-modal .send-message-textarea {
+    width: 100%;
+    min-height: 230px;
+    border: none;
+    outline: none;
+    resize: none;
+    padding: 16px 22px 100px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #1f2937;
+    background: #fff;
+}
+
+.custom-send-modal .send-message-preview-wrap {
+    display: none;
+}
+
+.custom-send-modal .editor-toolbar {
+    position: absolute;
+    left: 22px;
+    bottom: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+    padding: 4px 7px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.09);
+    z-index: 10;
+}
+
+.custom-send-modal .toolbar-type-pill {
+    height: 28px;
+    padding: 0 9px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #374151;
+    cursor: pointer;
+    transition: background .12s;
+}
+
+.custom-send-modal .toolbar-type-pill:hover {
+    background: #eef2f7;
+}
+
+.custom-send-modal .toolbar-divider {
+    width: 1px;
+    height: 15px;
+    background: #e2e8f0;
+    margin: 0 4px;
+    flex-shrink: 0;
+}
+
+.custom-send-modal .toolbar-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: #6b7280;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background .12s, color .12s;
+}
+
+.custom-send-modal .toolbar-btn:hover {
+    background: #f0f4f8;
+    color: #334155;
+}
+
+.custom-send-modal .toolbar-btn.is-active {
+    background: #ddf5f7;
+    color: #0ea5b8;
+}
+
+.link-insert-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(3px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    border-radius: 20px;
+}
+
+.link-insert-overlay.show {
+    display: flex;
+}
+
+.link-insert-box {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 14px 44px rgba(15, 23, 42, 0.14);
+    padding: 20px;
+    width: 330px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.link-insert-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.link-insert-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.link-insert-field label {
+    font-size: 11px;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.link-insert-field input {
+    height: 36px;
+    border: 1px solid #dbe2ea;
+    border-radius: 9px;
+    padding: 0 12px;
+    font-size: 13px;
+    color: #334155;
+    outline: none;
+}
+
+.link-insert-field input:focus {
+    border-color: #18c4d4;
+    box-shadow: 0 0 0 3px rgba(24, 196, 212, 0.12);
+}
+
+.link-insert-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.link-cancel-btn {
+    height: 32px;
+    padding: 0 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    color: #6b7280;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.link-cancel-btn:hover {
+    background: #f8fafc;
+}
+
+.link-confirm-btn {
+    height: 32px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 8px;
+    background: #18c4d4;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.link-confirm-btn:hover {
+    background: #12b3c2;
+}
+
+.custom-send-modal .send-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 18px 12px;
+    border-top: 1px solid #edf2f7;
+    background: #f8f9fc;
+    border-radius: 0 0 20px 20px;
+}
+
+.custom-send-modal .footer-left-tools,
+.custom-send-modal .footer-right-tools {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.custom-send-modal .footer-icon-btn {
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: transparent;
+    color: #b0b9c8;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+
+.custom-send-modal .footer-icon-btn:hover {
+    background: #edf2f7;
+    color: #64748b;
+}
+
+.custom-send-modal .send-now-btn {
+    height: 40px;
+    border: none;
+    border-radius: 12px;
+    background: #18c4d4;
+    color: #fff;
+    padding: 0 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-transform: lowercase;
+    box-shadow: 0 5px 14px rgba(24, 196, 212, 0.28);
+    transition: background .15s;
+}
+
+.custom-send-modal .send-now-btn:hover {
+    background: #12b3c2;
+}
+
+.custom-send-modal .recipient-select-wrap {
+    position: relative;
+    margin-top: 10px;
+}
+
+.custom-send-modal .searchable-select-wrap {
+    position: relative;
+}
+
+.custom-send-modal .customer-search-input {
+    width: 100%;
+    height: 36px;
+    border: 1px solid #dbe2ea;
+    border-radius: 10px;
+    padding: 0 12px;
+    font-size: 13px;
+    color: #334155;
+    background: #fff;
+    outline: none;
+}
+
+.custom-send-modal .customer-search-input:focus {
+    border-color: #18c4d4;
+    box-shadow: 0 0 0 3px rgba(24, 196, 212, 0.12);
+}
+
+.custom-send-modal .customer-search-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #dbe2ea;
+    border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 50;
+    display: none;
+    padding: 6px;
+}
+
+.custom-send-modal .customer-search-dropdown.show {
+    display: block;
+}
+
+.custom-send-modal .customer-dropdown-item {
+    width: 100%;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    padding: 8px 10px;
+    border-radius: 9px;
+    cursor: pointer;
+}
+
+.custom-send-modal .customer-dropdown-item:hover {
+    background: #f0f7fb;
+}
+
+.custom-send-modal .customer-dropdown-avatar-wrap {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #e6e9ef;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-send-modal .customer-dropdown-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.custom-send-modal .customer-dropdown-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.custom-send-modal .customer-dropdown-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.2;
+}
+
+.custom-send-modal .customer-dropdown-email {
+    font-size: 11px;
+    color: #6b7280;
+    line-height: 1.2;
+    margin-top: 2px;
+}
+
+.custom-send-modal .customer-dropdown-empty {
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.custom-send-modal .multi-chip-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+    min-height: 20px;
+}
+
+.custom-send-modal .chip-placeholder {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.custom-send-modal .selected-customer-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 7px 4px 4px;
+    background: #f0f4f8;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+}
+
+.custom-send-modal .selected-customer-avatar-wrap {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #e6e9ef;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-send-modal .selected-customer-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.custom-send-modal .selected-customer-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.custom-send-modal .selected-customer-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.custom-send-modal .selected-customer-email {
+    font-size: 10px;
+    color: #6b7280;
+}
+
+.custom-send-modal .selected-customer-remove {
+    border: none;
+    background: transparent;
+    color: #9ca3af;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+}
+
+.custom-send-modal.is-minimized .modal-dialog {
+    position: fixed;
+    bottom: 0;
+    right: 20px;
+    margin: 0;
+    max-width: 360px;
+}
+
+.custom-send-modal.is-minimized .send-modal-body,
+.custom-send-modal.is-minimized .send-modal-footer {
+    display: none;
+}
+
+.custom-send-modal.is-minimized .send-modal-header {
+    border-bottom: none;
+    border-radius: 14px 14px 0 0;
+}
+
+.custom-send-modal.is-expanded .modal-dialog {
+    max-width: 92vw;
+}
+
+.custom-send-modal.is-expanded .send-message-editor {
+    min-height: 400px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 991px) {
+    .top-filter-row,
+    .date-row,
+    .tab-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .utility-bar {
+        flex-wrap: nowrap;
+    }
+
+    #appShell .notification-wrapper {
+
+            padding: 0 ;
+
+
+}
+
+    .top-right-tools {
+        width: 100%;
+        justify-content: flex-start;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+
+    /* Inbox / Send Message become a pair of full-height, evenly split
+       pills on mobile instead of small content-sized buttons. */
+    .btn-send-message {
+        flex: 1;
+        height: 40px;
+        font-size: 13px;
+        justify-content: center;
+        max-width: 40%;
+    }
+    .btn-inbox{
+        border-radius: 100px;
+        max-width: 30%;
+        border: 1px solid #04e6ff;
+    }
+
+    .tabs {
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+
+    .tab-link {
+        flex: 0 0 auto;
+    }
+    .date-filter-box{
+        width: 100%;
+    }
+
+    .search-box-noti
+     {
+        width: 100%;
+        height: 40px;
+    }
+
+    .search-and-filter-row {
+        width: 100%;
+    }
+    .search-box-noti input{
+        height: 40px;
+    }
+
+    .search-and-filter-row .search-box-noti {
+        width: auto;
+        flex: 1;
+    }
+
+    .mobile-date-toggle-btn,
+    .mobile-tabs-toggle-btn {
+        display: flex;
+    }
+
+    /* Kept off-screen on mobile rather than display:none — showPicker()
+       (called directly by .mobile-date-toggle-btn) throws unless the input
+       is still "being rendered", which display:none disqualifies it from. */
+    .date-row {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    /* Same treatment for the category tabs — toggled open by
+       .mobile-tabs-toggle-btn instead of always showing. */
+    .tab-row {
+        display: none;
+        width: 100%;
+    }
+
+    .tab-row.show {
+        display: flex;
+    }
+
+    .notification-item {
+        position: relative;
+        align-items: flex-start;
+        flex-direction: column;
+    }
+    .notification-list{
+        height: 50%;
+        overflow-y: scroll;
+    }
+    .pagination-wrap{
+        width: 100%;
+        gap: 5px;
+    }
+
+    .per-page-unit{
+        display: none;
+    }
+    .pager-current{
+        padding: 5px ;
+    }
+    .pager-btn{
+        padding: 5px;
+    }
+    .notification-main-left {
+        width: 100%;
+        padding-right: 78px;
+    }
+
+    .notification-content,
+    .notification-name-row {
+        width: 100%;
+    }
+
+
+    .notification-right {
+        position: absolute;
+        top: 10px;
+        right: 4px;
+        width: auto;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        padding-right: 0;
+        min-width: 0;
+    }
+
+    /* :hover doesn't exist on touch devices — rather than force the
+       timestamp + delete icon permanently visible, swap in a single ⋮
+       "more actions" menu instead (matches the reference design). */
+    .notification-time,
+    .row-hover-delete-btn {
+        display: none !important;
+    }
+
+    .row-menu-wrap {
+        display: block;
+    }
+
+    /* Bigger, easier-to-tap checkbox on phone */
+    .notification-checkbox {
+        width: 10px;
+        height: 10px;
+    }
+
+    .custom-send-modal .modal-dialog {
+        max-width: calc(100% - 20px);
+    }
+
+    .custom-send-modal .send-modal-header,
+    .custom-send-modal .send-subject-row {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .custom-send-modal .send-message-editor,
+    .custom-send-modal .send-message-textarea {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .custom-send-modal .editor-toolbar {
+        left: 14px;
+    }
+
+    .custom-send-modal .selected-user-preview {
+        width: 100%;
+        border-radius: 12px;
+    }
+
+    .custom-send-modal .recipient-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .custom-send-modal .user-meta-mini {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+}
+
+/* The shared mobile top bar (hamburger/back + title + bell) already shows
+   "Admin Notifications" below 768px, so this in-page heading is a duplicate. */
+@media (max-width: 768px) {
+    .page-title {
+        display: none;
+    }
+}
+
+/* At phone widths the 4 tabs' flex-wrap depends on label length, so 3 land
+   on one row and "Global Message" gets stranded alone on a second row. A
+   fixed 2x2 grid keeps it balanced regardless of label width. */
+@media (max-width: 600px) {
+    .tabs {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px 8px;
+        justify-content: initial;
+    }
+
+    .tab-link {
+        flex: none;
+        width: auto;
+    }
+}
+body.admin-notifications-page,
+    body.admin-notifications-page .main-wrapper,
+    body.admin-notifications-page .content-area {
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* The rule above is unconditional (no media query), so it was pinning
+       .main-wrapper to a fixed 100vh with overflow:hidden at every viewport
+       width — same specificity as mobile-nav.css's .main-wrapper mobile
+       override (2 classes vs. 1), so it always won regardless of load
+       order and silently clipped the page instead of letting it scroll on
+       phones. Restore the auto-height/scrollable behavior below 768px. */
+    @media (max-width: 768px) {
+        body.admin-notifications-page,
+        body.admin-notifications-page .main-wrapper,
+        body.admin-notifications-page .content-area {
+            height: auto;
+            min-height: 100vh;
+            overflow: visible;
+        }
+    }
+
+    #sendModal .modal-dialog {
+        max-width: 660px;
+    }
+
+    #sendModal .modal-content {
+        border: none;
+        border-radius: 20px;
+        overflow: visible;
+        background: #fff;
+        box-shadow: 0 20px 70px rgba(15, 23, 42, 0.20);
+        font-family: 'DM Sans', Arial, sans-serif;
+    }
+
+    /* ── HEADER ── */
+    #sendModal .send-modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 16px 20px 14px;
+        border-bottom: 1px solid #f0f2f5;
+        border-radius: 20px 20px 0 0;
+        background: #fff;
+    }
+
+    #sendModal .send-to-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    #sendModal .send-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        height: 34px;
+        padding: 0 10px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        background: #f8fafc;
+        border: 1px solid #e4e7ec;
+        border-radius: 999px;
+        flex-shrink: 0;
+    }
+    #sendModal .send-label i {
+        color: #18c4d4;
+        font-size: 13px;
+    }
+
+    #sendModal .send-recipient-area {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* ── RECIPIENT TOP ROW: select + inline search ── */
+    #sendModal .recipient-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    /* Type select */
+    #sendModal .recipient-type-select {
+        height: 34px;
+        min-width: 155px;
+        border: 1px solid #e4e7ec;
+        border-radius: 9px;
+        padding: 0 28px 0 10px;
+        font-size: 13px;
+        color: #374151;
+        background: #fff;
+        font-family: inherit;
+        outline: none;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 9px center;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    #sendModal .recipient-type-select:focus {
+        border-color: #18c4d4;
+        box-shadow: 0 0 0 3px rgba(24,196,212,0.12);
+    }
+
+    /* ── INLINE CUSTOMER SEARCH (sits right next to the select) ── */
+    #sendModal .inline-customer-search-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 180px;
+        max-width: 300px;
+        display: none; /* shown via JS */
+    }
+    #sendModal .inline-customer-search-wrap.visible {
+        display: block;
+    }
+    #sendModal .inline-customer-input {
+        width: 100%;
+        height: 34px;
+        border: 1px solid #e4e7ec;
+        border-radius: 9px;
+        padding: 0 12px 0 32px;
+        font-size: 13px;
+        color: #374151;
+        font-family: inherit;
+        outline: none;
+        background: #f8fffe;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    #sendModal .inline-customer-input:focus {
+        border-color: #18c4d4;
+        box-shadow: 0 0 0 3px rgba(24,196,212,0.12);
+        background: #fff;
+    }
+    #sendModal .inline-search-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        font-size: 12px;
+        pointer-events: none;
+    }
+    #sendModal .inline-customer-dropdown {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid #e4e7ec;
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(15,23,42,0.12);
+        max-height: 210px;
+        overflow-y: auto;
+        z-index: 1060;
+        display: none;
+        padding: 6px;
+    }
+    #sendModal .inline-customer-dropdown.open {
+        display: block;
+    }
+
+    /* Dropdown items */
+    #sendModal .cust-dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        border: none;
+        background: transparent;
+        text-align: left;
+        padding: 8px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.1s;
+        font-family: inherit;
+    }
+    #sendModal .cust-dropdown-item:hover { background: #e0f8fa; }
+
+    #sendModal .cust-dd-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: #e6e9ef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 11px;
+        font-weight: 700;
+        color: #fff;
+    }
+    #sendModal .cust-dd-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    #sendModal .cust-dd-meta { display: flex; flex-direction: column; min-width: 0; }
+    #sendModal .cust-dd-name  { font-size: 13px; font-weight: 600; color: #111827; line-height: 1.2; }
+    #sendModal .cust-dd-email { font-size: 11px; color: #6b7280; margin-top: 1px; }
+    #sendModal .cust-dd-empty { padding: 10px 12px; font-size: 12px; color: #94a3b8; }
+
+    /* ── CHIPS (selected customers) ── */
+    #sendModal .chip-box {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+        min-height: 4px;
+    }
+    #sendModal .cust-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 7px 3px 3px;
+        background: #e0f8fa;
+        border: 1px solid #b2edf2;
+        border-radius: 999px;
+    }
+    #sendModal .chip-avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: #18c4d4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        color: #fff;
+        flex-shrink: 0;
+    }
+    #sendModal .chip-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    #sendModal .chip-name  { font-size: 11px; font-weight: 600; color: #0d6b75; }
+    #sendModal .chip-remove {
+        border: none;
+        background: transparent;
+        color: #4da8b5;
+        font-size: 15px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0;
+        display: flex;
+        align-items: center;
+    }
+    #sendModal .chip-remove:hover { color: #0d6b75; }
+
+    /* ── HEADER ICON BUTTONS ── */
+    #sendModal .send-header-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+        padding-top: 1px;
+    }
+    #sendModal .header-icon-btn {
+        width: 30px;
+        height: 30px;
+        border: 1px solid #e4e7ec;
+        border-radius: 9px;
+        background: #f8fafc;
+        color: #9aa3b2;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 13px;
+        transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    #sendModal .header-icon-btn:hover {
+        background: #edf2f7;
+        color: #555d6b;
+        border-color: #d1d5db;
+    }
+    #sendModal .header-icon-btn.close-btn:hover {
+        background: #fef2f2;
+        border-color: #fca5a5;
+        color: #ef4444;
+    }
+
+    /* ── SUBJECT ROW ── */
+    #sendModal .send-subject-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 20px;
+        min-height: 52px;
+        border-bottom: 1px solid #f0f2f5;
+    }
+    #sendModal .subject-row-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: #eefbfc;
+        color: #18c4d4;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        flex-shrink: 0;
+    }
+    #sendModal .send-subject-input {
+        flex: 1;
+        border: none;
+        outline: none;
+        font-family: inherit;
+        font-size: 16px;
+        font-weight: 600;
+        color: #111827;
+        background: transparent;
+        padding: 14px 0;
+    }
+    #sendModal .send-subject-input::placeholder { color: #d1d5db; font-weight: 400; }
+    #sendModal .subject-counter {
+        font-size: 11px;
+        color: #c4cad4;
+        background: #f5f7fb;
+        padding: 3px 8px;
+        border-radius: 6px;
+        min-width: 28px;
+        text-align: center;
+    }
+
+    /* ── EDITOR AREA ── */
+    #sendModal .send-modal-body { padding: 0; }
+    #sendModal .send-editor-wrap { position: relative; }
+    #sendModal .editor-mode-badge {
+        position: absolute;
+        top: 14px;
+        right: 18px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(238, 251, 252, 0.96);
+        color: #0f766e;
+        font-size: 11px;
+        font-weight: 600;
+        border: 1px solid #c7f2f5;
+        z-index: 5;
+        pointer-events: none;
+    }
+    #sendModal .editor-mode-badge i {
+        color: #18c4d4;
+        font-size: 12px;
+    }
+
+    #sendModal .send-message-editor {
+        width: 100%;
+        min-height: 220px;
+        border: none;
+        outline: none;
+        padding: 16px 20px 90px;
+        font-family: inherit;
+        font-size: 14px;
+        line-height: 1.7;
+        color: #1f2937;
+        background: #fff;
+        white-space: normal;
+        overflow-wrap: break-word;
+        overflow-y: auto;
+    }
+    #sendModal .send-message-editor:empty::before {
+        content: attr(data-placeholder);
+        color: #d1d5db;
+        pointer-events: none;
+    }
+    #sendModal .send-message-editor ul,
+    #sendModal .send-message-editor ol { padding-left: 22px; margin-bottom: 0; }
+
+    #sendModal .send-message-textarea {
+        width: 100%;
+        min-height: 220px;
+        border: none;
+        outline: none;
+        resize: none;
+        padding: 16px 20px 90px;
+        font-family: inherit;
+        font-size: 14px;
+        line-height: 1.7;
+        color: #1f2937;
+        background: #fff;
+    }
+
+    /* ── FLOATING TOOLBAR ── */
+    #sendModal .editor-toolbar {
+        position: absolute;
+        left: 20px;
+        bottom: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        padding: 5px 8px;
+        background: rgba(255,255,255,0.98);
+        border: 1px solid #e4e7ec;
+        border-radius: 10px;
+        box-shadow: 0 4px 18px rgba(15,23,42,0.09);
+        z-index: 10;
+    }
+    #sendModal .toolbar-type-pill {
+        height: 28px;
+        padding: 0 10px;
+        border-radius: 7px;
+        border: none;
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 500;
+        color: #374151;
+        cursor: pointer;
+        transition: background 0.12s;
+    }
+    #sendModal .toolbar-type-pill:hover { background: #f0f4f8; }
+    #sendModal .toolbar-divider {
+        width: 1px;
+        height: 14px;
+        background: #e4e7ec;
+        margin: 0 4px;
+        flex-shrink: 0;
+    }
+    #sendModal .toolbar-btn {
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: 7px;
+        background: transparent;
+        color: #6b7280;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: background 0.12s, color 0.12s;
+    }
+    #sendModal .toolbar-btn:hover { background: #f0f4f8; color: #334155; }
+    /* Active state — highlighted when format is applied */
+    #sendModal .toolbar-btn.is-active {
+        background: #e0f8fa;
+        color: #0d8f9e;
+        box-shadow: inset 0 0 0 1px #b2edf2;
+    }
+
+    /* ── LINK INSERT OVERLAY ── */
+    #sendModal .link-insert-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(255,255,255,0.72);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+    }
+    #sendModal .link-insert-overlay.show { display: flex; }
+    #sendModal .link-insert-box {
+        background: #fff;
+        border: 1px solid #e4e7ec;
+        border-radius: 14px;
+        box-shadow: 0 14px 44px rgba(15,23,42,0.14);
+        padding: 20px;
+        width: 320px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    #sendModal .link-insert-title { font-size: 14px; font-weight: 700; color: #111827; margin: 0; }
+    #sendModal .link-insert-field { display: flex; flex-direction: column; gap: 4px; }
+    #sendModal .link-insert-field label {
+        font-size: 11px;
+        color: #6b7280;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+    #sendModal .link-insert-field input {
+        height: 36px;
+        border: 1px solid #dbe2ea;
+        border-radius: 9px;
+        padding: 0 12px;
+        font-family: inherit;
+        font-size: 13px;
+        color: #334155;
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    #sendModal .link-insert-field input:focus {
+        border-color: #18c4d4;
+        box-shadow: 0 0 0 3px rgba(24,196,212,0.12);
+    }
+    #sendModal .link-insert-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+    #sendModal .link-cancel-btn {
+        height: 32px;
+        padding: 0 14px;
+        border: 1px solid #e4e7ec;
+        border-radius: 8px;
+        background: #fff;
+        color: #6b7280;
+        font-family: inherit;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    #sendModal .link-cancel-btn:hover { background: #f8fafc; }
+    #sendModal .link-confirm-btn {
+        height: 32px;
+        padding: 0 16px;
+        border: none;
+        border-radius: 8px;
+        background: #18c4d4;
+        color: #fff;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.14s;
+    }
+    #sendModal .link-confirm-btn:hover { background: #0fa8b8; }
+
+    /* ── EMOJI PICKER ── */
+    #sendModal .emoji-picker {
+        position: absolute;
+        right: 88px;
+        bottom: 58px;
+        width: 316px;
+        max-width: calc(100vw - 44px);
+        padding: 18px 16px 14px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+        display: none;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+        z-index: 120;
+    }
+    #sendModal .emoji-picker.show { display: grid; }
+    #sendModal .emoji-picker::after {
+        content: '';
+        position: absolute;
+        right: 52px;
+        bottom: -9px;
+        width: 18px;
+        height: 18px;
+        background: #fff;
+        border-right: 1px solid #e5e7eb;
+        border-bottom: 1px solid #e5e7eb;
+        transform: rotate(45deg);
+    }
+    #sendModal .emoji-option {
+        width: 46px;
+        height: 46px;
+        border: none;
+        border-radius: 14px;
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 27px;
+        line-height: 1;
+        cursor: pointer;
+        transition: background 0.14s, transform 0.14s;
+    }
+    #sendModal .emoji-option:hover {
+        background: #f5f7fb;
+        transform: translateY(-1px);
+    }
+
+    /* ── FOOTER ── */
+    #sendModal .send-modal-footer {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 16px 12px;
+        border-top: 1px solid #f0f2f5;
+        background: #f8f9fc;
+        border-radius: 0 0 20px 20px;
+    }
+    #sendModal .footer-left-tools,
+    #sendModal .footer-right-tools { display: flex; align-items: center; gap: 4px; }
+    #sendModal .footer-icon-btn {
+        width: 34px;
+        height: 34px;
+        border: none;
+        background: transparent;
+        color: #b0b9c8;
+        border-radius: 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.14s, color 0.14s;
+    }
+    #sendModal .footer-icon-btn:hover { background: #edf2f7; color: #64748b; }
+    #sendModal .footer-icon-btn.danger-btn:hover { background: #fef2f2; color: #ef4444; }
+    #sendModal .send-now-btn {
+        height: 40px;
+        border: none;
+        border-radius: 12px;
+        background: #18c4d4;
+        color: #fff;
+        padding: 0 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        text-transform: lowercase;
+        box-shadow: 0 5px 16px rgba(24,196,212,0.30);
+        transition: background 0.14s, transform 0.1s, box-shadow 0.14s;
+    }
+    #sendModal .send-now-btn:hover {
+        background: #0fa8b8;
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(24,196,212,0.36);
+    }
+
+    /* ── MINIMIZED STATE ── */
+    #sendModal.modal.is-minimized {
+        pointer-events: none;
+    }
+    .send-minimized-tab {
+        position: fixed;
+        bottom: 0;
+        right: 28px;
+        background: #fff;
+        border: 1px solid #e4e7ec;
+        border-bottom: none;
+        border-radius: 12px 12px 0 0;
+        padding: 10px 18px;
+        box-shadow: 0 -4px 20px rgba(15,23,42,0.10);
+        display: none;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        z-index: 1055;
+        transition: background 0.14s;
+    }
+    .send-minimized-tab:hover { background: #f0fffe; }
+    .send-minimized-tab.visible { display: flex; }
+    .minimized-dot { width: 8px; height: 8px; border-radius: 50%; background: #18c4d4; }
+    .minimized-label { font-size: 13px; font-weight: 600; color: #374151; }
+    .minimized-restore-btn {
+        width: 22px; height: 22px; border-radius: 6px;
+        border: none; background: #f0f2f5; color: #9ca3af;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; font-size: 11px;
+    }
+    #sendModal.modal.is-fullscreen .modal-dialog {
+        max-width: 100vw;
+        width: 100vw;
+        margin: 0;
+        height: 100vh;
+    }
+    #sendModal.modal.is-fullscreen .modal-dialog .modal-content {
+        border-radius: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    #sendModal.modal.is-fullscreen .send-modal-body { flex: 1; }
+    #sendModal.modal.is-fullscreen .send-message-editor { min-height: 350px; }
+    #sendModal.modal.is-fullscreen .send-modal-footer { border-radius: 0; }
+    @media (max-width: 767px) {
+        #sendModal .modal-dialog { max-width: calc(100% - 20px); margin: 10px auto; }
+        #sendModal .recipient-top { flex-direction: column; align-items: flex-start; }
+        #sendModal .inline-customer-search-wrap { max-width: 100%; min-width: 0; width: 100%; }
+        #sendModal .send-modal-header,
+        #sendModal .send-subject-row { padding-left: 14px; padding-right: 14px; }
+        #sendModal .send-message-editor { padding-left: 14px; padding-right: 14px; }
+        #sendModal .editor-toolbar { left: 14px; }
+    }

@@ -1,17 +1,17 @@
-@extends('ManagementSystemViews.UserViews.Layouts.app')
+@extends('Layout.POSUser.app')
 
 @section('title', 'POS Favorites')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSUserViews/Favorites/index.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSUserViews/Favorites/index.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSUserViews/Favorites/index.css')) }}">
 @endpush
 
 @section('content')
 
     <div class="page-wrap">
         <main class="content-area">
-            @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
-            @include('ManagementSystemViews.UserViews.Layouts.footer')
+            @include('Layout.POSUser.header_mobile')
+            @include('Layout.POSUser.footer')
 
             <div class="header">
                 <div class="topbar">
@@ -216,6 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const els = {
         cartCount:        document.getElementById("desktopCartCount"),
         asideCartCount:    document.getElementById("asideCartCount"),
+        mobileCartDot:     document.getElementById("mobileCartDot"),
         messageBox:        document.getElementById("messageBox"),
         toast:              document.getElementById("toast"),
         productsGrid:       document.getElementById("productsGrid"),
@@ -266,12 +267,53 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!els.productsGrid) return;
         if (els.productsGrid.querySelectorAll(".product-card").length > 0) return;
         els.productsGrid.remove();
-        if (!document.querySelector(".empty-box")) {
-            const empty = document.createElement("div");
-            empty.className = "empty-box";
-            empty.textContent = "No favorite items found.";
-            els.messageBox?.insertAdjacentElement("afterend", empty);
-        }
+        if (document.querySelector(".wishlist-page") || document.querySelector(".empty-box")) return;
+
+        // Same markup the server renders on a fresh page load (mobile
+        // .wishlist-page + desktop .empty-box) — keeps the real "empty
+        // wishlist" image/illustration instead of a bare text placeholder.
+        const emptyHtml = `
+            <div class="wishlist-page">
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" placeholder="Search your wishlist ..." />
+                </div>
+
+                <div class="product-count">0 products</div>
+
+                <div class="empty-state">
+                    <div class="image-placeholder">
+                        <img src="{{ asset('images/pos/no wishlist 1.png') }}" alt="Empty Wishlist">
+                    </div>
+                    <h2>Your wishlist is empty</h2>
+                    <p>Looks like you haven't added anything<br>to your wishlist yet</p>
+                    <a href="{{ route('user.posinterface') }}" class="primary-btn">
+                        Explore now
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </div>
+
+                <div class="bottom-nav">
+                    <div class="nav-item"><i class="bi bi-house"></i><span>home</span></div>
+                    <div class="nav-item"><i class="bi bi-box"></i><span>products</span></div>
+                    <div class="nav-item active"><i class="bi bi-heart-fill"></i><span>favorite</span></div>
+                    <div class="nav-item"><i class="bi bi-person"></i><span>user</span></div>
+                </div>
+            </div>
+            <div class="empty-box">
+                <div class="image-placeholder-desk">
+                    <img src="{{ asset('images/pos/no wishlist 1.png') }}" alt="Empty Wishlist">
+                    <h2>Your wishlist is empty</h2>
+                    <p>Looks like you haven't added anything<br>to your wishlist yet</p>
+                    <a href="{{ route('user.posinterface') }}" class="primary-btn">
+                        Explore now
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        `;
+
+        els.messageBox?.insertAdjacentHTML("afterend", emptyHtml);
     }
 
     /* ── shared add-to-cart call ── */
@@ -295,8 +337,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data.success && data.cartCount !== undefined) {
             if (els.cartCount) els.cartCount.textContent = data.cartCount;
             if (els.asideCartCount) {
-                els.asideCartCount.textContent = data.cartCount;
-                els.asideCartCount.classList.toggle("is-empty", data.cartCount <= 0);
+                els.asideCartCount.classList.toggle("show", data.cartCount > 0);
+            }
+            if (els.mobileCartDot) {
+                els.mobileCartDot.classList.toggle("show", data.cartCount > 0);
             }
         }
         return data;

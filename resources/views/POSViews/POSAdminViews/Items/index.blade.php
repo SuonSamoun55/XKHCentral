@@ -18,7 +18,7 @@
 
             <div class="filter-wrap">
                 <button type="button" class="filter-btn" id="filterBtn">
-                    Filter
+                    <span class="filter-btn-text">Filter</span>
                     <i class="bi bi-sliders2"></i>
                 </button>
 
@@ -71,23 +71,26 @@
         </div>
 
         <div class="toolbar-right">
-            <a href="{{ route('store.management.tracking') }}" class="sync-btn sync-btn-alt">
-                <i class="bi bi-activity"></i>
-                Stock Tracking
-            </a>
 
-            <button id="syncBtn" type="button" class="sync-btn" onclick="updateItems()">
+            <button id="syncBtn" type="button" class="sync-btn sync-btn-alt" onclick="updateItems()">
                 <i class="bi bi-arrow-repeat"></i>
-                Sync BC Product
+                Sync BC Products
             </button>
 
-            <div class="view-switch">
-                <button type="button" class="view-btn active" id="gridBtn" onclick="setView('grid')">
-                    <i class="bi bi-grid-3x3-gap-fill"></i> Grid
-                </button>
-                <button type="button" class="view-btn" id="listBtn" onclick="setView('list')">
-                    <i class="bi bi-list-ul"></i> List
-                </button>
+            <div class="toolbar-secondary-row">
+                <div class="view-switch">
+                    <button type="button" class="view-btn active" id="gridBtn" onclick="setView('grid')">
+                        <i class="bi bi-grid-3x3-gap-fill"></i> Grid
+                    </button>
+                    <button type="button" class="view-btn" id="listBtn" onclick="setView('list')">
+                        <i class="bi bi-list-ul"></i> List
+                    </button>
+                </div>
+
+                <a href="{{ route('store.management.index') }}" class="sync-btn">
+                    <i class="bi bi-shop"></i>
+                    Manage Store
+                </a>
             </div>
         </div>
     </div>
@@ -385,7 +388,7 @@
                 const pricing = getPricing(item);
 
                 return `
-                    <div class="list-card">
+                    <a href="/pos/items/${item.id}" class="list-card">
                         <div class="list-image">
                             <img
                                 src="/item-image/${esc(item.id)}"
@@ -406,13 +409,7 @@
                             <div class="now">${money(pricing.nowPrice)}</div>
                             ${pricing.hasDiscount ? `<div class="old">${money(pricing.oldPrice)}</div>` : ``}
                         </div>
-
-                        <div class="list-action">
-                            <a href="/pos/items/${item.id}" class="view-more-btn">
-                                View More
-                            </a>
-                        </div>
-                    </div>
+                    </a>
                 `;
             }).join('');
         }

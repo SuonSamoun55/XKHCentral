@@ -1,6 +1,8 @@
 <?php
 namespace App\Http\Controllers\Api\POS\Admin\Profile;
 use App\Http\Controllers\Controller;
+use App\Models\ManagementSystem\OrderAction;
+use App\Models\POS\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -11,7 +13,44 @@ class AdminProfileController extends Controller
     public function index()
     {
         $user = Auth::user();
-        return view('ManagementSystemViews.AdminViews.Layouts.setting.profile.adminprofile', compact('user'));
+
+        // Same "approved" definition used on the order detail pages
+        // (order->status / action_type of confirmed|approved).
+        $approvedActionTypes = ['confirmed', 'approved'];
+
+        $approvedOrderIds = OrderAction::where('action_by', $user->id)
+            ->whereIn('action_type', $approvedActionTypes)
+            ->orderByDesc('created_at')
+            ->pluck('order_id');
+
+        $approvedOrders = Order::with('user')
+            ->whereIn('id', $approvedOrderIds)
+            ->get()
+            ->sortByDesc(fn ($order) => $order->checked_out_at ?? $order->created_at)
+            ->values();
+
+        $approvedOrdersCount = $approvedOrders->count();
+
+        $approvedCustomerRows = $approvedOrders
+            ->whereNotNull('user_id')
+            ->groupBy('user_id')
+            ->map(fn ($orders) => [
+                'user_id' => $orders->first()->user_id,
+                'customer_name' => $orders->first()->user->name ?? 'Unknown',
+                'orders_count' => $orders->count(),
+            ])
+            ->sortByDesc('orders_count')
+            ->values();
+
+        $approvedCustomersCount = $approvedCustomerRows->count();
+
+        return view('ManagementSystemViews.AdminViews.Layouts.setting.profile.adminprofile', compact(
+            'user',
+            'approvedOrders',
+            'approvedOrdersCount',
+            'approvedCustomerRows',
+            'approvedCustomersCount'
+        ));
     }
 
     public function update(Request $request)
@@ -61,6 +100,8 @@ class AdminProfileController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return back()->with('success', 'Password updated successfully.');
+        return back()
+            ->with('success', 'Password updated successfully.')
+            ->with('new_password', $request->password);
     }
 }

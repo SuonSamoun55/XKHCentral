@@ -20,7 +20,17 @@ class BcCustomer extends Model
         'email',
         'phone',
         'phone_number',
+        'mobile_phone_no',
         'address',
+        'city',
+        'payment_terms_code',
+        'customer_price_group',
+        'location_code',
+        'ship_to_code',
+        'blocked',
+        'balance',
+        'balance_due',
+        'credit_limit',
         'profile_image_url',
         'connect_status',
         'last_synced_at',
@@ -28,6 +38,9 @@ class BcCustomer extends Model
 
     protected $casts = [
         'last_synced_at' => 'datetime',
+        'balance' => 'decimal:2',
+        'balance_due' => 'decimal:2',
+        'credit_limit' => 'decimal:2',
     ];
 
     public function user()

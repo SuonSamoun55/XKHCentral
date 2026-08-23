@@ -1,4 +1,4 @@
-@extends('ManagementSystemViews.UserViews.Layouts.app')
+@extends('Layout.POSUser.app')
 
     @section('title', 'POS User Item List')
 
@@ -19,8 +19,8 @@
         <div class="pl-page-wrap">
 
             <main class="pl-content-area">
-            @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
-            @include('ManagementSystemViews.UserViews.Layouts.footer')
+            @include('Layout.POSUser.header_mobile')
+            @include('Layout.POSUser.footer')
                 {{-- ===== MOBILE FILTERS (phone only) ===== --}}
                 <div class="pl-mobile-product-filters" id="mobileProductFilters">
                     <div class="pl-mobile-search-box">
@@ -274,6 +274,7 @@
             cartCount:             document.getElementById("desktopCartCount"),
             mobileCartCount:       document.getElementById("cartCount"),
             asideCartCount:        document.getElementById("asideCartCount"),
+            mobileCartDot:         document.getElementById("mobileCartDot"),
             messageBox:            document.getElementById("messageBox"),
 
             searchInput:           document.getElementById("searchInput"),
@@ -570,8 +571,10 @@
                 if (els.cartCount)       els.cartCount.textContent = data.cartCount;
                 if (els.mobileCartCount) els.mobileCartCount.textContent = data.cartCount;
                 if (els.asideCartCount) {
-                    els.asideCartCount.textContent = data.cartCount;
-                    els.asideCartCount.classList.toggle("is-empty", data.cartCount <= 0);
+                    els.asideCartCount.classList.toggle("show", data.cartCount > 0);
+                }
+                if (els.mobileCartDot) {
+                    els.mobileCartDot.classList.toggle("show", data.cartCount > 0);
                 }
             }
             return data;
@@ -641,7 +644,8 @@
 
         function renderVariantModal(card) {
             const data = getCardData(card);
-            activeVariantQty = 1;
+            const cardQtyEl = card.querySelector(".pl-qty");
+            activeVariantQty = Math.max(1, parseInt(cardQtyEl?.textContent || "1", 10));
             activeVariantSelections = {};
 
             const hasVariants = data.variants && data.variants.length > 0;
@@ -650,7 +654,7 @@
             els.variantModalImage.alt = data.displayName;
             els.variantModalTitle.textContent = data.displayName;
             els.variantModalPrice.textContent = `$${data.price}`;
-            els.variantModalQty.textContent = "1";
+            els.variantModalQty.textContent = activeVariantQty;
             els.variantModalViewDetail.href = card.dataset.detailUrl || "#";
 
             const oldPriceAttr = card.dataset.oldPrice;
@@ -793,6 +797,8 @@
                         qty: activeVariantQty
                     });
                     if (result.success) {
+                        const cardQtyEl = activeVariantCard.querySelector(".pl-qty");
+                        if (cardQtyEl) cardQtyEl.textContent = "1";
                         showToast("success", result.message || "Added to cart successfully.");
                         closeVariantModal();
                     } else {

@@ -1,9 +1,8 @@
-@extends('ManagementSystemViews.UserViews.Layouts.app')
-
+@extends('Layout.POSUser.app')
 @section('title', 'Order Detail')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSUserViews/Orders/show.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSUserViews/Orders/show.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSUserViews/Orders/show.css')) }}">
 @endpush
 
 @section('content')
@@ -13,7 +12,7 @@
         $shipping = (float) ($order->shipping_amount ?? 0);
         $tax = (float) ($order->tax_amount ?? 0);
         $discount = (float) ($order->discount_amount ?? 0);
-        $calculatedTotal = max(0, $itemsTotal + $shipping + $tax - $discount);
+        $calculatedTotal = max(0, $itemsTotal + $shipping);
         $storedTotal = (float) ($order->total_amount ?? 0);
         $total = $itemsTotal > 0 ? $calculatedTotal : $storedTotal;
 
@@ -33,10 +32,6 @@
             return in_array(strtolower((string) $action->action_type), ['cancelled', 'canceled'], true);
         });
 
-        // Priority: line's variant image, then the item's admin-set
-        // custom_image_url override, then the item's synced image_url,
-        // then placeholder. image_url may be stored either as a full URL
-        // or a relative storage path, so resolve either shape.
         $resolveLineImg = fn ($path) => $path
             ? (str_starts_with($path, 'http') ? $path : asset($path))
             : null;
@@ -50,8 +45,7 @@
 
     <div id="order-detail-page">
         <div class="od-mobile-chrome">
-            {{-- @include('ManagementSystemViews.UserViews.Layouts.header_mobile') --}}
-            @include('ManagementSystemViews.UserViews.Layouts.footer')
+            @include('Layout.POSUser.footer')
         </div>
 
         @if (session('success'))

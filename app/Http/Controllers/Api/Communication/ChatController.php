@@ -33,11 +33,6 @@ class ChatController extends Controller
         if ($admins->isEmpty()) {
             return back()->with('error', 'No admin account found.');
         }
-
-        // Only treat a thread as "selected" if admin_id was explicitly passed
-        // (e.g. the user tapped a contact). Without it, we deliberately leave
-        // $adminId at 0 so the view can show the contact list first instead
-        // of auto-opening a conversation.
         $hasExplicitAdmin = $request->filled('admin_id');
         $adminId = 0;
 
@@ -47,11 +42,9 @@ class ChatController extends Controller
                 ? $requestedAdminId
                 : (int) $admins->first()->id;
         }
-
         if ($adminId) {
             $this->markThreadAsRead($user->id, $adminId);
         }
-
         $contacts = $this->buildContactCards($user->id, $admins);
         $activeContact = $adminId ? $contacts->firstWhere('id', $adminId) : null;
 
@@ -74,7 +67,6 @@ class ChatController extends Controller
         if (!$user) {
             return redirect()->route('login');
         }
-
         $validated = $request->validate([
             'receiver_id' => ['required', 'exists:users,id'],
             'message' => ['nullable', 'string', 'max:2000'],
@@ -82,7 +74,6 @@ class ChatController extends Controller
             'image' => ['nullable', 'file', 'image', 'max:10240'],
             'voice' => ['nullable', 'file', 'mimetypes:audio/webm,video/webm,audio/ogg,video/ogg,audio/wav,audio/x-wav,audio/mpeg,audio/mp3,audio/mp4,audio/x-m4a,audio/aac', 'max:10240'],
         ]);
-
         $receiver = User::findOrFail($validated['receiver_id']);
 
         if (!$receiver->isAdmin()) {
@@ -114,6 +105,7 @@ class ChatController extends Controller
 
     public function adminIndex(Request $request)
     {
+        /** @var \App\Models\ManagementSystem\User|null $admin */
         $admin = Auth::user();
         if (!$admin) {
             return redirect()->route('login');
@@ -141,6 +133,7 @@ class ChatController extends Controller
             ->get();
 
         $activeContactId = (int) $request->get('user_id');
+        $hasExplicitContact = $activeContactId > 0;
         if ($activeContactId && !$contacts->pluck('id')->contains($activeContactId)) {
             $requestedUser = User::query()
                 ->where('id', $activeContactId)
@@ -197,11 +190,14 @@ class ChatController extends Controller
             'activeContactId' => $activeContactId,
             'activeContact' => $activeContact,
             'messages' => $messages,
+            'hasExplicitContact' => $hasExplicitContact,
+            'initialContacts' => $contacts->map(fn ($contact) => $this->mapContactForJson($contact, $activeContactId))->values(),
         ]);
     }
 
     public function adminSend(Request $request)
     {
+        /** @var \App\Models\ManagementSystem\User|null $admin */
         $admin = Auth::user();
         if (!$admin) {
             return redirect()->route('login');
@@ -274,6 +270,7 @@ class ChatController extends Controller
 
     public function adminMessages(Request $request)
     {
+        /** @var \App\Models\ManagementSystem\User|null $admin */
         $admin = Auth::user();
         if (!$admin) {
             return response()->json(['message' => 'Unauthorized'], 401);
@@ -475,8 +472,8 @@ class ChatController extends Controller
             return $user->profile_image_url;
         }
 
-        if (!empty($user->bc_id)) {
-            return route('users.bc-image', ['bcId' => $user->bc_id]);
+        if (!empty($user->bc_customer_no)) {
+            return route('users.bc-image', ['bcId' => $user->bc_customer_no]);
         }
 
         return asset('images/pos/Rectangle 2.png');
@@ -532,20 +529,29 @@ class ChatController extends Controller
     private function previewTextForNotification(ChatMessage $message): string
     {
         $type = (string) ($message->message_type ?? 'text');
+        $body = (string) ($message->message ?? '');
+
+        // buildAndStoreChatMessage() already falls back to storing the
+        // bracket placeholder itself (e.g. '[Image]') when there's no
+        // caption — don't prefix it again on top of itself, or this ends
+        // up stored as "[Image] [Image]".
+        if (in_array($body, ['[Image]', '[Voice message]', '[Icon]'], true)) {
+            $body = '';
+        }
 
         if ($type === 'image') {
-            return '[Image] ' . (string) ($message->message ?? '');
+            return trim('[Image] ' . $body);
         }
 
         if ($type === 'voice') {
-            return '[Voice] ' . (string) ($message->message ?? '');
+            return trim('[Voice] ' . $body);
         }
 
         if ($type === 'icon') {
-            return '[Icon] ' . (string) ($message->message ?? '');
+            return trim('[Icon] ' . $body);
         }
 
-        return (string) ($message->message ?? '');
+        return $body;
     }
 
     private function messagePreviewForContactRow(ChatMessage $row): string
@@ -621,3 +627,6 @@ class ChatController extends Controller
             ->update(['is_read' => true]);
     }
 }
+
+
+

@@ -1,69 +1,90 @@
-@extends('ManagementSystemViews.UserViews.Layouts.app')
-
+@extends('Layout.POSUser.app')
 @section('title', 'Change Password')
 
 @push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSUserViews/Profile/change-password.css') }}">
+<link rel="stylesheet" href="{{ asset('css/views/POSViews/POSUserViews/Profile/change-password.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSUserViews/Profile/change-password.css')) }}">
 @endpush
 
 @section('content')
-    <div class="content-area">
-        <div class="container mt-4">
-            <div class="profile-card">
-                @if(session('success'))
-                    <script>window.addEventListener('DOMContentLoaded',()=>window.showAppToast && window.showAppToast(@json(session('success')),'success'));</script>
-                @endif
-                @if(session('error'))
-                    <script>window.addEventListener('DOMContentLoaded',()=>window.showAppToast && window.showAppToast(@json(session('error')),'error'));</script>
-                @endif
+@include('Layout.POSUser.header_mobile')
+@include('Layout.POSUser.footer')
 
-                <h4 class="profile-title">Change Password</h4>
-                <p class="profile-subtitle">Update your password to keep your account secure</p>
+<div class="pw-page">
+    <div class="page-top-row">
+        <a href="{{ route('profile') }}" class="back-link">
+            <i class="bi bi-arrow-left"></i> Back to Profile
+        </a>
+    </div>
 
-                <form action="{{ route('user.password.update') }}" method="POST">
-                    @csrf
-                    @method('PUT')
+    @if(session('success') && !session('new_password'))
+        <div class="pw-alert pw-alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="pw-alert pw-alert-error">{{ session('error') }}</div>
+    @endif
 
-                    <div class="mb-3">
-                        <label class="form-label">Current Password</label>
-                        <input type="password" name="current_password" class="form-control @error('current_password') is-invalid @enderror" placeholder="Enter your current password" required>
-                        @error('current_password')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
+    <div class="pw-card">
+        <div class="pw-card-icon"><i class="bi bi-shield-lock-fill"></i></div>
+        <h1 class="pw-title">Change Password</h1>
+        <p class="pw-subtitle">Update your password to keep your account secure</p>
 
-                    <div class="mb-3">
-                        <label class="form-label">New Password</label>
-                        <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" placeholder="Enter your new password" required>
-                        <div id="password-strength" class="password-strength"></div>
-                        @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
+        <form action="{{ route('user.password.update') }}" method="POST" class="pw-form" id="pwForm">
+            @csrf
+            @method('PUT')
 
-                    <div class="mb-4">
-                        <label class="form-label">Confirm New Password</label>
-                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control @error('password_confirmation') is-invalid @enderror" placeholder="Confirm your new password" required>
-                        @error('password_confirmation')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
+            <div class="pw-field">
+                <label for="current_password">Current Password</label>
+                <input type="password" name="current_password" id="current_password" class="pw-input @error('current_password') is-invalid @enderror" placeholder="Enter your current password" required>
+                @error('current_password')<div class="pw-error">{{ $message }}</div>@enderror
+            </div>
 
-                        {{-- Buttons --}}
-                        <div class="d-flex justify-content-centers gap-3">
+            <div class="pw-field">
+                <label for="password">New Password</label>
+                <input type="password" name="password" id="password" class="pw-input @error('password') is-invalid @enderror" placeholder="Enter your new password" required>
+                <div id="password-strength" class="password-strength"></div>
+                @error('password')<div class="pw-error">{{ $message }}</div>@enderror
+            </div>
 
-                            <a href="{{ route('admin.profile') }}" class="btn btn-cancel btn-custom">
-                                Cancel
-                            </a>
+            <div class="pw-field">
+                <label for="password_confirmation">Confirm New Password</label>
+                <input type="password" name="password_confirmation" id="password_confirmation" class="pw-input @error('password_confirmation') is-invalid @enderror" placeholder="Confirm your new password" required>
+                @error('password_confirmation')<div class="pw-error">{{ $message }}</div>@enderror
+            </div>
 
-                            <button type="submit" class="btn btn-save btn-custom">
-                                Update Password
-                            </button>
+            <div class="pw-actions">
+                <a href="{{ route('profile') }}" class="pw-btn pw-btn-cancel">Cancel</a>
+                <button type="button" class="pw-btn pw-btn-save" id="pwSubmitBtn">Update Password</button>
+            </div>
+        </form>
+    </div>
 
-                        </div>
-
-                    </form>
-
+    @if(session('success') && session('new_password'))
+        <div class="pw-success-overlay show" id="pwSuccessOverlay">
+            <div class="pw-success-box">
+                <div class="pw-success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <h3 class="pw-success-title">Password updated!</h3>
+                <p class="pw-success-text">Please keep your new password safe — you'll need it next time you log in.</p>
+                <div class="pw-new-password-box">
+                    <span class="pw-new-password-label">New password</span>
+                    <span class="pw-new-password-value">{{ session('new_password') }}</span>
                 </div>
-
+                <button type="button" class="pw-btn pw-btn-save" id="pwSuccessClose" style="width:100%;">Got it</button>
             </div>
         </div>
+    @endif
+</div>
+
+<div class="logout-confirm-overlay" id="pwConfirmOverlay">
+    <div class="logout-confirm-box">
+        <div class="logout-confirm-icon"><i class="bi bi-shield-lock-fill"></i></div>
+        <h3 class="logout-confirm-title">Update password?</h3>
+        <p class="logout-confirm-text">Are you sure you want to change your password? You'll need the new password next time you log in.</p>
+        <div class="logout-confirm-actions">
+            <button type="button" class="logout-confirm-btn cancel" id="pwConfirmCancel">Cancel</button>
+            <button type="button" class="logout-confirm-btn confirm" id="pwConfirmOk">Yes, Update</button>
+        </div>
     </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -104,5 +125,50 @@
         const confirmation = this.value;
         this.setCustomValidity(confirmation && password !== confirmation ? 'Passwords do not match' : '');
     });
+
+    (function () {
+        const form = document.getElementById('pwForm');
+        const submitBtn = document.getElementById('pwSubmitBtn');
+        const overlay = document.getElementById('pwConfirmOverlay');
+        const okBtn = document.getElementById('pwConfirmOk');
+        const cancelBtn = document.getElementById('pwConfirmCancel');
+        if (!form || !submitBtn || !overlay) return;
+
+        function openModal() { overlay.classList.add('show'); }
+        function closeModal() { overlay.classList.remove('show'); }
+
+        submitBtn.addEventListener('click', function () {
+            if (!form.reportValidity()) return;
+            openModal();
+        });
+
+        okBtn?.addEventListener('click', function () {
+            closeModal();
+            form.submit();
+        });
+        cancelBtn?.addEventListener('click', closeModal);
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) closeModal();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && overlay.classList.contains('show')) closeModal();
+        });
+    })();
+
+    (function () {
+        const overlay = document.getElementById('pwSuccessOverlay');
+        const closeBtn = document.getElementById('pwSuccessClose');
+        if (!overlay) return;
+
+        function closeModal() { overlay.classList.remove('show'); }
+
+        closeBtn?.addEventListener('click', closeModal);
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) closeModal();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && overlay.classList.contains('show')) closeModal();
+        });
+    })();
 </script>
 @endpush

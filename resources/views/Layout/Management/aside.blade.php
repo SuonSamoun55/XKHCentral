@@ -3,10 +3,10 @@
     use Illuminate\Support\Facades\Storage;
     use Illuminate\Support\Facades\Route;
     use App\Models\ManagementSystem\Company;
+    use App\Models\ManagementSystem\Notification;
 
     $authUser = Auth::user();
-
-    // 1. Fetch Company Logic (Same as User)
+    $unreadNotificationCount = Notification::adminUnreadTotal(session('selected_company_id'));
     $company = null;
     if (session('selected_company_id')) {
         $company = Company::find(session('selected_company_id'));
@@ -107,18 +107,131 @@
         ],
 
     ];
+    $activeNavItem = null;
+    foreach ($navItems as $item) {
+        foreach ($item['match'] as $pattern) {
+            if (request()->is($pattern)) {
+                $activeNavItem = $item;
+                break 2;
+            }
+        }        if ($item['name'] === 'Companies' && request()->is('companies/select')) {
+            $activeNavItem = null;
+        }
+    }
+    $activeNavIcon = $activeNavItem['icon_active'] ?? $activeNavItem['icon'] ?? null;
+
+    $backUrl = trim((string) $__env->yieldContent('backUrl', ''));
+    $hideMobileChrome = trim((string) $__env->yieldContent('hideMobileNav', '')) !== '';
 @endphp
-{{--
-    FIX: this wrapper now carries BOTH class="app-shell" and id="appShell".
-    The CSS rules (.app-shell.collapsed ..., .app-shell.settings-active ...)
-    require the class "app-shell" on whichever element gets the "collapsed"
-    or "settings-active" state toggled onto it by the JS below. Previously
-    this div only had class="sidebar-wrap", so those rules never matched
-    anything, even though the JS was toggling the classes correctly.
---}}
-<div class="sidebar-wrap app-shell" id="appShell">
-    {{-- id="appSidebar" added so the mobile hamburger (header_mobile.blade.php)
-         has a stable, unambiguous target instead of guessing by tag/class. --}}
+
+@unless ($hideMobileChrome)
+<header class="mobile-topbar">
+    @if ($backUrl !== '')
+        <a href="{{ $backUrl }}" class="mobile-topbar-btn" aria-label="Go back">
+            <i class="bi bi-chevron-left"></i>
+        </a>
+    @else
+        <button type="button" class="mobile-topbar-btn" id="mobileMenuToggle" aria-label="Open menu" aria-controls="mobileMenuPanel" aria-expanded="false" aria-haspopup="true">
+            <i class="bi bi-list"></i>
+        </button>
+    @endif
+
+    <span class="mobile-topbar-title">
+        @if ($backUrl === '' && $activeNavIcon)
+        @endif
+        @yield('title', 'Management')
+    </span>
+
+    <a href="{{ route('admin.notifications.index') }}" class="mobile-topbar-btn mobile-topbar-bell" aria-label="Notifications">
+        <i class="bi bi-bell-fill"></i>
+        <span class="noti-dot {{ $unreadNotificationCount > 0 ? 'show' : '' }}" aria-hidden="true"></span>
+    </a>
+
+    @if ($backUrl === '')
+        <nav class="mobile-menu-panel" id="mobileMenuPanel">
+            @foreach ($navItems as $item)
+                @php
+                    $isActive = false;
+                    foreach ($item['match'] as $pattern) {
+                        if (request()->is($pattern)) {
+                            $isActive = true;
+                            break;
+                        }
+                    }
+
+                    if ($item['name'] === 'Companies' && request()->is('companies/select')) {
+                        $isActive = false;
+                    }
+
+                    $iconToShow = $item['icon'];
+                    if ($isActive && !empty($item['icon_active'])) {
+                        $iconToShow = $item['icon_active'];
+                    }
+                @endphp
+                <a href="{{ $item['url'] }}" class="mobile-menu-link {{ $isActive ? 'active' : '' }}">
+                    <img src="{{ asset($iconToShow) }}" alt="" class="mobile-menu-link-icon">
+                    {{ $item['name'] }}
+                </a>
+            @endforeach
+            <div class="mobile-menu-divider"></div>
+
+            <a href="{{ route('user.index') }}" class="mobile-menu-link">
+                <img src="{{ asset('/images/aside/open admin (2).png') }}" alt="" class="mobile-menu-link-icon">
+                Open User
+            </a>
+            <a href="{{ route('admin.orders.index') }}" class="mobile-menu-link">
+                <img src="{{ asset('/images/management/management.png') }}" alt="" class="mobile-menu-link-icon">
+                Open POS system
+            </a>
+            <a href="{{ route('admin.profile') }}" class="mobile-menu-link">
+                <img src="{{ asset('/images/aside/edit profile.png') }}" alt="" class="mobile-menu-link-icon">
+                My Profile
+            </a>
+            <a href="{{ route('admin.password.change') }}" class="mobile-menu-link">
+                <i class="bi bi-key"></i>
+                Change password
+            </a>
+            <a href="/logout" class="mobile-menu-link mobile-menu-link-danger">
+                <img src="{{ asset('images/aside/logout.png') }}" alt="" class="mobile-menu-link-icon">
+                Log out
+            </a>
+        </nav>
+    @endif
+</header>
+
+<div class="mobile-menu-backdrop" id="mobileMenuBackdrop"></div>
+
+<nav class="mobile-bottom-nav">
+    @foreach ($navItems as $item)
+        @php
+            $isActive = false;
+            foreach ($item['match'] as $pattern) {
+                if (request()->is($pattern)) {
+                    $isActive = true;
+                    break;
+                }
+            }
+
+            if ($item['name'] === 'Companies' && request()->is('companies/select')) {
+                $isActive = false;
+            }
+
+            $iconToShow = $item['icon'];
+            if ($isActive && !empty($item['icon_active'])) {
+                $iconToShow = $item['icon_active'];
+            }
+        @endphp
+        <a href="{{ $item['url'] }}" class="mobile-bottom-nav-item {{ $isActive ? 'active' : '' }}">
+            <span class="mobile-bottom-nav-icon">
+                <img src="{{ asset($iconToShow) }}" alt="{{ $item['name'] }} Icon">
+            </span>
+            <span class="mobile-bottom-nav-label">{{ $item['name'] }}</span>
+        </a>
+    @endforeach
+</nav>
+@endunless
+
+<div class="sidebar-wrap" id="sidebarWrap">
     <aside class="sidebar" id="appSidebar">
         <div class="sidebar-top">
             <div class="brand">
@@ -153,11 +266,8 @@
                     @endphp
                     <a href="{{ $item['url'] }}" class="nav-link-mobile-close">
                         <button class="nav-btn {{ $isActive ? 'active' : '' }}" type="button">
-                            <span class="nav-icon {{ !empty($item['notification']) ? 'nav-icon-notification' : '' }}">
+                            <span class="nav-icon">
                                 <img src="{{ asset($iconToShow) }}" alt="{{ $item['name'] }} Icon">
-                                @if (!empty($item['notification']))
-                                    <span id="unreadNotiDot" class="noti-dot" aria-hidden="true"></span>
-                                @endif
                             </span>
                             <span class="nav-label">{{ $item['name'] }}</span>
                         </button>
@@ -193,9 +303,11 @@
                 </button>
 
                 <div class="settings-menu">
-                    <a href="{{ route('admin.profile') }}" class="settings-link nav-link-mobile-close">Edit Profile</a>
-                    <a href="{{ route('admin.password.change') }}" class="settings-link nav-link-mobile-close">Change new password</a>
-                    <a href="#" class="settings-link">Policy</a>
+                    <a href="{{ route('user.index') }}" class="settings-link nav-link-mobile-close">Open User</a>
+                    <a href="{{ route('admin.orders.index') }}" class="settings-link nav-link-mobile-close">Open POS system</a>
+                    <a href="{{ route('admin.profile') }}" class="settings-link nav-link-mobile-close">Admin Profile</a>
+                    <a href="{{ route('admin.password.change') }}" class="settings-link nav-link-mobile-close">Change password</a>
+                    {{-- <a href="#" class="settings-link">Policy</a> --}}
                 </div>
             </div>
 
@@ -211,27 +323,60 @@
         </div>
     </aside>
 
-    <button class="collapse-handle" id="collapseHandle" type="button">
+    <button class="collapse-handle" id="collapseHandle" type="button" aria-label="Collapse sidebar">
         <span>‹</span>
     </button>
 
     <div id="globalToastContainer" class="global-toast-container"></div>
 </div>
 
-<link rel="stylesheet" href="{{ asset('/css/views/ManagementSystemViews/UserViews/Layouts/aside.css') }}">
+<!-- ===== Logout confirmation modal ===== -->
+<div class="logout-confirm-overlay" id="logoutConfirmOverlay">
+    <div class="logout-confirm-box">
+        <div class="logout-confirm-icon"><i class="bi bi-box-arrow-right"></i></div>
+        <h3 class="logout-confirm-title">Log out?</h3>
+        <p class="logout-confirm-text">Are you sure you want to log out of your account?</p>
+        <div class="logout-confirm-actions">
+            <button type="button" class="logout-confirm-btn cancel" id="logoutConfirmCancel">Cancel</button>
+            <button type="button" class="logout-confirm-btn confirm" id="logoutConfirmOk">Yes, Log out</button>
+        </div>
+    </div>
+</div>
 
 <script>
 (function () {
-    const appShell = document.getElementById('appShell');
+    const overlay = document.getElementById('logoutConfirmOverlay');
+    if (overlay && overlay.dataset.bound !== 'true') {
+        overlay.dataset.bound = 'true';
 
-    // FIX: idempotency guard. If this partial/script ever gets injected or
-    // re-run more than once on the same page (common with Livewire/Turbo/AJAX
-    // navigation, which is likely given this app sets data-sidebar-ready),
-    // this stops a second copy of the script from attaching a second set of
-    // click listeners to the same buttons. Without this guard, one physical
-    // click can fire the toggle logic twice, leaving classes like "open" and
-    // "settings-active" out of sync with each other — which is exactly the
-    // symptom you were seeing.
+        const okBtn = document.getElementById('logoutConfirmOk');
+        const cancelBtn = document.getElementById('logoutConfirmCancel');
+        let pendingHref = '/logout';
+
+        const openLogoutModal = (href) => {
+            pendingHref = href || '/logout';
+            overlay.classList.add('show');
+        };
+        const closeLogoutModal = () => overlay.classList.remove('show');
+
+        document.addEventListener('click', function (e) {
+            const link = e.target.closest('a[href="/logout"]');
+            if (!link) return;
+            e.preventDefault();
+            openLogoutModal(link.getAttribute('href'));
+        });
+
+        okBtn?.addEventListener('click', () => { window.location.href = pendingHref; });
+        cancelBtn?.addEventListener('click', closeLogoutModal);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeLogoutModal(); });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && overlay.classList.contains('show')) closeLogoutModal();
+        });
+    }
+})();
+
+(function () {
+    const appShell = document.getElementById('managementShell');
     if (!appShell || appShell.dataset.sidebarJsBound === 'true') {
         return;
     }
@@ -241,7 +386,6 @@
         const collapseHandle = document.getElementById('collapseHandle');
         const settingsBtn = document.getElementById('settingsBtn');
         const settingsBox = document.getElementById('settingsBox');
-        const appSidebar = document.getElementById('appSidebar');
 
         if (collapseHandle) {
             collapseHandle.addEventListener('click', () => {
@@ -256,10 +400,6 @@
 
         if (settingsBtn) {
             const settingsMenu = settingsBox?.querySelector('.settings-menu');
-
-            // Force a known-good starting state via inline styles, so the
-            // menu's visibility no longer depends on any external CSS rule
-            // actually being present/loaded/unconflicted.
             if (settingsMenu) {
                 settingsMenu.style.overflow = 'hidden';
                 settingsMenu.style.maxHeight = '0px';
@@ -280,9 +420,6 @@
                 if (!settingsMenu) return;
 
                 if (willOpen) {
-                    // Expand to the menu's actual content height (not a
-                    // guessed fixed number), then scroll it into view once
-                    // the expand transition finishes.
                     const targetHeight = settingsMenu.scrollHeight;
                     settingsMenu.style.maxHeight = targetHeight + 'px';
 
@@ -298,18 +435,6 @@
             });
         }
 
-        // Tapping any nav/settings/logout link inside the sidebar while
-        // it's open as a mobile overlay should close the menu, same as
-        // tapping the backdrop. No-ops harmlessly on desktop since the
-        // sidebar there isn't in the mobile-open overlay state.
-        document.querySelectorAll('.nav-link-mobile-close').forEach((link) => {
-            link.addEventListener('click', () => {
-                if (appSidebar?.classList.contains('mobile-open') && typeof toggleMobileSidebar === 'function') {
-                    toggleMobileSidebar();
-                }
-            });
-        });
-
         appShell.setAttribute('data-sidebar-ready', 'true');
     }
 
@@ -317,6 +442,45 @@
         document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
+    }
+
+    // Mobile hamburger menu open/close — mirrors POS Admin's aside.blade.php.
+    const menuToggle = document.getElementById('mobileMenuToggle');
+    const menuPanel = document.getElementById('mobileMenuPanel');
+    const backdrop = document.getElementById('mobileMenuBackdrop');
+
+    if (menuToggle && menuPanel && backdrop) {
+        function openMenu() {
+            menuPanel.classList.add('open');
+            backdrop.classList.add('show');
+            menuToggle.setAttribute('aria-expanded', 'true');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMenu() {
+            menuPanel.classList.remove('open');
+            backdrop.classList.remove('show');
+            menuToggle.setAttribute('aria-expanded', 'false');
+            document.body.style.overflow = '';
+        }
+
+        menuToggle.addEventListener('click', function () {
+            if (menuPanel.classList.contains('open')) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        });
+
+        backdrop.addEventListener('click', closeMenu);
+
+        menuPanel.querySelectorAll('.mobile-menu-link').forEach(function (link) {
+            link.addEventListener('click', closeMenu);
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeMenu();
+        });
     }
 })();
 </script>

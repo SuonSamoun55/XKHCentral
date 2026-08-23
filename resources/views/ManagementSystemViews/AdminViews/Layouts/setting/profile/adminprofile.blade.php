@@ -1,148 +1,206 @@
 @extends('Layout.Management.app')
 @section('title', 'Profile Information')
+@section('backUrl', url('/admin'))
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/views/ManagementSystemViews/AdminViews/Layouts/setting/profile/adminprofile.css') }}">
+<link rel="stylesheet" href="{{ asset('css/views/Management/AdminProfile/adminprofile.css') }}?v={{ filemtime(public_path('css/views/Management/AdminProfile/adminprofile.css')) }}">
 @endpush
-
 @section('content')
-<div class="main-wrapper">
+@php
+    $user = auth()->user();
+    $firstLetter = strtoupper(mb_substr(trim($user->name ?? 'A'), 0, 1)) ?: 'A';
+    $field = fn ($value) => $value !== null && trim((string) $value) !== '' ? $value : null;
+@endphp
 
-        {{-- Sidebar --}}
-
-
-    <div class="content-area">
-            <div class="container mt-4">
-
-                <div class="profile-card">
-
-                    {{-- Success Message --}}
-                    @if(session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            {{ session('success') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    @endif
-
-                    {{-- Header --}}
-                    <h4 class="profile-title">Admin Profile Info</h4>
-                    <p class="profile-subtitle">
-                        Update your personal information and contact details
-                    </p>
-
-                    {{-- Form --}}
-                    <form action="{{ route('admin.profile.update') }}" method="POST" enctype="multipart/form-data">
-                        @csrf
-                        @method('PUT')
-
-                        {{-- Avatar + Upload --}}
-                        <div class="d-flex align-items-center gap-4 mb-4">
-
-                            @php
-                            $avatarUrl = auth()->user()->profile_image_display ?? 'https://via.placeholder.com/80';
-                            @endphp
-                            <img src="{{ $avatarUrl }}" class="profile-avatar" id="previewImage">
-
-                            <div>
-                                <label class="btn btn-light border">
-                                    Change Photo
-                                    <input type="file" name="avatar" hidden onchange="previewFile(event)">
-                                </label>
-
-                                <div class="text-muted small mt-1">
-                                    JPG, PNG or GIF. Max size 2MB
-                                </div>
-                                @error('avatar')
-                                    <div class="text-danger small mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                        </div>
-
-                        {{-- Name --}}
-                        <div class="mb-3">
-                            <label class="form-label">Name</label>
-                            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
-                                value="{{ old('name', auth()->user()->name) }}">
-                            @error('name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        {{-- Email + Phone --}}
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Email</label>
-                                <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
-                                    value="{{ old('email', auth()->user()->email) }}">
-                                @error('email')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Phone</label>
-                                <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" placeholder="+855..."
-                                    value="{{ old('phone', auth()->user()->phone ?? '') }}">
-                                @error('phone')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        {{-- Date of Birth --}}
-                        <div class="mb-3">
-                            <label class="form-label">Date of Birth</label>
-                            <input type="date" name="dob" class="form-control @error('dob') is-invalid @enderror"
-                                value="{{ old('dob', auth()->user()->dob ?? '') }}">
-                            @error('dob')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        {{-- Location --}}
-                        <div class="mb-4">
-                            <label class="form-label">Location</label>
-                            <input type="text" name="location" class="form-control @error('location') is-invalid @enderror"
-                                value="{{ old('location', auth()->user()->location ?? '') }}">
-                            @error('location')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        {{-- Buttons --}}
-                        <div class="d-flex justify-content-center gap-3">
-
-                            <a href="{{ route('admin.profile') }}" class="btn btn-cancel btn-custom">
-                                Cancel
-                            </a>
-
-                            <button type="submit" class="btn btn-save btn-custom">
-                                Save
-                            </button>
-
-                        </div>
-
-                    </form>
-
-                </div>
-
-            </div>
+<div class="admin-profile-page">
+    <div class="page-top-row">
+        <div class="header-title-group">
+            <a href="{{ url('/admin') }}" class="header-back-arrow" aria-label="Back">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+            <h2 class="page-title">Profile Information</h2>
         </div>
-
     </div>
 
-    {{-- Preview Image Script --}}
+    @if(session('success'))
+        <div class="ap-alert ap-alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="ap-alert ap-alert-error">{{ session('error') }}</div>
+    @endif
+    @if($errors->any())
+        <div class="ap-alert ap-alert-error">
+            <ul style="margin:0;padding-left:18px;">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <div class="ap-header">
+        <div class="ap-header-left">
+            <div class="avatar-wrap">
+                <div class="ap-avatar-circle">
+                    @if($user->profile_image_display)
+                        <img src="{{ $user->profile_image_display }}" alt="" id="apAvatarPreview" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    @else
+                        <img src="" alt="" id="apAvatarPreview" style="display:none;">
+                    @endif
+                    <span class="ap-avatar-fallback" id="apAvatarFallback" style="display: {{ $user->profile_image_display ? 'none' : 'flex' }};">{{ $firstLetter }}</span>
+                </div>
+
+                <form action="{{ route('admin.profile.update') }}" method="POST" enctype="multipart/form-data" id="apAvatarForm">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="name" value="{{ $user->name }}">
+                    <input type="hidden" name="email" value="{{ $user->email }}">
+                    <input type="hidden" name="phone" value="{{ $user->phone }}">
+                    <input type="hidden" name="dob" value="{{ $user->dob }}">
+                    <input type="hidden" name="location" value="{{ $user->location }}">
+                    <label class="ap-avatar-edit-btn" for="apAvatarInput" aria-label="Change profile photo">
+                        <i class="bi bi-camera-fill"></i>
+                    </label>
+                    <input type="file" name="avatar" id="apAvatarInput" accept="image/*" hidden>
+                </form>
+            </div>
+            <div class="ap-header-text">
+                <h1>{{ $user->name }}</h1>
+                <span class="ap-role-badge">{{ ucfirst($user->role ?? 'admin') }}</span>
+                <div class="ap-email">{{ $user->email }}</div>
+            </div>
+        </div>
+        <a href="{{ route('admin.password.change') }}" class="ap-header-btn">
+            <i class="bi bi-key-fill"></i> Change Password
+        </a>
+    </div>
+
+    <div class="ap-card ap-stats-card">
+        <h2><i class="bi bi-graph-up"></i> Approval Activity</h2>
+        <div class="ap-stats-grid">
+            <button type="button" class="ap-stat" id="apOrdersStatBtn">
+                <div class="ap-stat-value">{{ $approvedOrdersCount }}</div>
+                <div class="ap-stat-label">{{ \Illuminate\Support\Str::plural('Order', $approvedOrdersCount) }} Approved</div>
+            </button>
+            <button type="button" class="ap-stat" id="apCustomersStatBtn">
+                <div class="ap-stat-value">{{ $approvedCustomersCount }}</div>
+                <div class="ap-stat-label">{{ \Illuminate\Support\Str::plural('Customer', $approvedCustomersCount) }} Served</div>
+            </button>
+        </div>
+    </div>
+
+    <div class="ap-card">
+        <h2><i class="bi bi-person-vcard"></i> Contact &amp; Account</h2>
+        <dl class="ap-field-list">
+            <dt>Email</dt><dd class="{{ $field($user->email) ? '' : 'empty' }}">{{ $field($user->email) ?? '—' }}</dd>
+            <dt>Phone</dt><dd class="{{ $field($user->phone) ? '' : 'empty' }}">{{ $field($user->phone) ?? '—' }}</dd>
+            <dt>Date of Birth</dt><dd class="{{ $field($user->dob) ? '' : 'empty' }}">{{ $user->dob ? \Carbon\Carbon::parse($user->dob)->format('M d, Y') : '—' }}</dd>
+            <dt>Location</dt><dd class="{{ $field($user->location) ? '' : 'empty' }}">{{ $field($user->location) ?? '—' }}</dd>
+            <dt>Role</dt><dd>{{ ucfirst($user->role ?? 'admin') }}</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="ap-list-overlay" id="apOrdersListOverlay">
+    <div class="ap-list-box">
+        <div class="ap-list-head">
+            <h3>Orders Approved <span class="ap-list-count">({{ $approvedOrdersCount }})</span></h3>
+            <button type="button" class="ap-list-close" id="apOrdersListClose" aria-label="Close">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="ap-list-body">
+            @forelse($approvedOrders as $order)
+                <a href="{{ route('admin.orders.show', $order->id) }}" class="ap-list-row">
+                    <div class="ap-list-row-main">
+                        <div class="ap-list-row-title">{{ $order->order_no }}</div>
+                        <div class="ap-list-row-sub">{{ $order->user->name ?? $order->customer_no ?? 'Unknown customer' }}</div>
+                    </div>
+                    <div class="ap-list-row-end">
+                        <div class="ap-list-row-amount">${{ number_format((float) ($order->total_amount ?? 0), 2) }}</div>
+                        <div class="ap-list-row-date">{{ optional($order->checked_out_at ?? $order->created_at)->format('M d, Y') }}</div>
+                    </div>
+                </a>
+            @empty
+                <div class="ap-list-empty">No orders approved yet.</div>
+            @endforelse
+        </div>
+    </div>
+</div>
+
+<div class="ap-list-overlay" id="apCustomersListOverlay">
+    <div class="ap-list-box">
+        <div class="ap-list-head">
+            <h3>Customers Served <span class="ap-list-count">({{ $approvedCustomersCount }})</span></h3>
+            <button type="button" class="ap-list-close" id="apCustomersListClose" aria-label="Close">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="ap-list-body">
+            @forelse($approvedCustomerRows as $row)
+                <a href="{{ route('admin.orders.index', ['tab' => 'approved', 'customer_id' => $row['user_id'], 'approved_by' => $user->id]) }}" class="ap-list-row">
+                    <div class="ap-list-row-main">
+                        <div class="ap-list-row-title">{{ $row['customer_name'] }}</div>
+                        <div class="ap-list-row-sub">View orders you approved for this customer</div>
+                    </div>
+                    <div class="ap-list-row-end">
+                        <div class="ap-list-row-amount">{{ $row['orders_count'] }} {{ \Illuminate\Support\Str::plural('order', $row['orders_count']) }}</div>
+                    </div>
+                </a>
+            @empty
+                <div class="ap-list-empty">No customers served yet.</div>
+            @endforelse
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
-        function previewFile(event) {
-            const reader = new FileReader();
-            reader.onload = function() {
-                document.getElementById('previewImage').src = reader.result;
-            };
-            reader.readAsDataURL(event.target.files[0]);
-        }
-    </script>
+document.addEventListener('DOMContentLoaded', function () {
+    var input = document.getElementById('apAvatarInput');
+    var form = document.getElementById('apAvatarForm');
+    if (!input || !form) return;
+
+    input.addEventListener('change', function () {
+        if (!input.files || !input.files[0]) return;
+
+        var preview = document.getElementById('apAvatarPreview');
+        var fallback = document.getElementById('apAvatarFallback');
+        var reader = new FileReader();
+        reader.onload = function () {
+            if (preview) {
+                preview.src = reader.result;
+                preview.style.display = 'block';
+            }
+            if (fallback) fallback.style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+
+        form.submit();
+    });
+});
+
+function apBindListModal(btnId, overlayId, closeId) {
+    var btn = document.getElementById(btnId);
+    var overlay = document.getElementById(overlayId);
+    var closeBtn = document.getElementById(closeId);
+    if (!btn || !overlay) return;
+
+    function open() { overlay.classList.add('show'); }
+    function close() { overlay.classList.remove('show'); }
+
+    btn.addEventListener('click', open);
+    closeBtn?.addEventListener('click', close);
+    overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) close();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay.classList.contains('show')) close();
+    });
+}
+
+apBindListModal('apOrdersStatBtn', 'apOrdersListOverlay', 'apOrdersListClose');
+apBindListModal('apCustomersStatBtn', 'apCustomersListOverlay', 'apCustomersListClose');
+</script>
 @endpush

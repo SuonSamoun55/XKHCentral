@@ -18,6 +18,8 @@ class Order extends Model
         'total_amount',
         'location_code',
         'amount_paid',
+        'riel_exchange_rate',
+        'total_amount_riel',
         'status',
         'sync_status',
         'bc_order_id',

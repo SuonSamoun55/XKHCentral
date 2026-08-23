@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\ManagementSystem;
 use App\Http\Controllers\Controller;
 use App\Models\ManagementSystem\Notification;
 use App\Models\ManagementSystem\User;
+use App\Models\POS\Item;
+use App\Models\POS\Order;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -59,6 +61,7 @@ class AdminNotificationController extends Controller
             $this->applyGlobalMessageFilter($notificationQuery);
         }
 
+        /** @var \Illuminate\Pagination\LengthAwarePaginator $notifications */
         $notifications = $notificationQuery
             ->latest('updated_at')
             ->paginate($perPage)
@@ -112,6 +115,7 @@ class AdminNotificationController extends Controller
         $selectedCompanyId = session('selected_company_id');
 
         $notification = $this->baseAdminNotificationQuery($selectedCompanyId)
+            ->with(['order'])
             ->findOrFail($id);
 
         if ($notification->user) {
@@ -133,9 +137,87 @@ class AdminNotificationController extends Controller
             ]);
         }
 
+        // Items are paginated for the desktop table, but the order summary
+        // (VAT, item count) needs totals across ALL items regardless of
+        // which page is showing — summed at the DB level rather than from
+        // whatever page happened to be loaded into memory. The phone
+        // receipt layout shows every item on one scroll (no pagination),
+        // so it gets its own unpaginated copy of the same query.
+        $orderItems = null;
+        $allOrderItems = null;
+        $orderItemsTotal = 0;
+        $orderVat = 0.0;
+
+        if ($notification->type === 'order' && $notification->order) {
+            $orderItemsQuery = $notification->order->items();
+            $orderItemsTotal = (clone $orderItemsQuery)->count();
+            $orderVat = (float) (clone $orderItemsQuery)->sum('tax_amount');
+            $allOrderItems = (clone $orderItemsQuery)
+                ->with(['item', 'itemVariant'])
+                ->orderBy('id')
+                ->get();
+            $orderItems = $orderItemsQuery
+                ->with(['item', 'itemVariant'])
+                ->orderBy('id')
+                ->paginate(4, ['*'], 'items_page')
+                ->withQueryString();
+        }
+
+        // Out-of-stock alerts only store item_id (no order_id), and the
+        // "current stock" / "reserved" figures need to reflect the item's
+        // live state rather than whatever it was when the alert fired —
+        // so these are recomputed here the same way
+        // OrderController::notifyLowStockIfNeeded() derives them, instead
+        // of trusting anything cached on the notification row.
+        $stockItem = null;
+        $stockCurrent = 0;
+        $stockReserved = 0;
+        $stockLevel = null;
+        $stockOrder = null;
+
+        if ($notification->type === 'out_of_stock' && $notification->item_id) {
+            $stockItem = Item::find($notification->item_id);
+
+            if ($stockItem) {
+                $stockCurrent = (int) $stockItem->inventory;
+
+                $stockReserved = (int) \App\Models\POS\OrderItem::query()
+                    ->from('order_items as oi')
+                    ->join('orders as o', 'o.id', '=', 'oi.order_id')
+                    ->where('oi.item_id', $stockItem->id)
+                    ->where('o.status', 'pending')
+                    ->sum('oi.qty');
+
+                $stockOrder = Order::query()
+                    ->where('status', 'pending')
+                    ->whereHas('items', function ($q) use ($stockItem) {
+                        $q->where('item_id', $stockItem->id);
+                    })
+                    ->latest('id')
+                    ->first();
+
+                $stockLevel = $stockCurrent <= 0
+                    ? ['label' => 'Out of stock', 'class' => 'critical']
+                    : (($stockReserved >= 0.8 * $stockCurrent)
+                        ? ['label' => 'Low stock', 'class' => 'warning']
+                        : ['label' => 'Notice', 'class' => 'notice']);
+            }
+        }
+
         return view(
             'ManagementSystemViews.AdminViews.Layouts.Notifications.NotificationsViews',
-            compact('notification')
+            compact(
+                'notification',
+                'orderItems',
+                'allOrderItems',
+                'orderItemsTotal',
+                'orderVat',
+                'stockItem',
+                'stockCurrent',
+                'stockReserved',
+                'stockLevel',
+                'stockOrder'
+            )
         );
     }
 
@@ -178,7 +260,7 @@ class AdminNotificationController extends Controller
             } elseif (!empty($customer->profile_image_url)) {
                 $avatar = $customer->profile_image_url;
             } elseif (!empty($customer->bc_customer_no)) {
-                $avatar = route('users.bc.image', $customer->bc_customer_no);
+                $avatar = route('users.bc-image', ['bcId' => $customer->bc_customer_no]);
             }
 
             return [
@@ -257,7 +339,7 @@ class AdminNotificationController extends Controller
             } elseif ($contactUser && !empty($contactUser->profile_image_url)) {
                 $avatar = $contactUser->profile_image_url;
             } elseif ($contactUser && !empty($contactUser->bc_customer_no)) {
-                $avatar = route('users.bc.image', $contactUser->bc_customer_no);
+                $avatar = route('users.bc-image', ['bcId' => $contactUser->bc_customer_no]);
             } elseif ($sender && !empty($sender->profile_image)) {
                 $avatar = asset('storage/' . ltrim($sender->profile_image, '/'));
             } elseif ($sender && !empty($sender->profile_image_url)) {
@@ -268,16 +350,29 @@ class AdminNotificationController extends Controller
                 ?? ($notification->sender_name ?: optional($sender)->name)
                 ?? 'System';
 
+            // User-contact rows skip the generic notification detail page
+            // entirely and open the chat with that customer directly —
+            // matches the same rule used for the row link rendered
+            // server-side in AdminNotificationViews.blade.php.
+            $chatUrl = optional($contactUser)->id
+                ? route('admin.chat.index', ['user_id' => $contactUser->id])
+                : null;
+
             return [
                 'id' => $notification->id,
                 'title' => $notification->title,
-                'message' => strip_tags($notification->message ?? ''),
+                'message' => trim(preg_replace(
+                    '/\s+/',
+                    ' ',
+                    html_entity_decode(strip_tags($notification->message ?? ''), ENT_QUOTES, 'UTF-8')
+                )),
                 'type' => $notification->type,
                 'is_read' => (bool) $notification->is_read,
                 'time' => optional($notification->updated_at)->format('H:i'),
                 'created_at' => optional($notification->updated_at)->toDateTimeString(),
                 'unread_count' => max(0, (int) ($notification->unread_count ?? 0)),
-                'show_url' => route('admin.notifications.show', $notification->id),
+                'show_url' => ($isUserContact && $chatUrl) ? $chatUrl : route('admin.notifications.show', $notification->id),
+                'chat_url' => $chatUrl,
                 'user_name' => $displayName,
                 'contact_user_id' => optional($contactUser)->id,
                 'avatar' => $avatar,
@@ -464,6 +559,34 @@ class AdminNotificationController extends Controller
         return back()->with('success', 'All notifications marked as read.');
     }
 
+    public function markSelectedAsRead(Request $request)
+    {
+        $selectedCompanyId = session('selected_company_id');
+        $ids = $request->input('notification_ids', []);
+
+        if (!is_array($ids) || count($ids) === 0) {
+            return back()->with('error', 'No notifications selected.');
+        }
+
+        $updated = $this->baseAdminNotificationQuery($selectedCompanyId)
+            ->whereIn('id', $ids)
+            ->where('is_read', false)
+            ->update([
+                'is_read' => true,
+                'unread_count' => 0,
+            ]);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Selected notifications marked as read.',
+                'updated' => $updated,
+            ]);
+        }
+
+        return back()->with('success', 'Selected notifications marked as read.');
+    }
+
     public function deleteSelected(Request $request)
     {
         $selectedCompanyId = session('selected_company_id');
@@ -515,11 +638,11 @@ class AdminNotificationController extends Controller
             return $user->profile_image_url;
         }
 
-        if (!empty($user->bc_id)) {
-            return route('users.bc-image', ['bcId' => $user->bc_id]);
+        if (!empty($user->bc_customer_no)) {
+            return route('users.bc-image', ['bcId' => $user->bc_customer_no]);
         }
 
-        return 'https://ui-avatars.com/api/?name=' . urlencode($user->name ?? 'User') . '&background=17bfd0&color=fff&size=128';
+        return asset('images/default-avatar.png');
     }
 
     protected function baseAdminNotificationQuery(?int $selectedCompanyId = null): Builder
@@ -538,40 +661,37 @@ class AdminNotificationController extends Controller
             });
     }
 
+    // Each tab is scoped strictly by the notification's own `type` column.
+    // Previously these also fuzzy-matched title/message text (e.g. "%order%",
+    // "%out of stock%"), which meant a cancelled-order notification whose
+    // message happened to say "...already out of stock..." leaked into the
+    // Out of Stock tab even though its real type is 'order'. Strict type
+    // matching keeps each notification in exactly one tab, and since the
+    // unread badge counts reuse these same filters, it fixes the counts too.
     protected function applyOrderNotificationFilter(Builder $query): Builder
     {
-        return $query->where(function ($q) {
-            $q->whereIn('type', ['order', 'order_notification', 'user'])
-                ->orWhere('title', 'like', '%order%')
-                ->orWhere('message', 'like', '%order%');
-        });
+        return $query->where('type', 'order');
     }
 
     protected function applyUserContactFilter(Builder $query): Builder
     {
-        return $query->where(function ($q) {
-            $q->where('type', 'user_contact')
-                ->orWhere('title', 'like', '%contact%')
-                ->orWhere('message', 'like', '%contact%');
-        });
+        return $query->where('type', 'user_contact');
     }
 
     protected function applyOutOfStockFilter(Builder $query): Builder
     {
-        return $query->where(function ($q) {
-            $q->where('type', 'out_of_stock')
-                ->orWhere('title', 'like', '%out of stock%')
-                ->orWhere('message', 'like', '%out of stock%');
-        });
+        return $query->where('type', 'out_of_stock');
     }
 
     protected function applyGlobalMessageFilter(Builder $query): Builder
     {
-        return $query->where(function ($q) {
-            $q->where('type', 'global_message')
-                ->orWhere('title', 'like', '%global message%')
-                ->orWhere('message', 'like', '%global message%');
-        });
+        // Strictly 'global_message' — the type only set when the "Send
+        // Message" form is submitted with send_type = 'all' (broadcast to
+        // every customer). 'admin_message' is excluded on purpose: it's
+        // reused both by 1-on-1 admin chat replies (ChatController::adminSend)
+        // and by "Send Message" sends to a specific/selected customer, so
+        // including it here was leaking live chat conversations into this tab.
+        return $query->where('type', 'global_message');
     }
 
     protected function unreadBadgeCount(Builder $query): int

@@ -2,7 +2,6 @@
 
 @if ($paginator->hasPages())
 <div class="pagination-container">
-
     {{-- SHOW ITEMS --}}
     <div class="show-items-wrapper">
         <span>Show</span>
@@ -16,9 +15,7 @@
         </select>
         <span>items</span>
     </div>
-
     <ul class="pagination-nav">
-
         {{-- PREVIOUS --}}
         <li>
             @if ($paginator->onFirstPage())
@@ -31,26 +28,20 @@
                 </a>
             @endif
         </li>
-
-        {{-- PAGE NUMBER WINDOW (MAX 5) --}}
         @php
             $current = $paginator->currentPage();
             $last = $paginator->lastPage();
-
             $start = max(1, $current - 2);
             $end   = min($last, $current + 2);
-
             if ($current <= 3) {
                 $start = 1;
                 $end = min(5, $last);
             }
-
             if ($current >= $last - 2) {
                 $start = max(1, $last - 4);
                 $end = $last;
             }
         @endphp
-
         @for ($page = $start; $page <= $end; $page++)
             <li>
                 @if ($page == $current)
@@ -60,8 +51,6 @@
                 @endif
             </li>
         @endfor
-
-        {{-- NEXT --}}
         <li>
             @if ($paginator->hasMorePages())
                 <a href="{{ $paginator->nextPageUrl() }}" class="arrow-icon">

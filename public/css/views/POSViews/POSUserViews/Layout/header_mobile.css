@@ -1,9 +1,16 @@
 .mobile{
-       position: sticky;
+    display: none;
+    position: sticky;
     top: 0;
     z-index: 1000;
     background: white;
     padding: 0px 5px;
+}
+
+@media (max-width: 768px) {
+    .mobile {
+        display: block;
+    }
 }
 .cart-boxM {
      position: sticky;
@@ -60,7 +67,7 @@
 position: absolute;
 top: -6px !important;
 right: -5px;
-background: var(--primary);
+background: #ef4444;
 color: #fff;
 border-radius: 999px;
 min-width: 22px;

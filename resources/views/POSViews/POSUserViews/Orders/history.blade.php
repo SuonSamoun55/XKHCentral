@@ -1,4 +1,4 @@
-@extends('ManagementSystemViews.UserViews.Layouts.app')
+@extends('Layout.POSUser.app')
 
 @section('title', 'Order History')
 
@@ -8,14 +8,11 @@
 
 @section('content')
     <div class="page-wrap">
-        @include('ManagementSystemViews.UserViews.Layouts.header_mobile')
-        @include('ManagementSystemViews.UserViews.Layouts.footer')
-
+        @include('Layout.POSUser.header_mobile')
+        @include('Layout.POSUser.footer')
         <div class="header">
             <div class="order-history-container">
                 <h2 class="history-title">Order History</h2>
-
-                <!-- Bulk-select action bar (hidden until a row checkbox is checked) -->
                 <div id="actionBar" class="action-bar">
                     <span id="selectedCount">Selected 0</span>
                     <button type="button" id="cancelSelection">Cancel</button>
@@ -55,11 +52,6 @@
                         </div>
                     </div>
                 </form>
-
-                <!-- Deletes whichever rowCheckbox inputs are checked at submit time.
-                     The checkboxes themselves live inside the table (name="ids[]"
-                     is added dynamically before submit — see script below), so
-                     this form just needs to exist as a submit target. -->
                 <form id="deleteForm" method="POST" action="{{ route('user.pos.order.deleteMultiple') }}">
                     @csrf
                     @method('DELETE')
@@ -68,29 +60,16 @@
         </div>
 
         @if ($orders->isEmpty())
-            <!-- EMPTY STATE -->
             <div class="order-empty-state">
                 <img src="{{ asset('images/pos/UserOrderHistory.png') }}" alt="No orders" class="order-empty-state-img">
-                {{-- <h3 class="order-empty-state-title">No Order History Yet</h3>
-                <p class="order-empty-state-subtitle">
-                    Looks like you haven't placed any orders yet.<br>
-                    Once you make a purchase, your order history will appear here.
-                </p> --}}
             </div>
         @else
-            <!-- PHONE-ONLY CARD LIST -->
             <div class="mobile-order-list">
                 @foreach ($orders as $order)
                     <div id="order-item-{{ $order->id }}" class="order-card-mobile" data-order-no="{{ $order->order_no }}" data-detail-url="{{ route('user.pos.order.show', $order->id) }}">
                         <div class="order-card-img item-thumb-stack">
                             @foreach ($order->items->take(3) as $index => $oi)
                                 @php
-                                    // Priority: ordered variant's own image, then the
-                                    // item's admin-set custom_image_url override, then the
-                                    // item's synced image_url/image, then null (placeholder
-                                    // handled by onerror below).
-                                    // image_url may be stored either as a full URL or a
-                                    // relative storage path, so resolve either shape.
                                     $resolveThumb = fn ($path) => $path
                                         ? (str_starts_with($path, 'http') ? $path : asset($path))
                                         : null;
@@ -193,13 +172,7 @@
                                     <div class="item-thumb-stack">
                                         @foreach ($orderItems as $index => $oi)
                                             @php
-                                                // Priority: ordered variant's own image, then the
-                                                // item's admin-set custom_image_url override, then
-                                                // the item's synced image field. Adjust the final
-                                                // accessor to match whatever field your Item model
-                                                // stores its image on. image_url may be stored
-                                                // either as a full URL or a relative storage path,
-                                                // so resolve either shape.
+                                            
                                                 $tblResolveThumb = fn ($path) => $path
                                                     ? (str_starts_with($path, 'http') ? $path : asset($path))
                                                     : null;
@@ -268,30 +241,6 @@
 
 @push('scripts')
     <script>
-        // Remembers the exact order you were looking at + scroll position,
-        // so leaving to view order detail and coming back doesn't dump you
-        // at the top of the list.
-        //
-        // Storage: localStorage, not sessionStorage. sessionStorage is
-        // tab-scoped and can fail to carry over depending on how the
-        // browser opens/restores the previous tab; localStorage is shared
-        // across tabs/windows for this site and is the most reliable option.
-        // It won't auto-clear when the browser closes (sessionStorage would
-        // have), but "actually works" beats "clears itself" here.
-        //
-        // Key: fixed, NOT tied to the current URL/query string. Scoping it
-        // to the URL was the likely reason it silently failed before — if
-        // returning to the list didn't land on the exact same filters/page
-        // query string, the saved entry was never found.
-        //
-        // When it's saved: immediately, synchronously, the moment you click
-        // a row/card/link — not on beforeunload/pagehide, which some
-        // browsers (mobile Safari especially) don't fire reliably.
-        //
-        // When it's restored: on every page-ready signal available
-        // (DOMContentLoaded, load, pageshow) so it fires whether the list
-        // page was freshly loaded, restored from bfcache, or anything in
-        // between.
         const SCROLL_STORAGE_KEY = 'posOrderHistoryScroll';
 
         let lastClickedOrderNo = null;
@@ -360,8 +309,6 @@
                             return;
                         }
                     }
-
-                    // Fallback: raw scroll offsets (tab switch, pagination, etc.)
                     const tableCard = document.querySelector('.custom-table-card');
                     if (tableCard && table) {
                         tableCard.scrollTop = table;
@@ -372,9 +319,6 @@
                     hasRestoredScroll = true;
                     console.log('[pos-scroll] fell back to raw offsets', { table, page });
                 };
-
-                // Small delay so it runs after layout has settled, in case
-                // this fires very early (DOMContentLoaded).
                 if (document.readyState === 'complete') {
                     applyRestore();
                 } else {
@@ -384,9 +328,6 @@
                 console.log('[pos-scroll] RESTORE FAILED', e);
             }
         }
-
-        // Fire on every signal available — harmless if more than one runs,
-        // since hasRestoredScroll guards against repeating it.
         document.addEventListener('DOMContentLoaded', () => {
             console.log('[pos-scroll] DOMContentLoaded fired');
             restoreScrollPosition();
@@ -399,19 +340,10 @@
             console.log('[pos-scroll] pageshow fired, persisted:', e.persisted);
             restoreScrollPosition();
         });
-
-        // Still keep pagehide as a backup save for navigation that isn't a
-        // direct row/card/link click (e.g. browser back from a page that
-        // isn't this one at all).
         window.addEventListener('pagehide', () => saveScrollPosition());
     </script>
     <script>
-        // Bulk-select handling for the desktop table.
-        // All four elements below are optional in the DOM (e.g. the
-        // action bar only renders when the table is present), so every
-        // lookup is null-checked before use. This is what was crashing
-        // before: cancelBtn.addEventListener() ran even though
-        // #cancelSelection didn't exist on pages with no orders.
+
         const selectAll = document.getElementById('selectAll');
         const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
         const actionBar = document.getElementById('actionBar');
@@ -452,8 +384,6 @@
             }
         }
 
-        // Before the delete form submits, inject the checked ids as
-        // hidden ids[] inputs so the backend receives them.
         if (deleteForm) {
             deleteForm.addEventListener('submit', function(e) {
                 deleteForm.querySelectorAll('input[name="ids[]"]').forEach(el => el.remove());

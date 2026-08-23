@@ -8,7 +8,6 @@ use App\Models\ManagementSystem\OrderAction;
 use App\Models\POS\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
  use App\Models\ManagementSystem\Company;
  use Illuminate\Support\Facades\Storage;
@@ -130,182 +129,8 @@ public function show($id)
     public function downloadInvoice($id)
     {
         $order = $this->orders()->with('items')->findOrFail($id);
-        $token = $this->getToken();
 
-        if (!$token) {
-            return back()->with(
-                'error',
-                'Failed to authenticate with Business Central.'
-            );
-        }
-
-        $isInvoice = in_array(
-            $order->status,
-            ['delivery', 'delivered'],
-            true
-        );
-
-        $bcId = $isInvoice
-            ? $this->resolvePostedInvoiceId($order, $token)
-            : $this->resolveSalesOrderId($order, $token);
-
-        if (!$bcId) {
-            $message = match (true) {
-                $isInvoice =>
-                    'Posted sales invoice was not found in Business Central yet.',
-
-                $order->status === 'on-the-way' =>
-                    'Sales order was not found in Business Central yet.',
-
-                default =>
-                    'Invoice PDF is available only after this order is synced to Business Central.',
-            };
-
-            return back()->with('error', $message);
-        }
-
-        $type = $isInvoice ? 'invoice' : 'order';
-
-        $page = $isInvoice
-            ? "postedSaleInvoicePdf({$bcId})"
-            : "salesOrderPdf({$bcId})";
-
-        return $this->streamPdf(
-            $this->bcUrl("{$page}/Microsoft.NAV.GetPDF"),
-            $token,
-            $order,
-            $type
-        );
-    }
-
-    private function streamPdf(
-        ?string $endpoint,
-        string $token,
-        Order $order,
-        string $type
-    ) {
-        if (!$endpoint) {
-            return back()->with(
-                'error',
-                'Business Central URL is not configured.'
-            );
-        }
-
-        $response = $this->bc($token)->post($endpoint, (object) []);
-
-        if (!$response->successful()) {
-            Log::error('BC PDF download failed', [
-                'endpoint' => $endpoint,
-                'status'   => $response->status(),
-                'body'     => $response->body(),
-            ]);
-
-            return back()->with(
-                'error',
-                'Failed to download PDF from Business Central.'
-            );
-        }
-
-        $pdf = base64_decode($response->json('value', ''), true);
-
-        if ($pdf === false) {
-            return back()->with(
-                'error',
-                'PDF was not returned by Business Central.'
-            );
-        }
-
-        $orderNo = preg_replace(
-            '/[^A-Za-z0-9_-]/',
-            '-',
-            $order->order_no ?: $order->id
-        );
-
-        return response($pdf, 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' =>
-                "attachment; filename=\"{$type}-{$orderNo}.pdf\"",
-        ]);
-    }
-
-    private function resolveSalesOrderId(
-        Order $order,
-        string $token
-    ): ?string {
-        if ($order->bc_order_id) {
-            return $order->bc_order_id;
-        }
-
-        if (!$order->bc_document_no) {
-            return null;
-        }
-
-        $number = str_replace("'", "''", $order->bc_document_no);
-
-        $url = $this->bcEndpoint(
-            'sales_orders_by_number_endpoint',
-            "salesOrders?\$filter=number eq '{number}'&\$top=1",
-            ['number' => $number]
-        );
-
-        return $url
-            ? $this->firstId($this->bc($token)->get($url))
-            : null;
-    }
-
-    private function resolvePostedInvoiceId(
-        Order $order,
-        string $token
-    ): ?string {
-        if ($order->bc_invoice_no) {
-            $id = $this->postedInvoiceId(
-                $token,
-                'number',
-                $order->bc_invoice_no
-            );
-
-            if ($id) {
-                return $id;
-            }
-        }
-
-        return $this->postedInvoiceId(
-            $token,
-            'orderNumber',
-            $order->bc_document_no ?: $order->order_no
-        );
-    }
-
-    private function postedInvoiceId(
-        string $token,
-        string $field,
-        string $value
-    ): ?string {
-        $url = $this->bcUrl('postedSalesInvoices');
-
-        if (!$url) {
-            return null;
-        }
-
-        $value = str_replace("'", "''", $value);
-        $filter = rawurlencode("{$field} eq '{$value}'");
-
-        return $this->firstId(
-            $this->bc($token)->get(
-                "{$url}?\$filter={$filter}&\$top=1"
-            )
-        );
-    }
-
-    private function firstId($response): ?string
-    {
-        if (!$response->successful()) {
-            return null;
-        }
-
-        $id = data_get($response->json(), 'value.0.id');
-
-        return $id ? (string) $id : null;
+        return $this->downloadOrderInvoicePdf($order);
     }
 
     public function deleteMultiple(Request $request)
@@ -392,8 +217,4 @@ public function show($id)
 
         return Storage::url($company->logo);
     }
-    protected function bc(string $token)
-{
-    return Http::withToken($token)->acceptJson();
-}
 }

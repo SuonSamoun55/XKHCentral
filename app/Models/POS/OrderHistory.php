@@ -14,6 +14,8 @@ class OrderHistory extends Model
         'order_no',
         'customer_no',
         'total_amount',
+        'riel_exchange_rate',
+        'total_amount_riel',
         'status',
         'items_summary',
         'ordered_at',

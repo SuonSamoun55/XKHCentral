@@ -1,6 +1,7 @@
-@extends('Layout.Management.app')
-<link rel="stylesheet" href="{{ asset('css/pos/admin/notification/admin_chat_view.css') }}">
+@extends('Layout.POSAdmin.app')
+<link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSAdminViews/Chat/admin_chat_view.css') }}">
 @section('title', 'Admin Chat')
+@section('hideMobileNav', '1')
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -12,24 +13,25 @@
     <button class="lightbox-close" id="lightboxClose">&#x2715;</button>
     <img class="lightbox-img" id="lightboxImg" src="" alt="Image preview">
     <button class="lightbox-nav lightbox-next" id="lightboxNext" type="button" aria-label="Next image">&gt;</button>
-    <div class="lightbox-count" id="lightboxCount">1 / 1</div>
+    <div class="lightbox-count" id="lightboxCount">1    / 1</div>
 </div>
 
-<div class="chat-page" id="chatPage">
+<div class="chat-page {{ $activeContactId ? 'has-active-chat' : 'no-active-chat' }} {{ ($activeContactId && !($hasExplicitContact ?? false)) ? 'auto-selected' : '' }}" id="chatPage">
     @php
         $activeContactIsOnline = $activeContact ? (bool) ($activeContact->is_online ?? false) : false;
         $activeContactStatusText = $activeContact
             ? ($activeContactIsOnline ? 'Online' : ((string) ($activeContact->offline_duration ?? 'Offline')))
             : '';
     @endphp
-
-    {{-- ══════════════════════════════════════════════════════
-         LEFT PANE — Conversation list
-    ══════════════════════════════════════════════════════ --}}
     <aside class="conversation-pane">
 
         <div class="pane-header">
-            <h3>Messages</h3>
+            <div class="pane-header-top">
+                <a href="{{ route('admin.notifications.index') }}" class="pane-back-btn" id="chatBackBtn" title="Back to Notifications">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <h3>Messages</h3>
+            </div>
             <div class="search-wrap">
                 <i class="bi bi-search"></i>
                 <input id="contactSearch"
@@ -83,18 +85,27 @@
             </div>
         </div>
 
-        <a href="{{ route('admin.notifications.index') }}" class="back-link">
-            <i class="bi bi-arrow-left"></i> Back to Notifications
-        </a>
-
     </aside>
-
-    {{-- ══════════════════════════════════════════════════════
-         MIDDLE PANE — Message thread
-    ══════════════════════════════════════════════════════ --}}
     <section class="message-pane">
+        <header class="mobile-chat-header">
+            <div class="header-left">
+                <button type="button" class="back-btn" id="mobileChatBack" title="Back to contacts">
+                    <i class="bi bi-arrow-left"></i>
+                </button>
+                <img src="{{ $activeContact->chat_avatar ?? asset('images/pos/Rectangle 2.png') }}"
+                     class="header-avatar" id="mobileHeaderAvatar" alt="Avatar">
+                <div class="header-meta">
+                    <div class="header-name" id="mobileHeaderName">{{ $activeContact->name ?? 'Admin Chat' }}</div>
+                    <div class="header-status {{ $activeContactIsOnline ? 'is-online' : 'is-offline' }}" id="mobileHeaderStatus" @if(!$activeContact) hidden @endif>{{ $activeContactStatusText }}</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <button type="button" class="header-icon" id="toggleInfoPaneMobile" title="View contact info" @if(!$activeContact) hidden @endif>
+                    <i class="bi bi-info-circle"></i>
+                </button>
+            </div>
+        </header>
 
-        {{-- Header --}}
         <header class="message-header">
             <div class="message-header-main" id="messageHeaderMain">
             @if($activeContact)
@@ -113,14 +124,10 @@
                 </div>
             @endif
             </div>
-
-            {{-- Toggle right panel --}}
             <button class="icon-btn header-toggle-btn" id="toggleInfoPane" title="Show / hide info panel" @if(!$activeContact) hidden @endif>
                 <i class="bi bi-layout-sidebar-reverse"></i>
             </button>
         </header>
-
-        {{-- Message stream --}}
         <div class="message-stream" id="chatBody">
             @php $previousMsgDate = null; @endphp
             @forelse($messages as $msg)
@@ -154,10 +161,9 @@
                          class="msg-avatar"
                          alt="Avatar">
 
-                    <div class="msg-bubble">
+                    <div class="msg-bubble {{ ($type === 'voice' && $attachUrl) ? 'msg-voice' : '' }}">
 
                         @if($type === 'image' && $attachUrl)
-                            {{-- Image message --}}
                             <img src="{{ $attachUrl }}"
                                  alt="Shared image"
                                  class="msg-image js-lightbox-trigger">
@@ -166,35 +172,29 @@
                             @endif
 
                         @elseif($type === 'voice' && $attachUrl)
-                            {{-- Voice message --}}
-                            <div class="msg-audio-row" data-src="{{ $attachUrl }}" data-mime="{{ $msg->attachment_mime ?? 'audio/webm' }}">
-                                <button class="play-btn js-play-btn" type="button">
+                            <div class="voice-player-row">
+                                <button type="button" class="voice-toggle-btn" aria-label="Play voice message">
                                     <i class="bi bi-play-fill"></i>
                                 </button>
-                                <div class="voice-progress-wrap">
-                                    <input type="range" class="voice-progress js-voice-progress" value="0" min="0" max="100" step="0.1">
+                                <div class="voice-waveform-wrap">
+                                    <div class="voice-bars-track">
+                                        @for ($i = 0; $i < 24; $i++)<span></span>@endfor
+                                    </div>
+                                    <div class="voice-bars-played">
+                                        @for ($i = 0; $i < 24; $i++)<span></span>@endfor
+                                    </div>
                                 </div>
-                                <span class="wave-dur js-wave-dur">{{ $msg->voice_duration ?? '0:00' }}</span>
-                                <select class="speed-select js-speed-select" title="Playback speed">
-                                    <option value="1">1×</option>
-                                    <option value="1.5">1.5×</option>
-                                    <option value="2">2×</option>
-                                </select>
-                                <audio class="js-audio-el" preload="metadata">
-                                    <source src="{{ $attachUrl }}"
-                                            type="{{ $msg->attachment_mime ?? 'audio/webm' }}">
-                                </audio>
+                                <div class="voice-time">0:00</div>
+                                <audio class="voice-audio-src d-none" preload="metadata" src="{{ $attachUrl }}"></audio>
                             </div>
                             @if($text !== '' && $text !== '[Voice message]')
                                 <div>{{ $text }}</div>
                             @endif
 
                         @elseif($type === 'icon')
-                            {{-- Emoji / icon message --}}
                             <div class="msg-icon-text">{{ $text }}</div>
 
                         @else
-                            {{-- Plain text --}}
                             <div>{{ $text }}</div>
                         @endif
 
@@ -235,10 +235,8 @@
         <div id="composerContainer">
         @if($activeContactId)
         <div class="composer-wrap">
-
-            {{-- Emoji picker panel --}}
             <div class="emoji-panel" id="emojiPanel">
-                @foreach(['😀','😂','😍','👍','🙏','🔥','🎉','😢','❤️','👏','😎','🤔'] as $em)
+                @foreach(['😀','😂','😍','👍','🙏','🔥','🎉','😢','❤️','👏','😎','🤔','😁'] as $em)
                     <button type="button" class="emoji-item" data-icon="{{ $em }}">{{ $em }}</button>
                 @endforeach
             </div>
@@ -252,12 +250,11 @@
                 <input type="hidden" name="receiver_id" value="{{ $activeContactId }}">
                 <input type="file"   id="imageInput"    accept="image/*" style="display:none">
 
-                <input type="text"
-                       id="chatMessageInput"
+                <textarea id="chatMessageInput"
                        name="message"
                        class="composer-input"
                        placeholder="Type a message..."
-                       autocomplete="off">
+                       rows="1"></textarea>
 
                 {{-- Attach image --}}
                 <button type="button" class="icon-btn" id="attachButton" title="Send image">
@@ -279,12 +276,10 @@
                 </button>
 
                 {{-- Send --}}
-                <button type="submit" class="send-btn">Send</button>
+                <button type="submit" class="send-btn"><span>Send</span><i class="bi bi-send-fill"></i></button>
             </form>
 
-            <div class="composer-hint" id="composerHint">
-                Click mic to record, click again to send. Press Esc to cancel.
-            </div>
+            <div class="composer-hint" id="composerHint"></div>
 
         </div>
         @endif
@@ -298,6 +293,10 @@
     <div id="contactInfoPaneContainer">
     @if($activeContact)
     <aside class="contact-info-pane" id="contactInfoPane">
+
+        <button type="button" class="info-pane-close" id="closeInfoPane" title="Close">
+            <i class="bi bi-x-lg"></i>
+        </button>
 
         <div class="rp-top">
             <img src="{{ $activeContact->chat_avatar ?? asset('images/pos/Rectangle 2.png') }}"
@@ -403,9 +402,10 @@
 (function () {
     'use strict';
     let form, input, attachButton, imageInput, emojiButton, emojiPanel, voiceButton, voiceCancelButton, composerHint, removeImgBtn;
-    let imgPreviewBar, imgThumb, imgFileName, contactInfoPane, peerStatus, peerInfoStatus;
+    let imgPreviewBar, imgThumb, imgFileName, contactInfoPane, peerStatus, peerInfoStatus, closeInfoPane;
 
     const chatBody               = document.getElementById('chatBody');
+    const chatPage                = document.getElementById('chatPage');
     const contactSearch          = document.getElementById('contactSearch');
     const contactList            = document.getElementById('contactList');
     const contactListItems       = document.getElementById('contactListItems');
@@ -420,6 +420,11 @@
     const lightboxNext           = document.getElementById('lightboxNext');
     const lightboxCount          = document.getElementById('lightboxCount');
     const toggleInfoPane         = document.getElementById('toggleInfoPane');
+    const mobileChatBack         = document.getElementById('mobileChatBack');
+    const mobileHeaderAvatar     = document.getElementById('mobileHeaderAvatar');
+    const mobileHeaderName       = document.getElementById('mobileHeaderName');
+    const mobileHeaderStatus     = document.getElementById('mobileHeaderStatus');
+    const toggleInfoPaneMobile   = document.getElementById('toggleInfoPaneMobile');
 
     const csrfToken              = document.querySelector('meta[name="csrf-token"]')?.content || '';
     const currentUserId          = Number(@json((int) $currentUser->id));
@@ -447,9 +452,11 @@
     let lightboxImages           = [];
     let lightboxIndex            = 0;
     let lastRenderedDate         = @json(optional($messages->last()?->created_at)->format('Y-m-d'));
-    let currentAudioEl           = null;
-    let currentPlayBtn           = null;
-    let contactsState            = [];
+    // Hydrated from the server-rendered contact list on first load, so
+    // renderContacts(contactsState) — called after sending a message,
+    // before any AJAX conversation switch has populated this — doesn't
+    // wipe the sidebar with an empty "No chats yet." state.
+    let contactsState            = @json($initialContacts ?? []);
 
     const renderedIds = new Set(@json($messages->pluck('id')->map(fn($id) => (int)$id)->values()));
 
@@ -470,6 +477,7 @@
         contactInfoPane   = document.getElementById('contactInfoPane');
         peerStatus        = document.getElementById('peerStatus');
         peerInfoStatus    = document.getElementById('peerInfoStatus');
+        closeInfoPane     = document.getElementById('closeInfoPane');
     }
 
     function escapeHtml(str) {
@@ -482,7 +490,9 @@
     }
 
     function setHint(text) {
-        if (composerHint) composerHint.textContent = text || '';
+        if (!composerHint) return;
+        composerHint.textContent = text || '';
+        composerHint.classList.toggle('show', !!text);
     }
 
     function showSending(visible) {
@@ -493,7 +503,7 @@
         if (!presence) return;
         const isOnline = Boolean(presence.is_online);
         const statusText = String(presence.status_text || (isOnline ? 'Online' : 'Offline'));
-        [peerStatus, peerInfoStatus].forEach(function (node) {
+        [peerStatus, peerInfoStatus, mobileHeaderStatus].forEach(function (node) {
             if (!node) return;
             node.textContent = statusText;
             node.classList.toggle('is-online', isOnline);
@@ -553,9 +563,20 @@
     }
 
     function formatDur(sec) {
+        if (!isFinite(sec) || sec < 0) return '0:00';
         const m = Math.floor(sec / 60);
         const s = String(Math.floor(sec % 60)).padStart(2, '0');
         return `${m}:${s}`;
+    }
+
+    // Auto-grow the message textarea as the user types, capped at 15vh.
+    function autoGrowInput() {
+        if (!input) return;
+        input.style.height = 'auto';
+        const maxHeight = window.innerHeight * 0.15;
+        const newHeight = Math.min(input.scrollHeight, maxHeight);
+        input.style.height = newHeight + 'px';
+        input.style.overflowY = input.scrollHeight > maxHeight ? 'auto' : 'hidden';
     }
 
     function syncLightboxControls() {
@@ -603,69 +624,50 @@
         });
     }
 
-    function stopCurrentAudio() {
-        if (currentAudioEl && !currentAudioEl.paused) {
-            currentAudioEl.pause();
-            if (currentPlayBtn) currentPlayBtn.innerHTML = '<i class="bi bi-play-fill"></i>';
-        }
-        currentAudioEl = null;
-        currentPlayBtn = null;
-    }
-
-    function attachPlayButtons(scope) {
+    function initVoicePlayers(scope) {
         if (!scope) return;
-        scope.querySelectorAll('.msg-audio-row').forEach(function (row) {
-            const btn = row.querySelector('.js-play-btn');
-            const audio = row.querySelector('.js-audio-el');
-            const progress = row.querySelector('.js-voice-progress');
-            const durEl = row.querySelector('.js-wave-dur');
-            const speedSel = row.querySelector('.js-speed-select');
-            if (!audio || !btn || row.dataset.bound === '1') return;
-            row.dataset.bound = '1';
+        scope.querySelectorAll('.voice-player-row').forEach(function (row) {
+            if (row.dataset.voiceBound === '1') return;
+            row.dataset.voiceBound = '1';
 
-            audio.addEventListener('timeupdate', function () {
-                if (!audio.duration) return;
-                const pct = (audio.currentTime / audio.duration) * 100;
-                if (progress) progress.value = pct;
-                if (durEl) durEl.textContent = formatDur(audio.currentTime) + ' / ' + formatDur(audio.duration);
-            });
+            const btn = row.querySelector('.voice-toggle-btn');
+            const icon = btn?.querySelector('i');
+            const audio = row.querySelector('.voice-audio-src');
+            const playedBars = row.querySelector('.voice-bars-played');
+            const timeEl = row.querySelector('.voice-time');
+            if (!btn || !audio || !playedBars || !timeEl) return;
 
             audio.addEventListener('loadedmetadata', function () {
-                if (durEl && audio.duration) durEl.textContent = formatDur(audio.duration);
+                if (isFinite(audio.duration)) timeEl.textContent = formatDur(audio.duration);
             });
 
-            progress?.addEventListener('input', function () {
-                if (!audio.duration) return;
-                audio.currentTime = (progress.value / 100) * audio.duration;
-            });
-
-            speedSel?.addEventListener('change', function () {
-                audio.playbackRate = parseFloat(speedSel.value);
-            });
-
-            btn.addEventListener('click', function () {
-                if (!audio.paused) {
-                    audio.pause();
-                    btn.innerHTML = '<i class="bi bi-play-fill"></i>';
-                    currentAudioEl = null;
-                    currentPlayBtn = null;
-                } else {
-                    stopCurrentAudio();
-                    audio.playbackRate = parseFloat(speedSel?.value || 1);
-                    audio.play();
-                    btn.innerHTML = '<i class="bi bi-pause-fill"></i>';
-                    currentAudioEl = audio;
-                    currentPlayBtn = btn;
-                }
+            audio.addEventListener('timeupdate', function () {
+                const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+                playedBars.style.width = pct + '%';
+                timeEl.textContent = formatDur(audio.currentTime);
             });
 
             audio.addEventListener('ended', function () {
-                btn.innerHTML = '<i class="bi bi-play-fill"></i>';
-                if (progress) progress.value = 0;
-                if (durEl && audio.duration) durEl.textContent = formatDur(audio.duration);
-                if (currentAudioEl === audio) {
-                    currentAudioEl = null;
-                    currentPlayBtn = null;
+                icon.className = 'bi bi-play-fill';
+                playedBars.style.width = '0%';
+                timeEl.textContent = formatDur(audio.duration || 0);
+            });
+
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.voice-audio-src').forEach(function (a) {
+                    if (a !== audio && !a.paused) {
+                        a.pause();
+                        const otherIcon = a.closest('.voice-player-row')?.querySelector('.voice-toggle-btn i');
+                        if (otherIcon) otherIcon.className = 'bi bi-play-fill';
+                    }
+                });
+
+                if (audio.paused) {
+                    audio.play();
+                    icon.className = 'bi bi-pause-fill';
+                } else {
+                    audio.pause();
+                    icon.className = 'bi bi-play-fill';
                 }
             });
         });
@@ -675,8 +677,6 @@
         const type = msg.message_type || 'text';
         const text = escapeHtml(msg.message || '');
         const attachmentUrl = msg.attachment_url ? escapeHtml(msg.attachment_url) : '';
-        const mime = escapeHtml(msg.attachment_mime || 'audio/webm');
-        const dur = escapeHtml(msg.voice_duration || '0:00');
 
         if (type === 'image' && attachmentUrl) {
             const caption = (text && text !== '[Image]') ? `<div>${text}</div>` : '';
@@ -684,20 +684,15 @@
         }
         if (type === 'voice' && attachmentUrl) {
             const caption = (text && text !== '[Voice message]') ? `<div>${text}</div>` : '';
-            return `<div class="msg-audio-row" data-src="${attachmentUrl}" data-mime="${mime}">
-                    <button type="button" class="play-btn js-play-btn"><i class="bi bi-play-fill"></i></button>
-                    <div class="voice-progress-wrap">
-                        <input type="range" class="voice-progress js-voice-progress" value="0" min="0" max="100" step="0.1">
+            const bars = '<span></span>'.repeat(24);
+            return `<div class="voice-player-row">
+                    <button type="button" class="voice-toggle-btn" aria-label="Play voice message"><i class="bi bi-play-fill"></i></button>
+                    <div class="voice-waveform-wrap">
+                        <div class="voice-bars-track">${bars}</div>
+                        <div class="voice-bars-played">${bars}</div>
                     </div>
-                    <span class="wave-dur js-wave-dur">${dur}</span>
-                    <select class="speed-select js-speed-select" title="Playback speed">
-                        <option value="1">1×</option>
-                        <option value="1.5">1.5×</option>
-                        <option value="2">2×</option>
-                    </select>
-                    <audio class="js-audio-el" preload="metadata">
-                        <source src="${attachmentUrl}" type="${mime}">
-                    </audio>
+                    <div class="voice-time">0:00</div>
+                    <audio class="voice-audio-src d-none" preload="metadata" src="${attachmentUrl}"></audio>
                 </div>${caption}`;
         }
         if (type === 'icon') return `<div class="msg-icon-text">${text}</div>`;
@@ -713,16 +708,17 @@
         const tick = isMine ? ' <span class="msg-tick">✓✓</span>' : '';
         const time = escapeHtml(msg.sent_at || nowFormatted());
 
+        const isVoice = (msg.message_type === 'voice') && Boolean(msg.attachment_url);
         const row = document.createElement('div');
         row.className = `msg-row ${isMine ? 'mine' : 'other'}`;
         row.innerHTML = `<img src="${avatar}" class="msg-avatar" alt="Avatar">
-            <div class="msg-bubble">
+            <div class="msg-bubble ${isVoice ? 'msg-voice' : ''}">
                 ${buildBubbleInner(msg)}
                 <small class="msg-time">${time}${tick}</small>
             </div>`;
         chatBody.appendChild(row);
         attachLightbox(row);
-        attachPlayButtons(row);
+        initVoicePlayers(row);
         if (msgId > 0) renderedIds.add(msgId);
         removeEmptyState();
         scrollBottom();
@@ -732,7 +728,7 @@
         renderedIds.clear();
         lastRenderedDate = '';
         lastId = 0;
-        stopCurrentAudio();
+        chatBody?.querySelectorAll('.voice-audio-src').forEach(function (a) { a.pause(); });
         if (chatBody) chatBody.innerHTML = '';
     }
 
@@ -780,6 +776,26 @@
     }
 
     function renderHeader(contact) {
+        chatPage?.classList.toggle('has-active-chat', Boolean(contact));
+        chatPage?.classList.toggle('no-active-chat', !contact);
+        // Once JS is driving the view (any real navigation), the initial
+        // "auto-selected on mobile" CSS override no longer applies.
+        chatPage?.classList.remove('auto-selected');
+
+        if (mobileHeaderAvatar) mobileHeaderAvatar.src = escapeHtml(contact?.chat_avatar || myAvatar);
+        if (mobileHeaderName) mobileHeaderName.textContent = contact ? (contact.name || '') : 'Admin Chat';
+        if (mobileHeaderStatus) {
+            if (contact) {
+                mobileHeaderStatus.removeAttribute('hidden');
+                mobileHeaderStatus.textContent = contact.status_text || (contact.is_online ? 'Online' : 'Offline');
+                mobileHeaderStatus.classList.toggle('is-online', Boolean(contact.is_online));
+                mobileHeaderStatus.classList.toggle('is-offline', !contact.is_online);
+            } else {
+                mobileHeaderStatus.setAttribute('hidden', 'hidden');
+            }
+        }
+        toggleInfoPaneMobile?.toggleAttribute('hidden', !contact);
+
         if (!messageHeaderMain) return;
         if (contact) {
             messageHeaderMain.innerHTML = `<img class="header-avatar" src="${escapeHtml(contact.chat_avatar || '')}" alt="${escapeHtml(contact.name || '')}">
@@ -805,14 +821,14 @@
                 <input type="hidden" name="_token" value="${escapeHtml(csrfToken)}">
                 <input type="hidden" name="receiver_id" value="${Number(contactId)}">
                 <input type="file" id="imageInput" accept="image/*" style="display:none">
-                <input type="text" id="chatMessageInput" name="message" class="composer-input" placeholder="Type a message..." autocomplete="off">
+                <textarea id="chatMessageInput" name="message" class="composer-input" placeholder="Type a message..." rows="1"></textarea>
                 <button type="button" class="icon-btn" id="attachButton" title="Send image"><i class="bi bi-image"></i></button>
                 <button type="button" class="icon-btn" id="emojiButton" title="Emoji"><i class="bi bi-emoji-smile"></i></button>
                 <button type="button" class="icon-btn" id="voiceButton" title="Voice message"><i class="bi bi-mic"></i></button>
                 <button type="button" class="voice-cancel-btn" id="voiceCancelButton" title="Cancel recording">Cancel</button>
-                <button type="submit" class="send-btn">Send</button>
+                <button type="submit" class="send-btn"><span>Send</span><i class="bi bi-send-fill"></i></button>
             </form>
-            <div class="composer-hint" id="composerHint">Click mic to record, click again to send. Press Esc to cancel.</div>
+            <div class="composer-hint" id="composerHint"></div>
         </div>`;
     }
 
@@ -851,6 +867,9 @@
             : '';
 
         infoPaneContainer.innerHTML = `<aside class="contact-info-pane" id="contactInfoPane">
+            <button type="button" class="info-pane-close" id="closeInfoPane" title="Close">
+                <i class="bi bi-x-lg"></i>
+            </button>
             <div class="rp-top">
                 <img src="${escapeHtml(contact.chat_avatar || '')}" alt="${escapeHtml(contact.name || '')}">
                 <h4>${escapeHtml(contact.name || '')}</h4>
@@ -1027,6 +1046,7 @@
             renderContacts(contactsState);
 
             if (input) input.value = '';
+            autoGrowInput();
             selectedImageFile = null;
             selectedVoiceFile = null;
             clearImagePreview();
@@ -1059,6 +1079,9 @@
                 sendPayload({ message: input.value, imageFile: selectedImageFile, voiceFile: selectedVoiceFile });
             }
         });
+
+        input?.addEventListener('input', autoGrowInput);
+        autoGrowInput();
 
         attachButton?.addEventListener('click', function () { imageInput?.click(); });
 
@@ -1237,9 +1260,36 @@
         toggleInfoPane.querySelector('i').className = hidden ? 'bi bi-layout-sidebar-inset-reverse' : 'bi bi-layout-sidebar-reverse';
     });
 
+    mobileChatBack?.addEventListener('click', function () {
+        chatPage?.classList.remove('has-active-chat', 'auto-selected');
+        chatPage?.classList.add('no-active-chat');
+        // Without this, re-tapping the same contact you just backed out of
+        // does nothing — the contact-list click handler below skips
+        // reloading whenever the tapped id already equals activeContactId.
+        activeContactId = 0;
+    });
+
+    toggleInfoPaneMobile?.addEventListener('click', function () {
+        contactInfoPane?.classList.add('mobile-open');
+    });
+
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('#closeInfoPane')) {
+            contactInfoPane?.classList.remove('mobile-open');
+        }
+    });
+
     window.addEventListener('popstate', function () {
         const userId = Number(new URL(window.location.href).searchParams.get('user_id') || 0);
-        if (userId && userId !== activeContactId) loadConversation(userId, false);
+        if (userId && userId !== activeContactId) {
+            loadConversation(userId, false);
+        } else if (!userId && activeContactId) {
+            // Same reset as the mobile back button — browser back landed on
+            // a URL with no ?user_id=, so show the list, not a stale thread.
+            chatPage?.classList.remove('has-active-chat', 'auto-selected');
+            chatPage?.classList.add('no-active-chat');
+            activeContactId = 0;
+        }
     });
 
     window.addEventListener('beforeunload', cleanupRecorder);
@@ -1251,11 +1301,32 @@
     bindComposerEvents();
     attachLightbox(chatBody);
     attachLightbox(infoPaneContainer);
-    attachPlayButtons(chatBody);
+    initVoicePlayers(chatBody);
     applyContactSearchFilter();
     scrollBottom();
     setInterval(pollMessages, 2500);
 
+})();
+
+</script>
+
+{{-- Back button acts like the browser's own Back button — real
+     history.back() (often served straight from bfcache, no fresh
+     request) instead of always navigating to a fixed URL. Only used
+     when we actually arrived here from this site — landing on this
+     page directly (bookmark, new tab, external link) has no useful
+     "back" to go to, so that case just falls through to the normal href. --}}
+<script>
+(function () {
+    var cameFromSameOrigin = document.referrer && document.referrer.indexOf(window.location.origin) === 0;
+    if (!cameFromSameOrigin || window.history.length <= 1) return;
+
+    var el = document.getElementById('chatBackBtn');
+    if (!el) return;
+    el.addEventListener('click', function (e) {
+        e.preventDefault();
+        window.history.back();
+    });
 })();
 </script>
 @endpush

@@ -1,5 +1,4 @@
-@extends('ManagementSystemViews.UserViews.Layouts.app')
-
+@extends('Layout.POSUser.app')
 @section('title', 'POS Cart')
 
 @push('styles')
@@ -12,7 +11,7 @@
         <main class="content-area">
             <div id="cartMainContent">
                 <div class="cart-header">
-                    @include('ManagementSystemViews.UserViews.Layouts.header', ['title' => 'Cart'])
+                    @include('Layout.POSUser.header', ['title' => 'Cart'])
                 </div>
 
                 @if (!$cart || $cart->items->isEmpty())

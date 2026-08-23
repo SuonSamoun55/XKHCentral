@@ -8,8 +8,6 @@
 
 @section('content')
 <div class="company-setup-page">
-
-    {{-- ============ ALERTS ============ --}}
     <div class="alert-container">
         @if (session('success'))
             <div class="custom-alert alert-success">

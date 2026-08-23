@@ -496,6 +496,30 @@
     width:100%;
     padding: 0px;
 }
+
+/* .app-shell's height:100vh + overflow:hidden (above) is meant to keep the
+   desktop sidebar fixed while its content area scrolls internally. On
+   mobile, stacked single-column content is often taller than one screen,
+   and that clipped shell was cutting content off below the fold instead of
+   letting the page scroll — unlock it here. */
+.app-shell {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+    /* Was row (the default) with no mobile override — with the sidebar
+       hidden below, that left header_mobile's topbar and the page content
+       sitting side by side as flex siblings instead of stacked, squeezing
+       both into partial width. */
+    flex-direction: column;
+}
+
+/* Desktop sidebar was never hidden on mobile, so it rendered as a squeezed
+   icon-only strip alongside the page content — pages needing mobile nav
+   already include header_mobile.blade.php (hamburger + menu panel) for
+   that instead. */
+.sidebar-wrap {
+    display: none;
+}
 }
 
 /* Cart count badge for aside */
@@ -553,6 +577,92 @@
 
 .voice-toggle-btn i {
     margin-left: 2px; /* optical centering for play glyph */
+}
+
+/* ===== Logout confirmation modal (shared across sidebars) ===== */
+.logout-confirm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(15, 23, 42, 0.45);
+    align-items: center;
+    justify-content: center;
+}
+
+.logout-confirm-overlay.show {
+    display: flex;
+}
+
+.logout-confirm-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px 24px;
+    width: 90%;
+    max-width: 340px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+}
+
+.logout-confirm-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #fee2e2;
+    color: #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    margin: 0 auto 16px;
+}
+
+.logout-confirm-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 8px;
+}
+
+.logout-confirm-text {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0 0 22px;
+    line-height: 1.5;
+}
+
+.logout-confirm-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.logout-confirm-btn {
+    flex: 1;
+    padding: 11px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.logout-confirm-btn.cancel {
+    background: #F1F5F9;
+    color: #111827;
+}
+
+.logout-confirm-btn.cancel:hover {
+    background: #E5E7EB;
+}
+
+.logout-confirm-btn.confirm {
+    background: #ef4444;
+    color: #fff;
+}
+
+.logout-confirm-btn.confirm:hover {
+    background: #dc2626;
 }
 
 .voice-waveform-wrap {

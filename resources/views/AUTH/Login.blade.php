@@ -1,8 +1,18 @@
-@extends('Layout.Management.app')
+<!DOCTYPE html>
+<html lang="en">
 
-@section('title', 'Login - POS')
-@section('content')
-    <link rel="stylesheet" href="{{ asset('css/management-system/auth/login.css') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Login - POS</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/pos/xtricate.png') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ asset('/css/views/AUTH/login.css') }}">
+</head>
+
+<body>
 
     <div class="onboarding-overlay" id="onboardingOverlay">
         <div class="onboarding-progress-container">
@@ -87,7 +97,7 @@
                         <div class="mb-3">
                             <label class="login-label" for="email">Email address</label>
                             <input id="email" type="email" name="email" class="form-control login-input"
-                                value="{{ old('email') }}" 
+                                value="{{ old('email') }}"
                                  placeholder="Enter your email address"
                                  required>
                         </div>
@@ -189,6 +199,18 @@
                     }, 300); // wait for keyboard open animation to finish
                 });
             });
+            var loginForm = document.querySelector('.login-form-box form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function() {
+                    var submitBtn = loginForm.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Logging in...';
+                    }
+                });
+            }
         });
     </script>
-@endsection
+</body>
+
+</html>

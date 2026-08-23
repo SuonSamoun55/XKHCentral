@@ -1,4 +1,4 @@
-@extends('ManagementSystemViews.UserViews.Layouts.app')
+@extends('Layout.POSUser.app')
 
 @section('title', $item->display_name ?? 'Product Detail')
 

@@ -1,5 +1,6 @@
 @extends('Layout.POSAdmin.app')
 @section('title', 'Edit Discount')
+@section('backUrl', route('discounts.index'))
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSAdminViews/Discounts/edit.css') }}">
@@ -8,13 +9,7 @@
 @section('content')
 <main class="main-wrap">
     <h1 class="page-title">Edit Discount</h1>
-    {{-- <div class="page-subtitle">Update discount value and date range</div> --}}
-
-    @if ($errors->any())
-        <div class="alert alert-danger rounded-4 border-0 shadow-sm mb-3">
-            <strong>Please check the form.</strong>
-        </div>
-    @endif
+    <div class="alert-container" id="alertContainer"></div>
 
     <div class="form-card">
         <div class="form-card-head">
@@ -22,8 +17,19 @@
         </div>
         <div class="form-card-body">
             <div class="item-preview">
-                <strong>{{ $item->display_name ?? 'No Name' }}</strong>
-                <div>Code: {{ $item->number ?? '-' }} | Category: {{ $item->item_category_code ?? '-' }}</div>
+                <div class="item-preview-thumb">
+                    @if($item->custom_image_url || $item->image_url)
+                        <img src="{{ $item->custom_image_url ?? $item->image_url }}" alt="{{ $item->display_name }}"
+                             onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';">
+                    @endif
+                    <div class="item-preview-fallback" style="{{ ($item->custom_image_url || $item->image_url) ? 'display:none;' : '' }}">
+                        <i class="bi bi-image"></i>
+                    </div>
+                </div>
+                <div>
+                    <strong>{{ $item->display_name ?: 'No Name' }}</strong>
+                    <div>Code: {{ $item->number ?: '-' }} | Category: {{ $item->item_category_code ?: '-' }}</div>
+                </div>
             </div>
 
             <form action="{{ route('discounts.update', $item->id) }}" method="POST">
@@ -90,8 +96,14 @@
                 </div>
 
                 <div class="action-row">
-                    <a href="{{ route('discounts.index') }}" class="btn-light-main">Back</a>
-                    <button type="submit" class="btn-main">Update Discount</button>
+                    <a href="{{ route('discounts.index') }}" class="btn-light-main">
+                        <i class="bi bi-arrow-left"></i>
+                        Back
+                    </a>
+                    <button type="submit" class="btn-main">
+                        <i class="bi bi-check2-circle"></i>
+                        Update Discount
+                    </button>
                 </div>
             </form>
         </div>
@@ -102,6 +114,24 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const alertContainer = document.getElementById('alertContainer');
+
+    function showAlert(message, type = 'success') {
+        if (!alertContainer) return;
+        const el = document.createElement('div');
+        el.className = `custom-alert alert-${type}`;
+        el.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill'}"></i><span>${message}</span>`;
+        alertContainer.appendChild(el);
+        setTimeout(() => {
+            el.classList.add('fade-out');
+            setTimeout(() => el.remove(), 300);
+        }, 4000);
+    }
+
+    @if ($errors->any())
+        showAlert('Please check the form.', 'danger');
+    @endif
+
     const scheduleType = document.getElementById('schedule_type');
     const startDateInput = document.getElementById('discount_start_date');
     const endDateInput = document.getElementById('discount_end_date');

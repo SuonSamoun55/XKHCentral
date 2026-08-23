@@ -43,24 +43,6 @@
     gap:12px;
     flex-wrap:wrap;
 }
-/* top cart icon */
-.cart-btn{
-    /* position:absolute;
-    top:24px; */
-    right:32px;
-    width:44px;
-    height:44px;
-    border-radius:12px;
-    background:#fff;
-    box-shadow:0 4px 14px rgba(0,0,0,0.10);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    text-decoration:none;
-    flex-shrink:0;
-}
-.cart-btn svg{width:20px;height:20px;stroke:#222;}
-.cart-btn img{width:20px;height:20px;object-fit:contain;}
 
 /* header */
 .page .header{
@@ -423,18 +405,6 @@
     font-weight:700;
     color:var(--text-dark);
 }
-/* secondary total (Khmer Riel) — smaller and lighter than the USD headline total */
-.summary-total.summary-total-secondary{
-    font-size:var(--fs-normal);
-}
-.summary-total.summary-total-secondary .label{
-    color:var(--text-mid);
-    font-weight:600;
-}
-.summary-total.summary-total-secondary .val{
-    color:var(--text-mid);
-    font-weight:700;
-}
 
 .empty-items{
     color:var(--text-light);
@@ -469,11 +439,6 @@
     }
     .page .header h1{
         font-size:17px;
-    }
-    .cart-btn{
-        width:38px;
-        height:38px;
-        border-radius:10px;
     }
     .icon-btn{
         width:36px;
@@ -538,9 +503,6 @@
     .sidebar-wrap{
         display: none;
     }
-    .cart-btn{
-        display: none;
-    }
 }
 
 
@@ -570,11 +532,6 @@
         height:32px;
         font-size:16px;
     }
-    .cart-btn{
-        width:34px;
-        height:34px;
-    }
-
     .sender-row{
         gap:10px;
     }

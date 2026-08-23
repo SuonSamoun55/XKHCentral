@@ -1,4 +1,4 @@
-@extends('ManagementSystemViews.UserViews.Layouts.app')
+@extends('Layout.POSUser.app')
 
 @section('title', 'POS Dashboard')
 
@@ -10,8 +10,8 @@
 
 @section('content')
 
-@include('ManagementSystemViews.UserViews.Layouts.header_mobile')
-@include('ManagementSystemViews.UserViews.Layouts.footer')
+@include('Layout.POSUser.header_mobile')
+@include('Layout.POSUser.footer')
     <main class="content-scroll">
         <div class="area-hero">
             <section class="card hero-card">
@@ -136,30 +136,46 @@
                             ?? $firstOrderItem?->item_name
                             ?? 'Unknown item';
                         $totalQty = (int) ($orderItems->sum('qty') ?? 0);
-                        $fallbackImage = 'https://cdn-icons-png.flaticon.com/512/11181/11181220.png';
                         $resolveThumbSrc = fn ($path) => $path
                             ? (str_starts_with($path, 'http') ? $path : asset($path))
                             : null;
 
-                        $thumbImages = $orderItems
+                        // No real product photo? Fall back to a letter
+                        // avatar (item's own initial) instead of a generic
+                        // stock icon, same as the avatar-fallback pattern
+                        // used on the notifications/user pages.
+                        $thumbItems = $orderItems
                             ->take(3)
-                            ->map(fn ($oi) =>
-                                $resolveThumbSrc(optional($oi->itemVariant)->image_url)
-                                    ?? $resolveThumbSrc(optional($oi->item)->custom_image_url)
-                                    ?? $resolveThumbSrc(optional($oi->item)->image_url)
-                                    ?? $fallbackImage
-                            )
+                            ->map(function ($oi) use ($resolveThumbSrc) {
+                                $name = $oi->item?->display_name ?? $oi->item_name ?? 'Item';
+                                return [
+                                    'name' => $name,
+                                    'image' => $resolveThumbSrc(optional($oi->itemVariant)->image_url)
+                                        ?? $resolveThumbSrc(optional($oi->item)->custom_image_url)
+                                        ?? $resolveThumbSrc(optional($oi->item)->image_url),
+                                    'initial' => mb_strtoupper(mb_substr(trim($name), 0, 1)) ?: '?',
+                                ];
+                            })
                             ->values();
                         $isStacked = $orderItems->count() > 1;
                     @endphp
                     <a href="{{ route('user.pos.order.show', $order->id) }}" class="order-item">
                         <div class="order-left">
                             <div class="order-thumb-stack {{ $isStacked ? 'stacked' : 'single' }}">
-                                @forelse($thumbImages as $thumbSrc)
-                                    <img src="{{ $thumbSrc }}" alt="{{ $itemName }}"
-                                        onerror="this.onerror=null;this.src='{{ asset('') }}';">
+                                @forelse($thumbItems as $thumb)
+                                    <div class="thumb-slot">
+                                        @if ($thumb['image'])
+                                            <img src="{{ $thumb['image'] }}" alt="{{ $thumb['name'] }}"
+                                                onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                            <span class="item-avatar-fallback" style="display:none;">{{ $thumb['initial'] }}</span>
+                                        @else
+                                            <span class="item-avatar-fallback">{{ $thumb['initial'] }}</span>
+                                        @endif
+                                    </div>
                                 @empty
-                                    <img src="{{ $fallbackImage }}" alt="{{ $itemName }}">
+                                    <div class="thumb-slot">
+                                        <span class="item-avatar-fallback">{{ $itemName ? mb_strtoupper(mb_substr($itemName, 0, 1)) : '?' }}</span>
+                                    </div>
                                 @endforelse
                             </div>
                             <div>
@@ -297,7 +313,7 @@
 
                         // Priority: item's admin-set custom_image_url
                         // override, then the item's synced image_url, then
-                        // the flaticon fallback. This is an aggregate across
+                        // a letter avatar. This is an aggregate across
                         // possibly several variants, so there's no single
                         // variant image to prefer here.
                         // image_url/custom_image_url may be stored either
@@ -307,14 +323,21 @@
                             : null;
 
                         $boughtItemImage = $resolveTopImg($item->custom_image_url ?? null)
-                            ?? $resolveTopImg($item->image_url ?? null)
-                            ?? 'https://cdn-icons-png.flaticon.com/512/11181/11181220.png';
+                            ?? $resolveTopImg($item->image_url ?? null);
+                        $boughtItemInitial = mb_strtoupper(mb_substr(trim($boughtItemName), 0, 1)) ?: '?';
                     @endphp
                     <div class="order-item">
                         <div class="order-left">
                             <div class="order-thumb-stack single">
-                                <img src="{{ $boughtItemImage }}" alt="{{ $boughtItemName }}"
-                                    onerror="this.onerror=null;this.src='{{ asset('') }}';">
+                                <div class="thumb-slot">
+                                    @if ($boughtItemImage)
+                                        <img src="{{ $boughtItemImage }}" alt="{{ $boughtItemName }}"
+                                            onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                        <span class="item-avatar-fallback" style="display:none;">{{ $boughtItemInitial }}</span>
+                                    @else
+                                        <span class="item-avatar-fallback">{{ $boughtItemInitial }}</span>
+                                    @endif
+                                </div>
                             </div>
                             <div>
                                 <div class="order-name">{{ \Illuminate\Support\Str::limit($boughtItemName, 32) }}</div>
@@ -335,8 +358,8 @@
       </div>
     </main>
     {{-- ============ MOBILE BOTTOM NAV ============ --}}
-       {{-- @include('ManagementSystemViews.UserViews.Layouts.header_mobile') --}}
-        @include('ManagementSystemViews.UserViews.Layouts.footer')
+       {{-- @include('Layout.POSUser.header_mobile') --}}
+        @include('Layout.POSUser.footer')
 
 
 @endsection

@@ -4,12 +4,10 @@
     }
    .api-card{
     height: 100%;
-overflow: scroll;
+    overflow: scroll;
    }
     .api-title{
-       
-        
-        font-size:22px;
+       font-size:22px;
         font-weight:700;
         color:#0f172a;
         margin-bottom:4px;

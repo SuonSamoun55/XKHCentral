@@ -1,6 +1,5 @@
 @extends('Layout.POSAdmin.app')
 @section('title', 'Store Management')
-
 @section('content')
 <div class="store-page-wrap">
     <div class="store-panel">
@@ -11,7 +10,6 @@
 @endsection
 
 <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSAdminViews/StoreManagement/index.css') }}">
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const ajaxContainer = document.getElementById('storeAjaxContainer');
@@ -68,7 +66,58 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    async function fetchPage() {
+    function getInnerScrollWrap() {
+        return activeTab === 'products'
+            ? document.querySelector('#productsTabContent .table-scroll-wrap')
+            : document.querySelector('#categoriesTabContent .category-list-grid');
+    }
+
+    function captureUiState() {
+        return {
+            scrollY: window.scrollY,
+            innerScrollTop: getInnerScrollWrap()?.scrollTop || 0,
+            search: document.getElementById('storeSearchInput')?.value || '',
+            status: document.getElementById('storeStatusFilter')?.value || 'all',
+            stock: document.getElementById('storeStockFilter')?.value || 'all',
+            setup: document.getElementById('storeSetupFilter')?.value || 'all',
+            perPageProduct: document.getElementById('storePerPage')?.value || '10',
+            perPageCategory: document.getElementById('storePerPageCategory')?.value || '10',
+            selectedProductIds: getSelectedProductIds(),
+            selectedCategoryCodes: getSelectedCategoryCodes()
+        };
+    }
+
+    function restoreUiState(state) {
+        const searchInput = document.getElementById('storeSearchInput');
+        if (searchInput) searchInput.value = state.search;
+
+        const statusFilter = document.getElementById('storeStatusFilter');
+        if (statusFilter) statusFilter.value = state.status;
+
+        const stockFilter = document.getElementById('storeStockFilter');
+        if (stockFilter) stockFilter.value = state.stock;
+
+        const setupFilter = document.getElementById('storeSetupFilter');
+        if (setupFilter) setupFilter.value = state.setup;
+
+        const perPageProduct = document.getElementById('storePerPage');
+        if (perPageProduct) perPageProduct.value = state.perPageProduct;
+
+        const perPageCategory = document.getElementById('storePerPageCategory');
+        if (perPageCategory) perPageCategory.value = state.perPageCategory;
+
+        document.querySelectorAll('.product-checkbox').forEach(cb => {
+            cb.checked = state.selectedProductIds.includes(cb.value);
+        });
+
+        document.querySelectorAll('.category-checkbox').forEach(cb => {
+            cb.checked = state.selectedCategoryCodes.includes(cb.value);
+        });
+    }
+
+    async function fetchPage({ preserveState = false } = {}) {
+        const savedState = preserveState ? captureUiState() : null;
+
         try {
             const response = await fetch(window.location.href, {
                 method: 'GET',
@@ -88,10 +137,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
             ajaxContainer.innerHTML = data.html;
             fixAjaxTabLayout();
+
+            if (savedState) {
+                restoreUiState(savedState);
+            }
+
             bindClientFiltering();
             bindMenuToggle();
             updateSelectedCounts();
-            switchTab('products');
+            switchTab(activeTab);
+
+            if (savedState) {
+                requestAnimationFrame(() => {
+                    window.scrollTo(0, savedState.scrollY);
+                    const wrap = getInnerScrollWrap();
+                    if (wrap) wrap.scrollTop = savedState.innerScrollTop;
+                });
+            }
         } catch (error) {
             showMessage('Failed to load data.', 'error');
         }
@@ -121,9 +183,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function updateSelectedCounts() {
-        const productCountEl = document.getElementById('selectedProductCount');
-        const categoryCountEl = document.getElementById('selectedCategoryCount');
-
         const visibleProductCheckboxes = Array.from(document.querySelectorAll('.product-checkbox'))
             .filter(cb => {
                 const row = cb.closest('.product-row');
@@ -140,20 +199,42 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const checkedVisibleCategories = visibleCategoryCheckboxes.filter(cb => cb.checked);
 
-        const selectAll = document.getElementById('selectAllProducts');
+        document.querySelectorAll('.js-selected-product-count').forEach(el => {
+            el.textContent = checkedVisibleProducts.length;
+        });
 
-        if (productCountEl) productCountEl.textContent = checkedVisibleProducts.length;
-        if (categoryCountEl) categoryCountEl.textContent = checkedVisibleCategories.length;
+        document.querySelectorAll('.js-selected-category-count').forEach(el => {
+            el.textContent = checkedVisibleCategories.length;
+        });
 
-        if (selectAll) {
-            if (visibleProductCheckboxes.length === 0) {
+        // The shared "Select all" (desktop table header + phone inline row)
+        // reflects whichever tab is currently active.
+        const activeVisible = activeTab === 'products' ? visibleProductCheckboxes : visibleCategoryCheckboxes;
+        const activeChecked = activeTab === 'products' ? checkedVisibleProducts : checkedVisibleCategories;
+
+        document.querySelectorAll('.js-select-all-products').forEach(selectAll => {
+            if (activeVisible.length === 0) {
                 selectAll.checked = false;
                 selectAll.indeterminate = false;
             } else {
-                selectAll.checked = checkedVisibleProducts.length === visibleProductCheckboxes.length;
+                selectAll.checked = activeChecked.length === activeVisible.length;
                 selectAll.indeterminate =
-                    checkedVisibleProducts.length > 0 &&
-                    checkedVisibleProducts.length < visibleProductCheckboxes.length;
+                    activeChecked.length > 0 &&
+                    activeChecked.length < activeVisible.length;
+            }
+        });
+
+        const banner = document.getElementById('storeSelectionBanner');
+        const bannerText = document.getElementById('storeSelectionBannerText');
+        if (banner && bannerText) {
+            if (activeChecked.length > 0) {
+                const noun = activeTab === 'products'
+                    ? (activeChecked.length === 1 ? 'product' : 'products')
+                    : (activeChecked.length === 1 ? 'category' : 'categories');
+                bannerText.textContent = `${activeChecked.length} ${noun} selected`;
+                banner.classList.add('show');
+            } else {
+                banner.classList.remove('show');
             }
         }
     }
@@ -247,6 +328,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const keyword = (document.getElementById('storeSearchInput')?.value || '').toLowerCase().trim();
         const status = document.getElementById('storeStatusFilter')?.value || 'all';
         const stock = document.getElementById('storeStockFilter')?.value || 'all';
+        const setup = document.getElementById('storeSetupFilter')?.value || 'all';
         const perPage = parseInt(document.getElementById('storePerPage')?.value || '10', 10);
 
         const rows = Array.from(document.querySelectorAll('.product-row'));
@@ -261,14 +343,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const rowStatus = row.dataset.status || 'inactive';
             const rowStock = row.dataset.stock || 'out';
+            const rowSetup = row.dataset.setup || 'incomplete';
 
             const matchKeyword = !keyword || text.includes(keyword);
             const matchStatus = status === 'all' || rowStatus === status;
             const matchStock = stock === 'all' || rowStock === stock;
+            const matchSetup = setup === 'all' || rowSetup === setup;
 
             row.style.display = 'none';
 
-            if (matchKeyword && matchStatus && matchStock) {
+            if (matchKeyword && matchStatus && matchStock && matchSetup) {
                 matched.push(row);
             }
         });
@@ -359,6 +443,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function switchTab(tab) {
+        const isTabChange = tab !== activeTab;
         activeTab = tab;
 
         document.querySelectorAll('.js-store-tab').forEach(btn => {
@@ -381,8 +466,15 @@ document.addEventListener('DOMContentLoaded', function () {
             stockWrap.classList.toggle('d-none', tab !== 'products');
         }
 
-        currentProductPage = 1;
-        currentCategoryPage = 1;
+        const setupWrap = document.querySelector('.setup-filter-wrap');
+        if (setupWrap) {
+            setupWrap.classList.toggle('d-none', tab !== 'products');
+        }
+
+        if (isTabChange) {
+            currentProductPage = 1;
+            currentCategoryPage = 1;
+        }
 
         runCurrentTabFilter();
     }
@@ -391,6 +483,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const searchInput = document.getElementById('storeSearchInput');
         const statusFilter = document.getElementById('storeStatusFilter');
         const stockFilter = document.getElementById('storeStockFilter');
+        const setupFilter = document.getElementById('storeSetupFilter');
         const perPageProduct = document.getElementById('storePerPage');
         const perPageCategory = document.getElementById('storePerPageCategory');
 
@@ -412,6 +505,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (stockFilter) {
             stockFilter.addEventListener('change', function () {
+                currentProductPage = 1;
+                filterProducts();
+            });
+        }
+
+        if (setupFilter) {
+            setupFilter.addEventListener('change', function () {
                 currentProductPage = 1;
                 filterProducts();
             });
@@ -533,83 +633,68 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const bulkProductActivate = e.target.closest('#bulkProductActivate');
-        if (bulkProductActivate) {
+        const bulkActionBtn = e.target.closest('.js-bulk-action');
+        if (bulkActionBtn) {
             e.preventDefault();
-            const ids = getSelectedProductIds();
-            if (!ids.length) return showMessage('Please select at least one product.', 'error');
+
+            const scope = bulkActionBtn.dataset.scope;
+            const action = bulkActionBtn.dataset.action;
+            const isProduct = scope === 'product';
+            const values = isProduct ? getSelectedProductIds() : getSelectedCategoryCodes();
+
+            if (!values.length) {
+                return showMessage(`Please select at least one ${scope}.`, 'error');
+            }
+
+            const payload = isProduct
+                ? { ids: values, action }
+                : { codes: values, action };
 
             try {
-                const result = await postJson(bulkProductActivate.dataset.url, { ids, action: 'activate' });
+                const result = await postJson(bulkActionBtn.dataset.url, payload);
                 if (!result.success) return showMessage(result.message || 'Failed to update.', 'error');
                 showMessage(result.message || 'Updated successfully.');
-                fetchPage();
+                fetchPage({ preserveState: true });
             } catch {
                 showMessage('Failed to update.', 'error');
             }
             return;
         }
 
-        const bulkProductDeactivate = e.target.closest('#bulkProductDeactivate');
-        if (bulkProductDeactivate) {
-            e.preventDefault();
-            const ids = getSelectedProductIds();
-            if (!ids.length) return showMessage('Please select at least one product.', 'error');
-
-            try {
-                const result = await postJson(bulkProductDeactivate.dataset.url, { ids, action: 'deactivate' });
-                if (!result.success) return showMessage(result.message || 'Failed to update.', 'error');
-                showMessage(result.message || 'Updated successfully.');
-                fetchPage();
-            } catch {
-                showMessage('Failed to update.', 'error');
+        // Phone only: the View Detail / Update links are hidden there (see
+        // .status-action-wrap a.store-action-btn in index.css) in favor of
+        // tapping the card itself. Desktop keeps its explicit icon links —
+        // the row's other cells hold selectable text there, so making the
+        // whole row a nav target would fight text selection.
+        const productRow = e.target.closest('.product-row');
+        if (productRow && window.innerWidth <= 768) {
+            if (e.target.closest('input') || e.target.closest('button') || e.target.closest('a')) {
+                return;
             }
-            return;
-        }
-
-        const bulkCategoryActivate = e.target.closest('#bulkCategoryActivate');
-        if (bulkCategoryActivate) {
-            e.preventDefault();
-            const codes = getSelectedCategoryCodes();
-            if (!codes.length) return showMessage('Please select at least one category.', 'error');
-
-            try {
-                const result = await postJson(bulkCategoryActivate.dataset.url, { codes, action: 'activate' });
-                if (!result.success) return showMessage(result.message || 'Failed to update.', 'error');
-                showMessage(result.message || 'Updated successfully.');
-                fetchPage();
-            } catch {
-                showMessage('Failed to update.', 'error');
+            const href = productRow.getAttribute('data-href');
+            if (href) {
+                window.location.href = href;
             }
-            return;
-        }
-
-        const bulkCategoryDeactivate = e.target.closest('#bulkCategoryDeactivate');
-        if (bulkCategoryDeactivate) {
-            e.preventDefault();
-            const codes = getSelectedCategoryCodes();
-            if (!codes.length) return showMessage('Please select at least one category.', 'error');
-
-            try {
-                const result = await postJson(bulkCategoryDeactivate.dataset.url, { codes, action: 'deactivate' });
-                if (!result.success) return showMessage(result.message || 'Failed to update.', 'error');
-                showMessage(result.message || 'Updated successfully.');
-                fetchPage();
-            } catch {
-                showMessage('Failed to update.', 'error');
-            }
-            return;
         }
     });
 
     document.addEventListener('change', function (e) {
-        if (e.target && e.target.id === 'selectAllProducts') {
-            document.querySelectorAll('.product-checkbox').forEach(cb => {
-                const row = cb.closest('.product-row');
-                if (row && row.style.display !== 'none') {
-                    cb.checked = e.target.checked;
-                }
-            });
+        if (e.target && e.target.classList.contains('js-select-all-products')) {
+            if (activeTab === 'products') {
+                document.querySelectorAll('.product-checkbox').forEach(cb => {
+                    const row = cb.closest('.product-row');
+                    if (row && row.style.display !== 'none') {
+                        cb.checked = e.target.checked;
+                    }
+                });
+            } else {
+                document.querySelectorAll('.category-checkbox').forEach(cb => {
+                    const card = cb.closest('.category-card, .category-item-card');
+                    if (card && card.style.display !== 'none') {
+                        cb.checked = e.target.checked;
+                    }
+                });
+            }
             updateSelectedCounts();
             return;
         }

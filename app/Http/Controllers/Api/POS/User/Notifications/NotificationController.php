@@ -506,8 +506,8 @@ class NotificationController extends Controller
             $grossSubtotal += $gross;
         }
 
-        // Notification model has no `order` relation, so delivery fee and
-        // exchange rate fall back to their defaults below (0 and 4100).
+        // Notification model has no `order` relation, so delivery fee
+        // falls back to its default below (0).
         $deliveryFee = 0.0;
         $discountTotal = max(0, $grossSubtotal - $subtotal);
         $total = $subtotal + $tax + $deliveryFee;
@@ -517,9 +517,6 @@ class NotificationController extends Controller
         } else {
             $vatRatePercent = 0;
         }
-
-        $exchangeRate = 4100.0;
-        $totalRiel = $total * $exchangeRate;
 
         return [
             'isOrderNotification' => $isOrderNotification,
@@ -540,8 +537,6 @@ class NotificationController extends Controller
             'ndDiscountTotal' => $discountTotal,
             'ndTotal' => $total,
             'ndVatRatePercent' => $vatRatePercent,
-            'ndExchangeRate' => $exchangeRate,
-            'ndTotalRiel' => $totalRiel,
         ];
     }
 
@@ -606,6 +601,34 @@ class NotificationController extends Controller
             'success' => true,
             'items' => $items,
             'order_no' => $notification->order_id,
+        ]);
+    }
+
+    /**
+     * Mark a single notification as read without navigating to its detail
+     * page — used when a click routes elsewhere instead (e.g. an admin
+     * message that opens the chat thread directly).
+     */
+    public function markAsRead(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+
+        if (!$user instanceof User) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated.',
+            ], 401);
+        }
+
+        $notification = Notification::where('user_id', $user->id)->findOrFail($id);
+
+        if (!$notification->is_read) {
+            $notification->is_read = true;
+            $notification->save();
+        }
+
+        return response()->json([
+            'success' => true,
         ]);
     }
 

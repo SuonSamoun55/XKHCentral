@@ -20,10 +20,21 @@
         <span class="alert-text">{{ session('success') }}</span>
     </div>
 @endif
-
 @if(session('error'))
     <div class="custom-alert alert-danger">
         <span class="alert-text">{{ session('error') }}</span>
+    </div>
+@endif
+@if($errors->any())
+    <div class="custom-alert alert-danger">
+        <span class="alert-text">
+            <strong>Please fix the following:</strong>
+            <ul style="margin:6px 0 0 18px;">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </span>
     </div>
 @endif
         <form method="POST" action="{{ route('companies.api.setup.update', $company->id) }}">
@@ -45,6 +56,13 @@
                 <div>
                     <div class="field-label">API Scope</div>
                     <input type="text" class="field-input" name="api_scope" value="{{ old('api_scope', $company->companyConnection->api_scope ?? 'https://api.businesscentral.dynamics.com/.default') }}" required>
+                </div>
+
+                <div class="full">
+                    <label style="display:flex;align-items:center;gap:8px;">
+                        <input type="checkbox" name="status" {{ old('status', $company->companyConnection->status ?? true) ? 'checked' : '' }}>
+                        Connection Active
+                    </label>
                 </div>
 
                 <div class="full">
@@ -72,7 +90,7 @@
                 <div class="full">
                     <div class="field-label">Sales Order Search by Number Endpoint</div>
                     <input type="text" class="field-input" name="sales_orders_by_number_endpoint" value="{{ old('sales_orders_by_number_endpoint', $company->companyConnection->sales_orders_by_number_endpoint ?? $defaultSalesOrderByNumberEndpoint) }}" required>
-                    <div class="field-help">Placeholder: <code>{documentNo}</code></div>
+                    <div class="field-help">Placeholder: <code>{documentNo}</code></div>    
                 </div>
 
                 <div class="full">
@@ -97,12 +115,6 @@
                     <div class="field-help">Placeholder: <code>{invoiceId}</code></div>
                 </div>
 
-                <div class="full">
-                    <label style="display:flex;align-items:center;gap:8px;">
-                        <input type="checkbox" name="status" {{ old('status', $company->companyConnection->status ?? true) ? 'checked' : '' }}>
-                        Connection Active
-                    </label>
-                </div>
             </div>
 
             <div class="action-row">
@@ -111,7 +123,6 @@
                 <button type="submit" class="btn-main">Save API Setup</button>
             </div>
         </form>
-
         <div class="example-box">
             <strong>Placeholders you can use:</strong>
             <br><code>{salesOrderId}</code> for line/PDF endpoint, <code>{documentNo}</code> for order search, <code>{companyId}</code> if needed.
@@ -125,11 +136,8 @@
         const alerts = document.querySelectorAll('.custom-alert');
 
         alerts.forEach(function(alert) {
-            // Auto-close after 4 seconds
             setTimeout(function() {
                 alert.style.animation = 'fadeOut 0.5s ease-in forwards';
-
-                // Remove from DOM after animation finishes
                 alert.addEventListener('animationend', function() {
                     alert.remove();
                 });

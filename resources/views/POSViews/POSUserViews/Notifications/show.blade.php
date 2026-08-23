@@ -1,8 +1,8 @@
-@extends('ManagementSystemViews.UserViews.Layouts.app')
+@extends('Layout.POSUser.app')
 @section('title', 'Notification Detail')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSUserViews/Notifications/notification-detail.css') }}" />
+    <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSUserViews/Notifications/notification-detail.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSUserViews/Notifications/notification-detail.css')) }}" />
 @endpush
 
 @section('content')
@@ -11,19 +11,12 @@
         <div class="Head">
             <div class="header">
             <div class="cart-nav">
-                <a href="{{ route('user.notifications') }}" class="back-arrow icon-btn" title="Back">
+                <a href="{{ route('user.notifications') }}" class="back-arrow icon-btn" title="Back" id="notifDetailBackBtn">
                     <i class="bi bi-arrow-left"></i>
                 </a>
             </div>
             <h1>Notification Detail</h1>
         </div>
-            <a href="{{ route('user.pos.cart') }}" class="cart-btn" title="Cart">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="9" cy="21" r="1"></circle>
-                <circle cx="20" cy="21" r="1"></circle>
-                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-            </svg>
-        </a>
         </div>
         <div class="sender-row">
             <div class="avatar">
@@ -123,7 +116,7 @@
             </svg>
             {{ $notification->title }}
         </div>
-        <div class="message-box">{{ $notification->message }}</div>
+        <div class="message-box">{!! \App\Models\ManagementSystem\Notification::cleanMessagePreview($notification->message) !!}</div>
         @if ($isOrderNotification)
             <h2 class="section-title">Order Detail</h2>
             <div class="item-count">{{ $orderItems->count() }} {{ Str::plural('item', $orderItems->count()) }}</div>
@@ -191,10 +184,6 @@
                             <span class="label">Order total in USD</span>
                             <span class="val">${{ number_format($ndTotal, 2) }}</span>
                         </div>
-                        <div class="summary-total summary-total-secondary">
-                            <span class="label">Order total in Khmer Riel</span>
-                            <span class="val">Riel {{ number_format($ndTotalRiel, 0) }}</span>
-                        </div>
                     </div>
                 </div>
             @else
@@ -203,3 +192,20 @@
         @endif
     </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    const btn = document.getElementById('notifDetailBackBtn');
+    if (!btn) return;
+
+    const cameFromSameOrigin = document.referrer && document.referrer.indexOf(window.location.origin) === 0;
+    if (!cameFromSameOrigin || window.history.length <= 1) return;
+
+    btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        window.history.back();
+    });
+})();
+</script>
+@endpush

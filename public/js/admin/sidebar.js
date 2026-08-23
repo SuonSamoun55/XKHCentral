@@ -1,5 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const appShell = document.getElementById("appShell") || document.querySelector(".sidebar-wrap");
+    // Scoped to "posAdminShell" specifically (not the generic "appShell" id) —
+    // several page-level templates (e.g. the notification list) reuse
+    // id="appShell" for their own unrelated content wrapper, which made
+    // getElementById("appShell") grab the wrong element on those pages.
+    const appShell = document.getElementById("posAdminShell");
     const collapseHandle = document.getElementById("collapseHandle");
     const settingsBtn = document.getElementById("settingsBtn");
     const settingsBox = document.getElementById("settingsBox");
@@ -16,6 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (appShell.classList.contains("collapsed") && settingsBox) {
                 settingsBox.classList.remove("open");
+                appShell.classList.remove("settings-active");
             }
         });
     }
@@ -27,7 +32,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (appShell.classList.contains("collapsed")) return;
 
-            settingsBox.classList.toggle("open");
+            const willOpen = !settingsBox.classList.contains("open");
+            settingsBox.classList.toggle("open", willOpen);
+            appShell.classList.toggle("settings-active", willOpen);
         });
     }
 
@@ -36,6 +43,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (!settingsBox.contains(e.target) && !settingsBtn.contains(e.target)) {
             settingsBox.classList.remove("open");
+            appShell?.classList.remove("settings-active");
         }
     });
 });

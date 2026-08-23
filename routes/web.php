@@ -19,7 +19,6 @@ use App\Http\Controllers\Api\POS\User\Orders\HistoryController;
 use App\Http\Controllers\Api\ManagementSystem\CompanyController;
 use App\Http\Controllers\Api\POS\Admin\StoreManagement\StoreManagementController;
 use App\Http\Controllers\Api\POS\Admin\Discounts\DiscountController;
-use App\Http\Controllers\Api\POS\Admin\Users\UserController;
 use App\Http\Controllers\Api\POS\Admin\Profile\AdminProfileController;
 use App\Http\Controllers\Api\POS\User\Legal\PolicyController;
 use App\Http\Controllers\Api\BusinessCentral\OrderStatusController;
@@ -68,9 +67,14 @@ Route::get('/store/management/products/{id}/images', [StoreManagementController:
     ->name('store.management.product.images');
 Route::post('/store/management/products/{id}/image', [StoreManagementController::class, 'uploadMainImage'])
     ->name('store.management.product.image.upload');
+Route::post('/store/management/products/{id}/mark-updated', [StoreManagementController::class, 'markUpdated'])
+    ->name('store.management.product.markUpdated');
 
     // ---------- Dashboard ----------
     Route::get('/admin', [DashboardController::class, 'index'])->name('pos.index');
+    Route::get('/admin/dashboard/report-chart', [DashboardController::class, 'reportChart'])->name('admin.dashboard.report-chart');
+    Route::get('/admin/dashboard/top-products', [DashboardController::class, 'topProductsData'])->name('admin.dashboard.top-products');
+    Route::get('/admin/dashboard/overview-stats', [DashboardController::class, 'overviewStats'])->name('admin.dashboard.overview-stats');
     Route::get('/', [DashboardUserController::class, 'index'])->name('user.index');
 
     // ---------- Users ----------
@@ -94,14 +98,11 @@ Route::post('/store/management/products/{id}/image', [StoreManagementController:
     Route::post('/admin/orders/{id}/cancel', [AdminOrderController::class, 'cancel'])->name('admin.orders.cancel');
     Route::get('/admin/order-actions', [AdminOrderController::class, 'actionHistory'])->name('admin.orders.actions');
     Route::get('/admin/orders/{id}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
+    Route::get('/admin/orders/{id}/invoice', [AdminOrderController::class, 'downloadInvoice'])->name('admin.orders.invoice');
 
 
 
 
-    ////////USER CONTROLLER
-    Route::prefix('admin')->group(function () {
-    Route::get('/users/{id}', [App\Http\Controllers\Api\POS\Admin\Users\UserController::class, 'show'])->name('admin.users.show');
-    });
     // ---------- POS User ----------
     Route::get('/pos-system', [ItemListController::class, 'getItems'])->name('user.posinterface');
     Route::get('/pos-system/product/{id}',
@@ -130,6 +131,7 @@ Route::get('/pos-system/notifications/unread', [NotificationController::class, '
     Route::post('/items/variants/{variantId}/image', [ItemVariantPosController::class, 'uploadImage']);
 ///-------------------------
     Route::get('/profile', [UserProfileController::class, 'index'])->name('profile');
+    Route::get('/profile/edit', [UserProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile/update', [UserProfileController::class, 'update'])->name('profile.update');
     Route::get('/profile/change-password', [UserProfileController::class, 'showChangePasswordForm'])->name('user.password.change');
     Route::put('/profile/change-password', [UserProfileController::class, 'updatePassword'])->name('user.password.update');
@@ -167,6 +169,7 @@ Route::get('/pos-system/notifications/unread', [NotificationController::class, '
         Route::post('/store', [AdminNotificationController::class, 'store'])->name('store');
         Route::post('/read/{id}', [AdminNotificationController::class, 'markAsRead'])->name('read');
         Route::post('/read-all', [AdminNotificationController::class, 'markAllAsRead'])->name('read.all');
+        Route::post('/read-selected', [AdminNotificationController::class, 'markSelectedAsRead'])->name('read.selected');
         Route::delete('/delete-selected', [AdminNotificationController::class, 'deleteSelected'])->name('delete.selected');
         Route::delete('/destroy/{id}', [AdminNotificationController::class, 'destroy'])->name('destroy');
         Route::get('/ajax/search-customers', [AdminNotificationController::class, 'searchCustomers'])->name('ajax.search.customers');
@@ -202,12 +205,15 @@ Route::get('/pos-system/notifications/unread', [NotificationController::class, '
     Route::get('/companies/{id}/api-setup', [CompanyController::class, 'apiSetup'])->name('companies.api.setup');
     Route::put('/companies/{id}/api-setup', [CompanyController::class, 'updateApiSetup'])->name('companies.api.setup.update');
     Route::delete('/companies/{id}', [CompanyController::class, 'destroy'])->name('companies.destroy');
+    Route::get('/companies/{id}/api-setup', [CompanyController::class, 'apiSetup'])->name('companies.api.setup');
+Route::put('/companies/{id}/api-setup', [CompanyController::class, 'updateApiSetup'])->name('companies.api.setup.update');
 
 });
 Route::middleware(['auth', 'last.seen'])->prefix('users')->name('users.')->group(function () {
         Route::get('/', [WebUserController::class, 'index'])->name('index');
         Route::get('/bc-image/{bcId}', [WebUserController::class, 'getBCImage'])->name('bc-image');
         Route::get('/sync', [WebUserController::class, 'syncBCCustomers'])->name('sync');
+        Route::post('/{id}/sync-bc', [WebUserController::class, 'syncSingleCustomer'])->name('syncOne');
         Route::get('/create/{id}', [WebUserController::class, 'create'])->name('create');
         Route::post('/store/{id}', [WebUserController::class, 'store'])->name('store');
         Route::get('/show/{id}', [WebUserController::class, 'show'])->name('show');

@@ -1,10 +1,9 @@
-@extends('ManagementSystemViews.UserViews.Layouts.app')
-
+@extends('Layout.POSUser.app')
 @section('title', 'User Chat')
 
 @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSUserViews/Notifications/chat.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSUserViews/Notifications/chat.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSUserViews/Notifications/chat.css')) }}">
 @endpush
 
 @section('content')
@@ -30,7 +29,7 @@
         <div class="inbox-header">
             <div class="inbox-left">
 
-                <a href="{{ route('user.notifications') }}" class="inbox-back">
+                <a href="{{ route('user.notifications') }}" class="inbox-back" id="inboxBackBtn">
                     <i class="bi bi-arrow-left"></i>
                 </a>
                 <span class="inbox-title">Inbox</span>
@@ -87,7 +86,7 @@
     <section class="message-pane">
         <header class="mobile-chat-header">
             <div class="header-left">
-                <a href="{{ route('user.chat.index') }}" class="back-btn" title="Back to inbox">
+                <a href="{{ route('user.chat.index') }}" class="back-btn" id="chatBackToInboxBtn" title="Back to inbox">
                     <i class="bi bi-arrow-left"></i>
                 </a>
 
@@ -382,20 +381,6 @@
             let lbZoomed = false;
             let lightboxImages = [];
             let lightboxIndex = 0;
-
-            // ===== Step-by-step back navigation guard =====
-            // Problem this solves: if something links straight into a chat's
-            // detail view (e.g. a Notifications entry with ?admin_id=...),
-            // the contact list is never a real entry in browser history, so
-            // the device/browser Back button jumps straight past it to
-            // Notifications instead of showing the list first.
-            //
-            // Fix: remember (per tab, via sessionStorage) once the plain
-            // list view has actually been shown. If we land on a detail
-            // view *without* the list having been seen yet, we push one
-            // extra history entry and intercept the very first Back press
-            // to force a normal navigation to the list — after that, Back
-            // continues to work normally (list -> Notifications, etc).
             if (activeContactId) {
                 const listAlreadySeen = sessionStorage.getItem('chatListSeen') === '1';
                 if (!listAlreadySeen) {
@@ -408,6 +393,35 @@
             } else {
                 sessionStorage.setItem('chatListSeen', '1');
             }
+
+            // "Back to inbox" (inside an open thread) — both panes already
+            // live on this same page, so swap them client-side instead of
+            // doing a full page reload like a plain <a href> would.
+            const chatPageEl = document.querySelector('.chat-page');
+            const chatBackToInboxBtn = document.getElementById('chatBackToInboxBtn');
+            chatBackToInboxBtn?.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (chatPageEl) {
+                    chatPageEl.classList.remove('has-active-chat');
+                    chatPageEl.classList.add('no-active-chat');
+                }
+                history.pushState({}, '', chatListUrl);
+                sessionStorage.setItem('chatListSeen', '1');
+            });
+
+            // Inbox -> Notifications: behave like Chrome's back button (use
+            // browser history instead of a fresh navigation) when we
+            // actually arrived here from the notifications page.
+            (function () {
+                const btn = document.getElementById('inboxBackBtn');
+                if (!btn) return;
+                const cameFromSameOrigin = document.referrer && document.referrer.indexOf(window.location.origin) === 0;
+                if (!cameFromSameOrigin || window.history.length <= 1) return;
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    window.history.back();
+                });
+            })();
 
             // ===== Auto-grow composer textarea (caps at 15vh) =====
             function autoGrowInput() {

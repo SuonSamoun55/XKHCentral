@@ -292,12 +292,17 @@ class StoreManagementController extends Controller
             default => null,
         };
 
+        // "Sold" only counts orders the admin has actually confirmed (and
+        // posted to BC) — pending and cancelled orders are not real sales.
+        $soldStatuses = ['confirmed', 'on-the-way', 'delivered', 'delivery'];
+
         $buyersQuery = OrderItem::query()
             ->from('order_items as oi')
             ->join('orders as o', 'o.id', '=', 'oi.order_id')
             ->leftJoin('users as u', 'u.id', '=', 'o.user_id')
             ->where('oi.company_id', $companyId)
             ->where('oi.item_id', $item->id)
+            ->whereIn('o.status', $soldStatuses)
             ->when($buyerSearch !== '', function ($q) use ($buyerSearch) {
                 $q->where('u.name', 'like', "%{$buyerSearch}%");
             })
@@ -325,16 +330,100 @@ class StoreManagementController extends Controller
                 ->join('orders as o', 'o.id', '=', 'oi.order_id')
                 ->where('oi.company_id', $companyId)
                 ->where('oi.item_id', $item->id)
+                ->whereIn('o.status', $soldStatuses)
                 ->distinct('o.user_id')
                 ->count('o.user_id'),
             'total_sold_qty' => (int) OrderItem::query()
-                ->where('company_id', $companyId)
-                ->where('item_id', $item->id)
-                ->sum('qty'),
+                ->from('order_items as oi')
+                ->join('orders as o', 'o.id', '=', 'oi.order_id')
+                ->where('oi.company_id', $companyId)
+                ->where('oi.item_id', $item->id)
+                ->whereIn('o.status', $soldStatuses)
+                ->sum('oi.qty'),
             'total_revenue' => (float) OrderItem::query()
-                ->where('company_id', $companyId)
-                ->where('item_id', $item->id)
-                ->sum('line_total'),
+                ->from('order_items as oi')
+                ->join('orders as o', 'o.id', '=', 'oi.order_id')
+                ->where('oi.company_id', $companyId)
+                ->where('oi.item_id', $item->id)
+                ->whereIn('o.status', $soldStatuses)
+                ->sum('oi.line_total'),
+        ];
+
+        $statusCounts = OrderItem::query()
+            ->from('order_items as oi')
+            ->join('orders as o', 'o.id', '=', 'oi.order_id')
+            ->where('oi.company_id', $companyId)
+            ->where('oi.item_id', $item->id)
+            ->groupBy('o.status')
+            ->selectRaw('o.status as status, COUNT(DISTINCT o.id) as total')
+            ->pluck('total', 'status');
+
+        $orderStats = [
+            'pending'    => (int) ($statusCounts['pending'] ?? 0),
+            'confirmed'  => (int) ($statusCounts['confirmed'] ?? 0),
+            'on_the_way' => (int) ($statusCounts['on-the-way'] ?? 0),
+            'delivered'  => (int) (($statusCounts['delivered'] ?? 0) + ($statusCounts['delivery'] ?? 0)),
+            'cancelled'  => (int) (($statusCounts['cancelled'] ?? 0) + ($statusCounts['canceled'] ?? 0)),
+        ];
+
+        // Who's waiting on this item right now, broken out per status tab —
+        // customer, qty, amount — so admin doesn't have to go hunting through
+        // the full order list to see what a status count is made of.
+        $statusGroups = [
+            'pending'    => ['pending'],
+            'confirmed'  => ['confirmed'],
+            'on_the_way' => ['on-the-way'],
+            'delivered'  => ['delivered', 'delivery'],
+            'cancelled'  => ['cancelled', 'canceled'],
+        ];
+
+        $orderRows = OrderItem::query()
+            ->from('order_items as oi')
+            ->join('orders as o', 'o.id', '=', 'oi.order_id')
+            ->leftJoin('users as u', 'u.id', '=', 'o.user_id')
+            ->where('oi.company_id', $companyId)
+            ->where('oi.item_id', $item->id)
+            ->whereIn('o.status', array_merge(...array_values($statusGroups)))
+            ->groupBy('o.id', 'o.order_no', 'o.created_at', 'u.name', 'o.status')
+            ->orderByDesc('o.created_at')
+            ->selectRaw('
+                o.status as status,
+                COALESCE(u.name, \'Unknown Buyer\') as buyer_name,
+                o.order_no,
+                SUM(oi.qty) as qty,
+                SUM(oi.line_total) as line_total,
+                o.created_at
+            ')
+            ->get();
+
+        $statusRows = [];
+        foreach ($statusGroups as $key => $rawStatuses) {
+            $statusRows[$key] = $orderRows->whereIn('status', $rawStatuses)->values();
+        }
+
+        $pendingRows = $statusRows['pending'];
+
+        // Stock is only decremented when an order is confirmed, so a pile of
+        // *pending* qty against current stock is invisible unless we surface
+        // it here — warn once pending demand reaches 80% of what's on hand,
+        // and escalate to critical once it would oversell the item outright.
+        $pendingQtyTotal = (int) $pendingRows->sum('qty');
+        $currentStock = (int) $item->inventory;
+        $stockRiskLevel = null;
+
+        if ($pendingQtyTotal > 0) {
+            if ($pendingQtyTotal >= $currentStock) {
+                $stockRiskLevel = 'critical';
+            } elseif ($pendingQtyTotal >= 0.8 * $currentStock) {
+                $stockRiskLevel = 'warning';
+            }
+        }
+
+        $stockRisk = [
+            'level' => $stockRiskLevel,
+            'pending_qty' => $pendingQtyTotal,
+            'stock' => $currentStock,
+            'remaining_if_confirmed' => $currentStock - $pendingQtyTotal,
         ];
 
         return view('POSViews.POSAdminViews.StoreManagement.product-detail', [
@@ -343,6 +432,10 @@ class StoreManagementController extends Controller
             'buyerStats' => $buyerStats,
             'buyerSearch' => $buyerSearch,
             'buyerFilter' => $buyerFilter,
+            'orderStats' => $orderStats,
+            'pendingRows' => $pendingRows,
+            'statusRows' => $statusRows,
+            'stockRisk' => $stockRisk,
         ]);
     }
 
@@ -355,7 +448,10 @@ class StoreManagementController extends Controller
 
         $variants = ItemVariant::where('item_id', $item->id)->get();
 
-        return view('POSViews.POSAdminViews.StoreManagement.product-images', compact('item', 'variants'));
+        $status = ItemSetupStatus::where('item_id', $item->id)->first();
+        $isUpdated = $status && $status->main_image_done && $status->variants_done;
+
+        return view('POSViews.POSAdminViews.StoreManagement.product-images', compact('item', 'variants', 'isUpdated'));
     }
 
     // Upload / replace the main photo for one item.
@@ -384,6 +480,29 @@ class StoreManagementController extends Controller
         return response()->json([
             'success' => true,
             'image_url' => $item->custom_image_url,
+        ]);
+    }
+
+    // Toggle an item's image setup (main photo + variants) between done/not
+    // done, without requiring a fresh upload. Used by the "Mark as Updated"
+    // button on the product-images page.
+    public function markUpdated(int $id)
+    {
+        $companyId = Company::value('id');
+
+        $item = Item::where('company_id', $companyId)->findOrFail($id);
+
+        $status = ItemSetupStatus::firstOrNew(['item_id' => $item->id]);
+        $isCurrentlyDone = $status->exists && $status->main_image_done && $status->variants_done;
+
+        $newState = !$isCurrentlyDone;
+        $status->main_image_done = $newState;
+        $status->variants_done = $newState;
+        $status->save();
+
+        return response()->json([
+            'success' => true,
+            'is_updated' => $newState,
         ]);
     }
 }

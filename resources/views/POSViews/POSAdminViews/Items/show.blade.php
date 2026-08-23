@@ -1,17 +1,21 @@
 @extends('Layout.POSAdmin.app')
 @section('title', 'Item Detail')
-
+@section('backUrl', url()->previous())
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSAdminViews/Items/show.css') }}">
 @endpush
 
 @section('content')
 <main class="detail-content">
-        <div class="detail-card">
-            <a href="{{ url()->previous() }}" class="back-btn text-decoration-none">
-                <i class="bi bi-chevron-left"></i>
-            </a>
 
+
+        <div class="detail-card">
+                    <div class="header-title">
+            <button class="back-btn-top" onclick="window.history.back()" aria-label="Go back">
+                <i class="bi bi-arrow-left"></i>
+            </button>
+            <h1 class="item-detail-title">Item Detail</h1>
+        </div>
             <div class="detail-grid">
                 <div>
                     <div class="main-image">
@@ -28,11 +32,9 @@
                 </div>
 
                 <div>
-                    <div class="item-title">{{ $item['displayName'] ?? 'No Name' }}</div>
-                    <div class="item-price">${{ number_format((float)($item['unitPrice'] ?? 0), 2) }}</div>
-
-                    <div class="item-desc">
-                        {{ $item['description'] ?? 'No description available for this item.' }}
+                    <div class="title-price-row">
+                        <div class="item-title">{{ $item['description'] }}</div>
+                        <div class="item-price">${{ number_format((float)($item['unitPrice'] ?? 0), 2) }}</div>
                     </div>
 
                     <div class="section-title">Available Size / Unit of Measure</div>
@@ -59,7 +61,7 @@
     </main>
 
 <script>
-    const ITEM_ID = "{{ $item['id'] }}";
+    const LOCAL_ITEM_ID = "{{ $item['localItemId'] ?? '' }}";
     const DEFAULT_IMAGE = "{{ $item['customImageUrl'] ?? url('/item-image/' . $item['id']) }}";
 
     // Load variants for this item when the page opens
@@ -68,7 +70,11 @@
     });
 
     function loadVariants() {
-        fetch('/items/' + ITEM_ID + '/variants')
+        if (!LOCAL_ITEM_ID) {
+            return;
+        }
+
+        fetch('/items/' + LOCAL_ITEM_ID + '/variants')
             .then(function (response) {
                 return response.json();
             })

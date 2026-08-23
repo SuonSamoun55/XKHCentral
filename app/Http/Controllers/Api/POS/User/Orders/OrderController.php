@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\POS\User\Orders;
 
 use App\Http\Controllers\Controller;
-use App\Models\POS\{Cart, Order, OrderItem, OrderHistory};
+use App\Models\POS\{Cart, Order, OrderItem, OrderHistory, Item};
 use App\Models\ManagementSystem\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, DB, Log};
@@ -59,6 +59,7 @@ class OrderController extends Controller
 
         try {
             [$subtotal, $discount, $tax] = $this->calculateTotals($cart, $companyId);
+            $totalAmount = ($subtotal - $discount) + $tax;
 
             $order = Order::create([
                 'company_id' => $companyId,
@@ -67,18 +68,24 @@ class OrderController extends Controller
                 'customer_no' => $user->bc_customer_no,
                 'subtotal' => $subtotal,
                 'discount_amount' => $discount,
-                'total_amount' => ($subtotal - $discount) + $tax,
-                'amount_paid' => ($subtotal - $discount) + $tax,
+                'total_amount' => $totalAmount,
+                'amount_paid' => $totalAmount,
                 'status' => 'pending',
             ]);
 
             $this->createItems($cart, $order, $companyId);
             $this->createHistory($cart, $order);
 
+            $itemIdsInOrder = $cart->items->pluck('item_id')->unique();
+
             $cart->items()->delete();
             $cart->update(['status' => 'completed']);
 
             DB::commit();
+
+            foreach ($itemIdsInOrder as $itemId) {
+                $this->notifyLowStockIfNeeded($itemId);
+            }
 
             return response()->json([
                 'success' => true,
@@ -144,6 +151,8 @@ class OrderController extends Controller
             'user_id' => auth()->id(),
             'order_no' => $order->order_no,
             'total_amount' => $order->total_amount,
+            'riel_exchange_rate' => $order->riel_exchange_rate,
+            'total_amount_riel' => $order->total_amount_riel,
             'status' => 'pending',
             'items_summary' => json_encode($cart->items),
         ]);
@@ -155,6 +164,77 @@ class OrderController extends Controller
             'success' => false,
             'message' => $msg
         ], 422);
+    }
+
+    /**
+     * Same pending-vs-stock risk classification used on the admin Product
+     * Detail page (StoreManagementController::productDetail): warn once
+     * pending demand reaches 80% of stock, escalate once it would oversell
+     * outright. Fires an admin notification the moment a fresh checkout
+     * pushes an item into that zone, instead of waiting for an admin to
+     * happen to open the product page.
+     */
+    private function notifyLowStockIfNeeded($itemId): void
+    {
+        $item = Item::find($itemId);
+        if (!$item) {
+            return;
+        }
+
+        $stock = (int) $item->inventory;
+
+        $pendingQty = (int) OrderItem::query()
+            ->from('order_items as oi')
+            ->join('orders as o', 'o.id', '=', 'oi.order_id')
+            ->where('oi.item_id', $itemId)
+            ->where('o.status', 'pending')
+            ->sum('oi.qty');
+
+        if ($pendingQty <= 0) {
+            return;
+        }
+
+        $level = null;
+        if ($pendingQty >= $stock) {
+            $level = 'critical';
+        } elseif ($pendingQty >= 0.8 * $stock) {
+            $level = 'warning';
+        }
+
+        if (!$level) {
+            return;
+        }
+
+        // Don't spam a fresh notification on every checkout while an
+        // existing alert for this item is still unread/unresolved.
+        $alreadyAlerted = Notification::where('item_id', $item->id)
+            ->where('type', 'out_of_stock')
+            ->where('is_read', false)
+            ->exists();
+
+        if ($alreadyAlerted) {
+            return;
+        }
+
+        $title = $level === 'critical'
+            ? 'Pending demand will oversell: ' . $item->display_name
+            : 'Nearly out of stock: ' . $item->display_name;
+
+        $message = $level === 'critical'
+            ? "{$pendingQty} units of \"{$item->display_name}\" are tied up in pending orders, but only {$stock} are in stock. Confirming all pending orders will oversell this item — review pending orders before approving."
+            : "{$pendingQty} of {$stock} units in stock for \"{$item->display_name}\" are already claimed by pending orders — worth checking on before approving more.";
+
+        Notification::create([
+            'user_id' => null,
+            'order_id' => null,
+            'item_id' => $item->id,
+            'type' => 'out_of_stock',
+            'title' => $title,
+            'message' => $message,
+            'is_group_summary' => true,
+            'unread_count' => 1,
+            'is_read' => false,
+        ]);
     }
 
     public function success(Request $r)

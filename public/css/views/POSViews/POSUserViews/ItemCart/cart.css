@@ -56,7 +56,7 @@
 .cart-container {
     width: 100%;
     max-width: 100%;
-    height: 100%;
+    height: 100vh;
     margin: 0 auto;
     padding: 20px;
     background-color: var(--bg-light);
@@ -69,6 +69,16 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+}
+
+/* #cartItemsArea is a JS hook (lets "Remove item" replace just the item
+   list/summary with the empty state, without wiping out .cart-nav_mobile
+   above it) — display:contents keeps its children acting as direct flex
+   items of #cartMainContent, exactly as before this wrapper existed, so
+   .cart-list-wrapper's height:100% still resolves against #cartMainContent
+   and only the item list scrolls internally instead of the whole block. */
+#cartItemsArea {
+    display: contents;
 }
 
 /* Header */
@@ -137,13 +147,13 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     height: 100%;
+    min-height: 0;
 }
 
 .cart-list {
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: 100%;
 }
 
 /* Custom Scrollbar for better UI */
@@ -315,7 +325,7 @@
     text-align: right;
 }
 
-/* Generic chip used on other screens (checkout cards, order detail) */
+/* Generic chip used on other screens (order detail) */
 .item-meta-row {
     display: flex;
     align-items: center;
@@ -326,6 +336,7 @@
 
 .summary-box {
     background-color: #ffffff;
+
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -352,13 +363,6 @@
     font-size: var(--fs-header);
 }
 
-.summary-line.total-riel {
-    font-weight: var(--fw-bold);
-    color: var(--text-dark);
-    font-size: var(--fs-header);
-    border-bottom: none;
-}
-
 .place-order-btn {
     display: flex;
     align-items: center;
@@ -377,6 +381,7 @@
     cursor: pointer;
     box-shadow: var(--shadow-btn);
     transition: transform 0.15s ease, background 0.15s ease;
+    margin-top: 15px;
 }
 
 .place-order-btn:hover {
@@ -546,6 +551,110 @@
     gap: 5px;
 }
 
+/* ===== ORDER CONFIRM MODAL ===== */
+.confirm-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 20000;
+    background: rgba(17, 24, 39, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.confirm-modal-overlay.hidden {
+    display: none;
+}
+
+.confirm-modal-box {
+    background: #ffffff;
+    width: 100%;
+    max-width: 360px;
+    border-radius: var(--radius-lg);
+    padding: 28px 24px 24px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(17, 24, 39, 0.2);
+    animation: confirmModalPop 0.18s ease;
+}
+
+@keyframes confirmModalPop {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.confirm-modal-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(10, 201, 189, 0.12);
+    color: var(--iconhard);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    margin: 0 auto 16px;
+}
+
+.confirm-modal-title {
+    font-size: var(--fs-h1);
+    font-weight: var(--fw-bold);
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+.confirm-modal-text {
+    font-size: var(--fs-body);
+    color: var(--text-gray);
+    line-height: 1.5;
+    margin-bottom: 22px;
+}
+
+.confirm-modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.confirm-modal-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    font-weight: var(--fw-semibold);
+    font-size: var(--fs-body);
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.confirm-modal-btn:active {
+    transform: scale(0.97);
+}
+
+.confirm-modal-btn.cancel {
+    background: #F1F5F9;
+    color: var(--text-dark);
+}
+
+.confirm-modal-btn.cancel:hover {
+    background: #E5E7EB;
+}
+
+.confirm-modal-btn.confirm {
+    background: #0EA8B2;
+    color: #fff;
+}
+
+.confirm-modal-btn.confirm:hover {
+    background: var(--heading-teal);
+}
+
+@media screen and (max-width: 767px) {
+    .confirm-modal-box {
+        max-width: 340px;
+        padding: 24px 20px 20px;
+    }
+}
+
 @media (max-width: 1200px) {
     .app-shell {
         min-height: auto;
@@ -591,7 +700,7 @@
     .cart-container {
         padding: 0;
         border-radius: 0;
-        height: 100vh;
+        /* height: 100vh; */
         overflow-y: auto;
         max-width: none;
     }
@@ -690,8 +799,6 @@
        Mobile item card — flexbox, wraps into two rows:
        Row 1: image + name/variant + price (top right)
        Row 2: qty controls + remove, right aligned
-       No grid-row numbers to maintain — reads top to bottom
-       in the same order it renders.
        ===================================================== */
     .item-card {
         width: 92%;
@@ -831,51 +938,42 @@
         left: 0;
         right: 0;
         z-index: 100;
-        background: var(--primary-teal);
-        color: #fff;
-        padding: 12px 16px 16px;
-        border-radius: 16px 16px 0 0;
+        background: #F9FAFB;
+        padding: 14px;
+        border-radius: var(--radius-md);
+        color: black;
         border-top: none;
     }
 
     .summary-line {
         font-size: var(--fs-body);
-        color: rgba(255, 255, 255, 0.85);
+        /* color: rgba(255, 255, 255, 0.85); */
         border-bottom: none;
         padding: 0 0 8px 0;
     }
 
-    .summary-line.total-usd,
-    .summary-line.total-riel {
-        color: #fff;
+    .summary-line.total-usd {
+        /* color: #fff; */
         font-size: var(--fs-header);
         font-weight: var(--fw-bold);
         border-bottom: none;
     }
-    #discountAmount{
-        color:white;
-    }
+
     /* Checkout button */
     .place-order-btn {
         width: 100%;
-        /* min-width: 0; */
         background: #2FC7BE;
         position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
         padding: 6%;
-        /* padding: ;
-         */
-         border-radius: 0px;
+        border-radius: 0px;
         font-size: var(--fs-header);
-        /* border-radius: var(--radius-lg) var(--radius-lg) 0 0; */
         box-shadow: none;
         margin: 0;
     }
-#checkoutMobileBtn{
 
-}
     .desktop-only {
         display: none !important;
     }
@@ -947,150 +1045,6 @@
     }
 
     .shop-now-btn:hover {
-        background: var(--heading-teal);
-    }
-
-    /* =========================
-       CHECKOUT SCREEN LAYOUT
-       header (sticky) -> items (scrolls) -> payment + button (pinned bottom)
-       ========================= */
-    .checkout-container {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        height: 100vh;
-        height: 100dvh;
-        overflow: hidden;
-        background: #ffffff;
-    }
-
-    .checkout-section {
-        padding: 16px;
-        /* height: 100%; */
-    }
-
-    /* Header */
-    .checkout-nav {
-        display: flex;
-        align-items: center;
-        font-weight: 600;
-        padding-bottom: 18px;
-    }
-
-    .icon-btn_mobile {
-        width: 46px;
-        height: 46px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: var(--radius-sm);
-        border: 1px solid var(--border-color);
-        background: #f7fbff;
-        text-decoration: none;
-        box-shadow: var(--shadow-icon);
-        transition: background 0.15s ease;
-    }
-
-    .icon-btn_mobile:hover {
-        background: #eef4fb;
-    }
-
-    /* Items list scrolls on its own between the sticky header and the
-       pinned payment/button block below, so long carts don't push the
-       Place Order button off screen. */
-    .checkout-items-wrapper {
-        flex: 1 1 auto;
-        min-height: 0;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .checkout-items-wrapper::-webkit-scrollbar {
-        width: 0;
-    }
-
-    /* Payment summary + Place Order button pinned together at the bottom.
-       flex: 0 0 auto so it only ever takes the height its content needs —
-       never fights .checkout-items-wrapper for space. */
-    .checkout-bottom {
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        flex: 0 0 auto;
-        background: #ffffff;
-        box-shadow: 0 -4px 16px rgba(17, 24, 39, 0.06);
-    }
-
-    /* Item Cards */
-    .checkout-item-card {
-        display: flex;
-        gap: 12px;
-        background: #F6F9FF;
-        padding: 12px;
-        border-radius: var(--radius-md);
-        border: 1px solid #E6EDFF;
-        margin-bottom: 12px;
-    }
-
-    .checkout-item-card img {
-        width: 56px;
-        height: 56px;
-        border-radius: var(--radius-xs);
-        object-fit: cover;
-    }
-
-    .item-top {
-        display: flex;
-        justify-content: space-between;
-    }
-
-    .item-meta {
-        font-size: var(--fs-body);
-        color: #6B7280;
-    }
-
-    /* Payment */
-    .payment-box {
-        background: #F9FAFB;
-        padding: 14px;
-        border-radius: var(--radius-md);
-    }
-
-    .payment-row {
-        display: flex;
-        justify-content: space-between;
-        font-size: var(--fs-body);
-        margin: 12px 0;
-        padding-left: 12px;
-        padding-right: 12px;
-    }
-
-    .payment-row.total {
-        font-weight: 700;
-        font-size: var(--fs-header);
-    }
-
-    .payment-row.discount span:last-child {
-        color: #FF5A5F;
-        font-weight: 600;
-    }
-
-    /* Button — sits naturally inside .checkout-bottom, not fixed, so it
-       always follows right after the payment box instead of being
-       clipped off-screen. */
-    .placeOrderBtn {
-        width: 100%;
-        padding: 22px;
-        background: #0AC9BD;
-        color: #fff;
-        border: none;
-        font-weight: 600;
-        font-size: var(--fs-header);
-        cursor: pointer;
-        transition: background 0.15s ease;
-    }
-
-    .placeOrderBtn:hover {
         background: var(--heading-teal);
     }
 

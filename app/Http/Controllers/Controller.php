@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Routing\Controller as BaseController;
 use App\Models\ManagementSystem\Company;
 use App\Models\ManagementSystem\CompanyConnection;
+use App\Models\ManagementSystem\User;
+use App\Models\POS\Order;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -105,23 +108,197 @@ class Controller extends BaseController
             return null;
         }
 
-        $response = Http::withoutVerifying()->asForm()->post($this->connection->token_url, [
-            'grant_type' => 'client_credentials',
-            'client_id' => trim($this->connection->client_id),
-            'client_secret' => trim($this->connection->client_secret),
-            'scope' => trim($this->connection->api_scope ?: 'https://api.businesscentral.dynamics.com/.default'),
-        ]);
+        // Client-credentials tokens are valid ~1hr; refetching on every single
+        // BC call added an extra slow, uncapped network round-trip to every
+        // request (seen stacking with the image-proxy fetch and blowing past
+        // PHP's max_execution_time). Cache it instead. remember() only caches
+        // non-null results, so a failed fetch is never "poisoned" - it just retries.
+        return Cache::remember('bc_token_' . $this->connection->id, 3300, function () {
+            $response = Http::withoutVerifying()->asForm()->timeout(15)->post($this->connection->token_url, [
+                'grant_type' => 'client_credentials',
+                'client_id' => trim($this->connection->client_id),
+                'client_secret' => trim($this->connection->client_secret),
+                'scope' => trim($this->connection->api_scope ?: 'https://api.businesscentral.dynamics.com/.default'),
+            ]);
+
+            if (!$response->successful()) {
+                logger()->error('BC token failed from base controller', [
+                    'company_id' => $this->connection->company_id,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                return null;
+            }
+
+            return $response->json()['access_token'] ?? null;
+        });
+    }
+
+    /**
+     * Laravel-side order stats for the customer detail page (WebUserController::show()).
+     */
+    protected function buildOrderStats(?User $user): array
+    {
+        $stats = [
+            'pending_count' => 0,
+            'confirmed_count' => 0,
+            'cancelled_count' => 0,
+            'pending_amount' => 0,
+            'confirmed_amount' => 0,
+            'cancelled_amount' => 0,
+            'last_order_at' => null,
+        ];
+
+        if (!$user) {
+            return $stats;
+        }
+
+        // "cancelled"/"canceled" mirrors the spelling variance already
+        // handled by HistoryController::filteredOrders()'s status alias.
+        $cancelledStatuses = ['cancelled', 'canceled'];
+
+        $stats['pending_count'] = Order::where('user_id', $user->id)->where('status', 'pending')->count();
+        $stats['confirmed_count'] = Order::where('user_id', $user->id)->where('status', 'confirmed')->count();
+        $stats['cancelled_count'] = Order::where('user_id', $user->id)->whereIn('status', $cancelledStatuses)->count();
+        $stats['pending_amount'] = Order::where('user_id', $user->id)->where('status', 'pending')->sum('total_amount');
+        $stats['confirmed_amount'] = Order::where('user_id', $user->id)->where('status', 'confirmed')->sum('total_amount');
+        $stats['cancelled_amount'] = Order::where('user_id', $user->id)->whereIn('status', $cancelledStatuses)->sum('total_amount');
+        $stats['last_order_at'] = Order::where('user_id', $user->id)->max('created_at');
+
+        return $stats;
+    }
+
+    /**
+     * BC invoice/order PDF download — shared by the customer-facing
+     * HistoryController::downloadInvoice() and the admin order/notification
+     * "Download invoice" action, since both stream the same posted-invoice
+     * or sales-order PDF from Business Central, just with different
+     * ownership scoping on the Order lookup itself.
+     */
+    protected function bc(string $token)
+    {
+        return Http::withToken($token)->acceptJson();
+    }
+
+    protected function resolveSalesOrderId(Order $order, string $token): ?string
+    {
+        if ($order->bc_order_id) {
+            return $order->bc_order_id;
+        }
+
+        if (!$order->bc_document_no) {
+            return null;
+        }
+
+        $number = str_replace("'", "''", $order->bc_document_no);
+
+        $url = $this->bcEndpoint(
+            'sales_orders_by_number_endpoint',
+            "salesOrders?\$filter=number eq '{number}'&\$top=1",
+            ['number' => $number]
+        );
+
+        return $url ? $this->firstId($this->bc($token)->get($url)) : null;
+    }
+
+    protected function resolvePostedInvoiceId(Order $order, string $token): ?string
+    {
+        if ($order->bc_invoice_no) {
+            $id = $this->postedInvoiceId($token, 'number', $order->bc_invoice_no);
+
+            if ($id) {
+                return $id;
+            }
+        }
+
+        return $this->postedInvoiceId($token, 'orderNumber', $order->bc_document_no ?: $order->order_no);
+    }
+
+    protected function postedInvoiceId(string $token, string $field, string $value): ?string
+    {
+        $url = $this->bcUrl('postedSalesInvoices');
+
+        if (!$url) {
+            return null;
+        }
+
+        $value = str_replace("'", "''", $value);
+        $filter = rawurlencode("{$field} eq '{$value}'");
+
+        return $this->firstId($this->bc($token)->get("{$url}?\$filter={$filter}&\$top=1"));
+    }
+
+    protected function firstId($response): ?string
+    {
+        if (!$response->successful()) {
+            return null;
+        }
+
+        $id = data_get($response->json(), 'value.0.id');
+
+        return $id ? (string) $id : null;
+    }
+
+    protected function streamPdf(?string $endpoint, string $token, Order $order, string $type)
+    {
+        if (!$endpoint) {
+            return back()->with('error', 'Business Central URL is not configured.');
+        }
+
+        $response = $this->bc($token)->post($endpoint, (object) []);
 
         if (!$response->successful()) {
-            logger()->error('BC token failed from base controller', [
-                'company_id' => $this->connection->company_id,
+            logger()->error('BC PDF download failed', [
+                'endpoint' => $endpoint,
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);
 
-            return null;
+            return back()->with('error', 'Failed to download PDF from Business Central.');
         }
 
-        return $response->json()['access_token'] ?? null;
+        $pdf = base64_decode($response->json('value', ''), true);
+
+        if ($pdf === false) {
+            return back()->with('error', 'PDF was not returned by Business Central.');
+        }
+
+        $orderNo = preg_replace('/[^A-Za-z0-9_-]/', '-', $order->order_no ?: $order->id);
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => "attachment; filename=\"{$type}-{$orderNo}.pdf\"",
+        ]);
+    }
+
+    protected function downloadOrderInvoicePdf(Order $order)
+    {
+        $token = $this->getToken();
+
+        if (!$token) {
+            return back()->with('error', 'Failed to authenticate with Business Central.');
+        }
+
+        $isInvoice = in_array($order->status, ['delivery', 'delivered', 'confirmed'], true);
+
+        $bcId = $isInvoice
+            ? $this->resolvePostedInvoiceId($order, $token)
+            : $this->resolveSalesOrderId($order, $token);
+
+        if (!$bcId) {
+            $message = match (true) {
+                $isInvoice => 'Posted sales invoice was not found in Business Central yet.',
+                $order->status === 'on-the-way' => 'Sales order was not found in Business Central yet.',
+                default => 'Invoice PDF is available only after this order is synced to Business Central.',
+            };
+
+            return back()->with('error', $message);
+        }
+
+        $type = $isInvoice ? 'invoice' : 'order';
+        $page = $isInvoice ? "postedSaleInvoicePdf({$bcId})" : "salesOrderPdf({$bcId})";
+
+        return $this->streamPdf($this->bcUrl("{$page}/Microsoft.NAV.GetPDF"), $token, $order, $type);
     }
 }

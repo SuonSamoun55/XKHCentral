@@ -11,7 +11,16 @@ class UserProfileController extends Controller
     public function index()
     {
         $user = Auth::user();
-        return view('POSViews.POSUserViews.Profile.show', compact('user'));
+        $customer = $user->bcCustomer;
+        $orderStats = $this->buildOrderStats($user);
+
+        return view('POSViews.POSUserViews.Profile.show', compact('user', 'customer', 'orderStats'));
+    }
+
+    public function edit()
+    {
+        $user = Auth::user();
+        return view('POSViews.POSUserViews.Profile.edit', compact('user'));
     }
 
     public function update(Request $request)
@@ -34,7 +43,7 @@ class UserProfileController extends Controller
 
         $user->update($data);
 
-        return back()->with('success', 'Profile updated successfully.');
+        return redirect()->route('profile')->with('success', 'Profile updated successfully.');
     }
 
     public function showChangePasswordForm()
@@ -59,7 +68,9 @@ class UserProfileController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return back()->with('success', 'Password updated successfully.');
+        return back()
+            ->with('success', 'Password updated successfully.')
+            ->with('new_password', $request->password);
     }
     
 public function index_mobile()

@@ -37,7 +37,8 @@ class WebUserController extends Controller
     $data = $customers->map(function ($customer) {
         $displayBcNo = $customer->bc_customer_no ?? '-';
         $displayName = $customer->local_name ?? $customer->name ?? '-';
-        $displayEmail = $customer->local_email ?? $customer->email ?? '-';
+        $rawEmail = trim((string) ($customer->local_email ?? $customer->email ?? ''));
+        $displayEmail = in_array($rawEmail, ['', '.', '-'], true) ? '' : $rawEmail;
         $displayPhone = $customer->local_phone ?? $customer->phone ?? '-';
         $displayRole = $customer->role ?? '-';
 
@@ -203,65 +204,38 @@ protected function getCustomerImageDisplay($customer, $linkedUser = null)
             $data = $response->json('value', []);
 
             foreach ($data as $row) {
-                $displayName = trim((string) $this->valueFrom($row, [
-                    'displayName',
-                    'display_name',
-                    'name',
-                    'Name',
-                    'customerName',
-                ], ''));
-                $customerNo = $this->valueFrom($row, [
-                    'number',
-                    'no',
-                    'No',
-                    'customerNo',
-                    'customerNumber',
-                ]);
-                $bcId = $this->valueFrom($row, ['id', 'systemId', 'SystemId']);
+                $fields = $this->extractBcCustomerFields($row);
 
-                if (!$customerNo) {
+                if (!$fields['customer_no']) {
                     continue;
                 }
 
-                $phoneNumber = $this->valueFrom($row, [
-                    'phoneNumber',
-                    'phone_number',
-                    'phone',
-                    'Phone',
-                    'mobilePhoneNo',
-                ]);
-
                 $bcImageUrl = null;
-                if (!empty($bcId)) {
-                    $bcImageUrl = route('users.bc-image', ['bcId' => $bcId]);
+                if (!empty($fields['bc_id'])) {
+                    $bcImageUrl = route('users.bc-image', ['bcId' => $fields['bc_id']]);
                 }
-
-                $customerName = $displayName !== '' ? $displayName : 'Unknown';
-                $customerEmail = $this->valueFrom($row, ['email', 'Email', 'emailAddress']);
 
                 BcCustomer::updateOrCreate(
                     [
                         'company_id' => $companyId,
-                        'bc_customer_no' => $customerNo,
+                        'bc_customer_no' => $fields['customer_no'],
                     ],
-                    $this->filterCustomerDataByExistingColumns([
-                        'bc_id' => $bcId,
-                        'name' => $customerName,
-                        'display_name' => $customerName,
-                        'email' => $customerEmail,
-                        'phone' => $phoneNumber,
-                        'phone_number' => $phoneNumber,
-                        'profile_image_url' => $bcImageUrl,
-                        'last_synced_at' => now(),
-                    ])
+                    $this->filterCustomerDataByExistingColumns(array_merge(
+                        $this->bcFieldsForStorage($fields),
+                        [
+                            'bc_id' => $fields['bc_id'],
+                            'profile_image_url' => $bcImageUrl,
+                            'last_synced_at' => now(),
+                        ]
+                    ))
                 );
 
                 User::where('company_id', $companyId)
-                    ->where('bc_customer_no', $customerNo)
+                    ->where('bc_customer_no', $fields['customer_no'])
                     ->update([
-                        'name' => $customerName,
-                        'email' => $customerEmail,
-                        'phone' => $phoneNumber,
+                        'name' => $fields['name'],
+                        'email' => $fields['email'],
+                        'phone' => $fields['phone'],
                         'profile_image_url' => $bcImageUrl,
                     ]);
             }
@@ -289,6 +263,157 @@ protected function getCustomerImageDisplay($customer, $linkedUser = null)
         return $default;
     }
 
+    /**
+     * Normalize one Business Central customer row (bulk sync or single-record
+     * fetch — same OData shape either way) into our own field names.
+     */
+    protected function extractBcCustomerFields(array $row): array
+    {
+        $displayName = trim((string) $this->valueFrom($row, [
+            'displayName',
+            'display_name',
+            'name',
+            'Name',
+            'customerName',
+        ], ''));
+
+        return [
+            'bc_id' => $this->valueFrom($row, ['id', 'systemId', 'SystemId']),
+            'customer_no' => $this->valueFrom($row, [
+                'number', 'no', 'No', 'customerNo', 'customerNumber',
+            ]),
+            'name' => $displayName !== '' ? $displayName : 'Unknown',
+            'email' => $this->valueFrom($row, ['email', 'Email', 'emailAddress']),
+            // BC's actual field is "phoneNo" — "phoneNumber" was never a real
+            // key in the API response, so phone was silently going unsynced.
+            'phone' => $this->valueFrom($row, ['phoneNo', 'phoneNumber', 'phone_number', 'phone', 'Phone']),
+            'mobile_phone_no' => $this->valueFrom($row, ['mobilePhoneNo', 'mobile_phone_no', 'mobilePhone']),
+            'address' => $this->valueFrom($row, ['address', 'Address']),
+            'city' => $this->valueFrom($row, ['city', 'City']),
+            'payment_terms_code' => $this->valueFrom($row, ['paymentTermsCode', 'payment_terms_code']),
+            'customer_price_group' => $this->valueFrom($row, ['customerPriceGroup', 'customer_price_group']),
+            'location_code' => $this->valueFrom($row, ['locationCode', 'location_code']),
+            'ship_to_code' => $this->valueFrom($row, ['shipToCode', 'ship_to_code']),
+            'blocked' => $this->valueFrom($row, ['blocked', 'Blocked']),
+            'balance' => $this->valueFrom($row, ['balance', 'Balance'], 0),
+            'balance_due' => $this->valueFrom($row, ['balanceDue', 'balance_due'], 0),
+            'credit_limit' => $this->valueFrom($row, ['creditLimit', 'credit_limit'], 0),
+        ];
+    }
+
+    /**
+     * Map extractBcCustomerFields()'s keys onto bc_customers column names —
+     * shared by the bulk sync and the single-customer sync so both write the
+     * same shape (still passed through filterCustomerDataByExistingColumns()
+     * by the caller).
+     */
+    protected function bcFieldsForStorage(array $fields): array
+    {
+        return [
+            'name' => $fields['name'],
+            'display_name' => $fields['name'],
+            'email' => $fields['email'],
+            'phone' => $fields['phone'],
+            'phone_number' => $fields['phone'],
+            'mobile_phone_no' => $fields['mobile_phone_no'],
+            'address' => $fields['address'],
+            'city' => $fields['city'],
+            'payment_terms_code' => $fields['payment_terms_code'],
+            'customer_price_group' => $fields['customer_price_group'],
+            'location_code' => $fields['location_code'],
+            'ship_to_code' => $fields['ship_to_code'],
+            'blocked' => $fields['blocked'],
+            'balance' => $fields['balance'],
+            'balance_due' => $fields['balance_due'],
+            'credit_limit' => $fields['credit_limit'],
+        ];
+    }
+
+    /**
+     * Re-fetch one customer from Business Central (used by the "Sync now"
+     * button on the customer detail page) instead of re-running the full
+     * bulk sync just to refresh one row.
+     */
+    public function syncSingleCustomer($id)
+    {
+        $customer = BcCustomer::findOrFail($id);
+
+        // This endpoint is also used by the POS user's own "View Profile" page
+        // ("Sync now" on their own BC balance), not just the admin customer
+        // detail page — only an admin or the customer themself may trigger it.
+        $authUser = auth()->user();
+        $isOwner = $authUser && $authUser->bc_customer_no && $authUser->bc_customer_no === $customer->bc_customer_no;
+        $isAdmin = $authUser && strtolower($authUser->role ?? '') === 'admin';
+
+        if (!$isOwner && !$isAdmin) {
+            abort(403);
+        }
+
+        if (empty($customer->bc_id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This customer has no Business Central ID to sync from.',
+            ], 422);
+        }
+
+        $token = $this->getToken();
+
+        if (!$token) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Business Central authentication failed.',
+            ], 502);
+        }
+
+        $url = $this->bcUrl("customers({$customer->bc_id})");
+
+        try {
+            $response = Http::withoutVerifying()
+                ->withToken($token)
+                ->timeout(30)
+                ->get($url);
+
+            if (!$response->successful()) {
+                Log::error('BC single customer sync failed', [
+                    'id' => $id,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to fetch this customer from Business Central.',
+                ], 502);
+            }
+
+            $fields = $this->extractBcCustomerFields($response->json() ?? []);
+
+            $customer->fill($this->filterCustomerDataByExistingColumns(array_merge(
+                $this->bcFieldsForStorage($fields),
+                ['last_synced_at' => now()]
+            )));
+            $customer->save();
+
+            return response()->json([
+                'success' => true,
+                'balance' => number_format((float) $customer->balance, 2),
+                'balance_due' => number_format((float) $customer->balance_due, 2),
+                'credit_limit' => number_format((float) $customer->credit_limit, 2),
+                'synced_at' => $customer->last_synced_at->diffForHumans(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('BC single customer sync exception', [
+                'id' => $id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error syncing this customer: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     protected function filterCustomerDataByExistingColumns(array $data): array
     {
         static $columns = null;
@@ -302,6 +427,21 @@ protected function getCustomerImageDisplay($customer, $linkedUser = null)
 
     public function getBCImage($bcId)
     {
+        $disk = Storage::disk('public');
+
+        // BC's picture API is slow (seen taking the full 15s timeout on large
+        // photos) and was being re-fetched on every page view. Cache the first
+        // successful fetch to local disk so repeat views are instant instead of
+        // stacking another slow round-trip on top of the token fetch.
+        foreach (['jpg', 'png'] as $ext) {
+            $cachePath = "bc-images/{$bcId}.{$ext}";
+            if ($disk->exists($cachePath)) {
+                return response($disk->get($cachePath))
+                    ->header('Content-Type', $ext === 'png' ? 'image/png' : 'image/jpeg')
+                    ->header('Cache-Control', 'public, max-age=86400');
+            }
+        }
+
         $token = $this->getToken();
 
         if (!$token) {
@@ -339,6 +479,9 @@ protected function getCustomerImageDisplay($customer, $linkedUser = null)
 
         $contentType = $imageResponse->header('Content-Type') ?: 'image/jpeg';
         $contentType = explode(';', $contentType)[0];
+        $extension   = $contentType === 'image/png' ? 'png' : 'jpg';
+
+        $disk->put("bc-images/{$bcId}.{$extension}", $imageResponse->body());
 
         return response($imageResponse->body())
             ->header('Content-Type', $contentType)
@@ -428,9 +571,11 @@ User::create([
             ? $customer->profile_image_url
             : $this->defaultImageUrl();
 
+        $orderStats = $this->buildOrderStats($user);
+
         return view(
             'ManagementSystemViews.AdminViews.Layouts.UserinfoView.UserShow',
-            compact('customer', 'user')
+            compact('customer', 'user', 'orderStats')
         );
     }
 

@@ -2,7 +2,7 @@
 @section('title', 'User Management')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/views/ManagementSystemViews/AdminViews/Layouts/UserinfoView/UserList.css') }}">
+<link rel="stylesheet" href="{{ asset('/css/views/Management/userinfo/UserList.css') }}">
 @endpush
 
 @section('content')
@@ -11,7 +11,7 @@
 
     <div class="content-areas">
         <div class="page-card">
-            <div class="page-title">User Management</div>
+            <div class="page-title">Customers Management</div>
 
             <div class="top-bar">
                 <div class="left-tools">
@@ -19,9 +19,15 @@
                         <i class="bi bi-search"></i>
                         <input type="text" id="userSearch" class="user-search-input" placeholder="Search by name, email, customer no, phone">
                     </div>
+
+                    {{-- Mobile-only: reveals the two <select> filters below
+                         instead of them always taking up their own row. --}}
+                    <button type="button" class="filter-toggle-btn" id="filterToggleBtn" aria-label="Show filters" aria-expanded="false" aria-controls="rightToolsInline">
+                        <i class="bi bi-sliders"></i>
+                    </button>
                 </div>
 
-                <div class="right-tools-inline">
+                <div class="right-tools-inline" id="rightToolsInline">
                     <select id="statusFilter" class="status-select">
                         <option value="">All Connect Status</option>
                         <option value="connected">Connected</option>
@@ -35,8 +41,9 @@
                     </select>
 
                     <a href="{{ route('users.sync') }}" class="sync-btn">
-                        <i class="bi bi-arrow-repeat"></i>
-                        Sync BC Customer
+                        <img src="{{ asset('images/management/sync-bc-icon.png') }}" alt="" class="sync-btn-icon">
+                        <span class="sync-btn-divider"></span>
+                        <span class="sync-btn-text">Sync BC Customers</span>
                     </a>
 
                     <button type="button" class="delete-selected-btn" id="deleteSelectedBtn">
@@ -73,6 +80,11 @@
                 @endif
             </div>
 
+            <div class="mobile-list-heading">
+                <span class="mobile-list-title">Active Users ({{ count($customers) }})</span>
+                <span class="mobile-list-view-all">View All</span>
+            </div>
+
             <form id="bulkDeleteForm" method="POST" action="{{ route('users.deleteSelected') }}">
                 @csrf
 
@@ -89,6 +101,7 @@
                                     <th>Role</th>
                                     <th>Last Seen</th>
                                     <th>Actions</th>
+                                    <th>Phone</th>
                                 </tr>
                             </thead>
 
@@ -97,7 +110,12 @@
                                     @php
                                         $displayBcNo = $customer->bc_customer_no ?? '-';
                                         $displayName = $customer->local_name ?? $customer->name ?? '-';
-                                        $displayEmail = $customer->local_email ?? $customer->email ?? '-';
+                                        $rawEmail = trim((string) ($customer->local_email ?? $customer->email ?? ''));
+                                        // Some BC-synced records store a placeholder "." instead of
+                                        // leaving the email blank — render those as empty rather than
+                                        // a stray dot, so the mobile card's email row collapses away
+                                        // (via .table td:empty{display:none}) instead of showing junk.
+                                        $displayEmail = in_array($rawEmail, ['', '.', '-'], true) ? '' : $rawEmail;
                                         $displayPhone = $customer->local_phone ?? $customer->phone ?? '-';
                                         $displayRole = $customer->role ?? '-';
 
@@ -148,6 +166,7 @@
                                                 </div>
 
                                                 <div class="name-block">
+                                                    <span class="role-badge">{{ $displayRole }}</span>
                                                     <span class="name-text">{{ $displayName }}</span>
                                                     <span class="sub-text">
                                                         @if($activityStatus === 'online')
@@ -165,9 +184,49 @@
 
                                         <td>
                                             @if($customer->connect_status === 'connected')
-                                                <span class="status-badge status-connected">Connected</span>
+                                                <button
+                                                    type="button"
+                                                    class="status-pill status-pill-connected open-user-modal"
+                                                    title="Edit"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#userModal"
+                                                    data-mode="edit"
+                                                    data-id="{{ $customer->id }}"
+                                                    data-bcno="{{ $displayBcNo }}"
+                                                    data-name="{{ $displayName }}"
+                                                    data-email="{{ $displayEmail }}"
+                                                    data-phone="{{ $displayPhone }}"
+                                                    data-role="{{ $displayRole }}"
+                                                    data-image-url="{{ $imageUrl }}"
+                                                >
+                                                    <span class="status-pill-main">
+                                                        <span class="status-pill-icon"><img src="{{ asset('images/management/connect (2).png') }}" alt=""></span>
+                                                        <span class="status-pill-text">Connect</span>
+                                                    </span>
+                                                    <img src="{{ asset('images/management/chevron.png') }}" alt="" class="status-pill-chevron">
+                                                </button>
                                             @else
-                                                <span class="status-badge status-disconnected">Not Connected</span>
+                                                <button
+                                                    type="button"
+                                                    class="status-pill status-pill-disconnected open-user-modal"
+                                                    title="Connect"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#userModal"
+                                                    data-mode="connect"
+                                                    data-id="{{ $customer->id }}"
+                                                    data-bcno="{{ $displayBcNo }}"
+                                                    data-name="{{ $displayName }}"
+                                                    data-email="{{ $displayEmail }}"
+                                                    data-phone="{{ $displayPhone }}"
+                                                    data-role=""
+                                                    data-image-url="{{ $imageUrl }}"
+                                                >
+                                                    <span class="status-pill-main">
+                                                        <span class="status-pill-icon"><img src="{{ asset('images/management/connect (2).png') }}" alt=""></span>
+                                                        <span class="status-pill-text">Not Connect</span>
+                                                    </span>
+                                                    <img src="{{ asset('images/management/chevron.png') }}" alt="" class="status-pill-chevron">
+                                                </button>
                                             @endif
                                         </td>
 
@@ -192,7 +251,7 @@
                                                         data-role=""
                                                         data-image-url="{{ $imageUrl }}"
                                                     >
-                                                        <i class="bi bi-link-45deg text-success"></i>
+                                                        <img src="{{ asset('images/management/link (5).png') }}" alt="Connect" class="action-icon-img">
                                                     </button>
                                                 @else
                                                     <button
@@ -214,30 +273,30 @@
                                                     </button>
                                                 @endif
 
-                                                <a href="javascript:void(0)"
-                                                   onclick="showUser('{{ route('admin.users.show', $customer->id) }}')"
-                                                   title="View">
-                                                    <i class="bi bi-eye text-primary"></i>
+                                                <a href="{{ route('users.show', $customer->id) }}" title="View">
+                                                    <img src="{{ asset('images/management/eye.png') }}" alt="View" class="action-icon-img">
                                                 </a>
 
                                                 <form method="POST" action="{{ route('users.destroy', $customer->id) }}" onsubmit="return confirm('Are you sure you want to delete this user?')" style="display:inline-block;">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="delete-icon" title="Delete">
-                                                        <i class="bi bi-trash"></i>
+                                                        <img src="{{ asset('images/management/delete.png') }}" alt="Delete" class="action-icon-img">
                                                     </button>
                                                 </form>
                                             </div>
                                         </td>
+
+                                        <td title="{{ $displayPhone }}">{{ $displayPhone }}</td>
                                     </tr>
                                 @empty
                                     <tr id="noDataRow">
-                                        <td colspan="8" class="empty-text">No BC customers found.</td>
+                                        <td colspan="9" class="empty-text">No BC customers found.</td>
                                     </tr>
                                 @endforelse
 
                                 <tr id="noResultRow" style="display:none;">
-                                    <td colspan="8" class="empty-text">No matching users found.</td>
+                                    <td colspan="9" class="empty-text">No matching users found.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -275,28 +334,6 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function showUser(url) {
-    fetch(url, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.text();
-        })
-        .then(html => {
-            document.getElementById('modalContent').innerHTML = html;
-            var myModal = new bootstrap.Modal(document.getElementById('userViewModal'));
-            myModal.show();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("Could not load user details.");
-        });
-}
-</script>
-<script>
 document.addEventListener('DOMContentLoaded', function () {
     const checkAll = document.getElementById('checkAll');
     const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
@@ -304,6 +341,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('userSearch');
     const statusFilter = document.getElementById('statusFilter');
     const activeFilter = document.getElementById('activeFilter');
+    const filterToggleBtn = document.getElementById('filterToggleBtn');
+    const rightToolsInline = document.getElementById('rightToolsInline');
     const pageSize = document.getElementById('pageSize');
     const prevPageBtn = document.getElementById('prevPageBtn');
     const nextPageBtn = document.getElementById('nextPageBtn');
@@ -354,6 +393,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const checkedVisible = visibleCheckboxes.filter(cb => cb.checked).length;
 
+        // Mobile: Delete Selected only takes up toolbar space once there's
+        // actually something to delete, rather than sitting there greyed
+        // out (or worse, always-clickable) by default.
+        rightToolsInline?.classList.toggle('has-selection', checkedVisible > 0);
+
         checkAll.indeterminate = false;
         checkAll.checked = false;
 
@@ -386,6 +430,13 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             updateCheckAllState();
+        });
+    }
+
+    if (filterToggleBtn && rightToolsInline) {
+        filterToggleBtn.addEventListener('click', function () {
+            const isOpen = rightToolsInline.classList.toggle('filters-open');
+            filterToggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         });
     }
 
@@ -495,7 +546,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const tr = document.createElement('tr');
 
         const displayName = customer.name || '-';
-        const displayEmail = customer.email || '-';
+        const displayEmail = customer.email || '';
         const displayBcNo = customer.bc_customer_no || '-';
         const displayPhone = customer.phone || '-';
         const displayRole = customer.role || '-';
@@ -547,7 +598,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     data-role=""
                     data-image-url="${escapeHtml(imageUrl)}"
                 >
-                    <i class="bi bi-link-45deg text-success"></i>
+                    <img src="{{ asset('images/management/link (5).png') }}" alt="Connect" class="action-icon-img">
                 </button>
             `;
         } else {
@@ -574,14 +625,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         actionHtml += `
             <a href="${escapeHtml(customer.show_url)}" title="View">
-                <i class="bi bi-eye text-primary"></i>
+                <img src="{{ asset('images/management/eye.png') }}" alt="View" class="action-icon-img">
             </a>
 
             <form method="POST" action="${escapeHtml(customer.destroy_url)}" onsubmit="return confirm('Are you sure you want to delete this user?')" style="display:inline-block;">
                 <input type="hidden" name="_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="_method" value="DELETE">
                 <button type="submit" class="delete-icon" title="Delete">
-                    <i class="bi bi-trash"></i>
+                    <img src="{{ asset('images/management/delete.png') }}" alt="Delete" class="action-icon-img">
                 </button>
             </form>
         `;
@@ -599,6 +650,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <div class="name-block">
+                        <span class="role-badge">${escapeHtml(displayRole)}</span>
                         <span class="name-text">${escapeHtml(displayName)}</span>
                         <span class="sub-text">${escapeHtml(subText)}</span>
                     </div>
@@ -607,12 +659,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             <td title="${escapeHtml(displayEmail)}">${escapeHtml(displayEmail)}</td>
             <td title="${escapeHtml(displayBcNo)}">${escapeHtml(displayBcNo)}</td>
-
             <td>
                 ${
                     customer.connect_status === 'connected'
-                    ? '<span class="status-badge status-connected">Connected</span>'
-                    : '<span class="status-badge status-disconnected">Not Connected</span>'
+                    ? `<button type="button" class="status-pill status-pill-connected open-user-modal" title="Edit" data-bs-toggle="modal" data-bs-target="#userModal" data-mode="edit" data-id="${escapeHtml(customer.id)}" data-bcno="${escapeHtml(displayBcNo)}" data-name="${escapeHtml(displayName)}" data-email="${escapeHtml(displayEmail)}" data-phone="${escapeHtml(displayPhone)}" data-role="${escapeHtml(displayRole)}" data-image-url="${escapeHtml(imageUrl)}"><span class="status-pill-main"><span class="status-pill-icon"><img src="{{ asset('images/management/connect (2).png') }}" alt=""></span><span class="status-pill-text">Connect</span></span><img src="{{ asset('images/management/chevron.png') }}" alt="" class="status-pill-chevron"></button>`
+                    : `<button type="button" class="status-pill status-pill-disconnected open-user-modal" title="Connect" data-bs-toggle="modal" data-bs-target="#userModal" data-mode="connect" data-id="${escapeHtml(customer.id)}" data-bcno="${escapeHtml(displayBcNo)}" data-name="${escapeHtml(displayName)}" data-email="${escapeHtml(displayEmail)}" data-phone="${escapeHtml(displayPhone)}" data-role="" data-image-url="${escapeHtml(imageUrl)}"><span class="status-pill-main"><span class="status-pill-icon"><img src="{{ asset('images/management/connect (2).png') }}" alt=""></span><span class="status-pill-text">Not Connect</span></span><img src="{{ asset('images/management/chevron.png') }}" alt="" class="status-pill-chevron"></button>`
                 }
             </td>
 
@@ -624,6 +675,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     ${actionHtml}
                 </div>
             </td>
+
+            <td title="${escapeHtml(displayPhone)}">${escapeHtml(displayPhone)}</td>
         `;
 
         return tr;
@@ -631,6 +684,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function refreshTableBody(customers) {
         const currentScrollTop = tableScroll ? tableScroll.scrollTop : 0;
+
+        // The background refresh rebuilds every row from scratch, which would
+        // otherwise silently uncheck anything the admin had selected for bulk
+        // delete — capture which ids are checked first, then re-check the
+        // matching new rows below so an in-progress selection survives.
+        const checkedIds = new Set(
+            Array.from(document.querySelectorAll('.row-check:checked')).map(cb => cb.value)
+        );
 
         const oldNoResultRow = document.getElementById('noResultRow');
         if (oldNoResultRow) {
@@ -642,11 +703,15 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!customers.length) {
             const emptyRow = document.createElement('tr');
             emptyRow.id = 'noDataRow';
-            emptyRow.innerHTML = `<td colspan="8" class="empty-text">No BC customers found.</td>`;
+            emptyRow.innerHTML = `<td colspan="9" class="empty-text">No BC customers found.</td>`;
             tableBody.appendChild(emptyRow);
         } else {
             customers.forEach(customer => {
                 const row = buildRow(customer);
+                const checkbox = row.querySelector('.row-check');
+                if (checkbox && checkedIds.has(String(customer.id))) {
+                    checkbox.checked = true;
+                }
                 tableBody.appendChild(row);
             });
         }
@@ -654,7 +719,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const noResultTr = document.createElement('tr');
         noResultTr.id = 'noResultRow';
         noResultTr.style.display = 'none';
-        noResultTr.innerHTML = `<td colspan="8" class="empty-text">No matching users found.</td>`;
+        noResultTr.innerHTML = `<td colspan="9" class="empty-text">No matching users found.</td>`;
         tableBody.appendChild(noResultTr);
 
         if (totalCount) {
@@ -669,6 +734,19 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function loadUsersSilently() {
+        // Skip this cycle entirely while the admin is mid-action — with a
+        // selection in progress, a filter dropdown open, the search box
+        // focused, or the connect/edit modal open — so a periodic refresh
+        // never yanks the page out from under them. It just tries again on
+        // the next tick once things are idle; nothing is lost by waiting.
+        const hasSelection = document.querySelector('.row-check:checked') !== null;
+        const searchFocused = document.activeElement === searchInput;
+        const modalOpen = document.getElementById('userModal')?.classList.contains('show');
+
+        if (hasSelection || searchFocused || modalOpen) {
+            return;
+        }
+
         fetch("{{ route('users.data') }}", {
             method: 'GET',
             headers: {
@@ -748,6 +826,16 @@ document.addEventListener('DOMContentLoaded', function () {
         }).catch(function (error) {
             console.log('Heartbeat failed:', error);
         });
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialStatus = urlParams.get('status');
+    const initialActive = urlParams.get('active');
+    if (initialStatus && statusFilter) {
+        statusFilter.value = initialStatus;
+    }
+    if (initialActive && activeFilter) {
+        activeFilter.value = initialActive;
     }
 
     renderTable();

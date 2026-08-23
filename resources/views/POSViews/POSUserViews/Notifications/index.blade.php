@@ -1,13 +1,11 @@
-@extends('ManagementSystemViews.UserViews.Layouts.app')
+@extends('Layout.POSUser.app')
 @section('title', 'Notifications')
 
 @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSUserViews/Notifications/notification.css') }}" />
+    <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSUserViews/Notifications/notification.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSUserViews/Notifications/notification.css')) }}" />
     <style>
-        /* Toggle between default and active tab icons.
-           Move these rules into notification.css whenever convenient. */
         .tab-icon-active {
             display: none;
         }
@@ -19,11 +17,10 @@
         }
     </style>
 @endpush
-
 @section('content')
 
-@include('ManagementSystemViews.UserViews.Layouts.header_mobile')
-@include('ManagementSystemViews.UserViews.Layouts.footer')
+@include('Layout.POSUser.header_mobile')
+@include('Layout.POSUser.footer')
     <div class="page-wrap">
         <div class="main-content">
             <div class="header">
@@ -33,7 +30,7 @@
                 <div class="search-date-container">
                     <div class="top-actions">
                         <a href="{{ route('user.chat.index') }}" class="btn-send">
-                            <img src="{{ asset('images/pos/inbox.png') }}" class="icon-img" alt="inbox">Inbox
+                            <img src="{{ asset('/images/aside/chat.png') }}" class="icon-img" alt="inbox">Chat
                         </a>
                     </div>
 
@@ -42,12 +39,10 @@
                         <input type="date" name="date" id="dateInput" value="{{ request('date') }}">
                     </div>
                 </div>
-
-                {{-- Tabs --}}
                 <div class="tabs">
                     <div class="tab active" data-tab="orderNotification">
                         <span class="tab-icon-wrap">
-                            <img class="icon-img tab-icon-default" src="{{ asset('images/pos/Notifi_cart icon.png') }}" alt="Order Notification">
+                            <img class="icon-img tab-icon-default" src="{{ asset('/images/aside/OrderNotification.png') }}" alt="Order Notification">
                             <img class="icon-img tab-icon-active" src="{{ asset('images/pos/Notifi_cart icon_active.png') }}" alt="Order Notification">
                             @if ($orderUnreadCount > 0)
                                 <span class="tab-count-badge">{{ $orderUnreadCount }}</span>
@@ -58,7 +53,7 @@
 
                     <div class="tab" data-tab="adminMessage">
                         <span class="tab-icon-wrap">
-                            <img class="icon-img tab-icon-default" src="{{ asset('images/pos/NoUser_adminIcon.png') }}" alt="Admin Message">
+                            <img class="icon-img tab-icon-default" src="{{ asset('/images/aside/AdminMessage.png') }}" alt="Admin Message">
                             <img class="icon-img tab-icon-active" src="{{ asset('images/pos/NoUser_adminIcon_active.png') }}" alt="Admin Message">
                             @if ($adminUnreadCount > 0)
                                 <span class="tab-count-badge">{{ $adminUnreadCount }}</span>
@@ -77,7 +72,7 @@
 
             <div class="mobile-tabs">
                 <a href="{{ route('user.chat.index') }}" class="mt-pill">
-                    <img src="{{ asset('images/pos/inbox.png') }}" class="icon-img" alt="inbox">Inbox
+                    <img src="{{ asset('/images/aside/chat.png') }}" class="icon-img" alt="inbox">Chat
                 </a>
 
                 <div class="mf-date" id="mfDate">
@@ -100,10 +95,6 @@
                 <span data-mobile-subtab="adminMessage">Admin Message ({{ $adminUnreadCount }})</span>
             </div>
 
-            {{-- Everything below this point scrolls together. On mobile,
-                 .content-scroll becomes the actual scroll container; on
-                 desktop/tablet it's display:contents and behaves exactly
-                 as before (no layout change there). --}}
             <div class="content-scroll">
 
                 {{-- Notification List --}}
@@ -161,7 +152,7 @@
                                             {{ $notification->display_subject }}
                                         </span>
                                         <span class="desktop-separator">-</span>
-                                        <span class="desktop-message">{{ Str::limit($notification->message, 118) }}</span>
+                                        <span class="desktop-message">{!! \App\Models\ManagementSystem\Notification::cleanMessagePreview($notification->message, 118) !!}</span>
                                         <span class="notification-meta d-none">
                                             {{ $notification->created_at->format('D d/m/Y') }}
                                             <span>{{ $notification->created_at->format('h:i A') }}</span>
@@ -231,7 +222,7 @@
                                     </div>
 
                                     <div class="notification-desc">
-                                        {{ Str::limit($notification->message, 60) }}
+                                        {!! \App\Models\ManagementSystem\Notification::cleanMessagePreview($notification->message, 60) !!}
                                     </div>
 
                                     @if ($notification->has_attachment)
@@ -270,7 +261,7 @@
                                 <div class="table-row {{ !$notification->is_read ? 'selected' : '' }}"
                                     data-id="{{ $notification->id }}"
                                     style="cursor:pointer;"
-                                    onclick="goToNotification({{ $notification->id }})">
+                                    onclick="goToNotification({{ $notification->id }}, {{ $notification->type !== 'global_message' ? 'true' : 'false' }}, {{ $notification->sender_id ?? 'null' }})">
 
                                     <div class="row-left">
                                         <input type="checkbox" class="checkboxs notification-select"
@@ -282,7 +273,7 @@
                                         <span class="tag">
                                             <span class="avatar notification-type-icon">
                                                 @if ($notification->type === 'global_message')
-                                                    <img src="{{ asset('images/pos/icon-megaphone.png') }}" class="icon-img" alt="Global Message">
+                                                    <i class="bi bi-megaphone-fill icon-img"></i>
                                                 @else
                                                     <i class="bi bi-chat-left-text icon-img"></i>
                                                 @endif
@@ -298,7 +289,7 @@
                                             {{ $notification->display_status }}
                                         </span>
                                         <span class="desktop-separator">-</span>
-                                        <span class="desktop-message">{{ Str::limit($notification->message, 118) }}</span>
+                                        <span class="desktop-message">{!! \App\Models\ManagementSystem\Notification::cleanMessagePreview($notification->message, 118) !!}</span>
                                         <span class="notification-meta d-none">
                                             {{ $notification->created_at->format('D d/m/Y') }}
                                             <span>{{ $notification->created_at->format('h:i A') }}</span>
@@ -332,12 +323,12 @@
                     @forelse($adminMessagesDisplay as $notification)
                         <div class="notification-card {{ !$notification->is_read ? 'unread' : '' }} type-{{ $notification->type }}"
                             data-id="{{ $notification->id }}" style="cursor: pointer;"
-                            onclick="goToNotification({{ $notification->id }})">
+                            onclick="goToNotification({{ $notification->id }}, {{ $notification->type !== 'global_message' ? 'true' : 'false' }}, {{ $notification->sender_id ?? 'null' }})">
 
                             <div class="notification-content">
                                 <div class="avatar notification-type-icon">
                                     @if ($notification->type === 'global_message')
-                                        <img src="{{ asset('images/pos/icon-megaphone.png') }}" class="icon-img" alt="Global Message">
+                                        <i class="bi bi-megaphone-fill icon-img"></i>
                                     @else
                                         <i class="bi bi-chat-left-text icon-img"></i>
                                     @endif
@@ -354,7 +345,7 @@
                                     </div>
 
                                     <div class="notification-desc">
-                                        {{ Str::limit($notification->message, 60) }}
+                                        {!! \App\Models\ManagementSystem\Notification::cleanMessagePreview($notification->message, 60) !!}
                                     </div>
                                 </div>
                             </div>
@@ -471,9 +462,9 @@
                     </div>
                 </div>
 
-            </div>{{-- /.content-scroll --}}
+            </div>
         </div>
-        @include('ManagementSystemViews.UserViews.Layouts.footer')
+        @include('Layout.POSUser.footer')
     </div>
 
 @endsection
@@ -607,7 +598,31 @@
         // defined". Route URL is built with a placeholder id and swapped
         // in at click time, so it stays in sync with the named route
         // instead of a hardcoded path.
-        function goToNotification(id) {
+        //
+        // isDirectAdminChat + senderId: a one-to-one Admin Message (not a
+        // broadcast Global Message) skips the detail page entirely and
+        // opens the chat thread with that admin instead, per the user's
+        // request. The notification is still marked read first (fire and
+        // forget) so its unread badge clears even though its own detail
+        // page is never visited.
+        function goToNotification(id, isDirectAdminChat, senderId) {
+            if (isDirectAdminChat) {
+                const readUrlTemplate = "{{ route('user.notifications.read', ['id' => '__ID__']) }}";
+                fetch(readUrlTemplate.replace('__ID__', id), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': getCsrfToken(),
+                        'Accept': 'application/json',
+                    },
+                }).catch(() => {});
+
+                const chatUrlTemplate = senderId
+                    ? "{{ route('user.chat.index', ['admin_id' => '__ADMIN_ID__']) }}".replace('__ADMIN_ID__', senderId)
+                    : "{{ route('user.chat.index') }}";
+                window.location.href = chatUrlTemplate;
+                return;
+            }
+
             const urlTemplate = "{{ route('user.notifications.show', ['id' => '__ID__']) }}";
             window.location.href = urlTemplate.replace('__ID__', id);
         }

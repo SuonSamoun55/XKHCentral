@@ -34,7 +34,6 @@
                 </div>
 
                 @if (!$company)
-                  
                     <div class="container">
                         <div class="company-card">
                             <form action="{{ route('companies.store') }}" method="POST" enctype="multipart/form-data">

@@ -12,6 +12,11 @@
             <h1 class="pim-title">{{ $item->display_name }}</h1>
             <div class="pim-sku">Item #{{ $item->number }}</div>
         </div>
+
+        <button type="button" class="pim-btn pim-mark-btn {{ $isUpdated ? 'is-done' : '' }}" id="markUpdatedBtn" onclick="markAsUpdated()">
+            <i class="bi bi-check2-circle"></i>
+            <span id="markUpdatedText">{{ $isUpdated ? 'Marked as Updated' : 'Mark as Updated' }}</span>
+        </button>
     </div>
 
     <div class="pim-scroll">
@@ -135,14 +140,9 @@
 </main>
 
 <style>
-    /* ===================================================================
-       TOKENS  —  .pim-page
-       Design variables. Change a color/spacing scale here, it updates
-       everywhere below.
-       =================================================================== */
        .content-wrapper{
-        padding: 10px 15px;
-        background-color:white;
+        padding: 20px;
+        background:white;
         border-radius: 18px;
        }
     .pim-page{
@@ -170,7 +170,7 @@
         min-height: 0;
         overflow-y: auto;
         overflow-x: hidden;
-        padding-right: 2px; /* keeps scrollbar off the card edge content */
+        padding-right: 2px; 
     }
     .pim-scroll::-webkit-scrollbar{ width: 8px; height: 8px; }
     .pim-scroll::-webkit-scrollbar-thumb{ background: #cbd5e1; border-radius: 8px; }
@@ -180,7 +180,8 @@
         align-items: center;
         gap: 12px;
         flex-wrap: wrap;
-        flex-shrink: 0; /* never gets squeezed by the scroll region below it */
+        margin-bottom: 10px ;
+        flex-shrink: 0; 
     }
 
     .pim-back{
@@ -211,6 +212,18 @@
         font-weight: 500;
         color: var(--slate-soft);
         margin-top: 2px;
+    }
+
+    .pim-mark-btn{
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    .pim-mark-btn.is-done{
+        background: var(--success);
     }
 
     .pim-panel{
@@ -355,11 +368,6 @@
         justify-content: center;
         font-size: 12px;
     }
-
-    /* ===================================================================
-       MAIN PHOTO LAYOUT (Part 1)  —  .pim-main-layout, .pim-main-meta,
-                                       .pim-hint, .pim-actions, .pim-filename
-       =================================================================== */
     .pim-main-layout{
         display: flex;
         gap: 22px;
@@ -395,10 +403,6 @@
         color: var(--slate-soft);
         word-break: break-all;
     }
-
-    /* ===================================================================
-       BUTTONS  —  .pim-btn, .pim-btn--sm, .pim-btn--block
-       =================================================================== */
     .pim-btn{
         display: inline-flex;
         align-items: center;
@@ -418,11 +422,6 @@
 
     .pim-btn--sm{ padding: 7px 10px; font-size: 12.5px; }
     .pim-btn--block{ width: 100%; margin-top: 8px; }
-
-    /* ===================================================================
-       VARIANT GRID (Part 2)  —  .pim-variant-grid, .pim-variant-footer,
-                                  .pim-code-chip, .pim-empty
-       =================================================================== */
     .pim-variant-grid{
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -452,18 +451,26 @@
         padding: 6px 2px;
     }
     .pim-empty i{ font-size: 16px; color: var(--slate-soft); }
-
-    /* ===================================================================
-       RESPONSIVE BREAKPOINTS
-       =================================================================== */
     @media (max-width: 640px){
+        .content-wrapper{
+            border-radius: 0px;
+        }
+        .pim-page{
+
+            padding: 10px;
+        }
         .pim-tile--hero{ max-width: 100%; }
         .pim-main-layout{ flex-direction: column; align-items: stretch; }
         .pim-variant-grid{ grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
+        .pim-crumb{
+            margin: 10px 0px;
+        }
     }
 
     @media (max-width: 380px){
         .pim-variant-grid{ grid-template-columns: repeat(2, 1fr); }
+        .pim-mark-btn{ margin-left: 0; width: 100%; }
+        .pim-crumb{ flex-direction: column; align-items: stretch; }
     }
 </style>
 
@@ -475,8 +482,6 @@
     function toggle(id, on) {
         document.getElementById(id).hidden = !on;
     }
-
-    // Briefly show the green check mark, then hide it again.
     function showCheck(id) {
         const el = document.getElementById(id);
         el.hidden = false;
@@ -484,8 +489,6 @@
             el.hidden = true;
         }, 1600);
     }
-
-    // Show the picked file locally before it's uploaded.
     function showLocalPreview(fileInput, imgEl) {
         const file = fileInput.files && fileInput.files[0];
         if (!file) return;
@@ -495,8 +498,6 @@
         };
         reader.readAsDataURL(file);
     }
-
-    // Wire up preview + filename updates for every file input on the page.
     document.querySelectorAll('.pim-file-input').forEach(function (input) {
         input.addEventListener('change', function () {
             const target = input.dataset.target;
@@ -516,8 +517,6 @@
             e.stopPropagation();
         });
     });
-
-    // Drag-and-drop support for every photo tile.
     document.querySelectorAll('.pim-tile').forEach(function (tile) {
         ['dragenter', 'dragover'].forEach(function (evt) {
             tile.addEventListener(evt, function (e) {
@@ -547,8 +546,6 @@
         });
     });
 
-    // One shared upload function for both the main photo and every variant photo.
-    // target is either 'main' or a variant id.
     function uploadImage(target) {
         const isMain = target === 'main';
 
@@ -596,6 +593,45 @@
             toggle(barId, false);
             btn.disabled = false;
             alert('Upload failed.');
+        });
+    }
+
+    function markAsUpdated() {
+        const btn = document.getElementById('markUpdatedBtn');
+        const label = document.getElementById('markUpdatedText');
+        const wasDone = btn.classList.contains('is-done');
+
+        btn.disabled = true;
+        label.textContent = 'Saving...';
+
+        fetch('/store/management/products/' + ITEM_ID + '/mark-updated', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': CSRF_TOKEN,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            btn.disabled = false;
+            if (data.success) {
+                if (data.is_updated) {
+                    btn.classList.add('is-done');
+                    label.textContent = 'Marked as Updated';
+                } else {
+                    btn.classList.remove('is-done');
+                    label.textContent = 'Mark as Updated';
+                }
+            } else {
+                label.textContent = wasDone ? 'Marked as Updated' : 'Mark as Updated';
+                alert('Failed to save.');
+            }
+        })
+        .catch(function () {
+            btn.disabled = false;
+            label.textContent = wasDone ? 'Marked as Updated' : 'Mark as Updated';
+            alert('Failed to save.');
         });
     }
 </script>

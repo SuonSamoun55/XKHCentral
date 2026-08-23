@@ -36,27 +36,34 @@
                     >
                 </div>
 
-                <div class="store-menu-wrap" id="storeMenuWrap">
-                    <button type="button" class="store-menu-trigger" id="storeMenuTrigger" title="Open menu">
-                        <i class="bi bi-grid-3x3-gap-fill"></i>
-                    </button>
+                <div class="store-status-menu-group">
+                    <select id="storeStatusFilter" class="store-select-control status-filter-select">
+                        <option value="all">All Status</option>
+                        <option value="active">Active Only</option>
+                        <option value="inactive">Inactive Only</option>
+                    </select>
 
-                    <div class="store-menu-panel d-none" id="storeMenuPanel">
-                        <div class="store-menu-item">
-                            <label for="storeStatusFilter" class="store-menu-label">All Status</label>
-                            <select id="storeStatusFilter" class="store-select-control">
-                                <option value="all">All Status</option>
-                                <option value="active">Active Only</option>
-                                <option value="inactive">Inactive Only</option>
-                            </select>
-                        </div>
+                    <div class="store-menu-wrap" id="storeMenuWrap">
+                        <button type="button" class="store-menu-trigger" id="storeMenuTrigger" title="Open menu">
+                            <i class="bi bi-grid-3x3-gap-fill"></i>
+                        </button>
 
+                        <div class="store-menu-panel d-none" id="storeMenuPanel">
                         <div class="store-menu-item stock-filter-wrap">
                             <label for="storeStockFilter" class="store-menu-label">All Stock</label>
                             <select id="storeStockFilter" class="store-select-control">
                                 <option value="all">All Stock</option>
                                 <option value="in">In Stock</option>
                                 <option value="out">Out of Stock</option>
+                            </select>
+                        </div>
+
+                        <div class="store-menu-item setup-filter-wrap">
+                            <label for="storeSetupFilter" class="store-menu-label">All Setup</label>
+                            <select id="storeSetupFilter" class="store-select-control">
+                                <option value="all">All Setup</option>
+                                <option value="complete">Image Updated</option>
+                                <option value="incomplete">Not Updated Yet</option>
                             </select>
                         </div>
 
@@ -71,8 +78,9 @@
 
                         <button
                             type="button"
-                            id="bulkProductActivate"
-                            class="store-action-btn btn-active-custom products-only-btn store-menu-btn"
+                            class="store-action-btn btn-active-custom products-only-btn store-menu-btn js-bulk-action"
+                            data-scope="product"
+                            data-action="activate"
                             data-url="{{ route('store.management.products.bulkUpdate') }}"
                         >
                             <i class="bi bi-check2-circle"></i>
@@ -81,8 +89,9 @@
 
                         <button
                             type="button"
-                            id="bulkProductDeactivate"
-                            class="store-action-btn btn-inactive-custom products-only-btn store-menu-btn"
+                            class="store-action-btn btn-inactive-custom products-only-btn store-menu-btn js-bulk-action"
+                            data-scope="product"
+                            data-action="deactivate"
                             data-url="{{ route('store.management.products.bulkUpdate') }}"
                         >
                             <i class="bi bi-x-circle"></i>
@@ -91,8 +100,9 @@
 
                         <button
                             type="button"
-                            id="bulkCategoryActivate"
-                            class="store-action-btn btn-active-custom categories-only-btn store-menu-btn d-none"
+                            class="store-action-btn btn-active-custom categories-only-btn store-menu-btn js-bulk-action d-none"
+                            data-scope="category"
+                            data-action="activate"
                             data-url="{{ route('store.management.categories.bulkUpdate') }}"
                         >
                             <i class="bi bi-check2-circle"></i>
@@ -101,17 +111,29 @@
 
                         <button
                             type="button"
-                            id="bulkCategoryDeactivate"
-                            class="store-action-btn btn-inactive-custom categories-only-btn store-menu-btn d-none"
+                            class="store-action-btn btn-inactive-custom categories-only-btn store-menu-btn js-bulk-action d-none"
+                            data-scope="category"
+                            data-action="deactivate"
                             data-url="{{ route('store.management.categories.bulkUpdate') }}"
                         >
                             <i class="bi bi-x-circle"></i>
                             Deactivate
                         </button>
+                        </div>
                     </div>
                 </div>
+
+                <label class="store-select-all-inline">
+                    <input type="checkbox" class="js-select-all-products row-check-input">
+                    <span>Select all</span>
+                </label>
             </div>
         </div>
+    </div>
+
+    <div class="store-selection-banner" id="storeSelectionBanner">
+        <i class="bi bi-check-circle-fill"></i>
+        <span id="storeSelectionBannerText"></span>
     </div>
 
     <div id="productsTabContent" class="store-tab-content">
@@ -120,7 +142,7 @@
                 <thead>
                     <tr>
                         <th class="col-check">
-                            <input type="checkbox" id="selectAllProducts" class="row-check-input">
+                            <input type="checkbox" class="js-select-all-products row-check-input">
                         </th>
                         <th>Product</th>
                         <th>Item No</th>
@@ -139,6 +161,8 @@
                             data-category="{{ strtolower($item->item_category_code ?? '') }}"
                             data-status="{{ $item->is_visible ? 'active' : 'inactive' }}"
                             data-stock="{{ (int) $item->inventory > 0 ? 'in' : 'out' }}"
+                            data-setup="{{ ($item->main_image_done && $item->variants_done) ? 'complete' : 'incomplete' }}"
+                            data-href="{{ route('store.management.products.detail', $item->id) }}"
                         >
                             <td class="col-check">
                                 <input type="checkbox" value="{{ $item->id }}" class="product-checkbox row-check-input">
@@ -163,6 +187,14 @@
                                     <div class="product-text-box">
                                         <div class="product-main-name">{{ $item->display_name ?: 'No Name' }}</div>
                                         <div class="product-sub-line">{{ $item->number ?: '-' }}</div>
+
+                                        <div class="product-mobile-meta">
+                                            ${{ number_format((float) $item->unit_price, 2) }} &bull; {{ (int) $item->inventory }} in stock
+                                        </div>
+
+                                        <div class="product-mobile-status {{ $item->is_visible ? 'active' : 'inactive' }}">
+                                            {{ $item->is_visible ? 'Active' : 'Inactive' }}
+                                        </div>
                                     </div>
                                 </div>
                             </td>
@@ -184,15 +216,15 @@
                                     </button>
 
                                     <a href="{{ route('store.management.products.detail', $item->id) }}" class="store-action-btn btn-active-custom" style="height:30px; padding:0 10px; font-size:12px; text-decoration:none;">
-                                        View Detail
+                                        <i class="bi bi-eye"></i> <span class="btn-text">View Detail</span>
                                     </a>
 
                                     <a href="{{ route('store.management.product.images', $item->id) }}" class="store-action-btn btn-active-custom" style="height:30px; padding:0 10px; font-size:12px; text-decoration:none;">
-                                        <i class="bi bi-image"></i> Update
+                                        <i class="bi bi-image"></i> <span class="btn-text">Update</span>
                                     </a>
                                 </div>
 
-                                <div style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;">
+                                <div class="setup-badges-row" style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;">
                                     @if($item->main_image_done)
                                         <span style="font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; background:#d1fae5; color:#065f46;">
                                             <i class="bi bi-check-circle"></i> Image Setup
@@ -222,7 +254,7 @@
             <div class="store-footer-left">
                 <div class="selected-box">
                     Selected
-                    <span id="selectedProductCount">0</span>
+                    <span class="js-selected-product-count">0</span>
                 </div>
 
                 <div class="footer-show-box">
@@ -289,7 +321,7 @@
             <div class="store-footer-left">
                 <div class="selected-box">
                     Selected
-                    <span id="selectedCategoryCount">0</span>
+                    <span class="js-selected-category-count">0</span>
                 </div>
 
                 <div class="footer-show-box">

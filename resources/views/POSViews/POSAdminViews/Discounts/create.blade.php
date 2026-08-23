@@ -1,6 +1,7 @@
 @extends('Layout.POSAdmin.app')
 
 @section('title', 'Create Discount')
+@section('backUrl', route('discounts.index'))
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSAdminViews/Discounts/create.css') }}">
@@ -9,19 +10,8 @@
 @section('content')
 <main class="main-wrap">
         <h1 class="page-title">Create Discount</h1>
-        {{-- <div class="page-subtitle">Add discount by item or category</div> --}}
-
-        @if ($errors->any())
-            <div class="alert alert-danger rounded-4 border-0 shadow-sm mb-3">
-                <strong>Please check the form.</strong>
-            </div>
-        @endif
-
+        <div class="alert-container" id="alertContainer"></div>
         <div class="form-card">
-            {{-- <div class="form-card-head">
-                <h2>Discount Form</h2>
-            </div> --}}
-
             <div class="form-card-body">
                 <form action="{{ route('discounts.store') }}" method="POST">
                     @csrf
@@ -164,6 +154,24 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const alertContainer = document.getElementById('alertContainer');
+
+        function showAlert(message, type = 'success') {
+            if (!alertContainer) return;
+            const el = document.createElement('div');
+            el.className = `custom-alert alert-${type}`;
+            el.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill'}"></i><span>${message}</span>`;
+            alertContainer.appendChild(el);
+            setTimeout(() => {
+                el.classList.add('fade-out');
+                setTimeout(() => el.remove(), 300);
+            }, 4000);
+        }
+
+        @if ($errors->any())
+            showAlert('Please check the form.', 'danger');
+        @endif
+
         const discountType = document.getElementById('discount_type');
         const itemSearchGroup = document.getElementById('itemSearchGroup');
         const categoryGroup = document.getElementById('categoryGroup');
@@ -221,8 +229,8 @@
                      data-number="${escapeHtml(item.number)}"
                      data-category="${escapeHtml(item.category)}"
                      data-image="${escapeHtml(item.image)}">
-                    <div class="search-option-title">${escapeHtml(item.name)}</div>
-                    <div class="search-option-sub">Code: ${escapeHtml(item.number)} | Category: ${escapeHtml(item.category)}</div>
+                    <div class="search-option-title">${escapeHtml(item.name || 'No Name')}</div>
+                    <div class="search-option-sub">Code: ${escapeHtml(item.number || '-')} | Category: ${escapeHtml(item.category || '-')}</div>
                 </div>
             `).join('');
 
@@ -312,7 +320,7 @@
             };
 
             itemIdInput.value = selectedItem.id;
-            itemSearchInput.value = `${selectedItem.name} (${selectedItem.number})`;
+            itemSearchInput.value = `${selectedItem.name || 'No Name'} (${selectedItem.number || '-'})`;
             itemSearchDropdown.style.display = 'none';
             updatePreview(selectedItem);
         });
@@ -324,7 +332,7 @@
             const selected = items.find(item => String(item.id) === String(oldId));
             if (!selected) return;
 
-            itemSearchInput.value = `${selected.name} (${selected.number})`;
+            itemSearchInput.value = `${selected.name || 'No Name'} (${selected.number || '-'})`;
             updatePreview(selected);
         }
 

@@ -27,13 +27,14 @@ class AdminOrderController extends Controller
 
         $tab = $request->get('tab', 'new');
 
-        $query = Order::with(['user', 'items'])->latest();
+        $query = Order::with(['user', 'items', 'actions.actionBy'])->latest();
 
         if ($request->filled('search')) {
             $search = trim($request->search);
 
             $query->where(function ($q) use ($search) {
                 $q->where('order_no', 'like', "%{$search}%")
+                    ->orWhere('status', 'like', "%{$search}%")
                     ->orWhereHas('user', function ($uq) use ($search) {
                         $uq->where('name', 'like', "%{$search}%");
                     })
@@ -41,6 +42,31 @@ class AdminOrderController extends Controller
                         $iq->where('item_name', 'like', "%{$search}%")
                            ->orWhere('item_no', 'like', "%{$search}%");
                     });
+            });
+        }
+        if ($request->filled('date')) {
+            $date = $request->date;
+            $query->where(function ($q) use ($date) {
+                $q->whereDate('checked_out_at', $date)
+                    ->orWhereDate('created_at', $date);
+            });
+        }
+
+        // Used by the admin profile's "Customers Served" list — jump straight
+        // to one customer's orders instead of a name-text search (which could
+        // also match other customers/items with similar names).
+        if ($request->filled('customer_id')) {
+            $query->where('user_id', $request->get('customer_id'));
+        }
+
+        // Used by the admin profile's "Orders Approved" / "Customers Served"
+        // lists — restrict to orders *this* admin personally approved,
+        // rather than every approved order in the system.
+        if ($request->filled('approved_by')) {
+            $approvedBy = $request->get('approved_by');
+            $query->whereHas('actions', function ($aq) use ($approvedBy) {
+                $aq->where('action_by', $approvedBy)
+                   ->whereIn('action_type', ['confirmed', 'approved']);
             });
         }
 
@@ -53,7 +79,28 @@ class AdminOrderController extends Controller
         $orders = $query->paginate(10);
         $orders->appends($request->query());
 
-        return view('POSViews.POSAdminViews.Orders.index', compact('orders', 'tab'));
+        $newOrdersCount = Order::where('status', 'pending')->count();
+        $approvedOrdersCount = Order::where('status', 'confirmed')->count();
+
+        // Lets the view show a "showing orders you approved for X" banner
+        // instead of silently filtering with no explanation.
+        $activityFilterCustomerName = null;
+        if ($request->filled('customer_id')) {
+            $activityFilterCustomerName = optional(
+                \App\Models\ManagementSystem\User::find($request->get('customer_id'))
+            )->name;
+        }
+        $activityFilterIsMine = $request->filled('approved_by')
+            && (int) $request->get('approved_by') === (int) $admin->id;
+
+        return view('POSViews.POSAdminViews.Orders.index', compact(
+            'orders',
+            'tab',
+            'newOrdersCount',
+            'approvedOrdersCount',
+            'activityFilterCustomerName',
+            'activityFilterIsMine'
+        ));
     }
 
     public function show($id)
@@ -64,9 +111,22 @@ class AdminOrderController extends Controller
             abort(403, 'Only admin can access this page.');
         }
 
-        $order = Order::with(['user', 'items'])->findOrFail($id);
+        $order = Order::with(['user', 'items.item', 'items.itemVariant'])->findOrFail($id);
 
         return view('POSViews.POSAdminViews.Orders.show', compact('order'));
+    }
+
+    public function downloadInvoice($id)
+    {
+        $admin = Auth::user();
+
+        if (!$admin || $admin->role !== 'admin') {
+            abort(403, 'Only admin can access this page.');
+        }
+
+        $order = Order::with('items')->findOrFail($id);
+
+        return $this->downloadOrderInvoicePdf($order);
     }
 
     public function confirm($id)
@@ -175,6 +235,8 @@ class AdminOrderController extends Controller
                 ->map(fn ($rows) => (int) $rows->sum('qty'))
                 ->filter(fn ($qty) => $qty > 0);
 
+            $outOfStockItems = collect();
+
             if ($requestedQtyByItemId->isNotEmpty()) {
                 $lockedItems = Item::query()
                     ->whereIn('id', $requestedQtyByItemId->keys()->all())
@@ -205,6 +267,10 @@ class AdminOrderController extends Controller
 
                     $oldInventory = (int) ($product->inventory ?? 0);
                     $newInventory = $oldInventory - $requestedQty;
+
+                    if ($newInventory <= 0) {
+                        $outOfStockItems->push($product);
+                    }
 
                     $product->decrement('inventory', $requestedQty);
 
@@ -257,6 +323,10 @@ class AdminOrderController extends Controller
             ]);
 
             DB::commit();
+
+            foreach ($outOfStockItems as $outOfStockItem) {
+                $this->notifyOutOfStock($outOfStockItem);
+            }
 
             return back()->with('success', 'Order confirmed and stored in BC Sales Order successfully.');
 
@@ -489,6 +559,36 @@ class AdminOrderController extends Controller
             'discountPercent' => (float)   ($linePayload['discountPercent']  ?? 0),   // always send
             'variantCode'     => (string)  ($linePayload['variantCode']     ?? ''),  // always send
         ];
+    }
+
+    /**
+     * Fires once an item's inventory is actually decremented to zero (or
+     * below) by a confirmed order — the hard "truly out of stock" case,
+     * distinct from the softer "pending demand is nearly there" warning
+     * created at checkout time (OrderController::notifyLowStockIfNeeded).
+     */
+    private function notifyOutOfStock(Item $item): void
+    {
+        $alreadyAlerted = Notification::where('item_id', $item->id)
+            ->where('type', 'out_of_stock')
+            ->where('is_read', false)
+            ->exists();
+
+        if ($alreadyAlerted) {
+            return;
+        }
+
+        Notification::create([
+            'user_id' => null,
+            'order_id' => null,
+            'item_id' => $item->id,
+            'type' => 'out_of_stock',
+            'title' => 'Out of stock: ' . $item->display_name,
+            'message' => "\"{$item->display_name}\" just sold out (0 units remaining) after an order was confirmed.",
+            'is_group_summary' => true,
+            'unread_count' => 1,
+            'is_read' => false,
+        ]);
     }
 
     private function resolveDiscountPercent($item): float

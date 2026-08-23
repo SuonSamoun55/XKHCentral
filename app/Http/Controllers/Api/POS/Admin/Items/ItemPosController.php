@@ -521,9 +521,10 @@ $item['discountEndDate'] =
             ?? $item['discount_end_date']
             ?? $item['discountenddate']
             ?? optional($localItem->discount_end_date)->format('Y-m-d H:i:s');
-
-        // Custom uploaded photo, if any (protected from BC sync overwrites)
         $item['customImageUrl'] = $localItem->custom_image_url ?? null;
+
+
+        $item['localItemId'] = $localItem->id ?? null;
 
         return view('POSViews.POSAdminViews.Items.show', compact('item'));
     }

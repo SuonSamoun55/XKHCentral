@@ -87,26 +87,7 @@
     </div>
 </div>
 
-<!-- View User Modal -->
-<!-- View User Modal -->
-<div class="modal fade" id="userViewModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content view-user-modal-content">
-            <div class="modal-header view-user-modal-header">
-                <h5 class="modal-title view-user-modal-title">
-                    <i class="bi bi-person-circle" style="margin-right: 8px; color: #18bfd0;"></i>
-                    User Details
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body view-user-modal-body" id="modalContent">
-                <!-- Content will be loaded here -->
-            </div>
-        </div>
-    </div>
-</div>
-
-<link rel="stylesheet" href="{{ asset('css/views/ManagementSystemViews/AdminViews/Layouts/UserinfoView/create.css') }}">
+<link rel="stylesheet" href="{{ asset('/css/views/Management/userinfo/create.css') }}">
 
 <script>
 document.addEventListener('click', function (e) {

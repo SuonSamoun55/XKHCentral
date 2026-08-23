@@ -38,6 +38,8 @@
         padding: 14px;
         border-radius: 15px;
         /* padding:18px; */
+        display:flex;
+        flex-direction:column;
     }
 
     .page-title{
@@ -53,12 +55,113 @@
         margin-bottom:16px;
     }
 
+    /* Phone-only header (title only now — the Add button moved into
+       .bulk-row) that replaces the stat cards — hidden on desktop,
+       promoted to flex inside the phone media query. */
+    .mobile-page-header{
+        display:none;
+    }
+
+    /* Now lives in .bulk-row (visible on both breakpoints), so it needs
+       its own explicit hide — it used to inherit .mobile-page-header's. */
+    .mobile-add-btn{
+        display:none;
+    }
+    .dm-stats-bar{
+        display:flex;
+        align-items:center;
+        gap:20px;
+        padding:6px 2px 22px;
+        margin-bottom:6px;
+    }
+
+    .dm-stats-row{
+        display:flex;
+        align-items:center;
+        gap:30px;
+        flex-wrap:wrap;
+        flex:1;
+        min-width:0;
+    }
+
+    .dm-stat-item{
+        display:flex;
+        align-items:center;
+        gap:14px;
+    }
+
+    .dm-stat-item i{
+        font-size:32px;
+        color:var(--primary);
+        line-height:1;
+    }
+
+    /* Ready for custom image icons (swap the <i> for an <img> in the blade) */
+    .dm-stat-item img{
+        width:50px;
+        height:38px;
+        object-fit:contain;
+        flex-shrink:0;
+    }
+
+    .dm-stat-text{
+        flex-shrink:0;
+    }
+
+    .dm-stat-label{
+        font-size:13px;
+        color:#4b5768;
+        margin-bottom:3px;
+        white-space:nowrap;
+    }
+
+    .dm-stat-value{
+        font-size:26px;
+        font-weight:800;
+        color:var(--primary);
+        line-height:1.1;
+        white-space:nowrap;
+    }
+
+    .dm-stat-sub{
+        font-size:11.5px;
+        color:#a7b0bc;
+        margin-top:2px;
+        white-space:nowrap;
+    }
+
+    .dm-stat-divider{
+        width:100%;
+        min-width:1px;
+        max-width:2px;
+        height:42px;
+        background-color:var(--primary);
+        background-image:none;
+        border:none;
+        border-radius:0;
+        box-shadow:none;
+        flex-shrink:0;
+    }
+
+
+    .dm-add-btn{
+        margin-left:auto;
+        height:40px;
+        padding:0 20px;
+        border-radius:10px;
+        font-size:13.5px;
+    }
+
     .table-card{
         background:#fff;
         border:1px solid var(--border);
         border-radius:16px;
         box-shadow:var(--shadow);
         width:100%;
+        flex:1;
+        min-height:0;
+        display:flex;
+        flex-direction:column;
     }
 
     .toolbar-card{
@@ -76,8 +179,7 @@
         margin-bottom: 8px;
     }
 
-    .toolbar-left,
-    .toolbar-right{
+    .toolbar-left{
         display:flex;
         align-items:center;
         gap:8px;
@@ -89,51 +191,133 @@
         min-width:0;
     }
 
+    .search-filter-row{
+        display:contents;
+    }
+
     .search-box{
         position:relative;
-        width:280px;
+        width:300px;
         max-width:100%;
     }
 
     .search-box i{
         position:absolute;
         top:50%;
-        left:12px;
+        left:16px;
         transform:translateY(-50%);
-        color:#98a2b3;
+        color:var(--primary);
         font-size:13px;
     }
 
     .search-box input{
         width:100%;
-        height:30px;
-        border:1px solid var(--border);
+        height:36px;
+        border:1.5px solid var(--primary);
         border-radius:5px;
-        /* background:#f7f8fa;/ */
-        padding:0 8px 0 34px;
+        background:#fff;
+        padding:0 14px 0 38px;
         outline:none;
-        font-size:12px;
+        font-size:12.5px;
         color:var(--text);
     }
 
+    .search-box input::placeholder{
+        color:#9aa5af;
+    }
+
     .search-box input:focus{
-        border-color:var(--primary);
-        background:#fff;
+        border-color:var(--primary-dark);
+        box-shadow:0 0 0 3px rgba(27,184,201,.12);
+    }
+    .mobile-filter-toggle-btn,
+    .mobile-date-toggle-btn{
+        display:none;
+    }
+
+    .mobile-toggle-icon{
+        width:20px;
+        height:20px;
+        object-fit:contain;
+    }
+
+    .filter-controls-row{
+        display:contents;
     }
 
     .filter-select{
-        height:30px;
+        height:36px;
         border:1px solid #dfe3e8;
         border-radius:5px;
         background:#fff;
-        padding:0 10px;
-        font-size:12px;
+        padding:0 30px 0 12px;
+        font-size:12.5px;
         color:#5f6b7a;
         outline:none;
-        /* min-width:125px; */
+        appearance:none;
+        -webkit-appearance:none;
+        -moz-appearance:none;
+        background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%235f6b7a' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+        background-repeat:no-repeat;
+        background-position:right 12px center;
+        cursor:pointer;
+        min-width:140px;
     }
 
     .filter-select:focus{
+        border-color:var(--primary);
+    }
+
+    /* ---- Date filter ---- */
+    .date-filter{
+        height:36px;
+        display:flex;
+        align-items:center;
+        gap:8px;
+        border:1px solid #dfe3e8;
+        border-radius:5px;
+        background:#fff;
+        padding:0 12px;
+        font-size:12.5px;
+        color:#9aa5af;
+        cursor:pointer;
+        min-width:170px;
+    }
+
+    .date-filter i{
+        color:var(--primary);
+        font-size:13px;
+    }
+
+    .date-filter input[type="date"]{
+        border:none;
+        outline:none;
+        font-size:12.5px;
+        color:var(--text);
+        background:transparent;
+        cursor:pointer;
+        height:100%;
+        flex:1;
+        position:relative;
+    }
+
+    /* Chrome/Edge render their own black calendar icon on top of ours —
+       hide it and stretch its (invisible) clickable area over the whole
+       input so clicking the text or our teal icon opens the picker too,
+       not just that one native icon. */
+    .date-filter input[type="date"]::-webkit-calendar-picker-indicator{
+        position:absolute;
+        left:0;
+        top:0;
+        width:100%;
+        height:100%;
+        margin:0;
+        padding:0;
+        opacity:0;
+        cursor:pointer;
+    }
+
+    .date-filter:focus-within{
         border-color:var(--primary);
     }
 
@@ -179,6 +363,11 @@
         color:var(--primary);
     }
 
+    .btn-light-main:disabled{
+        opacity:.5;
+        cursor:not-allowed;
+    }
+
     .btn-danger-soft{
         background:#fff1f2;
         color:var(--danger);
@@ -188,6 +377,11 @@
     .btn-danger-soft:hover{
         background:#ffe4e6;
         color:var(--danger);
+    }
+
+    .btn-danger-soft:disabled{
+        opacity:.5;
+        cursor:not-allowed;
     }
 
     .btn-info-soft{
@@ -230,8 +424,129 @@
         font-size:13px;
     }
 
-    .table-card{
-        /* padding:px; */
+    /* Phone-only status pills (All / Active / Expired / Scheduled) — hidden
+       on desktop, where #statusFilter's <select> already covers this. */
+    .status-tab-row{
+        display:none;
+    }
+
+    /* ---- Bulk select row (Select all | Unselect all | ...) ---- */
+    .bulk-row{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:14px;
+        padding:0 4px 10px;
+        font-size:12px;
+    }
+
+    .select-all-check{
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        font-size:12px;
+        font-weight:600;
+        color:#374151;
+        cursor:pointer;
+        user-select:none;
+    }
+
+    .select-all-check input{
+        width:16px;
+        height:16px;
+        cursor:pointer;
+        accent-color:var(--primary);
+    }
+
+    .bulk-row-left{
+        display:flex;
+        align-items:center;
+        gap:10px;
+    }
+
+    /* Phone-only — the "..." menu's Delete Selected covers this on desktop.
+       Hidden until something is checked (see .show, toggled in JS). */
+    .mobile-delete-icon-btn{
+        display:none;
+    }
+
+    .bulk-row-right{
+        display:flex;
+        align-items:center;
+        gap:14px;
+    }
+
+    .bulk-link{
+        background:none;
+        border:none;
+        color:#5f6b7a;
+        font-weight:600;
+        font-size:12px;
+        cursor:pointer;
+        padding:0;
+    }
+
+    .bulk-link:hover{
+        color:var(--primary);
+        text-decoration:underline;
+    }
+
+    .bulk-menu-wrap{
+        position:relative;
+    }
+
+    .bulk-menu-btn{
+        background:none;
+        border:none;
+        color:var(--muted);
+        font-size:16px;
+        cursor:pointer;
+        padding:2px 6px;
+        line-height:1;
+    }
+
+    .bulk-menu-btn:hover{
+        color:var(--primary);
+    }
+
+    .bulk-menu-dropdown{
+        display:none;
+        position:absolute;
+        right:0;
+        top:26px;
+        background:#fff;
+        border:1px solid var(--border);
+        border-radius:10px;
+        box-shadow:var(--shadow);
+        min-width:170px;
+        z-index:20;
+        overflow:hidden;
+    }
+
+    .bulk-menu-dropdown.show{
+        display:block;
+    }
+
+    .bulk-menu-dropdown button{
+        width:100%;
+        text-align:left;
+        padding:9px 12px;
+        border:none;
+        background:#fff;
+        font-size:12px;
+        cursor:pointer;
+        color:var(--text);
+        display:flex;
+        align-items:center;
+        gap:8px;
+    }
+
+    .bulk-menu-dropdown button:hover{
+        background:#f7f8fa;
+    }
+
+    .bulk-menu-dropdown button.danger{
+        color:var(--danger);
     }
 
     .table-top{
@@ -263,9 +578,8 @@
     .table-wrap{
         overflow:auto;
         width:100%;
-        /* height: 100vh; */
-        max-height:calc(79vh - 5px);
-        /* height: 70%; */
+        flex:1;
+        min-height:0;
     }
 .table-wrap::-webkit-scrollbar {
     width: 0px;
@@ -274,7 +588,7 @@
     .discount-table{
         width:100%;
         /* min-width:1220px; */
-        /* height: 70%; */
+        /* height: 1000%; */
         border-collapse:separate;
         border-spacing:0;
     }
@@ -364,6 +678,20 @@
         font-size:14px;
     }
 
+    .item-info{
+        display:flex;
+        flex-direction:column;
+        min-width:0;
+        flex:1;
+    }
+
+    .item-name-row{
+        display:flex;
+        align-items:baseline;
+        justify-content:space-between;
+        gap:8px;
+    }
+
     .item-name{
         font-size:12px;
         font-weight:700;
@@ -377,6 +705,23 @@
         color:#94a3b8;
         margin-top:2px;
     }
+    .item-off{
+        display:none;
+        font-size:12px;
+        font-weight:800;
+        color:var(--primary);
+        white-space:nowrap;
+        flex-shrink:0;
+    }
+    .item-meta-row{
+        display:none;
+    }
+
+    .item-date-range{
+        font-size:11px;
+        color:#94a3b8;
+        font-weight:600;
+    }
 
     .status-badge{
         display:inline-flex;
@@ -384,13 +729,14 @@
         justify-content:center;
         min-width:80px;
         height:25px;
-        padding:0 10px;
-        border-radius:5px;
+        padding:0 12px;
+        border-radius:999px;
         font-size:11px;
         font-weight:700;
     }
 
-    .status-badge.forever{
+    .status-badge.forever,
+    .status-badge.active{
         background:rgba(16,185,129,.12);
         color:var(--success);
     }
@@ -400,7 +746,8 @@
         color:var(--warning);
     }
 
-    .status-badge.expired{
+    .status-badge.expired,
+    .status-badge.inactive{
         background:rgba(239,68,68,.12);
         color:var(--danger);
     }
@@ -410,6 +757,72 @@
         align-items:center;
         gap:6px;
         flex-wrap:nowrap;
+    }
+    .row-menu-wrap{
+        display:none;
+        position:relative;
+    }
+
+    .row-menu-btn{
+        width:28px;
+        height:28px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        border:none;
+        border-radius:8px;
+        background:transparent;
+        color:var(--muted);
+        font-size:15px;
+        cursor:pointer;
+    }
+
+    .row-menu-btn:hover,
+    .row-menu-btn:active{
+        background:#f3f4f6;
+        color:var(--primary);
+    }
+
+    .row-menu-dropdown{
+        display:none;
+        position:absolute;
+        top:calc(100% + 4px);
+        right:0;
+        min-width:150px;
+        background:#fff;
+        border:1px solid var(--border);
+        border-radius:10px;
+        box-shadow:var(--shadow);
+        padding:6px;
+        z-index:15;
+    }
+
+    .row-menu-dropdown.show{
+        display:block;
+    }
+
+    .row-menu-item{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        width:100%;
+        border:none;
+        background:transparent;
+        padding:8px 10px;
+        border-radius:8px;
+        font-size:12px;
+        color:var(--text);
+        text-align:left;
+        text-decoration:none;
+        cursor:pointer;
+    }
+
+    .row-menu-item:hover{
+        background:#f7f8fa;
+    }
+
+    .row-menu-item-danger{
+        color:var(--danger);
     }
 
     .icon-btn{
@@ -470,6 +883,7 @@
         gap:10px;
         flex-wrap:nowrap;
         padding:5px 14px;
+        margin-top:auto;
     }
 
     .page-info{
@@ -532,17 +946,27 @@
         }
 
         .main-wrap{
-            height:auto;
-            overflow:visible;
+            height:100%;
+            /* overflow:visible; */
         }
 
-        .toolbar-left,
-        .toolbar-right{
+        .toolbar-left{
             width:100%;
         }
 
         .search-box{
             width:100%;
+        }
+
+        .dm-stats-bar{
+            flex-direction:column;
+            align-items:flex-start;
+        }
+
+        .dm-add-btn{
+            width:100%;
+            margin-left:0;
+            justify-content:center;
         }
 
         .pagination-bar{
@@ -552,5 +976,373 @@
         .footer-right{
             margin-left:0;
             width:100%;
+        }
+    }
+
+    /* ==========================================================
+       PHONE LAYOUT
+       ========================================================== */
+    @media (max-width: 768px){
+        body{
+            overflow-x:hidden;
+        }
+
+        /* .footer-label{
+            display: none;
+        } */
+        .mobile-topbar-title{
+            display:none;
+        }
+        .page-info {
+            display: none;
+        }
+        .filter-select{max-width: 50px;}
+        .main-wrap{
+            padding:10px;
+            border-radius:0;
+            overflow-x:hidden;
+            height:auto;
+            min-height:calc(100vh - 56px - 62px);
+        }
+        .page-title{
+            display:none;
+        }
+
+        .mobile-page-header{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            margin-bottom:14px;
+        }
+
+        .mobile-page-title{
+            margin:0;
+            font-size:22px;
+            font-weight:800;
+            color:#1f2937;
+        }
+
+        .mobile-add-btn{
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            flex-shrink:0;
+            height:34px;
+            padding:0 16px;
+            border-radius:999px;
+            background:var(--primary);
+            color:#fff;
+            font-size:12.5px;
+            font-weight:700;
+            text-decoration:none;
+            box-shadow:0 6px 16px rgba(27,184,201,.20);
+        }
+
+        .mobile-add-btn i{
+            font-size:15px;
+        }
+        #unselectAllLink,
+        .bulk-menu-wrap{
+            display:none;
+        }
+
+        .mobile-delete-icon-btn.show{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            width:30px;
+            height:30px;
+            border-radius:50%;
+            border:none;
+            background:#fde8e8;
+            color:var(--danger);
+            font-size:14px;
+            cursor:pointer;
+        }
+
+        .mobile-delete-icon-btn:disabled{
+            opacity:.5;
+            cursor:not-allowed;
+        }
+        .dm-stats-bar{
+            display:none;
+        }
+        .search-filter-row{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            width:100%;
+        }
+
+        .search-filter-row .search-box{
+            flex:1;
+            width:auto;
+        }
+
+        .mobile-filter-toggle-btn,
+        .mobile-date-toggle-btn{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            width:36px;
+            height:36px;
+            flex-shrink:0;
+            border:1.5px solid var(--primary);
+            border-radius:5px;
+            background:#fff;
+            color:var(--primary);
+            font-size:14px;
+            cursor:pointer;
+        }
+        #discountTableBody{
+            height: 63vh;
+            overflow: scroll;
+        }
+        .filter-controls-row{
+            display:block;
+            position:absolute;
+            width:1px;
+            height:1px;
+            margin:-1px;
+            padding:0;
+            overflow:hidden;
+            clip:rect(0,0,0,0);
+            white-space:nowrap;
+            border:0;
+        }
+
+        .filter-controls-row.show{
+            display:flex;
+            position:static;
+            width:100%;
+            height:auto;
+            margin:8px 0 0;
+            padding:0;
+            overflow:visible;
+            clip:auto;
+            white-space:normal;
+            flex-wrap:wrap;
+            gap:8px;
+        }
+
+        .filter-select,
+        .date-filter{
+            flex:1;
+            width:auto;
+            min-width:0;
+            padding-left:8px;
+            padding-right:22px;
+            font-size:11px;
+        }
+
+        .date-filter{
+            padding-left:8px;
+            padding-right:8px;
+        }
+
+        .date-filter input[type="date"]{
+            font-size:11px;
+        }
+
+        /* Status pills replace #statusFilter's <select> on phone */
+        .status-tab-row{
+            display:flex;
+            gap:8px;
+            overflow-x:auto;
+            padding-bottom:4px;
+            margin-bottom:10px;
+            -webkit-overflow-scrolling:touch;
+        }
+
+        .status-tab-row::-webkit-scrollbar{
+            height:0;
+        }
+
+        .status-tab-btn{
+            flex-shrink:0;
+            display:inline-flex;
+            align-items:center;
+            gap:4px;
+            height:32px;
+            padding:0 14px;
+            border-radius:999px;
+            border:1px solid #dfe3e8;
+            background:#fff;
+            color:#5f6b7a;
+            font-size:12px;
+            font-weight:600;
+            cursor:pointer;
+            white-space:nowrap;
+        }
+
+        .status-tab-btn.active{
+            border-color:var(--primary);
+            color:var(--primary);
+            background:#eafafb;
+        }
+        .table-wrap{
+            /* max-height:none; */
+            overflow:visible;
+        }
+
+        .discount-table{
+            width:100%;
+            height: 100%;
+
+        }
+
+        .discount-table thead{
+            display:none;
+        }
+
+        .discount-table tbody{
+            display:block;
+            height: 100%;
+        }
+
+        .discount-table tbody tr{
+            display:flex;
+            flex-wrap:wrap;
+            align-items:center;
+            gap:6px 10px;
+            width:100%;
+            
+            background:#fff;
+            border:1px solid #eef2f6;
+            border-radius:14px;
+            padding:12px;
+            margin-bottom:10px;
+            box-shadow:0 2px 10px rgba(15, 23, 42, 0.04);
+        }
+
+        .discount-table tbody td{
+            background:transparent !important;
+            border:none;
+            padding:0;
+            white-space:normal;
+        }
+
+        .discount-table tbody td.checkbox-col{
+            order:1;
+            width:auto;
+        }
+
+        .discount-table tbody td:nth-child(2),
+        .discount-table tbody td:nth-child(4),
+        .discount-table tbody td:nth-child(5),
+        .discount-table tbody td:nth-child(6),
+        .discount-table tbody td:nth-child(7),
+        .discount-table tbody td:nth-child(8){
+            display:none;
+        }
+
+        .discount-table tbody td:nth-child(3){
+            order:2;
+            flex:1;
+            min-width:0;
+        }
+        .discount-table tbody td:nth-child(9){
+            display:none;
+        }
+        .discount-table tbody td:nth-child(10){
+            order:3;
+            flex-shrink:0;
+        }
+
+        .action-group{
+            display:none;
+        }
+
+        .row-menu-wrap{
+            display:inline-flex;
+        }
+
+        .item-cell{
+            min-width:0;
+        }
+
+        .item-thumb{
+            width:54px;
+            height:54px;
+            border-radius:12px;
+        }
+        .item-sub{
+            display:none;
+        }
+
+        .item-off{
+            display:block;
+        }
+
+        .item-meta-row{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:8px;
+            margin-top:4px;
+        }
+
+        .item-meta-row .status-badge{
+            min-width:0;
+            height:20px;
+            padding:0 10px;
+            font-size:10px;
+        }
+        .row-checkbox{
+            appearance:none;
+            -webkit-appearance:none;
+            width:15px;
+            height:15px;
+            border:1.5px solid #cbd5e1;
+            /* border-radius:; */
+            background:#fff;
+            position:relative;
+            cursor:pointer;
+            margin:0;
+            flex-shrink:0;
+        }
+
+        .row-checkbox:checked{
+            background:var(--primary);
+            border-color:var(--primary);
+        }
+
+        .row-checkbox:checked::after{
+            content:'';
+            position:absolute;
+            left:50%;
+            top:44%;
+            width:5px;
+            height:9px;
+            border:solid #fff;
+            border-width:0 2px 2px 0;
+            transform:translate(-50%,-50%) rotate(45deg);
+        }
+
+        .status-badge{
+            text-transform:uppercase;
+            letter-spacing:.3px;
+        }
+
+        .status-badge.scheduled{
+            background:#eef1f5;
+            color:#64748b;
+        }
+
+        /* Pagination footer: stack into clean rows */
+        .pagination-bar{
+            flex-direction:column;
+            align-items:stretch;
+            gap:10px;
+        }
+
+        .footer-left{
+            flex-wrap:wrap;
+            justify-content:center;
+        }
+
+        .page-info{
+            text-align:center;
         }
     }
