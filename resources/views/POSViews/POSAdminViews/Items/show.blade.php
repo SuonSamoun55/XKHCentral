@@ -33,7 +33,7 @@
 
                 <div>
                     <div class="title-price-row">
-                        <div class="item-title">{{ $item['description'] }}</div>
+                        <div class="item-title">{{ $item['displayName'] ?? $item['description'] ?? 'Untitled' }}</div>
                         <div class="item-price">${{ number_format((float)($item['unitPrice'] ?? 0), 2) }}</div>
                     </div>
 

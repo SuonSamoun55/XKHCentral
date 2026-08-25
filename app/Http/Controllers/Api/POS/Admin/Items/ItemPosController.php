@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\POS\Item;
 use App\Models\POS\ItemVariant;
 use App\Models\POS\InventoryMovement;
-use App\Models\ManagementSystem\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +15,14 @@ class ItemPosController extends Controller
 {
     public function index()
     {
+        $companyId = session('selected_company_id');
+
+        if (!$companyId) {
+            return response()->json([
+                'error' => 'Select a company first (Companies list) before selling.',
+            ], 422);
+        }
+
         $token = $this->getToken();
         $url = $this->bcEndpoint('items_endpoint', 'items');
 
@@ -46,17 +53,19 @@ class ItemPosController extends Controller
         $items = $response->json()['value'] ?? [];
 
         $localItems = Item::select(
-                'bc_id',
-                'default_location_code',
-                'base_unit_of_measure_code',
-                'vat_percent',
-                'tax_amount',
-                'discount_amount',
-                'discount_start_date',
-                'discount_end_date',
-                'is_visible',
-                'custom_image_url'
-            )
+            'company_id',
+            'bc_id',
+            'default_location_code',
+            'base_unit_of_measure_code',
+            'tax_group_code',
+            'tax_amount',
+            'discount_amount',
+            'discount_start_date',
+            'discount_end_date',
+            'is_visible',
+            'custom_image_url'
+        )
+            ->where('company_id', $companyId)
             ->get()
             ->keyBy('bc_id');
 
@@ -120,11 +129,13 @@ class ItemPosController extends Controller
             $item['baseUnitOfMeasureCode'] = $item['baseUnitOfMeasureCode']
                 ?? ($localItem->base_unit_of_measure_code ?? null)
                 ?? 'PCS';
+            $item['taxGroupCode'] = $item['taxGroupCode']
+                ?? $item['taxgroupcode']
+                ?? $item['vatProdPostingGroup']
+                ?? $item['vatprodpostinggroup']
+                ?? ($localItem->tax_group_code ?? null);
 
-            $item['vatPercent'] = $item['vatPercent']
-                ?? $item['vat_percentage']
-                ?? $item['vatpercent']
-                ?? ($localItem->vat_percent ?? 0);
+            $item['vatPercent'] = optional($localItem)->resolved_vat_percent ?? 0;
 
             $item['taxAmount'] = $item['taxAmount']
                 ?? $item['tax_amount']
@@ -136,17 +147,17 @@ class ItemPosController extends Controller
                 ?? $item['discountamount']
                 ?? ($localItem->discount_amount ?? 0);
 
-          $item['discountStartDate'] =
-    $item['discountStartDate']
-    ?? $item['discount_start_date']
-    ?? $item['discountstartdate']
-    ?? ($localItem?->discount_start_date?->format('Y-m-d H:i:s'));
+            $item['discountStartDate'] =
+                $item['discountStartDate']
+                ?? $item['discount_start_date']
+                ?? $item['discountstartdate']
+                ?? ($localItem?->discount_start_date?->format('Y-m-d H:i:s'));
 
-$item['discountEndDate'] =
-    $item['discountEndDate']
-    ?? $item['discount_end_date']
-    ?? $item['discountenddate']
-    ?? ($localItem?->discount_end_date?->format('Y-m-d H:i:s'));
+            $item['discountEndDate'] =
+                $item['discountEndDate']
+                ?? $item['discount_end_date']
+                ?? $item['discountenddate']
+                ?? ($localItem?->discount_end_date?->format('Y-m-d H:i:s'));
 
             // Custom uploaded photo, if any (protected from BC sync overwrites)
             $item['customImageUrl'] = $localItem->custom_image_url ?? null;
@@ -179,7 +190,9 @@ $item['discountEndDate'] =
 
         $item = $response->json();
 
-        $localItem = Item::where('bc_id', $id)->first();
+        $localItem = Item::where('bc_id', $id)
+            ->where('company_id', session('selected_company_id'))
+            ->first();
 
         $item['defaultLocationCode'] = $item['defaultLocationCode']
             ?? $item['locationCode']
@@ -189,10 +202,13 @@ $item['discountEndDate'] =
             ?? ($localItem->base_unit_of_measure_code ?? null)
             ?? 'PCS';
 
-        $item['vatPercent'] = $item['vatPercent']
-            ?? $item['vat_percentage']
-            ?? $item['vatpercent']
-            ?? ($localItem->vat_percent ?? 0);
+        $item['taxGroupCode'] = $item['taxGroupCode']
+            ?? $item['taxgroupcode']
+            ?? $item['vatProdPostingGroup']
+            ?? $item['vatprodpostinggroup']
+            ?? ($localItem->tax_group_code ?? null);
+
+        $item['vatPercent'] = optional($localItem)->resolved_vat_percent ?? 0;
 
         $item['taxAmount'] = $item['taxAmount']
             ?? $item['tax_amount']
@@ -255,13 +271,13 @@ $item['discountEndDate'] =
 
     public function syncFromAl(Request $request)
     {
-        $companyId = Company::value('id');
+        $companyId = session('selected_company_id');
         $actorId = Auth::id();
 
         if (!$companyId) {
             return response()->json([
                 'success' => false,
-                'message' => 'No company found.',
+                'message' => 'Select a company first (Companies list) before syncing.',
             ], 422);
         }
 
@@ -272,7 +288,7 @@ $item['discountEndDate'] =
             'items.*.displayName' => ['nullable', 'string'],
             'items.*.unitPrice' => ['nullable', 'numeric'],
 
-            'items.*.vatPercent' => ['nullable', 'numeric'],
+            'items.*.taxGroupCode' => ['nullable', 'string'],
             'items.*.taxAmount' => ['nullable', 'numeric'],
             'items.*.discountAmount' => ['nullable', 'numeric'],
             'items.*.discountStartDate' => ['nullable', 'date'],
@@ -298,7 +314,6 @@ $item['discountEndDate'] =
                     ->first();
 
                 $oldInventory = (int) ($existing->inventory ?? 0);
-
                 $saved = Item::updateOrCreate(
                     [
                         'company_id' => $companyId,
@@ -309,7 +324,7 @@ $item['discountEndDate'] =
                         'display_name' => $item['displayName'] ?? null,
                         'unit_price' => $item['unitPrice'] ?? 0,
 
-                        'vat_percent' => $item['vatPercent'] ?? 0,
+                        'tax_group_code' => $item['taxGroupCode'] ?? null,
                         'tax_amount' => $item['taxAmount'] ?? 0,
                         'discount_amount' => $item['discountAmount'] ?? 0,
                         'discount_start_date' => $item['discountStartDate'] ?? null,
@@ -330,8 +345,6 @@ $item['discountEndDate'] =
                     $delta = $change !== 0 ? $change : $incomingInventory;
                     $today = now()->toDateString();
 
-                    // Merge same-day sync logs per item so tracking is cleaner:
-                    // one row per item per day, while still keeping pull date visibility.
                     $sameDaySync = InventoryMovement::query()
                         ->where('company_id', $companyId)
                         ->where('item_id', $saved->id)
@@ -379,9 +392,16 @@ $item['discountEndDate'] =
                 'message' => 'Sync failed: ' . $e->getMessage(),
             ], 500);
         }
+        try {
+            $variantResult = $this->syncVariantsFromBc($companyId);
+        } catch (\Throwable $e) {
+            logger()->error('Item variant sync threw an exception', [
+                'company_id' => $companyId,
+                'message' => $e->getMessage(),
+            ]);
 
-        // Also sync variants right after items, so one click does both
-        $variantResult = $this->syncVariantsFromBc();
+            $variantResult = ['saved' => 0, 'skipped' => 0, 'error' => 'Unexpected error: ' . $e->getMessage()];
+        }
 
         return response()->json([
             'success' => true,
@@ -389,29 +409,46 @@ $item['discountEndDate'] =
             'count' => count($validated['items']),
             'variantsSaved' => $variantResult['saved'],
             'variantsSkipped' => $variantResult['skipped'],
+            'variantsError' => $variantResult['error'] ?? null,
         ]);
     }
-
-    // Pulls item variants from Business Central and saves them locally.
-    // Called automatically at the end of syncFromAl(), so one button click does both.
-    private function syncVariantsFromBc()
+    private function syncVariantsFromBc($companyId)
     {
         $token = $this->getToken();
 
         if (!$token) {
-            return ['saved' => 0, 'skipped' => 0];
+            logger()->warning('Item variant sync skipped: BC authentication failed', [
+                'company_id' => $companyId,
+            ]);
+
+            return ['saved' => 0, 'skipped' => 0, 'error' => 'Business Central authentication failed.'];
         }
 
         $url = $this->bcEndpoint('item_variants_endpoint', 'itemVariants');
 
         if (!$url) {
-            return ['saved' => 0, 'skipped' => 0];
+            logger()->warning('Item variant sync skipped: could not build BC URL', [
+                'company_id' => $companyId,
+            ]);
+
+            return ['saved' => 0, 'skipped' => 0, 'error' => 'Business Central URL could not be built.'];
         }
 
         $response = Http::withoutVerifying()->withToken($token)->get($url);
 
         if (!$response->successful()) {
-            return ['saved' => 0, 'skipped' => 0];
+            logger()->warning('Item variant sync failed: BC request unsuccessful', [
+                'company_id' => $companyId,
+                'url' => $url,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return [
+                'saved' => 0,
+                'skipped' => 0,
+                'error' => 'Business Central rejected the item variants request (HTTP ' . $response->status() . '). Check storage/logs/laravel.log for details, or verify the Item Variants endpoint under Companies > API Setup.',
+            ];
         }
 
         $variants = $response->json()['value'] ?? [];
@@ -420,24 +457,31 @@ $item['discountEndDate'] =
         $skippedCount = 0;
 
         foreach ($variants as $variant) {
-
-            $itemNumber = $variant['itemNo'] ?? null;
+            $itemNumber = $variant['itemNo'] ?? $variant['itemNumber'] ?? null;
+            $itemBcId = $variant['itemId'] ?? null;
             $bcId = $variant['id'] ?? null;
             $code = $variant['code'] ?? null;
 
-            if (!$itemNumber || !$bcId || !$code) {
+            if ((!$itemNumber && !$itemBcId) || !$bcId || !$code) {
                 $skippedCount = $skippedCount + 1;
                 continue;
             }
 
-            $localItem = Item::where('number', $itemNumber)->first();
+            $localItem = Item::where('company_id', $companyId)
+                ->when(
+                    $itemBcId,
+                    fn($q) => $q->where('bc_id', $itemBcId),
+                    fn($q) => $q->where('number', $itemNumber)
+                )
+                ->first();
 
             if (!$localItem) {
                 $skippedCount = $skippedCount + 1;
                 continue;
             }
-
-            $existingVariant = ItemVariant::where('bc_id', $bcId)->first();
+            $existingVariant = ItemVariant::where('bc_id', $bcId)
+                ->whereHas('item', fn($q) => $q->where('company_id', $companyId))
+                ->first();
 
             if ($existingVariant) {
                 $existingVariant->item_id = $localItem->id;
@@ -487,7 +531,9 @@ $item['discountEndDate'] =
 
         $item = $response->json();
 
-        $localItem = Item::where('bc_id', $id)->first();
+        $localItem = Item::where('bc_id', $id)
+            ->where('company_id', session('selected_company_id'))
+            ->first();
 
         $item['defaultLocationCode'] = $item['defaultLocationCode']
             ?? $item['locationCode']
@@ -497,10 +543,13 @@ $item['discountEndDate'] =
             ?? ($localItem->base_unit_of_measure_code ?? null)
             ?? 'PCS';
 
-        $item['vatPercent'] = $item['vatPercent']
-            ?? $item['vat_percentage']
-            ?? $item['vatpercent']
-            ?? ($localItem->vat_percent ?? 0);
+        $item['taxGroupCode'] = $item['taxGroupCode']
+            ?? $item['taxgroupcode']
+            ?? $item['vatProdPostingGroup']
+            ?? $item['vatprodpostinggroup']
+            ?? ($localItem->tax_group_code ?? null);
+
+        $item['vatPercent'] = optional($localItem)->resolved_vat_percent ?? 0;
 
         $item['taxAmount'] = $item['taxAmount']
             ?? $item['tax_amount']

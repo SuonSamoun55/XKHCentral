@@ -7,7 +7,9 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Storage;
 use App\Models\POS\Cart;
+use App\Models\ManagementSystem\Company;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -47,6 +49,37 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $view->with('cartCount', $cartCount);
+            $view->with('activeFaviconUrl', $this->resolveActiveFaviconUrl());
         });
+    }
+
+    /**
+     * The favicon of the currently selected company, falling back to the
+     * default app icon when none is set. Memoized per-request since this
+     * composer runs once for every view/partial rendered on the page.
+     */
+    private ?string $resolvedFaviconUrl = null;
+    private bool $faviconResolved = false;
+
+    private function resolveActiveFaviconUrl(): string
+    {
+        if ($this->faviconResolved) {
+            return $this->resolvedFaviconUrl;
+        }
+
+        $this->faviconResolved = true;
+        $this->resolvedFaviconUrl = asset('images/pos/xtricate.png');
+
+        $companyId = session('selected_company_id');
+
+        if ($companyId) {
+            $favicon = Company::whereKey($companyId)->value('favicon');
+
+            if (!empty($favicon) && Storage::disk('public')->exists($favicon)) {
+                $this->resolvedFaviconUrl = asset('storage/' . $favicon);
+            }
+        }
+
+        return $this->resolvedFaviconUrl;
     }
 }

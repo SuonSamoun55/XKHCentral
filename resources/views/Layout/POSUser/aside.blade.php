@@ -4,6 +4,7 @@
     use Illuminate\Support\Facades\Route;
     use App\Models\ManagementSystem\Company;
 
+    /** @var \App\Models\ManagementSystem\User $authUser */
     $authUser = Auth::user();
 
     // 1. Fetch Company Logic (Same as Admin)
@@ -76,8 +77,10 @@
     // 3. Setup User Avatar Logic
     $userAvatar = $authUser->profile_image_display ?? asset('images/default-user.png');
 
-    // Role check — used to conditionally show the "Open Admin" link below.
-    $isAdmin = strtolower($authUser->role ?? '') === 'admin';
+    // Used to conditionally show the "Open Admin" link below — mirrors the
+    // 'permission:dashboard' gate on the /admin route itself, so this link
+    // only appears for roles that can actually get in.
+    $isAdmin = $authUser->isAdmin() || $authUser->hasPermission('dashboard');
         $navItems = [
         [
             'name' => 'Dashboard',

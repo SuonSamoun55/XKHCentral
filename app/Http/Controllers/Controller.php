@@ -60,7 +60,7 @@ class Controller extends BaseController
 
         $baseUrl = rtrim($this->baseUrl, '/');
         $resource = ltrim($path, '/');
-        
+
         $isImagePath = Str::contains($resource, ['/picture', 'getImage']);
 
         if ($isImagePath) {
@@ -108,11 +108,6 @@ class Controller extends BaseController
             return null;
         }
 
-        // Client-credentials tokens are valid ~1hr; refetching on every single
-        // BC call added an extra slow, uncapped network round-trip to every
-        // request (seen stacking with the image-proxy fetch and blowing past
-        // PHP's max_execution_time). Cache it instead. remember() only caches
-        // non-null results, so a failed fetch is never "poisoned" - it just retries.
         return Cache::remember('bc_token_' . $this->connection->id, 3300, function () {
             $response = Http::withoutVerifying()->asForm()->timeout(15)->post($this->connection->token_url, [
                 'grant_type' => 'client_credentials',
@@ -153,29 +148,25 @@ class Controller extends BaseController
         if (!$user) {
             return $stats;
         }
-
-        // "cancelled"/"canceled" mirrors the spelling variance already
-        // handled by HistoryController::filteredOrders()'s status alias.
         $cancelledStatuses = ['cancelled', 'canceled'];
 
+        // "Confirmed" here means "approved and not cancelled" — it also
+        // covers the later stages an order moves through once Business
+        // Central posts its shipment/invoice (delivery, on-the-way,
+        // delivered), so those orders don't silently drop out of every
+        // bucket once OrderStatusController advances them past 'confirmed'.
+        $confirmedStatuses = ['confirmed', 'delivery', 'on-the-way', 'delivered'];
+
         $stats['pending_count'] = Order::where('user_id', $user->id)->where('status', 'pending')->count();
-        $stats['confirmed_count'] = Order::where('user_id', $user->id)->where('status', 'confirmed')->count();
+        $stats['confirmed_count'] = Order::where('user_id', $user->id)->whereIn('status', $confirmedStatuses)->count();
         $stats['cancelled_count'] = Order::where('user_id', $user->id)->whereIn('status', $cancelledStatuses)->count();
         $stats['pending_amount'] = Order::where('user_id', $user->id)->where('status', 'pending')->sum('total_amount');
-        $stats['confirmed_amount'] = Order::where('user_id', $user->id)->where('status', 'confirmed')->sum('total_amount');
+        $stats['confirmed_amount'] = Order::where('user_id', $user->id)->whereIn('status', $confirmedStatuses)->sum('total_amount');
         $stats['cancelled_amount'] = Order::where('user_id', $user->id)->whereIn('status', $cancelledStatuses)->sum('total_amount');
         $stats['last_order_at'] = Order::where('user_id', $user->id)->max('created_at');
 
         return $stats;
     }
-
-    /**
-     * BC invoice/order PDF download — shared by the customer-facing
-     * HistoryController::downloadInvoice() and the admin order/notification
-     * "Download invoice" action, since both stream the same posted-invoice
-     * or sales-order PDF from Business Central, just with different
-     * ownership scoping on the Order lookup itself.
-     */
     protected function bc(string $token)
     {
         return Http::withToken($token)->acceptJson();
@@ -280,7 +271,7 @@ class Controller extends BaseController
             return back()->with('error', 'Failed to authenticate with Business Central.');
         }
 
-        $isInvoice = in_array($order->status, ['delivery', 'delivered', 'confirmed'], true);
+        $isInvoice = in_array($order->status, ['delivery', 'delivered'], true);
 
         $bcId = $isInvoice
             ? $this->resolvePostedInvoiceId($order, $token)
@@ -289,7 +280,7 @@ class Controller extends BaseController
         if (!$bcId) {
             $message = match (true) {
                 $isInvoice => 'Posted sales invoice was not found in Business Central yet.',
-                $order->status === 'on-the-way' => 'Sales order was not found in Business Central yet.',
+                in_array($order->status, ['confirmed', 'on-the-way'], true) => 'Sales order was not found in Business Central yet.',
                 default => 'Invoice PDF is available only after this order is synced to Business Central.',
             };
 

@@ -3,6 +3,8 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('/css/views/Management/userinfo/UserList.css') }}">
+<link rel="stylesheet" href="{{ asset('/css/views/Management/Password/adminchangepassword.css') }}">
+<link rel="stylesheet" href="{{ asset('/css/shared/toast.css') }}">
 @endpush
 
 @section('content')
@@ -46,6 +48,12 @@
                         <span class="sync-btn-text">Sync BC Customers</span>
                     </a>
 
+                    <a href="{{ route('staff.index') }}" class="sync-btn">
+                        <i class="bi bi-person-badge-fill"></i>
+                        <span class="sync-btn-divider"></span>
+                        <span class="sync-btn-text">Staff Accounts</span>
+                    </a>
+
                     <button type="button" class="delete-selected-btn" id="deleteSelectedBtn">
                         <i class="bi bi-trash"></i>
                         Delete Selected
@@ -53,32 +61,7 @@
                 </div>
             </div>
 
-            <div class="message-box">
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
-                @if ($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <ul class="mb-0 ps-3">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-            </div>
+            @include('partials.app-toast')
 
             <div class="mobile-list-heading">
                 <span class="mobile-list-title">Active Users ({{ count($customers) }})</span>
@@ -277,13 +260,13 @@
                                                     <img src="{{ asset('images/management/eye.png') }}" alt="View" class="action-icon-img">
                                                 </a>
 
-                                                <form method="POST" action="{{ route('users.destroy', $customer->id) }}" onsubmit="return confirm('Are you sure you want to delete this user?')" style="display:inline-block;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="delete-icon" title="Delete">
-                                                        <img src="{{ asset('images/management/delete.png') }}" alt="Delete" class="action-icon-img">
-                                                    </button>
-                                                </form>
+                                                <button type="button"
+                                                    title="Delete"
+                                                    class="delete-icon open-delete-confirm"
+                                                    data-url="{{ route('users.destroy', $customer->id) }}"
+                                                    data-label="{{ $displayName }}">
+                                                    <img src="{{ asset('images/management/delete.png') }}" alt="Delete" class="action-icon-img">
+                                                </button>
                                             </div>
                                         </td>
 
@@ -329,6 +312,23 @@
 </div>
 
 @include('ManagementSystemViews.AdminViews.Layouts.UserinfoView.create')
+
+{{-- ===== Delete confirmation overlay — shared by every delete button (single row, bulk, and rows added by the live AJAX refresh) ===== --}}
+<div class="pw-confirm-overlay" id="deleteConfirmOverlay">
+    <div class="pw-confirm-box">
+        <div class="pw-confirm-icon"><i class="bi bi-trash3-fill"></i></div>
+        <h3 class="pw-confirm-title" id="deleteConfirmTitle">Delete this user?</h3>
+        <p class="pw-confirm-text">This action cannot be undone.</p>
+        <div class="pw-confirm-actions">
+            <button type="button" class="pw-confirm-btn cancel" id="deleteConfirmCancel">Cancel</button>
+            <button type="button" class="pw-confirm-btn confirm" id="deleteConfirmOk">Yes, Delete</button>
+        </div>
+    </div>
+</div>
+<form method="POST" id="deleteConfirmForm" style="display:none;">
+    @csrf
+    @method('DELETE')
+</form>
 @endsection
 
 @push('scripts')
@@ -338,6 +338,53 @@ document.addEventListener('DOMContentLoaded', function () {
     const checkAll = document.getElementById('checkAll');
     const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
     const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+
+    // Shared delete-confirm overlay. Uses event delegation (not a one-time
+    // querySelectorAll) so it keeps working on rows the live AJAX refresh
+    // rebuilds from scratch every 15s (see loadUsersSilently/refreshTableBody).
+    (function () {
+        const overlay = document.getElementById('deleteConfirmOverlay');
+        const titleEl = document.getElementById('deleteConfirmTitle');
+        const form = document.getElementById('deleteConfirmForm');
+        const okBtn = document.getElementById('deleteConfirmOk');
+        const cancelBtn = document.getElementById('deleteConfirmCancel');
+        if (!overlay || !form) return;
+
+        let pendingAction = null;
+
+        function openModal(title, action) {
+            titleEl.textContent = title;
+            pendingAction = action;
+            overlay.classList.add('show');
+        }
+        function closeModal() {
+            overlay.classList.remove('show');
+            pendingAction = null;
+        }
+
+        document.addEventListener('click', function (e) {
+            const trigger = e.target.closest('.open-delete-confirm');
+            if (!trigger) return;
+
+            openModal('Delete ' + (trigger.dataset.label || 'this user') + '?', function () {
+                form.action = trigger.dataset.url;
+                form.submit();
+            });
+        });
+
+        okBtn?.addEventListener('click', function () {
+            if (typeof pendingAction === 'function') pendingAction();
+        });
+        cancelBtn?.addEventListener('click', closeModal);
+        overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && overlay.classList.contains('show')) closeModal();
+        });
+
+        window.openBulkDeleteConfirm = function (count, onConfirm) {
+            openModal('Delete ' + count + ' selected user(s)?', onConfirm);
+        };
+    })();
     const searchInput = document.getElementById('userSearch');
     const statusFilter = document.getElementById('statusFilter');
     const activeFilter = document.getElementById('activeFilter');
@@ -453,9 +500,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            if (confirm('Are you sure you want to delete selected users?')) {
+            window.openBulkDeleteConfirm(checkedBoxes.length, function () {
                 bulkDeleteForm.submit();
-            }
+            });
         });
     }
 
@@ -628,13 +675,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 <img src="{{ asset('images/management/eye.png') }}" alt="View" class="action-icon-img">
             </a>
 
-            <form method="POST" action="${escapeHtml(customer.destroy_url)}" onsubmit="return confirm('Are you sure you want to delete this user?')" style="display:inline-block;">
-                <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="_method" value="DELETE">
-                <button type="submit" class="delete-icon" title="Delete">
-                    <img src="{{ asset('images/management/delete.png') }}" alt="Delete" class="action-icon-img">
-                </button>
-            </form>
+            <button type="button" title="Delete" class="delete-icon open-delete-confirm"
+                data-url="${escapeHtml(customer.destroy_url)}" data-label="${escapeHtml(displayName)}">
+                <img src="{{ asset('images/management/delete.png') }}" alt="Delete" class="action-icon-img">
+            </button>
         `;
 
         tr.innerHTML = `

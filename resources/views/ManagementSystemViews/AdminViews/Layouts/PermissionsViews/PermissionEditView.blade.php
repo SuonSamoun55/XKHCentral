@@ -1,9 +1,9 @@
 @extends('Layout.Management.app')
-@section('title', 'Edit Permission')
+@section('title', 'Edit Page')
 
 @section('content')
 <div class="container mt-4">
-    <h2>Edit Permission</h2>
+    <h2>Edit Page</h2>
 
     @if ($errors->any())
         <div class="alert alert-danger">
@@ -20,13 +20,32 @@
         @method('PUT')
 
         <div class="mb-3">
-            <label class="form-label">Permission Name</label>
+            <label class="form-label">Page Key</label>
             <input type="text" name="name" class="form-control" value="{{ old('name', $permission->name) }}" required>
         </div>
 
+        @if($permission->urls)
+            <div class="mb-3">
+                <div class="field-label">URL(s) this key gates</div>
+                <div class="form-control-plaintext text-muted"><code>{{ $permission->urls }}</code></div>
+            </div>
+        @endif
+
         <div class="mb-3">
-            <label class="form-label">Display Name</label>
+            <label class="form-label">Page Label</label>
             <input type="text" name="display_name" class="form-control" value="{{ old('display_name', $permission->display_name) }}">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label d-block">Side</label>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="group" id="groupAdmin" value="admin" {{ old('group', $permission->group) === 'admin' ? 'checked' : '' }}>
+                <label class="form-check-label" for="groupAdmin">Admin Side</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="group" id="groupCustomer" value="customer" {{ old('group', $permission->group) === 'customer' ? 'checked' : '' }}>
+                <label class="form-check-label" for="groupCustomer">User Side</label>
+            </div>
         </div>
 
         <button type="submit" class="btn btn-primary">Update</button>

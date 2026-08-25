@@ -36,10 +36,7 @@ class AuthController extends Controller
             return back()->withErrors([
                 'email' => 'Invalid credentials.',
             ])->onlyInput('email');
-        }
-
-        // Regenerate session ID to prevent session fixation
-        // and to issue a FRESH CSRF token tied to the new session.
+        };
         $request->session()->regenerate();
 
         /** @var \App\Models\ManagementSystem\User $user */
@@ -47,6 +44,12 @@ class AuthController extends Controller
 
         $user->last_seen_at = now();
         $user->save();
+        //comnay session
+        if ($user->company_id) {
+            session(['selected_company_id' => $user->company_id]);
+        } else {
+            session()->forget('selected_company_id');
+        }
 
         return $this->redirectUser($user);
     }
@@ -117,10 +120,10 @@ class AuthController extends Controller
 
     private function redirectUser($user)
     {
+
         return match ($user->role) {
-            'admin' => redirect()->route('pos.index'),
             'customer' => redirect()->route('user.index'),
-            default => redirect()->route('login'),
+            default => redirect()->route('pos.index'),
         };
     }
 }

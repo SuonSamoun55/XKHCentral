@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\POS\Admin\Discounts;
 
 use App\Http\Controllers\Controller;
 use App\Models\POS\Item;
-use App\Models\ManagementSystem\Company;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -12,7 +11,12 @@ class DiscountController extends Controller
 {
     public function index(Request $request)
     {
-        $companyId = session('selected_company_id') ?: Company::value('id');
+        $companyId = session('selected_company_id');
+
+        if (!$companyId) {
+            return redirect()->route('companies.index')
+                ->with('error', 'Select a company first to manage its discounts.');
+        }
 
         $query = Item::query()
             ->where('company_id', $companyId)
@@ -51,7 +55,7 @@ class DiscountController extends Controller
 
  public function create()
 {
-    $companyId = session('selected_company_id') ?: Company::value('id');
+    $companyId = session('selected_company_id');
 
     $items = Item::where('company_id', $companyId)
         ->where('blocked', false)
@@ -105,7 +109,7 @@ public function store(Request $request)
         $validated['discount_end_date'] = null;
     }
 
-    $companyId = session('selected_company_id') ?: Company::value('id');
+    $companyId = session('selected_company_id');
     if ($validated['discount_type'] === 'item') {
         if (empty($validated['item_id'])) {
             return back()->withErrors([
@@ -139,7 +143,7 @@ public function store(Request $request)
 }
     public function edit($id)
     {
-        $companyId = session('selected_company_id') ?: Company::value('id');
+        $companyId = session('selected_company_id');
         $item = Item::where('company_id', $companyId)->findOrFail($id);
         $scheduleType = ($item->discount_start_date || $item->discount_end_date) ? 'scheduled' : 'forever';
 
@@ -165,7 +169,7 @@ public function store(Request $request)
             $validated['discount_end_date'] = null;
         }
 
-        $companyId = session('selected_company_id') ?: Company::value('id');
+        $companyId = session('selected_company_id');
         $item = Item::where('company_id', $companyId)->findOrFail($id);
         $this->applyDiscountToItem($item, $validated);
 
@@ -176,7 +180,7 @@ public function store(Request $request)
 
     public function destroy($id)
     {
-        $companyId = session('selected_company_id') ?: Company::value('id');
+        $companyId = session('selected_company_id');
         $item = Item::where('company_id', $companyId)->findOrFail($id);
         $this->applyDiscountToItem($item, [
             'discount_amount' => 0,

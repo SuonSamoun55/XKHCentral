@@ -72,7 +72,8 @@
 
             <div class="login-right">
                 <div class="login-form-box">
-                    <img src="{{ asset('images/pos/image 14.png') }}" alt="second login image" class="login-form-image">
+                    <img src="{{ asset('images/pos/image 14.png') }}" alt="second login image"
+                        class="login-form-image">
                     <h1 class="login-title">Account Login</h1>
                     <p class="login-subtitle">
                         If you are already a member you can login with your email address and password.
@@ -97,16 +98,13 @@
                         <div class="mb-3">
                             <label class="login-label" for="email">Email address</label>
                             <input id="email" type="email" name="email" class="form-control login-input"
-                                value="{{ old('email') }}"
-                                 placeholder="Enter your email address"
-                                 required>
+                                value="{{ old('email') }}" placeholder="Enter your email address" required>
                         </div>
 
                         <div class="mb-2">
                             <label class="login-label" for="password">Password</label>
                             <input id="password" type="password" name="password" class="form-control login-input"
-                             placeholder="Enter your password"
-                              required>
+                                placeholder="Enter your password" required>
                         </div>
 
                         <div class="login-check-row">
@@ -195,7 +193,10 @@
             document.querySelectorAll('.login-input').forEach(function(input) {
                 input.addEventListener('focus', function() {
                     setTimeout(function() {
-                        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        input.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
                     }, 300); // wait for keyboard open animation to finish
                 });
             });

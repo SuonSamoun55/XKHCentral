@@ -112,21 +112,24 @@
                     @endif
                 </div>
 
-                <div class="primary-figure">{{ $money($orderStats['pending_amount']) }}</div>
-                <div class="primary-figure-label">Pending amount (not yet synced)</div>
+                <div class="primary-figure">{{ $money($orderStats['confirmed_amount']) }}</div>
+                <div class="primary-figure-label">Confirmed amount</div>
 
                 <div class="order-counters">
                     <div class="counter pending">
                         <div class="counter-value">{{ $orderStats['pending_count'] }}</div>
                         <div class="counter-label">Pending</div>
+                        <div class="counter-amount">{{ $money($orderStats['pending_amount']) }}</div>
                     </div>
                     <div class="counter confirmed">
                         <div class="counter-value">{{ $orderStats['confirmed_count'] }}</div>
                         <div class="counter-label">Confirmed</div>
+                        <div class="counter-amount">{{ $money($orderStats['confirmed_amount']) }}</div>
                     </div>
                     <div class="counter cancelled">
                         <div class="counter-value">{{ $orderStats['cancelled_count'] }}</div>
                         <div class="counter-label">Cancelled</div>
+                        <div class="counter-amount">{{ $money($orderStats['cancelled_amount']) }}</div>
                     </div>
                 </div>
 

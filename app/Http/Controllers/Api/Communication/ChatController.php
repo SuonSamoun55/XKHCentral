@@ -20,18 +20,10 @@ class ChatController extends Controller
             return redirect()->route('login');
         }
 
-        $admins = User::query()
-            ->where(function ($q) {
-                $q->where('role', 'admin')
-                    ->orWhereHas('roleRelation', function ($roleQ) {
-                        $roleQ->where('name', 'admin');
-                    });
-            })
-            ->orderBy('name')
-            ->get();
+        $admins = $this->chatSupportAgentsQuery($user->company_id)->orderBy('name')->get();
 
         if ($admins->isEmpty()) {
-            return back()->with('error', 'No admin account found.');
+            return back()->with('error', 'No support agent available.');
         }
         $hasExplicitAdmin = $request->filled('admin_id');
         $adminId = 0;
@@ -76,8 +68,8 @@ class ChatController extends Controller
         ]);
         $receiver = User::findOrFail($validated['receiver_id']);
 
-        if (!$receiver->isAdmin()) {
-            return back()->with('error', 'You can only message admin.');
+        if (!$this->isChatSupportAgentForCompany($receiver, $user->company_id)) {
+            return back()->with('error', 'You can only message a support agent.');
         }
 
         $chatMessage = $this->buildAndStoreChatMessage($request, $validated, (int) $user->id, (int) $receiver->id);
@@ -110,7 +102,7 @@ class ChatController extends Controller
         if (!$admin) {
             return redirect()->route('login');
         }
-        if (!$admin->isAdmin()) {
+        if (!$this->canOpenAdminChat($admin)) {
             abort(403);
         }
 
@@ -129,6 +121,11 @@ class ChatController extends Controller
         $contacts = User::query()
             ->whereIn('id', $contactIds)
             ->where('id', '!=', $admin->id)
+            ->when($admin->company_id, function ($q) use ($admin) {
+                $q->where(function ($cq) use ($admin) {
+                    $cq->where('company_id', $admin->company_id)->orWhereNull('company_id');
+                });
+            })
             ->orderBy('name')
             ->get();
 
@@ -138,6 +135,11 @@ class ChatController extends Controller
             $requestedUser = User::query()
                 ->where('id', $activeContactId)
                 ->where('id', '!=', $admin->id)
+                ->when($admin->company_id, function ($q) use ($admin) {
+                    $q->where(function ($cq) use ($admin) {
+                        $cq->where('company_id', $admin->company_id)->orWhereNull('company_id');
+                    });
+                })
                 ->first();
 
             if ($requestedUser) {
@@ -202,7 +204,7 @@ class ChatController extends Controller
         if (!$admin) {
             return redirect()->route('login');
         }
-        if (!$admin->isAdmin()) {
+        if (!$this->canOpenAdminChat($admin)) {
             abort(403);
         }
 
@@ -217,6 +219,9 @@ class ChatController extends Controller
         $receiver = User::findOrFail($validated['receiver_id']);
         if ($receiver->isAdmin()) {
             return back()->with('error', 'Please select a customer/user.');
+        }
+        if (!$this->contactAllowedForAdmin($admin, $receiver)) {
+            return back()->with('error', 'That customer is not in your company.');
         }
 
         $chatMessage = $this->buildAndStoreChatMessage($request, $validated, (int) $admin->id, (int) $receiver->id);
@@ -255,7 +260,7 @@ class ChatController extends Controller
         }
 
         $admin = User::find($adminId);
-        if (!$admin || !$admin->isAdmin()) {
+        if (!$admin || !$this->isChatSupportAgentForCompany($admin, $user->company_id)) {
             return response()->json(['message' => 'Invalid admin'], 422);
         }
 
@@ -275,7 +280,7 @@ class ChatController extends Controller
         if (!$admin) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
-        if (!$admin->isAdmin()) {
+        if (!$this->canOpenAdminChat($admin)) {
             abort(403);
         }
 
@@ -285,7 +290,7 @@ class ChatController extends Controller
         }
 
         $contact = User::find($userId);
-        if (!$contact || (int) $contact->id === (int) $admin->id) {
+        if (!$contact || (int) $contact->id === (int) $admin->id || !$this->contactAllowedForAdmin($admin, $contact)) {
             return response()->json(['message' => 'Invalid user'], 422);
         }
 
@@ -296,6 +301,42 @@ class ChatController extends Controller
             $userId,
             (int) $request->get('after_id', 0)
         );
+    }
+
+    private function chatSupportAgentsQuery(?int $companyId = null)
+    {
+        return User::query()
+            ->whereHas('roleRelation', function ($roleQ) {
+                $roleQ->whereHas('permissions', function ($permQ) {
+                    $permQ->where('name', 'chat_support');
+                });
+            })
+            ->when($companyId, function ($q) use ($companyId) {
+                $q->where(function ($cq) use ($companyId) {
+                    $cq->where('company_id', $companyId)->orWhereNull('company_id');
+                });
+            });
+    }
+
+    private function isChatSupportAgent(User $user): bool
+    {
+        return $user->hasPermission('chat_support');
+    }
+
+    private function isChatSupportAgentForCompany(User $agent, ?int $companyId): bool
+    {
+        return $this->isChatSupportAgent($agent)
+            && ($agent->company_id === null || $agent->company_id === $companyId);
+    }
+    private function contactAllowedForAdmin(User $admin, User $contact): bool
+    {
+        return $admin->company_id === null
+            || $contact->company_id === null
+            || $admin->company_id === $contact->company_id;
+    }
+    private function canOpenAdminChat(User $user): bool
+    {
+        return strtolower((string) $user->role) === 'admin' || $user->hasPermission('admin_chat');
     }
 
     private function threadMessages(int $userA, int $userB, int $afterId = 0)

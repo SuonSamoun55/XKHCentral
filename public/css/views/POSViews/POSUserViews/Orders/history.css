@@ -101,6 +101,11 @@ body {
     z-index: 2;
 }
 
+.date-filter-wrapper img {
+    height: 15px;
+    width: 15px;
+}
+
 .floating-label {
     position: absolute;
     top: 10px;
@@ -392,7 +397,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     align-items: center;
 }
 
-.item-thumb-stack .item-thumb + .item-thumb {
+.item-thumb-stack .item-thumb+.item-thumb {
     margin-right: -30px;
 }
 
@@ -576,6 +581,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     color: #64748b;
     white-space: nowrap;
 }
+
 .order-empty-state {
     flex: 1;
     display: flex;
@@ -636,22 +642,28 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         padding: 0 8px;
     }
 }
+
 @media screen and (max-width: 768px),
-       screen and (max-width: 926px) and (orientation: landscape) {
+screen and (max-width: 926px) and (orientation: landscape) {
+
     html,
     body {
         overflow-x: hidden;
         max-width: 100%;
     }
-    .header{
+
+    .header {
         width: 100%;
     }
-     .right-section{
+
+    .right-section {
         display: none;
     }
-    .mobile{
+
+    .mobile {
         padding: 0px 10px;
     }
+
     .sidebar,
     .sidebar-wrap {
         display: none !important;
@@ -764,6 +776,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
     .calendar-custom-img {
         right: 12px;
+
     }
 
     .action-bar {
@@ -792,7 +805,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
         overflow: auto;
         height: 100%;
-        padding-bottom:75px ;
+        padding-bottom: 75px;
         /* padding: 4px 4px 90px; */
     }
 
@@ -904,10 +917,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         text-decoration: none;
         flex-shrink: 0;
     }
+
     .mobile-download-btn:active {
         background: #18bfd0;
         color: #fff;
     }
+
     .order-empty-state {
         padding: 20px 12px 60px;
     }
@@ -920,6 +935,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         font-size: 14px;
     }
 }
+
 @media screen and (max-width: 380px) {
     .page-wrap {
         padding: 8px;
@@ -939,7 +955,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         height: 36px;
     }
 
-    .item-thumb-stack .item-thumb + .item-thumb {
+    .item-thumb-stack .item-thumb+.item-thumb {
         margin-right: -22px;
     }
 
@@ -956,6 +972,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         height: 26px;
         font-size: 12px;
     }
-   
+
 
 }

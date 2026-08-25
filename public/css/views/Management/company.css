@@ -60,7 +60,7 @@
 
 .company-page {
     width: 100%;
-    height: 100%    ;
+    height: 100%;
 }
 
 .page-title {
@@ -521,20 +521,34 @@
 }
 
 @keyframes companySlideIn {
-    from { opacity: 0; transform: translateX(100%); }
-    to { opacity: 1; transform: translateX(0); }
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 @keyframes companyFadeOut {
-    from { opacity: 1; transform: translateX(0); }
-    to { opacity: 0; transform: translateX(100%); }
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
 }
 
 /* ==========================================================================
    Responsive
    ========================================================================== */
 @media (max-width: 992px) {
-   
+
 
     .company-card {
         padding: var(--company-space-5);

@@ -31,6 +31,9 @@
 
         $inStock = (int) ($item->inventory ?? 0) > 0;
 
+        $vatPercent = max(0, (float) ($item->resolved_vat_percent ?? 0));
+        $vatAmount = round($finalPrice * ($vatPercent / 100), 2);
+
         // $favoriteIds is passed in from the controller (same array used on the
         // item-list index page) — array of item IDs the current user has favorited.
         $favoriteIds = $favoriteIds ?? [];
@@ -116,6 +119,9 @@
                         <div class="price-old">${{ number_format($unitPrice, 2) }}</div>
                     @endif
                     <div class="price-new">${{ number_format($finalPrice, 2) }}</div>
+                    @if ($vatPercent > 0)
+                        <div class="pd-vat-chip">VAT {{ rtrim(rtrim(number_format($vatPercent, 2), '0'), '.') }}%: ${{ number_format($vatAmount, 2) }}</div>
+                    @endif
 
                     @if (!empty($item->description))
                         <div class="product-desc">{{ $item->description }}</div>

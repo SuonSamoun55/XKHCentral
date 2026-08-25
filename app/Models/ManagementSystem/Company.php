@@ -18,6 +18,7 @@ class Company extends Model
         'email',
         'address',
         'logo',
+        'favicon',
         'tax_number',
         'is_active',
     ];

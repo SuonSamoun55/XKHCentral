@@ -19,15 +19,19 @@ class AdminOrderController extends Controller
 {
     public function index(Request $request)
     {
+        /** @var \App\Models\ManagementSystem\User|null $admin */
         $admin = Auth::user();
 
-        if (!$admin || $admin->role !== 'admin') {
-            abort(403, 'Only admin can access this page.');
+        if (!$admin || (!$admin->isAdmin() && !$admin->hasPermission('orders'))) {
+            abort(403, 'You do not have access to this page.');
         }
 
         $tab = $request->get('tab', 'new');
+        $companyId = session('selected_company_id');
 
-        $query = Order::with(['user', 'items', 'actions.actionBy'])->latest();
+        $query = Order::with(['user', 'items', 'actions.actionBy'])
+            ->when($companyId, fn ($q) => $q->where('company_id', $companyId))
+            ->latest();
 
         if ($request->filled('search')) {
             $search = trim($request->search);
@@ -79,8 +83,10 @@ class AdminOrderController extends Controller
         $orders = $query->paginate(10);
         $orders->appends($request->query());
 
-        $newOrdersCount = Order::where('status', 'pending')->count();
-        $approvedOrdersCount = Order::where('status', 'confirmed')->count();
+        $newOrdersCount = Order::when($companyId, fn ($q) => $q->where('company_id', $companyId))
+            ->where('status', 'pending')->count();
+        $approvedOrdersCount = Order::when($companyId, fn ($q) => $q->where('company_id', $companyId))
+            ->where('status', 'confirmed')->count();
 
         // Lets the view show a "showing orders you approved for X" banner
         // instead of silently filtering with no explanation.
@@ -105,39 +111,48 @@ class AdminOrderController extends Controller
 
     public function show($id)
     {
+        /** @var \App\Models\ManagementSystem\User|null $admin */
         $admin = Auth::user();
 
-        if (!$admin || $admin->role !== 'admin') {
-            abort(403, 'Only admin can access this page.');
+        if (!$admin || (!$admin->isAdmin() && !$admin->hasPermission('orders'))) {
+            abort(403, 'You do not have access to this page.');
         }
 
-        $order = Order::with(['user', 'items.item', 'items.itemVariant'])->findOrFail($id);
+        $order = Order::with(['user', 'items.item', 'items.itemVariant'])
+            ->when(session('selected_company_id'), fn ($q) => $q->where('company_id', session('selected_company_id')))
+            ->findOrFail($id);
 
         return view('POSViews.POSAdminViews.Orders.show', compact('order'));
     }
 
     public function downloadInvoice($id)
     {
+        /** @var \App\Models\ManagementSystem\User|null $admin */
         $admin = Auth::user();
 
-        if (!$admin || $admin->role !== 'admin') {
-            abort(403, 'Only admin can access this page.');
+        if (!$admin || (!$admin->isAdmin() && !$admin->hasPermission('orders'))) {
+            abort(403, 'You do not have access to this page.');
         }
 
-        $order = Order::with('items')->findOrFail($id);
+        $order = Order::with('items')
+            ->when(session('selected_company_id'), fn ($q) => $q->where('company_id', session('selected_company_id')))
+            ->findOrFail($id);
 
         return $this->downloadOrderInvoicePdf($order);
     }
 
     public function confirm($id)
     {
+        /** @var \App\Models\ManagementSystem\User|null $admin */
         $admin = Auth::user();
 
-        if (!$admin || $admin->role !== 'admin') {
+        if (!$admin || (!$admin->isAdmin() && !$admin->hasPermission('orders'))) {
             return back()->with('error', 'Unauthorized.');
         }
 
-            $order = Order::with(['user', 'items.item', 'items.itemVariant'])->find($id);
+            $order = Order::with(['user', 'items.item', 'items.itemVariant'])
+                ->when(session('selected_company_id'), fn ($q) => $q->where('company_id', session('selected_company_id')))
+                ->find($id);
 
             if (!$order) {
                 return back()->with('error', 'Order not found.');
@@ -183,7 +198,7 @@ class AdminOrderController extends Controller
 
             $salesOrderData = $orderResponse->json();
             $salesOrderId   = $salesOrderData['id'] ?? null;
-            $salesOrderNo   = $salesOrderData['number'] ?? null;
+            $salesOrderNo   = $salesOrderData['number'] ?? $salesOrderData['no'] ?? null;
 
             if (!$salesOrderId) {
                 throw new \Exception('BC sales order ID not returned.');
@@ -339,9 +354,10 @@ class AdminOrderController extends Controller
 
     public function cancel(Request $request, $id)
     {
+        /** @var \App\Models\ManagementSystem\User|null $admin */
         $admin = Auth::user();
 
-        if (!$admin || $admin->role !== 'admin') {
+        if (!$admin || (!$admin->isAdmin() && !$admin->hasPermission('orders'))) {
             return back()->with('error', 'Unauthorized.');
         }
 
@@ -351,7 +367,9 @@ class AdminOrderController extends Controller
             'note.required' => 'Please input reason before cancelling the order.',
         ]);
 
-        $order = Order::with(['user', 'items'])->find($id);
+        $order = Order::with(['user', 'items'])
+            ->when(session('selected_company_id'), fn ($q) => $q->where('company_id', session('selected_company_id')))
+            ->find($id);
 
         if (!$order) {
             return back()->with('error', 'Order not found.');
@@ -405,13 +423,17 @@ class AdminOrderController extends Controller
 
     public function actionHistory()
     {
+        /** @var \App\Models\ManagementSystem\User|null $admin */
         $admin = Auth::user();
 
-        if (!$admin || $admin->role !== 'admin') {
-            abort(403, 'Only admin can access this page.');
+        if (!$admin || (!$admin->isAdmin() && !$admin->hasPermission('orders'))) {
+            abort(403, 'You do not have access to this page.');
         }
 
         $actions = OrderAction::with(['order', 'user', 'actionBy'])
+            ->when(session('selected_company_id'), function ($q) {
+                $q->whereHas('order', fn ($oq) => $oq->where('company_id', session('selected_company_id')));
+            })
             ->latest()
             ->paginate(20);
 
@@ -536,19 +558,6 @@ class AdminOrderController extends Controller
             ->post($endpoint, $payload);
     }
 
-    /**
-     * Build the payload for the custom [ServiceEnabled] AddLine bound action.
-     *
-     * ALL six parameters declared in the AL signature must always be present.
-     * BC rejects the call with "Expected a parameter with name 'x'\" if any is missing.
-     *
-     *   itemNo          Code[20]   — item number, required
-     *   quantity        Decimal    — must be > 0
-     *   unitPrice       Decimal    — 0 = let BC resolve from price list
-     *   locationCode    Code[10]   — '' = use order-level location
-     *   discountPercent Decimal    — 0 = no discount
-     *   variantCode     Code[10]   — '' = no variant, required parameter for products with variants
-     */
     private function serviceEnabledAddLinePayload(array $linePayload): array
     {
         return [
@@ -651,7 +660,7 @@ class AdminOrderController extends Controller
     {
         // Check if discount was present in original but missing in actual
         $discountDropped = (
-            array_key_exists('discountPercent', $originalPayload) 
+            array_key_exists('discountPercent', $originalPayload)
             && $originalPayload['discountPercent'] > 0
             && (!array_key_exists('discountPercent', $actualPayload) || $actualPayload['discountPercent'] == 0)
         );

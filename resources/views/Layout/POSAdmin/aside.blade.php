@@ -15,7 +15,9 @@
         $company = Company::first();
     }
     $unreadNotificationCount = Notification::adminUnreadTotal(session('selected_company_id'));
-    $pendingOrdersCount = Order::where('status', 'pending')->count();
+    $pendingOrdersCount = Order::where('status', 'pending')
+        ->when(session('selected_company_id'), fn ($q) => $q->where('company_id', session('selected_company_id')))
+        ->count();
 
     $userAvatar = asset('images/default-user.png');
 
@@ -106,6 +108,13 @@
             'name' => 'Discount',
             'url' => '/discounts',
             'match' => ['discounts', 'discounts/*'],
+            'icon' => '/images/AdminPOS/Admin_POS_Discount.png',
+            'icon_active' => '/images/AdminPOS/Admin_POS_Discount_active.png',
+        ],
+        [
+            'name' => 'Tax Groups',
+            'url' => '/tax-groups',
+            'match' => ['tax-groups', 'tax-groups/*'],
             'icon' => '/images/AdminPOS/Admin_POS_Discount.png',
             'icon_active' => '/images/AdminPOS/Admin_POS_Discount_active.png',
         ],

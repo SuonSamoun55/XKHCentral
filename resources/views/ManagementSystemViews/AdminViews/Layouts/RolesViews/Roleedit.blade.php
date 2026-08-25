@@ -30,26 +30,32 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label d-block">Permissions</label>
+            <label class="form-label d-block">Pages this role can access</label>
 
-            @foreach($permissions as $permission)
-                <div class="form-check">
-                    <input
-                        class="form-check-input"
-                        type="checkbox"
-                        name="permissions[]"
-                        value="{{ $permission->id }}"
-                        id="permission{{ $permission->id }}"
-                        {{ $role->permissions->contains('id', $permission->id) ? 'checked' : '' }}
-                    >
-                    <label class="form-check-label" for="permission{{ $permission->id }}">
-                        {{ $permission->name }}
-                        @if($permission->display_name)
-                            - {{ $permission->display_name }}
-                        @endif
-                    </label>
-                </div>
-            @endforeach
+            @if($permissions->isEmpty())
+                <p>No pages in database yet.</p>
+            @else
+                @foreach(['admin' => 'Admin Side', 'customer' => 'User Side'] as $groupKey => $groupLabel)
+                    @if(($permissions[$groupKey] ?? collect())->isNotEmpty())
+                        <div class="fw-semibold mt-2">{{ $groupLabel }}</div>
+                        @foreach($permissions[$groupKey] as $permission)
+                            <div class="form-check">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    name="permissions[]"
+                                    value="{{ $permission->id }}"
+                                    id="permission{{ $permission->id }}"
+                                    {{ $role->permissions->contains('id', $permission->id) ? 'checked' : '' }}
+                                >
+                                <label class="form-check-label" for="permission{{ $permission->id }}">
+                                    {{ $permission->display_name ?? $permission->name }}
+                                </label>
+                            </div>
+                        @endforeach
+                    @endif
+                @endforeach
+            @endif
         </div>
 
         <button type="submit" class="btn btn-primary">Update</button>

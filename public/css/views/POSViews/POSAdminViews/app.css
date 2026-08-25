@@ -12,10 +12,6 @@
             height: 100vh;
             overflow: hidden;
         }
-
-        /* Shared toast alert — same look as the admin Notifications page's
-           #alertContainer/.custom-alert, so any POS admin page can call a
-           showAlert(message, type) and get the identical floating pill. */
         .alert-container {
             position: fixed;
             top: 60px;

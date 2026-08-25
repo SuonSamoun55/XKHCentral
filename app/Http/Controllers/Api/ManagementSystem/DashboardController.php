@@ -18,6 +18,7 @@ class DashboardController extends Controller
 
     public function index()
     {
+        /** @var \App\Models\ManagementSystem\User|null $user */
         $user = Auth::user();
 
         // check if login
@@ -25,9 +26,9 @@ class DashboardController extends Controller
             return redirect()->route('login');
         }
 
-        // allow only admin
-        if ($user->role !== 'admin') {
-            abort(403, 'Only admin can access this page.');
+        // allow admin, or any role granted the 'dashboard' page
+        if (!$user->isAdmin() && !$user->hasPermission('dashboard')) {
+            abort(403, 'You do not have access to this page.');
         }
 
         ini_set('memory_limit', '512M');
@@ -36,13 +37,13 @@ class DashboardController extends Controller
         $now = Carbon::now();
 
         $orderQuery = Order::query()
-            ->when($selectedCompanyId, fn ($q) => $q->where('company_id', $selectedCompanyId));
+            ->when($selectedCompanyId, fn($q) => $q->where('company_id', $selectedCompanyId));
 
         $availableYears = (clone $orderQuery)
             ->selectRaw('DISTINCT YEAR(created_at) as yr')
             ->orderByDesc('yr')
             ->pluck('yr')
-            ->map(fn ($yr) => (int) $yr)
+            ->map(fn($yr) => (int) $yr)
             ->values();
         if ($availableYears->isEmpty()) {
             $availableYears = collect([$now->year]);
@@ -62,28 +63,17 @@ class DashboardController extends Controller
         // HERO ROW (counts shown on the 3 hero cards, if you wire text in)
         // ================================================================
         $totalProducts = Item::query()
-            ->when($selectedCompanyId, fn ($q) => $q->where('company_id', $selectedCompanyId))
+            ->when($selectedCompanyId, fn($q) => $q->where('company_id', $selectedCompanyId))
             ->count();
-        // Registered customers (signed up / logged in at least once), and
-        // how many of them are online right now — reuses User::scopeOnline's
-        // existing 5-minute last_seen_at window (kept fresh by the
-        // 'last.seen' middleware and the /heartbeat endpoint) so this stays
-        // consistent with how "online" is defined everywhere else.
-        $totalCustomers = User::where('role', 'customer')->count();
-        $onlineCustomers = User::where('role', 'customer')->online()->count();
-
-        // ================================================================
-        // REPORT — revenue bar chart, bucketed by hour/day/month depending
-        // on the selected period
-        // ================================================================
+        $totalCustomers = User::where('role', 'customer')
+            ->when($selectedCompanyId, fn($q) => $q->where('company_id', $selectedCompanyId))
+            ->count();
+        $onlineCustomers = User::where('role', 'customer')
+            ->when($selectedCompanyId, fn($q) => $q->where('company_id', $selectedCompanyId))
+            ->online()
+            ->count();
         [$chartData, $yAxisSteps, $yAxisMax] = $this->buildReportChart($orderQuery, $reportPeriod, $now, $selectedYear);
 
-        // ================================================================
-        // NOTIFICATIONS — most recent 4 addressed to this admin, plus the
-        // actual unread count (previously the panel's "X unread messages"
-        // caption was faked as min(2, count of the 4 latest) regardless of
-        // their real is_read status).
-        // ================================================================
         $unreadNotificationCount = Notification::query()
             ->where('user_id', $user->id)
             ->where('is_read', false)
@@ -99,24 +89,11 @@ class DashboardController extends Controller
                 return [
                     'id' => $n->id,
                     'name' => $n->sender->name ?? 'Unknown',
-                    // TODO: swap 'company_name' for whatever column on your
-                    // User model actually stores the customer's business name
                     'role' => $n->sender->company_name ?? ($n->title ?? ''),
-                    // profile_image_display is the User model's own accessor —
-                    // real profile photo if one exists and the file is
-                    // actually still on disk, else profile_image_url, else a
-                    // default avatar. Previously this checked profile_image
-                    // directly without verifying the file exists, which could
-                    // point at a stale/missing path instead of falling back.
                     'avatar' => $n->sender ? $n->sender->profile_image_display : asset(self::DEFAULT_AVATAR),
                 ];
             })
             ->all();
-
-        // ================================================================
-        // TOP SELLING PRODUCTS — ranked by qty sold in the selected period,
-        // each with a % change in qty vs the prior equivalent period
-        // ================================================================
         $topProductsPeriod = request()->get('products_period', 'today');
         if (!in_array($topProductsPeriod, ['today', 'week', 'month', 'year'], true)) {
             $topProductsPeriod = 'today';
@@ -124,12 +101,7 @@ class DashboardController extends Controller
         $topProductsLimit = $this->normalizeTopProductsLimit(request()->get('products_limit', '20'));
         $topProducts = $this->topSellingProducts($selectedCompanyId, $now, $topProductsPeriod, $this->topProductsLimitToInt($topProductsLimit));
 
-        // ================================================================
-        // OVERVIEW STATS — Total Income / Total Confirmed / Pending Product,
-        // all filterable by the same Today / This Week / This Month /
-        // This Year period, each with a % change vs the prior equivalent
-        // period.
-        // ================================================================
+
         $statsPeriod = request()->get('stats_period', 'month');
         if (!in_array($statsPeriod, ['today', 'week', 'month', 'year'], true)) {
             $statsPeriod = 'month';
@@ -168,11 +140,6 @@ class DashboardController extends Controller
         ));
     }
 
-    /**
-     * AJAX endpoint behind the Report panel's year select — returns just the
-     * bar-chart data for the requested year so the dropdown can redraw the
-     * chart in place instead of reloading the whole dashboard.
-     */
     public function reportChart()
     {
         $this->authorizeAjaxAdmin();
@@ -181,13 +148,13 @@ class DashboardController extends Controller
         $now = Carbon::now();
 
         $orderQuery = Order::query()
-            ->when($selectedCompanyId, fn ($q) => $q->where('company_id', $selectedCompanyId));
+            ->when($selectedCompanyId, fn($q) => $q->where('company_id', $selectedCompanyId));
 
         $availableYears = (clone $orderQuery)
             ->selectRaw('DISTINCT YEAR(created_at) as yr')
             ->orderByDesc('yr')
             ->pluck('yr')
-            ->map(fn ($yr) => (int) $yr)
+            ->map(fn($yr) => (int) $yr)
             ->values();
         if ($availableYears->isEmpty()) {
             $availableYears = collect([$now->year]);
@@ -207,11 +174,6 @@ class DashboardController extends Controller
 
         return response()->json(compact('chartData', 'yAxisSteps', 'yAxisMax', 'selectedYear'));
     }
-
-    /**
-     * AJAX endpoint behind the Top Selling Products period select — returns
-     * just the ranked product list so the dropdown can redraw it in place.
-     */
     public function topProductsData()
     {
         $this->authorizeAjaxAdmin();
@@ -229,8 +191,6 @@ class DashboardController extends Controller
 
         return response()->json(compact('topProducts', 'period', 'limit'));
     }
-
-    /** 'all' or a limit string outside {10,20,30,all} both fall back to '20'. */
     private function normalizeTopProductsLimit(string $limit): string
     {
         return in_array($limit, ['10', '20', '30', 'all'], true) ? $limit : '20';
@@ -240,12 +200,6 @@ class DashboardController extends Controller
     {
         return $limit === 'all' ? null : (int) $limit;
     }
-
-    /**
-     * AJAX endpoint behind the Overview period select — returns just the
-     * Total Income / Total Confirm / Pending Product figures so the dropdown
-     * can redraw the three stat cards in place.
-     */
     public function overviewStats()
     {
         $this->authorizeAjaxAdmin();
@@ -254,7 +208,7 @@ class DashboardController extends Controller
         $now = Carbon::now();
 
         $orderQuery = Order::query()
-            ->when($selectedCompanyId, fn ($q) => $q->where('company_id', $selectedCompanyId));
+            ->when($selectedCompanyId, fn($q) => $q->where('company_id', $selectedCompanyId));
 
         $period = request()->get('period', 'month');
         if (!in_array($period, ['today', 'week', 'month', 'year'], true)) {
@@ -266,31 +220,18 @@ class DashboardController extends Controller
         return response()->json(array_merge(['period' => $period], $stats));
     }
 
-    /**
-     * Only admin, no login-page redirect — the three AJAX endpoints above
-     * are called from fetch(), so a redirect response would just come back
-     * as opaque HTML instead of sending the user anywhere.
-     */
     private function authorizeAjaxAdmin(): void
     {
+        /** @var \App\Models\ManagementSystem\User|null $user */
         $user = Auth::user();
 
-        if (!$user || $user->role !== 'admin') {
-            abort(403, 'Only admin can access this page.');
+        if (!$user || (!$user->isAdmin() && !$user->hasPermission('dashboard'))) {
+            abort(403, 'You do not have access to this page.');
         }
     }
 
     /**
-     * Revenue bar-chart data for the given period: hourly (today), daily
-     * (this week / this month) or monthly (a whole year) buckets, each with
-     * its confirmed-order revenue and whether it's in the future (greyed out
-     * in the UI) — plus y-axis gridlines auto-scaled to the real numbers.
-     *
-     * Bar values are raw dollars (not pre-divided into $K) so a quiet day's
-     * $40 in sales gets its own sensible axis instead of being dwarfed by a
-     * scale sized for whole-year totals; formatAxisValue() picks the
-     * K/M suffix per axis based on its own max.
-     *
+
      * @return array{0: array, 1: array<string>, 2: float} [chartData, yAxisSteps (formatted labels), yAxisMax (raw)]
      */
     private function buildReportChart($orderQuery, string $period, Carbon $now, int $selectedYear): array
@@ -307,7 +248,7 @@ class DashboardController extends Controller
             ? $this->niceAxisSteps($maxValue)
             : [[0, 5, 10, 15, 20], 20.0];
 
-        $yAxisSteps = array_map(fn ($v) => $this->formatAxisValue((float) $v), $rawSteps);
+        $yAxisSteps = array_map(fn($v) => $this->formatAxisValue((float) $v), $rawSteps);
 
         return [$chartData, $yAxisSteps, $yAxisMax];
     }
@@ -327,8 +268,6 @@ class DashboardController extends Controller
             $chartData[] = [
                 'label' => Carbon::create($year, $m, 1)->format('M'),
                 'value' => (float) ($revenue[$m] ?? 0),
-                // grey out months in the future so the bar chart doesn't
-                // imply data for months that haven't happened yet
                 'muted' => Carbon::create($year, $m, 1)->startOfMonth()->isAfter($now),
             ];
         }
@@ -336,7 +275,6 @@ class DashboardController extends Controller
         return $chartData;
     }
 
-    /** One bucket per day of the current month. */
     private function reportChartMonth($orderQuery, Carbon $now): array
     {
         $monthStart = $now->copy()->startOfMonth();
@@ -360,8 +298,6 @@ class DashboardController extends Controller
 
         return $chartData;
     }
-
-    /** One bucket per day of the current week (Mon–Sun). */
     private function reportChartWeek($orderQuery, Carbon $now): array
     {
         $weekStart = $now->copy()->startOfWeek();
@@ -469,7 +405,7 @@ class DashboardController extends Controller
     {
         [$from, $to, $prevFrom, $prevTo] = $this->periodRange($now, $period);
 
-        $confirmedOrders = fn (Carbon $from, Carbon $to) => (clone $orderQuery)
+        $confirmedOrders = fn(Carbon $from, Carbon $to) => (clone $orderQuery)
             ->where('status', 'confirmed')
             ->whereBetween('created_at', [$from, $to]);
 
@@ -484,9 +420,9 @@ class DashboardController extends Controller
         // TODO: swap the 'is_visible' condition below if "pending" should
         // mean something else in your data model (e.g. a dedicated
         // approval/status column instead of visibility).
-        $pendingProductBase = fn () => Item::query()
+        $pendingProductBase = fn() => Item::query()
             ->where('is_visible', false)
-            ->when($companyId, fn ($q) => $q->where('company_id', $companyId));
+            ->when($companyId, fn($q) => $q->where('company_id', $companyId));
         $pendingProductCount = $pendingProductBase()->count();
         $pendingProductPrevCount = $pendingProductBase()->where('created_at', '<', $from)->count();
         $pendingProductChangePct = $this->percentChange((float) $pendingProductPrevCount, (float) $pendingProductCount);
@@ -516,7 +452,7 @@ class DashboardController extends Controller
                 ->leftJoin('items', 'items.id', '=', 'order_items.item_id')
                 ->where('orders.status', 'confirmed')
                 ->whereBetween('orders.created_at', [$from, $to])
-                ->when($companyId, fn ($q) => $q->where('orders.company_id', $companyId))
+                ->when($companyId, fn($q) => $q->where('orders.company_id', $companyId))
                 ->select(
                     'order_items.item_id',
                     DB::raw('COALESCE(MAX(items.display_name), MAX(order_items.item_name), MAX(order_items.item_no)) as item_name'),
@@ -559,20 +495,28 @@ class DashboardController extends Controller
     {
         return match ($period) {
             'week' => [
-                $now->copy()->startOfWeek(), $now->copy()->endOfWeek(),
-                $now->copy()->subWeek()->startOfWeek(), $now->copy()->subWeek()->endOfWeek(),
+                $now->copy()->startOfWeek(),
+                $now->copy()->endOfWeek(),
+                $now->copy()->subWeek()->startOfWeek(),
+                $now->copy()->subWeek()->endOfWeek(),
             ],
             'month' => [
-                $now->copy()->startOfMonth(), $now->copy()->endOfMonth(),
-                $now->copy()->subMonthNoOverflow()->startOfMonth(), $now->copy()->subMonthNoOverflow()->endOfMonth(),
+                $now->copy()->startOfMonth(),
+                $now->copy()->endOfMonth(),
+                $now->copy()->subMonthNoOverflow()->startOfMonth(),
+                $now->copy()->subMonthNoOverflow()->endOfMonth(),
             ],
             'year' => [
-                $now->copy()->startOfYear(), $now->copy()->endOfYear(),
-                $now->copy()->subYear()->startOfYear(), $now->copy()->subYear()->endOfYear(),
+                $now->copy()->startOfYear(),
+                $now->copy()->endOfYear(),
+                $now->copy()->subYear()->startOfYear(),
+                $now->copy()->subYear()->endOfYear(),
             ],
             default => [
-                $now->copy()->startOfDay(), $now->copy()->endOfDay(),
-                $now->copy()->subDay()->startOfDay(), $now->copy()->subDay()->endOfDay(),
+                $now->copy()->startOfDay(),
+                $now->copy()->endOfDay(),
+                $now->copy()->subDay()->startOfDay(),
+                $now->copy()->subDay()->endOfDay(),
             ],
         };
     }

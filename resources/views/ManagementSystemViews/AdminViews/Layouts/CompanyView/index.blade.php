@@ -1,363 +1,209 @@
 @extends('Layout.Management.app')
-<link rel="stylesheet" href="{{ asset('/css/views/Management/company.css') }}">
-@section('title', 'Company')
 
 @push('styles')
-
+    <link rel="stylesheet" href="{{ asset('/css/views/Management/company_list.css') }}">
 @endpush
 
+@section('title', 'Companies')
+
 @section('content')
-    <div class="main-wrapper">
-        <div class="content-areas">
-            <div class="company-page">
-                <div class="alert-container">
-                    @if (session('success'))
-                        <div class="custom-alert alert-success">
-                            <i class="bi bi-check-circle-fill"></i>
-                            <span>{{ session('success') }}</span>
-                        </div>
-                    @endif
+    <div class="companies-page">
 
-                    @if (session('error'))
-                        <div class="custom-alert alert-danger">
-                            <i class="bi bi-exclamation-triangle-fill"></i>
-                            <span>{{ session('error') }}</span>
-                        </div>
-                    @endif
-
-                    @if ($errors->any())
-                        <div class="custom-alert alert-danger">
-                            <i class="bi bi-exclamation-triangle-fill"></i>
-                            <span>Please fix the errors below.</span>
-                        </div>
-                    @endif
+        <div class="alert-container">
+            @if (session('success'))
+                <div class="custom-alert alert-success">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>{{ session('success') }}</span>
                 </div>
+            @endif
 
-                @if (!$company)
-                    <div class="container">
-                        <div class="company-card">
-                            <form action="{{ route('companies.store') }}" method="POST" enctype="multipart/form-data">
-                                @csrf
+            @if (session('error'))
+                <div class="custom-alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>{{ session('error') }}</span>
+                </div>
+            @endif
+        </div>
 
-                                <div class="company-grid">
-                                    <div class="logo-panel">
-                                        <div class="logo-box">
-                                            <img id="logoPreview" alt="Logo Preview" style="display:none;">
-                                            <div class="logo-placeholder" id="logoPlaceholder">
-                                                <div><i class="bi bi-camera" style="font-size:20px;"></i></div>
-                                                <div>UPLOAD LOGO</div>
-                                            </div>
-
-                                            <button type="button" class="logo-edit-btn" id="openLogoPicker">
-                                                <i class="bi bi-pencil-fill"></i>
-                                            </button>
-                                        </div>
-
-                                        <input type="file" name="logo" id="logoInput" class="custom-file"
-                                            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
-
-                                        <div class="logo-note mt-3">
-                                            <strong><i class="bi bi-info-circle me-1"></i>LOGO REQUIREMENT</strong>
-                                            <ul>
-                                                <li>Maximum file size: 2MB</li>
-                                                <li>Format: JPG, PNG, or WEBP</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div class="form-section-title">Company Info</div>
-
-                                        <div class="form-grid">
-                                            <div class="form-col-span-2">
-                                                <div class="field-label">Company Name</div>
-                                                <input type="text" name="name" class="custom-input"
-                                                    value="{{ old('name') }}" required>
-                                            </div>
-
-                                            <div>
-                                                <div class="field-label">Client ID</div>
-                                                <input type="text" name="client_id" class="custom-input"
-                                                    value="{{ old('client_id') }}" required>
-                                            </div>
-
-                                            <div>
-                                                <div class="field-label">BC Company ID</div>
-                                                <input type="text" name="company_bc_id" class="custom-input"
-                                                    value="{{ old('company_bc_id') }}" required>
-                                            </div>
-
-                                            <div>
-                                                <div class="field-label">Email</div>
-                                                <input type="email" name="email" class="custom-input"
-                                                    value="{{ old('email') }}">
-                                            </div>
-
-                                            <div>
-                                                <div class="field-label">Contact</div>
-                                                <input type="text" name="phone" class="custom-input"
-                                                    value="{{ old('phone') }}" placeholder="+855">
-                                            </div>
-
-                                            <div class="form-col-span-2">
-                                                <div class="field-label">Address</div>
-                                                <textarea name="address" class="custom-textarea">{{ old('address') }}</textarea>
-                                            </div>
-
-                                            <div class="form-col-span-2">
-                                                <div class="field-label">Display Name</div>
-                                                <input type="text" name="display_name" class="custom-input"
-                                                    value="{{ old('display_name') }}">
-                                            </div>
-
-                                            <div class="form-col-span-2">
-                                                <div class="field-label">Tax Number</div>
-                                                <input type="text" name="tax_number" class="custom-input"
-                                                    value="{{ old('tax_number') }}">
-                                            </div>
-
-                                            <div class="form-col-span-2">
-                                                <div class="field-label">Tenant ID</div>
-                                                <input type="text" name="tenant_id" class="custom-input"
-                                                    value="{{ old('tenant_id') }}" required>
-                                            </div>
-
-                                            <div class="form-col-span-2">
-                                                <div class="field-label">Client Secret</div>
-                                                <input type="text" name="client_secret" class="custom-input"
-                                                    value="{{ old('client_secret') }}" required>
-                                            </div>
-
-                                            <div class="form-col-span-2">
-                                                <div class="field-label">Environment</div>
-                                                <input type="text" name="environment" class="custom-input"
-                                                    value="{{ old('environment') }}">
-                                            </div>
-
-                                            <div class="form-col-span-2">
-                                                <div class="field-label">Base URL</div>
-                                                <input type="text" name="base_url" class="custom-input"
-                                                    value="{{ old('base_url') }}">
-                                            </div>
-
-                                            <div class="form-col-span-2">
-                                                <div class="field-label">Token URL</div>
-                                                <input type="text" name="token_url" class="custom-input"
-                                                    value="{{ old('token_url') }}">
-                                            </div>
-
-                                            <div class="form-col-span-2">
-                                                <label class="checkbox-row">
-                                                    <input type="checkbox" checked disabled>
-                                                    <span>Company Active</span>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <div class="btn-submit-wrap">
-                                            <button type="submit" class="btn-submit-company">Create</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                @else
-               
-                    <div class="company-card">
-                        <div class="company-overview-grid">
-                            <div class="company-left-panel">
-                                <div class="company-logo-boxs">
-                                    @if (!empty($company->logo) && file_exists(public_path('storage/' . $company->logo)))
-                                        <img src="{{ asset('storage/' . $company->logo) }}" alt="Logo">
-                                    @else
-                                        <div class="company-default-logo">
-                                            {{ strtoupper(substr($company->name ?? 'C', 0, 1)) }}
-                                        </div>
-                                    @endif
-                                </div>
-
-                                <div class="company-panel-name">{{ $company->name ?? '-' }}</div>
-
-                                @if ($company->is_active)
-                                    <span class="company-panel-status status-active">
-                                        <i class="bi bi-check-circle-fill"></i> Active
-                                    </span>
-                                @else
-                                    <span class="company-panel-status status-inactive">
-                                        <i class="bi bi-dash-circle-fill"></i> Inactive
-                                    </span>
-                                @endif
-                            </div>
-
-                            <div>
-                                <div class="form-section-title">Company Details</div>
-
-                                <div class="company-details-grid">
-                                    <div class="company-field full-width">
-                                        <div class="field-label">Company Name</div>
-                                        <div class="company-value">{{ $company->name ?? '-' }}</div>
-                                    </div>
-
-                                    <div class="company-field">
-                                        <div class="field-label">Client ID</div>
-                                        <div class="company-value">{{ $company->companyConnection->client_id ?? '-' }}</div>
-                                    </div>
-
-                                    <div class="company-field">
-                                        <div class="field-label">BC Company ID</div>
-                                        <div class="company-value">{{ $company->companyConnection->company_bc_id ?? '-' }}
-                                        </div>
-                                    </div>
-
-                                    <div class="company-field">
-                                        <div class="field-label">Email</div>
-                                        <div class="company-value">{{ $company->email ?? '-' }}</div>
-                                    </div>
-
-                                    <div class="company-field">
-                                        <div class="field-label">Contact</div>
-                                        <div class="company-value">{{ $company->phone ?? '-' }}</div>
-                                    </div>
-
-                                    <div class="company-field full-width">
-                                        <div class="field-label">Address</div>
-                                        <div class="company-value">{{ $company->address ?? '-' }}</div>
-                                    </div>
-
-                                    <div class="company-field">
-                                        <div class="field-label">Connection Status</div>
-                                        @if ($company->companyConnection && $company->companyConnection->status)
-                                            <div class="company-value">
-                                                <i class="bi bi-check-circle-fill" style="color:#10b981;margin-right:6px;"></i>
-                                                Active
-                                            </div>
-                                        @else
-                                            <div class="company-value">
-                                                <i class="bi bi-x-circle-fill" style="color:#ef4444;margin-right:6px;"></i>
-                                                Inactive
-                                            </div>
-                                        @endif
-                                    </div>
-
-                                    <div class="company-field">
-                                        <div class="field-label">Company Status</div>
-                                        @if ($company->is_active)
-                                            <div class="company-value">
-                                                <i class="bi bi-check-circle-fill" style="color:#10b981;margin-right:6px;"></i>
-                                                Active
-                                            </div>
-                                        @else
-                                            <div class="company-value">
-                                                <i class="bi bi-x-circle-fill" style="color:#ef4444;margin-right:6px;"></i>
-                                                Inactive
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-
-                                <div class="company-actions">
-                                    <a href="{{ route('companies.edit', $company->id) }}" class="btn-company-outline-info">
-                                        <i class="bi bi-pencil-square"></i>
-                                        Edit Company
-                                    </a>
-                                    <a href="{{ route('companies.api.setup', $company->id) }}" class="btn-company-outline-info">
-                                        <i class="bi bi-sliders"></i>
-                                        API Setup
-                                    </a>
-
-                                    <!-- Delete Button triggers Modal -->
-                                    <button type="button" class="btn-company-outline-danger" data-bs-toggle="modal"
-                                        data-bs-target="#deleteCompanyModal">
-                                        <i class="bi bi-trash"></i>
-                                        Delete Company
-                                    </button>
-
-                                    <!-- Delete Confirmation Modal -->
-                                    <div class="modal fade" id="deleteCompanyModal" tabindex="-1"
-                                        aria-labelledby="deleteCompanyModalLabel" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="deleteCompanyModalLabel">Are you sure?</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    This action is permanent and cannot be undone. Your company details will be
-                                                    deleted.
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <form action="{{ route('companies.destroy', $company->id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-danger">Delete</button>
-                                                    </form>
-                                                    <button type="button" class="btn btn-secondary"
-                                                        data-bs-dismiss="modal">Cancel Request</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <div class="page-head">
+            <div>
+                <h1>Companies</h1>
+                <p>{{ $companies->count() }} {{ Str::plural('company', $companies->count()) }} total</p>
+            </div>
+            <div class="head-actions">
+                @if ($selectedCompanyId)
+                    <form action="{{ route('companies.clearSelection') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-ghost">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                            View all
+                        </button>
+                    </form>
                 @endif
+                <a href="{{ route('companies.create') }}" class="btn btn-primary">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.4">
+                        <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    Create company
+                </a>
             </div>
         </div>
+
+        <div class="toolbar">
+            <div class="search">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="M21 21l-4.3-4.3" />
+                </svg>
+                <input type="text" id="companySearch" placeholder="Search companies…" autocomplete="off">
+            </div>
+            <span class="count-pill" id="companyCount">{{ $companies->count() }} of {{ $companies->count() }} shown</span>
+        </div>
+
+        <div class="company-list" id="companyList">
+            @forelse ($companies as $company)
+                @php
+                    $isSelected = $selectedCompanyId == $company->id;
+                    $isConnected = $company->companyConnection && $company->companyConnection->status;
+                    $initials = strtoupper(
+                        substr(preg_replace('/\s+/', '', $company->display_name ?? $company->name), 0, 2),
+                    );
+                    $logoVariant = ['', 'alt', 'alt2'][$loop->index % 3];
+                @endphp
+                <div class="company-card {{ $isSelected ? 'is-selected' : '' }}"
+                    data-company-name="{{ strtolower(($company->display_name ?? $company->name) . ' ' . $company->name) }}">
+                    <div class="logo-mark {{ $logoVariant }}">
+                        @if (!empty($company->logo) && file_exists(public_path('storage/' . $company->logo)))
+                            <img src="{{ asset('storage/' . $company->logo) }}" alt="">
+                        @else
+                            {{ $initials }}
+                        @endif
+                    </div>
+
+                    <div class="info">
+                        <div class="info-name-row">
+                            <span class="info-name">{{ $company->display_name ?? $company->name }}</span>
+                            @if ($isSelected)
+                                <span class="selected-tag">CURRENT</span>
+                            @endif
+                        </div>
+                        <div class="info-sub">
+                            {{ $company->email ?? '—' }}
+                            <span class="dot-sep">·</span>
+                            <b>{{ optional($company->companyConnection)->company_bc_id ?? 'BC not set' }}</b>
+                        </div>
+                    </div>
+
+                    <div class="meta">
+                        <div class="meta-item">
+                            <div class="meta-label">Users</div>
+                            <div class="meta-value">{{ $company->users_count }}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Status</div>
+                            @if ($company->is_active && $isConnected)
+                                <span class="status-pill"><svg viewBox="0 0 8 8">
+                                        <circle cx="4" cy="4" r="4" fill="currentColor" />
+                                    </svg>Active · Connected</span>
+                            @elseif ($company->is_active)
+                                <span class="status-pill warning"><svg viewBox="0 0 8 8">
+                                        <circle cx="4" cy="4" r="4" fill="currentColor" />
+                                    </svg>Active · Not connected</span>
+                            @else
+                                <span class="status-pill inactive"><svg viewBox="0 0 8 8">
+                                        <circle cx="4" cy="4" r="4" fill="currentColor" />
+                                    </svg>Inactive</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        @if ($isSelected)
+                            <button type="button" class="btn-manage is-current">Current</button>
+                        @else
+                            <form action="{{ route('companies.select', $company->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn-manage">Manage</button>
+                            </form>
+                        @endif
+                        <a href="{{ route('companies.edit', $company->id) }}" class="icon-btn" title="Edit">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                            </svg>
+                        </a>
+                        <a href="{{ route('companies.api.setup', $company->id) }}" class="icon-btn" title="API Setup">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="3" />
+                                <path
+                                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+                            </svg>
+                        </a>
+                        <form action="{{ route('companies.destroy', $company->id) }}" method="POST"
+                            onsubmit="return confirm('Delete this company? This cannot be undone.')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="icon-btn danger" title="Delete">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path d="M3 6h18" />
+                                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @empty
+                <div class="empty-state">No companies yet. Create the first one.</div>
+            @endforelse
+        </div>
+
     </div>
 @endsection
 
 @push('scripts')
     <script>
-        const openLogoPicker = document.getElementById('openLogoPicker');
-        const logoInput = document.getElementById('logoInput');
-        const logoPreview = document.getElementById('logoPreview');
-        const logoPlaceholder = document.getElementById('logoPlaceholder');
-
-        function updateLogoPreview(file) {
-            if (!file || !logoPreview || !logoPlaceholder) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                logoPreview.src = e.target.result;
-                logoPreview.style.display = 'block';
-                logoPlaceholder.style.display = 'none';
-            };
-            reader.readAsDataURL(file);
-        }
-
-        if (openLogoPicker && logoInput) {
-            openLogoPicker.addEventListener('click', function() {
-                logoInput.click();
-            });
-        }
-
-        if (logoInput) {
-            logoInput.addEventListener('change', function() {
-                const file = this.files[0] || null;
-                if (!file) return;
-
-                updateLogoPreview(file);
-            });
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
-            const alerts = document.querySelectorAll('.custom-alert');
-
+            const alerts = document.querySelectorAll('.companies-page .custom-alert');
             alerts.forEach(function(alert) {
-                // Auto-close after 4 seconds
                 setTimeout(function() {
-                    alert.style.animation = 'companyFadeOut 0.5s ease-in forwards';
-
-                    // Remove from DOM after animation finishes
+                    alert.style.animation = 'companyListFadeOut 0.5s ease-in forwards';
                     alert.addEventListener('animationend', function() {
                         alert.remove();
                     });
                 }, 4000);
             });
+
+            const searchInput = document.getElementById('companySearch');
+            const cards = Array.from(document.querySelectorAll('#companyList .company-card'));
+            const countPill = document.getElementById('companyCount');
+            const total = cards.length;
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const term = searchInput.value.trim().toLowerCase();
+                    let shown = 0;
+
+                    cards.forEach(function(card) {
+                        const match = card.dataset.companyName.includes(term);
+                        card.style.display = match ? '' : 'none';
+                        if (match) shown++;
+                    });
+
+                    if (countPill) {
+                        countPill.textContent = shown + ' of ' + total + ' shown';
+                    }
+                });
+            }
         });
     </script>
 @endpush

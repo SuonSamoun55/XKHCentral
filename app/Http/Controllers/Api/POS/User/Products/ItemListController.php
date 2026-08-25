@@ -12,17 +12,18 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use App\Models\POS\ItemVariant;
 use Illuminate\Support\Facades\Log;
-// use Illuminate\Log;
-// use mobileCategories
-// use App\Http\Controllers\Api\POS\User\Products\Category;
 
 class ItemListController extends Controller
 {
     public function getItems()
     {
         $user = Auth::user();
+        $companyId = $user->company_id ?? session('selected_company_id');
 
         $items = Item::query()
+            ->when($companyId, function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
+            })
             ->where(function ($q) {
                 $q->where('blocked', false)->orWhereNull('blocked');
             })
@@ -214,8 +215,13 @@ class ItemListController extends Controller
     public function filter(Request $request)
     {
         $categoryCode = $request->category;
+        $user = Auth::user();
+        $companyId = $user->company_id ?? session('selected_company_id');
 
         $items = Item::query()
+            ->when($companyId, function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
+            })
             ->when($categoryCode, fn ($q) =>
                 $q->whereHas('category', fn ($c) =>
                     $c->where('code', $categoryCode)
@@ -334,9 +340,13 @@ class ItemListController extends Controller
     public function detail($id)
     {
         $user = Auth::user();
+        $companyId = $user->company_id ?? session('selected_company_id');
 
         $item = Item::query()
             ->where('id', $id)
+            ->when($companyId, function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
+            })
             ->where(function ($q) {
                 $q->where('blocked', false)->orWhereNull('blocked');
             })
@@ -386,6 +396,9 @@ class ItemListController extends Controller
         // current product excluded.
         $relatedItems = Item::query()
             ->where('id', '!=', $item->id)
+            ->when($companyId, function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
+            })
             ->when($item->item_category_code, function ($q) use ($item) {
                 $q->where('item_category_code', $item->item_category_code);
             }, function ($q) {

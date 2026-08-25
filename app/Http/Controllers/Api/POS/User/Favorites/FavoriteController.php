@@ -28,6 +28,13 @@ class FavoriteController extends Controller
             ], 401);
         }
 
+        if (!Item::where('id', $validated['item_id'])->where('company_id', $user->company_id)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item not found.',
+            ], 404);
+        }
+
         $favorite = Favorite::where('user_id', $user->id)
             ->where('item_id', $validated['item_id'])
             ->first();
@@ -65,6 +72,7 @@ class FavoriteController extends Controller
                   ->from('favorites')
                   ->where('user_id', $user->id);
         })
+        ->where('company_id', $user->company_id)
         ->where('is_visible', true)
         ->get();
 

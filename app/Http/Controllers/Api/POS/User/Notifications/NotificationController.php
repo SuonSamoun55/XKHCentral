@@ -197,14 +197,6 @@ class NotificationController extends Controller
             ?? $notification->sender?->name
             ?? 'Admin';
     }
-
-    /**
-     * Single source of truth for "is this notification an Admin Message":
-     * type is authoritative when it's explicitly admin_message/global_message;
-     * otherwise fall back to keyword sniffing on title/message. Any order
-     * wording (cancel/confirm/approve/order/received) keeps it in the Order
-     * tab even if the text happens to also mention "admin".
-     */
     private function isAdminNotification(Notification $notification): bool
     {
         if ($notification->type === 'admin_message') {
@@ -214,7 +206,6 @@ class NotificationController extends Controller
         if ($notification->type === 'global_message') {
             return false;
         }
-
         $title = strtolower($notification->title ?? '');
         $message = strtolower($notification->message ?? '');
 
@@ -225,23 +216,14 @@ class NotificationController extends Controller
                 return false;
             }
         }
-
         if (str_contains($title, 'chat message') || str_contains($message, 'chat message')) {
             return true;
         }
-
         if (str_contains($title, 'admin') || str_contains($message, 'admin')) {
             return true;
         }
-
         return false;
     }
-
-    /**
-     * Attaches the display fields the Order Notification list needs
-     * (icon, subject line, attachment flag) so the view never has to run
-     * str_contains() itself.
-     */
     private function decorateOrderNotification(Notification $notification): Notification
     {
         $titleLower = strtolower($notification->title ?? '');
@@ -283,14 +265,6 @@ class NotificationController extends Controller
 
         return $notification;
     }
-
-    /**
-     * Splits the paginated "order tab" query into the notifications that
-     * really belong in the Order tab vs the ones that should display as
-     * Admin Messages instead (reclassified by isAdminNotification), then
-     * merges those reclassified rows into the admin list and recomputes
-     * unread counts for both tabs.
-     */
     private function classifyNotificationTabs(LengthAwarePaginator $notifications, LengthAwarePaginator $adminMessages): array
     {
         $orderNotifications = collect();
@@ -329,13 +303,6 @@ class NotificationController extends Controller
             'adminUnreadCount' => $adminMessagesDisplay->where('is_read', false)->count(),
         ];
     }
-
-    /**
-     * Resolves a stored image path to a working, absolute URL. image_url /
-     * custom_image_url may be saved either as a full URL or a relative
-     * storage path, so both shapes need to work here — same helper used
-     * across the cart/checkout/order/dashboard/product-detail views.
-     */
     private function resolveImagePath(?string $path): ?string
     {
         if (!$path) {
@@ -344,26 +311,12 @@ class NotificationController extends Controller
 
         return str_starts_with($path, 'http') ? $path : asset($path);
     }
-
-    /**
-     * Priority: the order line's variant image, then the item's
-     * admin-set custom_image_url override, then the item's synced
-     * image_url. Returns null if none are set — the front end already
-     * has its own placeholder image to fall back to.
-     */
     private function resolveOrderItemImage($orderItem): ?string
     {
         return $this->resolveImagePath($orderItem->itemVariant?->image_url ?? null)
             ?? $this->resolveImagePath($orderItem->item?->custom_image_url ?? null)
             ?? $this->resolveImagePath($orderItem->item?->image_url ?? null);
     }
-
-    /**
-     * For order confirm/cancel notifications, find the matching row in
-     * order_actions and eager-load the admin via the actionBy() relation.
-     * This replaces the old guesswork of trying several relation names on
-     * Notification/Order.
-     */
     private function resolveOrderAction(Notification $notification): ?OrderAction
     {
         $isOrderNotification = $notification->type !== 'admin_message' && $notification->type !== 'global_message';
@@ -567,9 +520,6 @@ class NotificationController extends Controller
         return null;
     }
 
-    /**
-     * Get related order items for a notification
-     */
     public function getNotificationItems(int $notificationId): JsonResponse
     {
         $notification = Notification::with('relatedOrderItems.item', 'relatedOrderItems.itemVariant')
@@ -604,11 +554,6 @@ class NotificationController extends Controller
         ]);
     }
 
-    /**
-     * Mark a single notification as read without navigating to its detail
-     * page — used when a click routes elsewhere instead (e.g. an admin
-     * message that opens the chat thread directly).
-     */
     public function markAsRead(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
@@ -632,10 +577,6 @@ class NotificationController extends Controller
         ]);
     }
 
-    /**
-     * Delete one or more of the current user's notifications.
-     * Expects JSON body: { notification_ids: [1, 2, 3] }
-     */
     public function deleteSelected(Request $request): JsonResponse
     {
         $user = $request->user();

@@ -1,7 +1,6 @@
 <?php
 namespace App\Http\Controllers\Api\POS\Admin\Profile;
 use App\Http\Controllers\Controller;
-use App\Models\ManagementSystem\OrderAction;
 use App\Models\POS\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,18 +12,21 @@ class AdminProfileController extends Controller
     public function index()
     {
         $user = Auth::user();
+        $companyId = session('selected_company_id');
 
         // Same "approved" definition used on the order detail pages
         // (order->status / action_type of confirmed|approved).
         $approvedActionTypes = ['confirmed', 'approved'];
 
-        $approvedOrderIds = OrderAction::where('action_by', $user->id)
-            ->whereIn('action_type', $approvedActionTypes)
-            ->orderByDesc('created_at')
-            ->pluck('order_id');
-
+        // Scoped to the currently selected company — an order approved while
+        // viewing Company 1 must not still show up on this profile once the
+        // admin switches to Company 2.
         $approvedOrders = Order::with('user')
-            ->whereIn('id', $approvedOrderIds)
+            ->when($companyId, fn ($q) => $q->where('company_id', $companyId))
+            ->whereHas('actions', function ($q) use ($user, $approvedActionTypes) {
+                $q->where('action_by', $user->id)
+                    ->whereIn('action_type', $approvedActionTypes);
+            })
             ->get()
             ->sortByDesc(fn ($order) => $order->checked_out_at ?? $order->created_at)
             ->values();

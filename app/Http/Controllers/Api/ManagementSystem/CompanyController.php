@@ -13,35 +13,49 @@ class CompanyController extends Controller
 {
     public function index()
     {
+        $companies = Company::with('companyConnection')
+            ->withCount('users')
+            ->latest()
+            ->get();
+
         $selectedCompanyId = session('selected_company_id');
-        $company = null;
-
-        if ($selectedCompanyId) {
-            $company = Company::with('companyConnection')->find($selectedCompanyId);
-        }
-
-        if (!$company) {
-            $company = Company::with('companyConnection')->first();
-        }
 
         return view(
             'ManagementSystemViews.AdminViews.Layouts.CompanyView.index',
-            compact('company')
+            compact('companies', 'selectedCompanyId')
         );
     }
 
     public function create()
     {
-        return redirect()->route('companies.index');
+        return view('ManagementSystemViews.AdminViews.Layouts.CompanyView.create');
+    }
+
+    /**
+     * Switches the acting (cross-tenant) user's session into one company's
+     * data — everything gated by session('selected_company_id') follows.
+     */
+    public function select($id)
+    {
+        $company = Company::findOrFail($id);
+
+        session(['selected_company_id' => $company->id]);
+
+        return redirect()->route('pos.index')
+            ->with('success', 'Now viewing ' . ($company->display_name ?? $company->name) . '.');
+    }
+
+    /** Back to the unscoped "all companies" view. */
+    public function clearSelection()
+    {
+        session()->forget('selected_company_id');
+
+        return redirect()->route('companies.index')
+            ->with('success', 'Viewing all companies.');
     }
 
     public function store(Request $request)
     {
-        if (Company::exists()) {
-            return redirect()->route('companies.index')
-                ->with('error', 'Only one company is allowed.');
-        }
-
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'display_name' => ['nullable', 'string', 'max:255'],
@@ -49,6 +63,7 @@ class CompanyController extends Controller
             'email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'favicon' => ['nullable', 'mimes:jpg,jpeg,png,webp,ico', 'max:512'],
             'tax_number' => ['nullable', 'string', 'max:100'],
 
             'tenant_id' => ['required', 'string'],
@@ -61,6 +76,7 @@ class CompanyController extends Controller
             'api_scope' => ['nullable', 'string'],
             'customers_endpoint' => ['nullable', 'string'],
             'items_endpoint' => ['nullable', 'string'],
+            'item_variants_endpoint' => ['nullable', 'string'],
             'sales_orders_endpoint' => ['nullable', 'string'],
             'sales_order_lines_endpoint' => ['nullable', 'string'],
             'sales_orders_by_number_endpoint' => ['nullable', 'string'],
@@ -76,6 +92,12 @@ class CompanyController extends Controller
             $logoPath = $request->file('logo')->store('company_logos', 'public');
         }
 
+        $faviconPath = null;
+
+        if ($request->hasFile('favicon')) {
+            $faviconPath = $request->file('favicon')->store('company_favicons', 'public');
+        }
+
         $company = Company::create([
             'name' => $validated['name'],
             'display_name' => $validated['display_name'] ?? null,
@@ -83,6 +105,7 @@ class CompanyController extends Controller
             'email' => $validated['email'] ?? null,
             'address' => $validated['address'] ?? null,
             'logo' => $logoPath,
+            'favicon' => $faviconPath,
             'tax_number' => $validated['tax_number'] ?? null,
             'is_active' => true,
         ]);
@@ -99,6 +122,7 @@ class CompanyController extends Controller
             'api_scope' => $validated['api_scope'] ?? null,
             'customers_endpoint' => $validated['customers_endpoint'] ?? null,
             'items_endpoint' => $validated['items_endpoint'] ?? null,
+            'item_variants_endpoint' => $validated['item_variants_endpoint'] ?? null,
             'sales_orders_endpoint' => $validated['sales_orders_endpoint'] ?? null,
             'sales_order_lines_endpoint' => $validated['sales_order_lines_endpoint'] ?? null,
             'sales_orders_by_number_endpoint' => $validated['sales_orders_by_number_endpoint'] ?? null,
@@ -139,6 +163,8 @@ class CompanyController extends Controller
             'email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'favicon' => ['nullable', 'mimes:jpg,jpeg,png,webp,ico', 'max:512'],
+            'remove_favicon' => ['nullable'],
             'tax_number' => ['nullable', 'string', 'max:100'],
             'is_active' => ['nullable'],
 
@@ -152,6 +178,7 @@ class CompanyController extends Controller
             'api_scope' => ['nullable', 'string'],
             'customers_endpoint' => ['nullable', 'string'],
             'items_endpoint' => ['nullable', 'string'],
+            'item_variants_endpoint' => ['nullable', 'string'],
             'sales_orders_endpoint' => ['nullable', 'string'],
             'sales_order_lines_endpoint' => ['nullable', 'string'],
             'sales_orders_by_number_endpoint' => ['nullable', 'string'],
@@ -172,6 +199,22 @@ class CompanyController extends Controller
             $logoPath = $request->file('logo')->store('company_logos', 'public');
         }
 
+        $faviconPath = $company->favicon;
+
+        if ($request->hasFile('favicon')) {
+            if (!empty($company->favicon) && Storage::disk('public')->exists($company->favicon)) {
+                Storage::disk('public')->delete($company->favicon);
+            }
+
+            $faviconPath = $request->file('favicon')->store('company_favicons', 'public');
+        } elseif ($request->boolean('remove_favicon')) {
+            if (!empty($company->favicon) && Storage::disk('public')->exists($company->favicon)) {
+                Storage::disk('public')->delete($company->favicon);
+            }
+
+            $faviconPath = null;
+        }
+
         $company->update([
             'name' => $validated['name'],
             'display_name' => $validated['display_name'] ?? null,
@@ -179,6 +222,7 @@ class CompanyController extends Controller
             'email' => $validated['email'] ?? null,
             'address' => $validated['address'] ?? null,
             'logo' => $logoPath,
+            'favicon' => $faviconPath,
             'tax_number' => $validated['tax_number'] ?? null,
             'is_active' => $request->has('is_active'),
         ]);
@@ -190,24 +234,31 @@ class CompanyController extends Controller
             'environment' => $validated['environment'] ?? null,
             'base_url' => $validated['base_url'] ?? null,
             'token_url' => $validated['token_url'] ?? null,
-            'api_scope' => $validated['api_scope'] ?? null,
-            'customers_endpoint' => $validated['customers_endpoint'] ?? null,
-            'items_endpoint' => $validated['items_endpoint'] ?? null,
-            'sales_orders_endpoint' => $validated['sales_orders_endpoint'] ?? null,
-            'sales_order_lines_endpoint' => $validated['sales_order_lines_endpoint'] ?? null,
-            'sales_orders_by_number_endpoint' => $validated['sales_orders_by_number_endpoint'] ?? null,
-            'sales_order_pdf_endpoint' => $validated['sales_order_pdf_endpoint'] ?? null,
             'status' => $request->has('status'),
             'is_default' => true,
         ];
 
+        // These endpoint fields live only on the separate API Setup form —
+        // this "Edit Company" form doesn't submit them at all, so setting
+        // them unconditionally here would silently wipe whatever was
+        // configured on API Setup back to null every time basic company
+        // info is saved. Only touch them when actually present in the
+        // request (i.e. this was submitted from API Setup, not here).
         foreach ([
+            'api_scope',
+            'customers_endpoint',
+            'items_endpoint',
+            'item_variants_endpoint',
+            'sales_orders_endpoint',
+            'sales_order_lines_endpoint',
+            'sales_orders_by_number_endpoint',
+            'sales_order_pdf_endpoint',
             'posted_sales_invoice_endpoint',
             'posted_sales_invoice_lines_endpoint',
             'posted_sales_invoice_pdf_endpoint',
-        ] as $postedEndpointField) {
-            if ($request->has($postedEndpointField)) {
-                $connectionData[$postedEndpointField] = $validated[$postedEndpointField] ?? null;
+        ] as $endpointField) {
+            if ($request->has($endpointField)) {
+                $connectionData[$endpointField] = $validated[$endpointField] ?? null;
             }
         }
 
@@ -250,6 +301,7 @@ class CompanyController extends Controller
             'api_scope' => ['required', 'string'],
             'customers_endpoint' => ['required', 'string'],
             'items_endpoint' => ['required', 'string'],
+            'item_variants_endpoint' => ['nullable', 'string'],
             'sales_orders_endpoint' => ['required', 'string'],
             'sales_order_lines_endpoint' => ['required', 'string'],
             'sales_orders_by_number_endpoint' => ['required', 'string'],
@@ -271,6 +323,7 @@ class CompanyController extends Controller
             'api_scope' => trim($validated['api_scope']),
             'customers_endpoint' => $customersEndpoint,
             'items_endpoint' => trim($validated['items_endpoint']),
+            'item_variants_endpoint' => trim($validated['item_variants_endpoint'] ?? ''),
             'sales_orders_endpoint' => trim($validated['sales_orders_endpoint']),
             'sales_order_lines_endpoint' => trim($validated['sales_order_lines_endpoint']),
             'sales_orders_by_number_endpoint' => trim($validated['sales_orders_by_number_endpoint']),
@@ -305,6 +358,10 @@ class CompanyController extends Controller
 
         if (!empty($company->logo) && Storage::disk('public')->exists($company->logo)) {
             Storage::disk('public')->delete($company->logo);
+        }
+
+        if (!empty($company->favicon) && Storage::disk('public')->exists($company->favicon)) {
+            Storage::disk('public')->delete($company->favicon);
         }
 
         if ($company->companyConnection) {

@@ -167,7 +167,13 @@ public function success(Request $request)
         ]
     );
 
-    $item = Item::findOrFail($validated['item_id']);
+    $companyId = $user->company_id ?? session('selected_company_id');
+
+    $item = Item::where('id', $validated['item_id'])
+        ->when($companyId, function ($q) use ($companyId) {
+            $q->where('company_id', $companyId);
+        })
+        ->firstOrFail();
 
     if (!$item->is_visible) {
         return response()->json([
@@ -339,7 +345,7 @@ public function success(Request $request)
         $taxAmount = 0;
 
         if (!$item->price_includes_tax) {
-            $vatPercent = max(0, (float) ($item->vat_percent ?? 0));
+            $vatPercent = max(0, (float) ($item->resolved_vat_percent ?? 0));
             $fixedTaxPerUnit = max(0, (float) ($item->tax_amount ?? 0));
 
             $percentTaxAmount = $taxableAmount * ($vatPercent / 100);

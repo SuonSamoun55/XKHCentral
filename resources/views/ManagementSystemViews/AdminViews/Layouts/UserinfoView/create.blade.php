@@ -55,9 +55,11 @@
                             <label class="form-label custom-label">Role:</label>
                             <select name="role" id="role" class="form-select custom-input" required>
                                 <option value="">Select Role</option>
-                                <option value="customer">Customer</option>
-                                <option value="admin">Admin</option>
+                                @foreach($roles as $roleOption)
+                                    <option value="{{ $roleOption->name }}">{{ $roleOption->display_name ?? ucfirst($roleOption->name) }}</option>
+                                @endforeach
                             </select>
+                            <small class="form-text text-muted">Controls which admin pages this login can reach. Manage roles under Settings &rarr; Roles.</small>
                         </div>
 
                         <div class="mb-3" id="oldPasswordGroup" style="display:none;">

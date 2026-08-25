@@ -286,6 +286,17 @@
     font-size: 20px;
     color: #111827;
     font-weight: 700;
+    margin-bottom: 8px;
+}
+
+#pos-product-detail-scope .pd-vat-chip {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 12%, transparent);
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
     margin-bottom: 20px;
 }
 

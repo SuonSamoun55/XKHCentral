@@ -31,11 +31,6 @@ class CompanyConnection extends Model
     'posted_sales_invoice_endpoint',
     'posted_sales_invoice_lines_endpoint',
     'posted_sales_invoice_pdf_endpoint',
-    'exchange_rate_id',           // ← this one, must be present
-    'exchange_rate_currency_code',
-    'exchange_rate_relational_currency_code',
-    'relational_exchange_rate_id',
-    'adjustment_exchange_rate_id',
     'is_default',
     'status',
 ];

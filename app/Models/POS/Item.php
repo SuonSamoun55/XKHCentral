@@ -15,7 +15,7 @@ class Item extends Model
         'number',
         'display_name',
         'unit_price',
-        'vat_percent',
+        'tax_group_code',
         'tax_amount',
         'discount_amount',
         'discount_start_date',
@@ -38,7 +38,6 @@ class Item extends Model
         'category_visible' => 'boolean',
         'price_includes_tax' => 'boolean',
         'unit_price' => 'decimal:2',
-        'vat_percent' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'discount_start_date' => 'datetime',
@@ -64,6 +63,24 @@ class Item extends Model
     {
         return $this->hasMany(InventoryMovement::class, 'item_id');
     }
+
+    /**
+     * The real VAT rate for this item — resolved live from Tax Groups by
+     * its tax_group_code (the code Business Central actually sends), rather
+     * than a cached percent on the item itself. Editing a tax group's rate
+     * takes effect immediately everywhere this is read.
+     */
+    public function getResolvedVatPercentAttribute(): float
+    {
+        if (empty($this->tax_group_code)) {
+            return 0.0;
+        }
+
+        return (float) (TaxGroup::where('company_id', $this->company_id)
+            ->where('code', $this->tax_group_code)
+            ->value('percent') ?? 0);
+    }
+
     public function getActiveDiscountPercentAttribute(): float
     {
         $discount = max(0, (float) ($this->discount_amount ?? 0));

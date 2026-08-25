@@ -67,7 +67,7 @@
 
                                     $itemVatPercent = (!empty(optional($cartItem->item)->price_includes_tax))
                                         ? 0
-                                        : max(0, (float) (optional($cartItem->item)->vat_percent ?? 0));
+                                        : max(0, (float) (optional($cartItem->item)->resolved_vat_percent ?? 0));
                                     $lineTotal = $finalUnitPrice * $cartItem->qty;
                                     $originalLineTotal = $originalUnitPrice * $cartItem->qty;
                                     $lineVat = round($lineTotal * ($itemVatPercent / 100), 2);
@@ -283,7 +283,7 @@
                             $odUnitPrice = $item->unit_price ?? ($item->qty > 0 ? $item->line_total / $item->qty : 0);
                             $odVatPercent = (!empty(optional($item->item)->price_includes_tax))
                                 ? 0
-                                : max(0, (float) (optional($item->item)->vat_percent ?? 0));
+                                : max(0, (float) (optional($item->item)->resolved_vat_percent ?? 0));
                             $odLineVat = round(($item->line_total ?? 0) * ($odVatPercent / 100), 2);
                             $odResolveImg = fn ($path) => $path
                                 ? (str_starts_with($path, 'http') ? $path : asset($path))
@@ -669,7 +669,7 @@
                             window.location.href = "{{ route('user.pos.cart') }}";
                         }, 20000);
                     } else {
-                        alert('Checkout failed');
+                        alert(data.message || 'Checkout failed');
                     }
                 } catch (e) {
                     alert('Error');

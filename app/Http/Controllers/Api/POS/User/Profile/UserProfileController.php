@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Http\Controllers\Api\POS\User\Profile;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +18,6 @@ class UserProfileController extends Controller
 
         return view('POSViews.POSUserViews.Profile.show', compact('user', 'customer', 'orderStats'));
     }
-
     public function edit()
     {
         $user = Auth::user();
@@ -72,12 +73,11 @@ class UserProfileController extends Controller
             ->with('success', 'Password updated successfully.')
             ->with('new_password', $request->password);
     }
-    
-public function index_mobile()
+
+    public function index_mobile()
     {
         $user = Auth::user(); // optional, ready for later use
 
         return view('POSViews.POSUserViews.mobile.POSprofile_mobile', compact('user'));
     }
-
 }

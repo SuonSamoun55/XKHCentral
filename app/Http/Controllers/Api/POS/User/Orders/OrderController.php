@@ -52,8 +52,10 @@ class OrderController extends Controller
             return $this->fail('Cart is empty');
         }
 
-        $companyId = DB::table('companies')->value('id');
-        if (!$companyId) return $this->fail('Company not found');
+        // The customer's own company, not an arbitrary/admin-session one —
+        // checkout doesn't run inside the admin panel's tenant context.
+        $companyId = $user->company_id;
+        if (!$companyId) return $this->fail('Your account is not linked to a company.');
 
         DB::beginTransaction();
 
@@ -151,8 +153,6 @@ class OrderController extends Controller
             'user_id' => auth()->id(),
             'order_no' => $order->order_no,
             'total_amount' => $order->total_amount,
-            'riel_exchange_rate' => $order->riel_exchange_rate,
-            'total_amount_riel' => $order->total_amount_riel,
             'status' => 'pending',
             'items_summary' => json_encode($cart->items),
         ]);
@@ -288,7 +288,7 @@ class OrderController extends Controller
         $taxAmount = 0;
 
         if (!$item->price_includes_tax) {
-            $vatPercent = max(0, (float) ($item->vat_percent ?? 0));
+            $vatPercent = max(0, (float) ($item->resolved_vat_percent ?? 0));
             $fixedTaxPerUnit = max(0, (float) ($item->tax_amount ?? 0));
 
             $percentTaxAmount = $taxableAmount * ($vatPercent / 100);

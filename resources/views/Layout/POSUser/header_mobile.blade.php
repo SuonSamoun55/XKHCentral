@@ -24,8 +24,11 @@
         }
     }
 
+    /** @var \App\Models\ManagementSystem\User $authUser */
     $authUser = Auth::user();
-    $isAdmin = strtolower($authUser->role ?? '') === 'admin';
+    // Mirrors the 'permission:dashboard' gate on the /admin route itself, so
+    // "Open Admin" only shows for roles that can actually get in.
+    $isAdmin = $authUser->isAdmin() || $authUser->hasPermission('dashboard');
 
     $mobileNavItems = [
         [

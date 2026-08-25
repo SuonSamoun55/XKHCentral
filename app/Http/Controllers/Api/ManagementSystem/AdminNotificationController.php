@@ -517,7 +517,7 @@ class AdminNotificationController extends Controller
 
     public function markAsRead(Request $request, $id)
     {
-        $notification = Notification::findOrFail($id);
+        $notification = $this->baseAdminNotificationQuery(session('selected_company_id'))->findOrFail($id);
 
         if (!$notification->is_read) {
             $notification->update([
@@ -614,7 +614,7 @@ class AdminNotificationController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $notification = Notification::findOrFail($id);
+        $notification = $this->baseAdminNotificationQuery(session('selected_company_id'))->findOrFail($id);
         $notification->delete();
 
         if ($request->expectsJson() || $request->ajax()) {

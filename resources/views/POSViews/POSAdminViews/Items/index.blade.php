@@ -444,7 +444,7 @@
                         number: item.number || item.no || item.No || item.itemNo || item.itemNumber,
                         displayName: item.displayName || item.display_name || item.description || item.Description || item.name,
                         unitPrice: item.unitPrice ?? item.unit_price ?? item.price ?? item.UnitPrice ?? 0,
-                        vatPercent: item.vatPercent ?? item.vat_percentage ?? item.vatpercent ?? 0,
+                        taxGroupCode: item.taxGroupCode ?? item.taxgroupcode ?? item.vatProdPostingGroup ?? item.vatprodpostinggroup ?? null,
                         taxAmount: item.taxAmount ?? item.tax_amount ?? item.taxamount ?? 0,
                         discountAmount: item.discountAmount ?? item.discount_amount ?? item.discountamount ?? 0,
                         discountStartDate: item.discountStartDate ?? item.discount_start_date ?? item.discountstartdate ?? null,
@@ -472,7 +472,19 @@
             }
 
             const syncedCount = data?.count ?? PRODUCTS.length;
-            showSyncToast('success', 'Sync Successful', `${syncedCount} item(s) synced.`);
+            const variantsSaved = data?.variantsSaved ?? 0;
+            const variantsSkipped = data?.variantsSkipped ?? 0;
+            const variantsError = data?.variantsError ?? null;
+
+            if (variantsError) {
+                showSyncToast('error', 'Items Synced, Variants Failed', `${syncedCount} item(s) synced. Variants: ${variantsError}`);
+            } else {
+                let variantMsg = `${variantsSaved} variant(s) saved`;
+                if (variantsSkipped) {
+                    variantMsg += `, ${variantsSkipped} skipped`;
+                }
+                showSyncToast('success', 'Sync Successful', `${syncedCount} item(s) synced. ${variantMsg}.`);
+            }
         } catch (error) {
             console.error(error);
             showSyncToast('error', 'Sync Failed', error?.message || 'Could not sync items.');

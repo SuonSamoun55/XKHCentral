@@ -26,7 +26,15 @@ class OrderStatusController extends Controller
             ], 404);
         }
 
-        if ($user && (int) $order->user_id !== (int) $user->id && ($user->role ?? null) !== 'admin') {
+        $isOwner = $user && (int) $order->user_id === (int) $user->id;
+        // Staff may look up any order's BC status, but only within their own
+        // company — a company_id-null (cross-tenant) staff account can look
+        // up any order, matching how the rest of the app treats that role.
+        $isStaffForThisOrder = $user
+            && strtolower((string) $user->role) !== 'customer'
+            && (!$user->company_id || (int) $order->company_id === (int) $user->company_id);
+
+        if (!$isOwner && !$isStaffForThisOrder) {
             return response()->json([
                 'success' => false,
                 'message' => 'You are not allowed to view this order.',

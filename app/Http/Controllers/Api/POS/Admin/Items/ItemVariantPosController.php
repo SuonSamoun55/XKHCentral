@@ -12,17 +12,16 @@ use Illuminate\Support\Facades\Storage;
 
 class ItemVariantPosController extends Controller
 {
-    // Show all variants for one item (used by the item detail page)
     public function index($itemId)
     {
-        $variants = ItemVariant::where('item_id', $itemId)->get();
+        $item = Item::where('id', $itemId)
+            ->where('company_id', session('selected_company_id'))
+            ->firstOrFail();
+
+        $variants = ItemVariant::where('item_id', $item->id)->get();
 
         return response()->json($variants);
     }
-
-    // Get variants from Business Central and save them (also called automatically
-    // from ItemPosController::syncFromAl, kept here too in case you want a
-    // standalone variant-only sync button somewhere)
     public function syncFromBc()
     {
         $token = $this->getToken();
@@ -113,7 +112,9 @@ class ItemVariantPosController extends Controller
             'image' => 'required|image|max:5120',
         ]);
 
-        $variant = ItemVariant::findOrFail($variantId);
+        $variant = ItemVariant::whereHas('item', function ($q) {
+            $q->where('company_id', session('selected_company_id'));
+        })->findOrFail($variantId);
 
         $path = $request->file('image')->store('item-variants', 'public');
 
@@ -142,15 +143,19 @@ class ItemVariantPosController extends Controller
     // Admin page: list every item that has variants, so images can be uploaded
     public function manage()
     {
-        // Get all variants first
-        $allVariants = ItemVariant::all();
+        $companyId = session('selected_company_id');
+
+        // Get all variants for this company's items first
+        $allVariants = ItemVariant::whereHas('item', function ($q) use ($companyId) {
+            $q->where('company_id', $companyId);
+        })->get();
 
         // Group variants by item_id
         $variantsByItem = $allVariants->groupBy('item_id');
 
         // Get only the items that actually have variants
         $itemIds = $variantsByItem->keys();
-        $items = Item::whereIn('id', $itemIds)->orderBy('display_name')->get();
+        $items = Item::whereIn('id', $itemIds)->where('company_id', $companyId)->orderBy('display_name')->get();
 
         // Attach the variants manually to each item
         foreach ($items as $item) {

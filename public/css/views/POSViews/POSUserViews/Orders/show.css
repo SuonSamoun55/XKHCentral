@@ -510,6 +510,7 @@
         grid-template-columns: 1fr 1fr;
     }
 }
+
 #order-detail-page .od-mobile-header,
 #order-detail-page .od-mobile-banner,
 #order-detail-page .od-mobile-info,
@@ -528,10 +529,12 @@
         background: #fff;
 
     }
-    #order-detail-page > .od-header,
-    #order-detail-page > .od-grid {
+
+    #order-detail-page>.od-header,
+    #order-detail-page>.od-grid {
         display: none !important;
     }
+
     #order-detail-page .od-mobile-header {
         position: sticky;
         top: 0;
@@ -642,6 +645,7 @@
         font-size: 14px;
         font-weight: 800;
     }
+
     #order-detail-page .od-mobile-items {
         display: flex;
         flex-direction: column;
@@ -829,6 +833,7 @@
    ============================================================ */
 
 @media (max-width: 576px) {
+
     /* Hide sidebar, show mobile header/footer */
     .sidebar,
     .sidebar-wrap {
