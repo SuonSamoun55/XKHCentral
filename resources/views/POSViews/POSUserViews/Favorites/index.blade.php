@@ -215,6 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const els = {
         cartCount:        document.getElementById("desktopCartCount"),
+        mobileCartCount:   document.getElementById("cartCount"),
         asideCartCount:    document.getElementById("asideCartCount"),
         mobileCartDot:     document.getElementById("mobileCartDot"),
         messageBox:        document.getElementById("messageBox"),
@@ -336,6 +337,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (data.success && data.cartCount !== undefined) {
             if (els.cartCount) els.cartCount.textContent = data.cartCount;
+            if (els.mobileCartCount) {
+                els.mobileCartCount.textContent = data.cartCount;
+                els.mobileCartCount.classList.toggle("is-empty", data.cartCount <= 0);
+            }
             if (els.asideCartCount) {
                 els.asideCartCount.classList.toggle("show", data.cartCount > 0);
             }

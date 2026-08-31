@@ -103,8 +103,14 @@
 
                         <div class="mb-2">
                             <label class="login-label" for="password">Password</label>
-                            <input id="password" type="password" name="password" class="form-control login-input"
-                                placeholder="Enter your password" required>
+                            <div class="password-field">
+                                <input id="password" type="password" name="password" class="form-control login-input"
+                                    placeholder="Enter your password" required>
+                                <button type="button" class="password-toggle-btn" id="passwordToggleBtn"
+                                    aria-label="Show password" aria-pressed="false">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="login-check-row">
@@ -185,21 +191,64 @@
                     window.history.back();
                 });
             }
+            // On phones, the on-screen keyboard eats a large chunk of the
+            // viewport. Centering the field (old behavior) fought with the
+            // browser's own keyboard-open scroll and often left the field
+            // hidden behind the keyboard or off-screen above it. Instead,
+            // once the keyboard has finished opening, scroll so the field
+            // sits just below the top of whatever viewport space is left —
+            // easy to see and type into no matter how tall the keyboard is.
+            var isMobileViewport = window.matchMedia('(max-width: 768px)').matches;
 
-            // --- FIX: keep focused input visible when mobile keyboard opens ---
-            // Email was scrolling into view fine because it's near the top,
-            // but password sits lower and was getting hidden behind the keyboard
-            // with no scroll room to reach it (login-shell was locked to height:100vh).
+            function scrollFieldNearTop(input) {
+                var topOffset = 16;
+                var currentTop = input.getBoundingClientRect().top;
+                window.scrollBy({
+                    top: currentTop - topOffset,
+                    behavior: 'smooth'
+                });
+            }
+
             document.querySelectorAll('.login-input').forEach(function(input) {
                 input.addEventListener('focus', function() {
-                    setTimeout(function() {
-                        input.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'center'
-                        });
-                    }, 300); // wait for keyboard open animation to finish
+                    if (!isMobileViewport) return;
+
+                    if (window.visualViewport) {
+                        var onViewportResize = function() {
+                            window.visualViewport.removeEventListener('resize', onViewportResize);
+                            scrollFieldNearTop(input);
+                        };
+                        window.visualViewport.addEventListener('resize', onViewportResize);
+
+                        // Fallback in case the keyboard doesn't trigger a
+                        // visualViewport resize on this browser.
+                        setTimeout(function() {
+                            window.visualViewport.removeEventListener('resize', onViewportResize);
+                            scrollFieldNearTop(input);
+                        }, 400);
+                    } else {
+                        setTimeout(function() {
+                            scrollFieldNearTop(input);
+                        }, 400);
+                    }
                 });
             });
+
+            var passwordInput = document.getElementById('password');
+            var passwordToggleBtn = document.getElementById('passwordToggleBtn');
+            if (passwordInput && passwordToggleBtn) {
+                passwordToggleBtn.addEventListener('click', function() {
+                    var icon = passwordToggleBtn.querySelector('i');
+                    var willShow = passwordInput.type === 'password';
+
+                    passwordInput.type = willShow ? 'text' : 'password';
+                    icon.classList.toggle('bi-eye', !willShow);
+                    icon.classList.toggle('bi-eye-slash', willShow);
+                    passwordToggleBtn.setAttribute('aria-label', willShow ? 'Hide password' : 'Show password');
+                    passwordToggleBtn.setAttribute('aria-pressed', willShow ? 'true' : 'false');
+                    passwordInput.focus();
+                });
+            }
             var loginForm = document.querySelector('.login-form-box form');
             if (loginForm) {
                 loginForm.addEventListener('submit', function() {

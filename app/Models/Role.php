@@ -4,11 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Permission;
+use App\Models\ManagementSystem\Company;
 use App\Models\ManagementSystem\User;
 
 class Role extends Model
 {
     protected $fillable = [
+        'company_id',
         'name',
         'display_name',
     ];
@@ -21,5 +23,10 @@ class Role extends Model
     public function users()
     {
         return $this->hasMany(User::class, 'role_id');
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 }

@@ -129,7 +129,7 @@
                 </div>
                 <button class="icon-btn header-toggle-btn" id="toggleInfoPane" title="Show / hide info panel"
                     @if (!$activeContact) hidden @endif>
-                    <i class="bi bi-layout-sidebar-reverse"></i>
+                    <i class="bi bi-layout-sidebar-inset-reverse"></i>
                 </button>
             </header>
             <div class="message-stream" id="chatBody">
@@ -289,7 +289,7 @@
     ══════════════════════════════════════════════════════ --}}
         <div id="contactInfoPaneContainer">
             @if ($activeContact)
-                <aside class="contact-info-pane" id="contactInfoPane">
+                <aside class="contact-info-pane pane-hidden" id="contactInfoPane">
 
                     <button type="button" class="info-pane-close" id="closeInfoPane" title="Close">
                         <i class="bi bi-x-lg"></i>

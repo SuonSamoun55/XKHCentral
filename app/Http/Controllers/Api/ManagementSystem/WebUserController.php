@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use App\Models\BcCustomer;
 use App\Models\ManagementSystem\User;
 use App\Models\Role;
@@ -21,7 +22,10 @@ class WebUserController extends Controller
         $companyId = session('selected_company_id');
 
         $customers = $this->buildCustomerCollection($companyId);
-        $roles = Role::orderBy('name')->get();
+
+        $roles = Role::when($companyId, fn ($q) => $q->where('company_id', $companyId))
+            ->orderBy('name')
+            ->get();
 
         return view(
             'ManagementSystemViews.AdminViews.Layouts.UserinfoView.UserList',
@@ -91,11 +95,9 @@ class WebUserController extends Controller
         if ($linkedUser && !empty($linkedUser->profile_image)) {
             return asset('storage/' . $linkedUser->profile_image);
         }
-
         if ($linkedUser && !empty($linkedUser->profile_image_url)) {
             return $linkedUser->profile_image_url;
         }
-
         if (!empty($customer->bc_id)) {
             return route('users.bc-image', ['bcId' => $customer->bc_id]);
         }
@@ -108,24 +110,21 @@ class WebUserController extends Controller
     }
     protected function buildCustomerCollection($companyId)
     {
-        // $companyId is null for a cross-tenant user viewing "all companies" —
-        // when() skips the filter entirely rather than matching a literal NULL.
         $customers = BcCustomer::when($companyId, fn($q) => $q->where('company_id', $companyId))
             ->orderBy('id', 'desc')
             ->get();
-
         $userMap = User::when($companyId, fn($q) => $q->where('company_id', $companyId))
             ->get()
-            ->keyBy('bc_customer_no');
+            ->keyBy(fn($u) => $u->company_id . '|' . $u->bc_customer_no);
 
         foreach ($customers as $customer) {
-            $linkedUser = $userMap->get($customer->bc_customer_no);
+            $linkedUser = $userMap->get($customer->company_id . '|' . $customer->bc_customer_no);
 
             $bcName = $customer->display_name ?? $customer->name ?? '-';
             $bcEmail = $customer->email ?? '-';
             $bcPhone = $customer->phone_number ?? '-';
 
-            if ($linkedUser) {
+            if ($linkedUser && $linkedUser->status) {
                 $customer->connect_status = 'connected';
                 $customer->role = $linkedUser->role ?? 'user';
                 $customer->local_user_id = $linkedUser->id;
@@ -202,20 +201,16 @@ class WebUserController extends Controller
                 ->withToken($token)
                 ->timeout(60)
                 ->get($url);
-
             if (!$response->successful()) {
                 Log::error('BC sync failed', [
                     'status' => $response->status(),
                     'body' => $response->body(),
                     'url' => $url,
                 ]);
-
                 return redirect()->route('users.index')
                     ->with('error', 'Failed to fetch BC customers.');
             }
-
             $data = $response->json('value', []);
-
             foreach ($data as $row) {
                 $fields = $this->extractBcCustomerFields($row);
 
@@ -275,11 +270,6 @@ class WebUserController extends Controller
 
         return $default;
     }
-
-    /**
-     * Normalize one Business Central customer row (bulk sync or single-record
-     * fetch — same OData shape either way) into our own field names.
-     */
     protected function extractBcCustomerFields(array $row): array
     {
         $displayName = trim((string) $this->valueFrom($row, [
@@ -301,8 +291,6 @@ class WebUserController extends Controller
             ]),
             'name' => $displayName !== '' ? $displayName : 'Unknown',
             'email' => $this->valueFrom($row, ['email', 'Email', 'emailAddress']),
-            // BC's actual field is "phoneNo" — "phoneNumber" was never a real
-            // key in the API response, so phone was silently going unsynced.
             'phone' => $this->valueFrom($row, ['phoneNo', 'phoneNumber', 'phone_number', 'phone', 'Phone']),
             'mobile_phone_no' => $this->valueFrom($row, ['mobilePhoneNo', 'mobile_phone_no', 'mobilePhone']),
             'address' => $this->valueFrom($row, ['address', 'Address']),
@@ -521,17 +509,15 @@ class WebUserController extends Controller
             return redirect()->route('users.index')
                 ->with('error', 'This BC customer has no customer number.');
         }
-
-        if (User::where('company_id', $companyId)
+        $existingUser = User::where('company_id', $companyId)
             ->where('bc_customer_no', $bcCustomerNo)
-            ->exists()
-        ) {
+            ->first();
+
+        if ($existingUser && $existingUser->status) {
             return redirect()->route('users.index')
                 ->with('error', 'This customer is already connected.');
         }
-
-        $uploadedImagePath = null;
-
+        $uploadedImagePath = $existingUser?->profile_image;
         if ($request->hasFile('profile_image')) {
             $uploadedImagePath = $request->file('profile_image')->store('users/profile_images', 'public');
         }
@@ -540,9 +526,7 @@ class WebUserController extends Controller
             ? route('users.bc-image', ['bcId' => $customer->bc_id])
             : ($customer->profile_image_url ?? null);
 
-        User::create([
-            'company_id' => $companyId,
-            'bc_customer_no' => $bcCustomerNo,
+        $data = [
             'name' => $customer->display_name ?? $customer->name ?? '-',
             'email' => $customer->email ?? null,
             'phone' => $customer->phone_number ?? null,
@@ -550,11 +534,21 @@ class WebUserController extends Controller
             'profile_image_url' => $finalImageUrl,
             'password' => Hash::make($request->password),
             'role' => $request->role,
-            'role_id' => Role::where('name', $request->role)->value('id'),
+            'role_id' => Role::where('name', $request->role)->where('company_id', $companyId)->value('id'),
             'status' => true,
             'linked_at' => now(),
             'last_seen_at' => null,
-        ]);
+        ];
+
+        if ($existingUser) {
+            $existingUser->update($data);
+        } else {
+            User::create(array_merge($data, [
+                'company_id' => $companyId,
+                'bc_customer_no' => $bcCustomerNo,
+            ]));
+        }
+
         return redirect()->route('users.index')
             ->with('success', 'User connected successfully.');
     }
@@ -566,28 +560,20 @@ class WebUserController extends Controller
         $user = User::where('company_id', $customer->company_id)
             ->where('bc_customer_no', $customer->bc_customer_no)
             ->first();
-
-        if ($user) {
-            $user->profile_image_display = $user->profile_image_display;
-        }
-
         $customer->profile_image_display = !empty($customer->profile_image_url)
             ? $customer->profile_image_url
             : $this->defaultImageUrl();
 
         $orderStats = $this->buildOrderStats($user);
-
         return view(
             'ManagementSystemViews.AdminViews.Layouts.UserinfoView.UserShow',
             compact('customer', 'user', 'orderStats')
         );
     }
-
     public function edit($id)
     {
         return redirect()->route('users.index');
     }
-
     public function update(Request $request, $id)
     {
         $customer = BcCustomer::findOrFail($id);
@@ -595,23 +581,16 @@ class WebUserController extends Controller
         $user = User::where('company_id', $customer->company_id)
             ->where('bc_customer_no', $customer->bc_customer_no)
             ->firstOrFail();
-
         $request->validate([
             'role' => 'required|string|max:50|exists:roles,name',
-            'old_password' => 'required',
             'password' => 'nullable|min:6|confirmed',
             'profile_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'profile_image_url' => 'nullable|string|max:1000',
         ]);
 
-        if (!Hash::check($request->old_password, $user->password)) {
-            return redirect()->route('users.index')
-                ->with('error', 'Old password is incorrect.');
-        }
-
         $data = [
             'role' => $request->role,
-            'role_id' => Role::where('name', $request->role)->value('id'),
+            'role_id' => Role::where('name', $request->role)->where('company_id', $customer->company_id)->value('id'),
             'name' => $customer->display_name ?? $customer->name ?? $user->name,
             'email' => $customer->email ?? $user->email,
             'phone' => $customer->phone_number ?? $user->phone,
@@ -649,12 +628,14 @@ class WebUserController extends Controller
             ->first();
 
         if ($user) {
-            if (!empty($user->profile_image) && Storage::disk('public')->exists($user->profile_image)) {
-                Storage::disk('public')->delete($user->profile_image);
-            }
 
-            $user->delete();
+            $user->update([
+                'password' => Hash::make(Str::random(40)),
+                'status' => false,
+            ]);
         }
+
+        $customer->delete();
 
         return redirect()->route('users.index')
             ->with('success', 'User deleted successfully.');
@@ -681,12 +662,13 @@ class WebUserController extends Controller
                 ->first();
 
             if ($user) {
-                if (!empty($user->profile_image) && Storage::disk('public')->exists($user->profile_image)) {
-                    Storage::disk('public')->delete($user->profile_image);
-                }
-
-                $user->delete();
+                $user->update([
+                    'password' => Hash::make(Str::random(40)),
+                    'status' => false,
+                ]);
             }
+
+            $customer->delete();
         }
 
         return redirect()->route('users.index')

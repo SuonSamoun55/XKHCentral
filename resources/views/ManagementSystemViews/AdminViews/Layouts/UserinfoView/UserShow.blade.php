@@ -76,9 +76,9 @@
             <!-- BC card -->
             <div class="source-card">
                 <div class="source-head">
-                    <div class="source-tag bc"><span class="source-icon"><i class="bi bi-building"></i></span>Business Central</div>
+                    <div class="source-tag bc"><span class="source-icon"><img src="{{ asset('images/management/sync-bc-icon.png') }}" class="icon-img" alt=""></span>Business Central</div>
                     <button type="button" class="source-action" id="syncBcBtn" {{ empty($customer->bc_id) ? 'disabled title="No Business Central ID on file"' : '' }}>
-                        <i class="bi bi-arrow-repeat"></i> Sync now
+                        <img src="{{ asset('images/Profile/box-loading.png') }}" class="icon-img" alt=""> Sync now
                     </button>
                 </div>
 
@@ -102,7 +102,7 @@
             <!-- Laravel POS card -->
             <div class="source-card">
                 <div class="source-head">
-                    <div class="source-tag lv"><span class="source-icon"><i class="bi bi-cart3"></i></span>Laravel POS</div>
+                    <div class="source-tag lv"><span class="source-icon"><img src="{{ asset('images/management/management_POS_active.png') }}" class="icon-img" alt=""></span>Laravel POS</div>
                     @if($user)
                         <a class="source-action" href="{{ route('admin.orders.index', ['search' => $user->name]) }}">
                             <i class="bi bi-box-arrow-up-right"></i> View orders
@@ -147,22 +147,22 @@
         <!-- Info cards -->
         <div class="info-grid">
             <div class="detail-card">
-                <h2><i class="bi bi-telephone"></i> Contact</h2>
+                <h2><img src="{{ asset('images/Profile/smartphone.png') }}" class="icon-img" alt=""> Contact</h2>
                 <dl class="field-list">
-                    <dt>Phone</dt><dd class="{{ $field($customer->phone) ? '' : 'empty' }}">{{ $field($customer->phone) ?? '—' }}</dd>
-                    <dt>Mobile</dt><dd class="{{ $field($customer->mobile_phone_no) ? '' : 'empty' }}">{{ $field($customer->mobile_phone_no) ?? '—' }}</dd>
-                    <dt>Email</dt><dd class="{{ $field($customer->email) ? '' : 'empty' }}">{{ $field($customer->email) ?? '—' }}</dd>
-                    <dt>Address</dt><dd class="{{ $address ? '' : 'empty' }}">{{ $address ?? '—' }}</dd>
+                    <dt><img src="{{ asset('images/Profile/smartphone.png') }}" class="icon-img" alt=""> Phone</dt><dd class="{{ $field($customer->phone) ? '' : 'empty' }}">{{ $field($customer->phone) ?? '—' }}</dd>
+                    <dt><img src="{{ asset('images/Profile/mobile.png') }}" class="icon-img" alt=""> Mobile</dt><dd class="{{ $field($customer->mobile_phone_no) ? '' : 'empty' }}">{{ $field($customer->mobile_phone_no) ?? '—' }}</dd>
+                    <dt><img src="{{ asset('images/Profile/email.png') }}" class="icon-img" alt=""> Email</dt><dd class="{{ $field($customer->email) ? '' : 'empty' }}">{{ $field($customer->email) ?? '—' }}</dd>
+                    <dt><img src="{{ asset('images/Profile/gps.png') }}" class="icon-img" alt=""> Address</dt><dd class="{{ $address ? '' : 'empty' }}">{{ $address ?? '—' }}</dd>
                 </dl>
             </div>
 
             <div class="detail-card">
-                <h2><i class="bi bi-truck"></i> Fulfillment &amp; Payment</h2>
+                <h2><img src="{{ asset('images/Profile/delivery-truck.png') }}" class="icon-img" alt=""> Fulfillment &amp; Payment</h2>
                 <dl class="field-list">
-                    <dt>Location</dt><dd class="{{ $field($customer->location_code) ? '' : 'empty' }}">{{ $field($customer->location_code) ?? '—' }}</dd>
-                    <dt>Ship-to Code</dt><dd class="{{ $field($customer->ship_to_code) ? '' : 'empty' }}">{{ $field($customer->ship_to_code) ?? '—' }}</dd>
-                    <dt>Payment Terms</dt><dd class="{{ $field($customer->payment_terms_code) ? '' : 'empty' }}">{{ $field($customer->payment_terms_code) ?? '—' }}</dd>
-                    <dt>Price Group</dt><dd class="{{ $field($customer->customer_price_group) ? '' : 'empty' }}">{{ $field($customer->customer_price_group) ?? '—' }}</dd>
+                    <dt><img src="{{ asset('images/Profile/gps.png') }}" class="icon-img" alt=""> Location</dt><dd class="{{ $field($customer->location_code) ? '' : 'empty' }}">{{ $field($customer->location_code) ?? '—' }}</dd>
+                    <dt><img src="{{ asset('images/Profile/delivery-truck.png') }}" class="icon-img" alt=""> Ship-to Code</dt><dd class="{{ $field($customer->ship_to_code) ? '' : 'empty' }}">{{ $field($customer->ship_to_code) ?? '—' }}</dd>
+                    <dt><img src="{{ asset('images/Profile/clock-three.png') }}" class="icon-img" alt=""> Payment Terms</dt><dd class="{{ $field($customer->payment_terms_code) ? '' : 'empty' }}">{{ $field($customer->payment_terms_code) ?? '—' }}</dd>
+                    <dt><img src="{{ asset('images/Profile/tags.png') }}" class="icon-img" alt=""> Price Group</dt><dd class="{{ $field($customer->customer_price_group) ? '' : 'empty' }}">{{ $field($customer->customer_price_group) ?? '—' }}</dd>
                 </dl>
             </div>
         </div>

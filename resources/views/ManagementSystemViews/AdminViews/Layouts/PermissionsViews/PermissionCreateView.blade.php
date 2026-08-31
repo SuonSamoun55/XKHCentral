@@ -1,7 +1,7 @@
 @extends('Layout.Management.app')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('/css/views/Management/page_form.css') }}">
+    <link rel="stylesheet" href="{{ asset('/css/views/Management/permission_form.css') }}">
 @endpush
 
 @section('title', 'Add Page')
@@ -9,14 +9,7 @@
 @section('content')
 <div class="page-form-page">
 
-    <a href="{{ route('permissions.index') }}" class="back-link">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/></svg>
-        Page List
-    </a>
-
-    <div class="page-head">
-        <h1>Add Page</h1>
-    </div>
+    <h1>Add Page</h1>
 
     @if ($errors->any())
         <div class="error-banner">
@@ -33,26 +26,24 @@
     @endif
 
     @if (empty($availableKeys))
-        <div class="form-card">
-            <div class="empty-card">
-                Every known page already exists in the list — there's nothing left to add.
-                A new key only appears here once a developer wires up a new
-                <code>permission:&lt;key&gt;</code> route and adds it to
-                <code>RoleAndPermissionSeeder::$pages</code>.
-                <div>
-                    <a href="{{ route('permissions.index') }}" class="btn btn-secondary">Back to Page List</a>
-                </div>
+        <section class="card empty-card">
+            Every known page already exists in the list — there's nothing left to add.
+            A new key only appears here once a developer wires up a new
+            <code>permission:&lt;key&gt;</code> route and adds it to
+            <code>RoleAndPermissionSeeder::$pages</code>.
+            <div>
+                <a href="{{ route('permissions.index') }}" class="btn">Back to Page List</a>
             </div>
-        </div>
+        </section>
     @else
-        <div class="form-card">
+        <section class="card form-card">
             <form action="{{ route('permissions.store') }}" method="POST">
                 @csrf
 
                 <div class="field">
-                    <label for="pageKeySelect">Page Key</label>
-                    <select name="name" id="pageKeySelect" required>
-                        <option value="" {{ old('name') ? '' : 'selected' }} disabled>Select a page…</option>
+                    <label for="pageKeySelect">Page Key <span class="required">*</span></label>
+                    <select name="name" id="pageKeySelect" class="select-control" required>
+                        <option value="" {{ old('name') ? '' : 'selected' }} disabled hidden>Select a page…</option>
                         @foreach ($availableKeys as $key => $meta)
                             <option value="{{ $key }}"
                                 data-label="{{ $meta['label'] }}"
@@ -63,7 +54,7 @@
                             </option>
                         @endforeach
                     </select>
-                    <div class="field-hint">Only real, already-wired-up pages are listed — picking one is what actually lets a role be granted access to it.</div>
+                    <p class="hint">Only real, already-wired-up pages are listed — picking one is what actually lets a role be granted access to it.</p>
                 </div>
 
                 <div class="field">
@@ -72,20 +63,17 @@
                 </div>
 
                 <div class="field">
-                    <label for="pageKeyLabel">Page Label</label>
-                    <input type="text" name="display_name" id="pageKeyLabel" placeholder="e.g. Chat View" value="{{ old('display_name') }}">
-                    <div class="field-hint">Auto-filled from the selected page — change it if you want a different display name.</div>
+                    <label for="pageKeyLabel">Page Label <span class="optional-tag">Optional</span></label>
+                    <input type="text" name="display_name" id="pageKeyLabel" class="text-control" placeholder="e.g. Chat View" value="{{ old('display_name') }}">
+                    <p class="hint">Auto-filled from the selected page — change it if you want a different display name.</p>
                 </div>
 
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6L9 17l-5-5"/></svg>
-                        Save
-                    </button>
-                    <a href="{{ route('permissions.index') }}" class="btn btn-secondary">Back</a>
+                <div class="form-footer">
+                    <a href="{{ route('permissions.index') }}" class="btn">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Add Page</button>
                 </div>
             </form>
-        </div>
+        </section>
     @endif
 
 </div>
@@ -112,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
         urlsBox.classList.remove('is-empty');
         urlsBox.innerHTML = urls.map(function (u) {
             const chip = document.createElement('span');
-            chip.className = 'url-chip mono';
+            chip.className = 'url-chip';
             chip.textContent = u;
             return chip.outerHTML;
         }).join('');

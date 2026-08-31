@@ -1,7 +1,7 @@
 :root {
     --removebutton: #B01212;
     --primary-teal: #257686;
-    --heading-teal: #17A2AF;
+    --heading-teal: #3BACB4;
     --iconhard:#0AC9BD;
     --text-gray: #7D7D7D;
     --text-dark: #111827;
@@ -71,12 +71,6 @@
     flex-direction: column;
 }
 
-/* #cartItemsArea is a JS hook (lets "Remove item" replace just the item
-   list/summary with the empty state, without wiping out .cart-nav_mobile
-   above it) — display:contents keeps its children acting as direct flex
-   items of #cartMainContent, exactly as before this wrapper existed, so
-   .cart-list-wrapper's height:100% still resolves against #cartMainContent
-   and only the item list scrolls internally instead of the whole block. */
 #cartItemsArea {
     display: contents;
 }
@@ -136,7 +130,7 @@
 }
 
 .nav-title {
-    font-size: var(--fs-title);
+    font-size: 24px;
     font-weight: var(--fw-bold);
     color: var(--heading-teal);
 }
@@ -414,7 +408,7 @@
 }
 
 .empty-state-image {
-    width: 25%;
+    width: 100%;
     margin-bottom: 2%;
     max-width: 10rem;
 }

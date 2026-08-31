@@ -20,9 +20,9 @@
     margin-bottom: 10px;
     }
     .approval-title{
-        font-size: 20px;
+        font-size: 24px;
         font-weight: 700;
-        color: #39b1bc;
+        color: #3BACB4;
         text-align: center;
         text-justify: center;
         margin-top: 13px;
@@ -31,7 +31,6 @@
     .approval-page-inner{
         background: #fff;
         min-height: calc(100vh - 0px);
-        /* padding: 28px 40px 24px; */
         padding:10px 20px 20px 20px;
         border-radius: 5px;
         display: flex;
@@ -275,10 +274,6 @@
     .complete-approval-form{
         margin: 0;
     }
-
-    /* Icon + text button, matching the mobile detail view's
-       .mobile-approve-order-btn instead of the old cropped
-       CompleteApproval.png image. */
     .complete-approval-btn{
         display: inline-flex;
         align-items: center;
@@ -330,9 +325,6 @@
         font-size: 14px;
         color: #7b8794;
     }
-
-    /* .confirm-action-delete-btn (shared, app.css) defaults to red for
-       destructive actions — approving isn't destructive, so override it teal. */
     .confirm-action-approve-btn{
         background: #17bfd0;
     }
@@ -340,8 +332,6 @@
     .confirm-action-approve-btn:hover{
         background: #0ea5b7;
     }
-
-    /* ---------- Mobile order detail (hidden on desktop) ---------- */
     .mobile-order-detail{
         display: none;
     }

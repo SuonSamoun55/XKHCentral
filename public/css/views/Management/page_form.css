@@ -1,6 +1,4 @@
-/* ==========================================================================
-   Add / Edit Page form — design tokens
-   ========================================================================== */
+ */
 .page-form-page {
     --border: #DDE4E1;
     --border-soft: #EBF0EE;
@@ -14,7 +12,7 @@
     --red-tint: #FCEAE9;
     --radius: 12px;
 
-    max-width: 760px;
+    max-width: 100%;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     color: var(--ink);
 }
@@ -43,13 +41,14 @@
 .page-form-page .back-link:hover {
     color: var(--teal-dark);
 }
-
-.page-form-page .page-head h1 {
-    font-size: 23px;
+.pagelist-page .page-head h1 {
+    font-size: 24px;
     font-weight: 700;
     letter-spacing: -0.01em;
     margin: 0 0 6px;
+    color:#3BACB4;
 }
+
 
 .page-form-page .page-head p {
     margin: 0 0 24px;
@@ -181,6 +180,42 @@
     border: 1px solid var(--border-soft);
     padding: 4px 9px;
     border-radius: 6px;
+}
+
+/* ---------- side toggle (Admin Side / User Side) ---------- */
+.page-form-page .side-toggle {
+    position: relative;
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 3px;
+    gap: 3px;
+    background: #FAFCFB;
+}
+
+.page-form-page .side-toggle input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.page-form-page .side-toggle label {
+    display: inline-flex;
+    align-items: center;
+    height: 34px;
+    padding: 0 16px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: background .12s ease, color .12s ease;
+    margin: 0;
+}
+
+.page-form-page .side-toggle input:checked + label {
+    background: var(--teal);
+    color: #fff;
 }
 
 .page-form-page .form-actions {

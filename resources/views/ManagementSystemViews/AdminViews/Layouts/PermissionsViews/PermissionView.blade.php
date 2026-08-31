@@ -39,7 +39,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>No.</th>
                         <th>Page Key</th>
                         <th>Page Label</th>
                         <th>URL(s)</th>
@@ -49,7 +49,7 @@
                 <tbody>
                     @forelse (($permissions[$groupKey] ?? []) as $permission)
                         <tr>
-                            <td class="id-cell" data-label="ID">{{ $permission->id }}</td>
+                            <td class="id-cell" data-label="No.">{{ $loop->iteration }}</td>
                             <td class="key-cell" data-label="Page Key"><code>{{ $permission->name }}</code></td>
                             <td class="label-cell" data-label="Page Label">{{ $permission->display_name }}</td>
                             <td class="url-cell" data-label="URL(s)">

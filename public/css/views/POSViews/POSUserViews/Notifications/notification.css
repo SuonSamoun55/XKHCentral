@@ -1367,8 +1367,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     }
 
     .page-title {
-        font-size: 20px;
-        color: #08bac6;
+        font-size: 24px;
+        color: #3BACB4;
         font-weight: 700;
     }
 

@@ -1,7 +1,3 @@
-/* ============================================================
-   ROOT / PAGE CONTAINER
-   ============================================================ */
-
 #order-detail-page {
     --od-bg: white;
     --od-card: #ffffff;
@@ -22,7 +18,7 @@
     height: 100%;
     min-height: 0;
     /* margin: 0; */
-    padding: 24px;
+    padding: 20px;
     /* padding: 10px 14px; */
     color: var(--od-text);
     background: var(--od-bg);
@@ -45,9 +41,7 @@
     -webkit-overflow-scrolling: touch;
 }
 
-/* Mobile-only header/footer partials — hidden on desktop/tablet by default.
-   Wrapped in .od-mobile-chrome so we control visibility without depending
-   on the internal class names of the header_mobile/footer partials. */
+
 #order-detail-page .od-mobile-chrome {
     display: none;
 }
@@ -84,9 +78,7 @@
 }
 
 
-/* ============================================================
-   DESKTOP HEADER (back button, title, status badge, actions)
-   ============================================================ */
+
 
 #order-detail-page .od-header {
     display: flex;

@@ -95,7 +95,7 @@
             <!-- Laravel POS card -->
             <div class="source-card">
                 <div class="source-head">
-                    <div class="source-tag lv"><span class="source-icon"><i class="bi bi-cart3"></i></span>Laravel POS</div>
+                    <div class="source-tag lv"><span class="source-icon"><img src="{{ asset('images/management/management_POS_active.png') }}" class="icon-img" alt=""></span>Laravel POS</div>
                     <a class="source-action" href="{{ route('user.pos.order.history') }}">
                         <i class="bi bi-box-arrow-up-right"></i> View orders
                     </a>
@@ -139,12 +139,12 @@
         <!-- Info cards -->
         <div class="info-grid {{ $customer ? '' : 'single-col' }}">
             <div class="detail-card">
-                <h2><i class="bi bi-telephone"></i> Contact</h2>
+                <h2><img src="{{ asset('images/Profile/smartphone.png') }}" class="icon-img" alt=""> Contact</h2>
                 <dl class="field-list">
-                    <dt>Phone</dt><dd class="{{ $field($customer->phone ?? null) ?? $field($user->phone) ? '' : 'empty' }}">{{ $field($customer->phone ?? null) ?? $field($user->phone) ?? '—' }}</dd>
-                    <dt>Mobile</dt><dd class="{{ $customer && $field($customer->mobile_phone_no) ? '' : 'empty' }}">{{ ($customer ? $field($customer->mobile_phone_no) : null) ?? '—' }}</dd>
-                    <dt>Email</dt><dd class="{{ $field($user->email) ? '' : 'empty' }}">{{ $field($user->email) ?? '—' }}</dd>
-                    <dt>Address</dt><dd class="{{ $address ? '' : 'empty' }}">{{ $address ?? '—' }}</dd>
+                    <dt><img src="{{ asset('images/Profile/smartphone.png') }}" class="icon-img" alt=""> Phone</dt><dd class="{{ $field($customer->phone ?? null) ?? $field($user->phone) ? '' : 'empty' }}">{{ $field($customer->phone ?? null) ?? $field($user->phone) ?? '—' }}</dd>
+                    <dt><img src="{{ asset('images/Profile/mobile.png') }}" class="icon-img" alt=""> Mobile</dt><dd class="{{ $customer && $field($customer->mobile_phone_no) ? '' : 'empty' }}">{{ ($customer ? $field($customer->mobile_phone_no) : null) ?? '—' }}</dd>
+                    <dt><img src="{{ asset('images/Profile/email.png') }}" class="icon-img" alt=""> Email</dt><dd class="{{ $field($user->email) ? '' : 'empty' }}">{{ $field($user->email) ?? '—' }}</dd>
+                    <dt><img src="{{ asset('images/Profile/gps.png') }}" class="icon-img" alt=""> Address</dt><dd class="{{ $address ? '' : 'empty' }}">{{ $address ?? '—' }}</dd>
                 </dl>
             </div>
 

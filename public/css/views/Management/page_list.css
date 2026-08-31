@@ -28,10 +28,11 @@
 
 /* ---------- header ---------- */
 .pagelist-page .page-head h1 {
-    font-size: 23px;
+    font-size: 24px;
     font-weight: 700;
     letter-spacing: -0.01em;
     margin: 0 0 8px;
+    color:#3BACB4;
 }
 
 .pagelist-page .page-head {
@@ -185,7 +186,12 @@
     padding: 11px 14px;
     border-bottom: 1px solid var(--border-soft);
     font-size: 13.5px;
-    vertical-align: middle;
+    /* top, not middle: a row with several wrapped URL chips is much taller
+       than its siblings, and middle-alignment let the short "No./Page
+       Key/Page Label" text drift down to that tall row's vertical center —
+       so a partially-scrolled view showed only URL chips with no visible
+       row number/key/label, looking like a broken, disconnected row. */
+    vertical-align: top;
 }
 
 .pagelist-page tbody tr:last-child td {

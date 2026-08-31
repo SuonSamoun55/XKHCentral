@@ -128,20 +128,25 @@ $navItems = [
         'name' => 'Roles',
         'url' => '/roles',
         'match' => ['roles', 'roles/*'],
-        'icon' => '/images/aside/setting.png',
-        'icon_active' => '/images/aside/setting.png',
+        'icon' => '/images/management/role.png',
+        'icon_active' => '/images/management/role_active.png',
         'permission' => 'roles',
     ],
     [
         'name' => 'Page List',
         'url' => '/permissions',
         'match' => ['permissions', 'permissions/*'],
-        'icon' => '/images/aside/setting.png',
-        'icon_active' => '/images/aside/setting.png',
+        'icon' => '/images/management/pagelist.png',
+        'icon_active' => '/images/management/pagelist_active.png',
         'permission' => 'page_management',
     ],
 ];
 $navItems = array_values(array_filter($navItems, fn($item) => $canAccessPage($item['permission'])));
+$bottomNavItems = array_values(array_filter(
+    $navItems,
+    fn($item) => !in_array($item['permission'], ['roles', 'page_management'])
+));
+
 $activeNavItem = null;
 foreach ($navItems as $item) {
     foreach ($item['match'] as $pattern) {
@@ -243,7 +248,7 @@ $hideMobileChrome = trim((string) $__env->yieldContent('hideMobileNav', '')) !==
     <div class="mobile-menu-backdrop" id="mobileMenuBackdrop"></div>
 
     <nav class="mobile-bottom-nav">
-        @foreach ($navItems as $item)
+        @foreach ($bottomNavItems as $item)
             @php
                 $isActive = false;
                 foreach ($item['match'] as $pattern) {
@@ -252,7 +257,6 @@ $hideMobileChrome = trim((string) $__env->yieldContent('hideMobileNav', '')) !==
                         break;
                     }
                 }
-
                 if ($item['name'] === 'Companies' && request()->is('companies/select')) {
                     $isActive = false;
                 }

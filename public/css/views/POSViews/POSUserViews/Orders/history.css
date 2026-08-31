@@ -28,9 +28,9 @@ body {
 
 .history-title {
     padding: 10px 0px;
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 700;
-    color: #18bfd0;
+    color: #3BACB4;
 }
 
 .order-history-container {
@@ -659,11 +659,6 @@ screen and (max-width: 926px) and (orientation: landscape) {
     .right-section {
         display: none;
     }
-
-    .mobile {
-        padding: 0px 10px;
-    }
-
     .sidebar,
     .sidebar-wrap {
         display: none !important;

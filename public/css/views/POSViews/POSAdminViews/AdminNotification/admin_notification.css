@@ -65,9 +65,9 @@
 
 .page-title {
     margin-bottom: 10px;
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 700;
-    color: #2aaab5;
+    color: #3BACB4;
 }
 
 /* ============================================================
@@ -1923,19 +1923,13 @@ body.admin-notifications-page,
         overflow: hidden;
     }
 
-    /* The rule above is unconditional (no media query), so it was pinning
-       .main-wrapper to a fixed 100vh with overflow:hidden at every viewport
-       width — same specificity as mobile-nav.css's .main-wrapper mobile
-       override (2 classes vs. 1), so it always won regardless of load
-       order and silently clipped the page instead of letting it scroll on
-       phones. Restore the auto-height/scrollable behavior below 768px. */
     @media (max-width: 768px) {
         body.admin-notifications-page,
         body.admin-notifications-page .main-wrapper,
         body.admin-notifications-page .content-area {
             height: auto;
             min-height: 100vh;
-            overflow: visible;
+            /* overflow: visible; */
         }
     }
 

@@ -666,6 +666,17 @@ class ChatController extends Controller
             ->where('receiver_id', $currentUserId)
             ->where('is_read', false)
             ->update(['is_read' => true]);
+
+        // Opening the thread directly is itself the "read" action for the
+        // matching notification bell entry — without this, a message stays
+        // marked unread in Notifications even after you've already read it
+        // in Chat, and the unread badge never clears.
+        Notification::query()
+            ->where('user_id', $currentUserId)
+            ->where('sender_id', $otherUserId)
+            ->whereIn('type', ['user_contact', 'admin_message'])
+            ->where('is_read', false)
+            ->update(['is_read' => true, 'unread_count' => 0]);
     }
 }
 

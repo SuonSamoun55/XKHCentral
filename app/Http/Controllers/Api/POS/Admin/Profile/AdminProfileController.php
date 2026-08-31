@@ -5,7 +5,6 @@ use App\Models\POS\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
 
 class AdminProfileController extends Controller
 {
@@ -87,7 +86,7 @@ class AdminProfileController extends Controller
     {
         $request->validate([
             'current_password' => 'required',
-            'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'password' => ['required', 'min:6', 'confirmed'],
         ]);
 
         $user = auth()->user();

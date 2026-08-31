@@ -37,14 +37,21 @@ class AuthController extends Controller
                 'email' => 'Invalid credentials.',
             ])->onlyInput('email');
         };
-        $request->session()->regenerate();
 
         /** @var \App\Models\ManagementSystem\User $user */
         $user = Auth::user();
+        if (!$user->status) {
+            Auth::logout();
+
+            return back()->withErrors([
+                'email' => 'This account is not active. Please contact an administrator.',
+            ])->onlyInput('email');
+        }
+
+        $request->session()->regenerate();
 
         $user->last_seen_at = now();
         $user->save();
-        //comnay session
         if ($user->company_id) {
             session(['selected_company_id' => $user->company_id]);
         } else {
@@ -91,6 +98,15 @@ class AuthController extends Controller
         /** @var \App\Models\ManagementSystem\User $user */
         $user = Auth::user();
 
+        if (!$user->status) {
+            Auth::logout();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'This account is not active. Please contact an administrator.',
+            ], 403);
+        }
+
         $user->last_seen_at = now();
         $user->save();
 
@@ -120,10 +136,24 @@ class AuthController extends Controller
 
     private function redirectUser($user)
     {
+        if (strtolower((string) $user->role) === 'admin') {
+            return redirect()->route('pos.index');
+        }
 
-        return match ($user->role) {
-            'customer' => redirect()->route('user.index'),
-            default => redirect()->route('pos.index'),
-        };
+        $permissionNames = $user->roleRelation
+            ? $user->roleRelation->permissions->pluck('name')
+            : collect();
+
+        if ($permissionNames->contains('dashboard')) {
+            return redirect()->route('pos.index');
+        }
+
+        if ($permissionNames->contains('home')) {
+            return redirect()->route('user.index');
+        }
+
+        return back()->withErrors([
+            'email' => 'Your role has no assigned home page yet. Ask an admin to grant it "Dashboard" (Admin Side) or "Home" (User Side) access under Roles.',
+        ])->onlyInput('email');
     }
 }

@@ -34,21 +34,14 @@
                                         </button>
                                     </div>
 
+                                    <div class="logo-title">Company Logo</div>
                                     <input type="file" name="logo" id="logoInput" class="custom-file"
                                         accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
 
-                                    <div class="logo-note mt-3">
-                                        <strong><i class="bi bi-info-circle me-1"></i>LOGO REQUIREMENT</strong>
-                                        <ul>
-                                            <li>Maximum file size: 2MB</li>
-                                            <li>Format: JPG, PNG, or WEBP</li>
-                                        </ul>
-                                    </div>
-
-                                    <div class="logo-box mt-3" style="width:64px;height:64px;">
+                                    <div class="logo-box mt-3">
                                         <img id="faviconPreview" alt="Favicon Preview" style="display:none;">
                                         <div class="logo-placeholder" id="faviconPlaceholder">
-                                            <div><i class="bi bi-app" style="font-size:16px;"></i></div>
+                                            <div><i class="bi bi-app" style="font-size:20px;"></i></div>
                                         </div>
 
                                         <button type="button" class="logo-edit-btn" id="openFaviconPicker">
@@ -56,17 +49,9 @@
                                         </button>
                                     </div>
 
+                                    <div class="logo-title">Company Favicon</div>
                                     <input type="file" name="favicon" id="faviconInput" class="custom-file"
                                         accept=".jpg,.jpeg,.png,.webp,.ico,image/jpeg,image/png,image/webp,image/x-icon">
-
-                                    <div class="logo-note mt-3">
-                                        <strong><i class="bi bi-info-circle me-1"></i>BROWSER TAB ICON</strong>
-                                        <ul>
-                                            <li>Shown in the browser tab for this company</li>
-                                            <li>Maximum file size: 512KB</li>
-                                            <li>Format: PNG, ICO, JPG, or WEBP</li>
-                                        </ul>
-                                    </div>
                                 </div>
 
                                 <div>

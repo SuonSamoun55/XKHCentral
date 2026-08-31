@@ -22,6 +22,7 @@ class CompanyConnection extends Model
     'api_scope',
     'customers_endpoint',
     'items_endpoint',
+    'item_variants_endpoint',
     'sales_orders_endpoint',
     'sales_order_lines_endpoint',
     'sales_order_lines_by_document_endpoint',

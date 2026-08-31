@@ -9,7 +9,7 @@
 
 @section('content')
 <div class="main-wrapper">
-    
+
 
     <div class="content-areas">
         <div class="page-card">
@@ -47,9 +47,9 @@
                         <span class="sync-btn-divider"></span>
                         <span class="sync-btn-text">Sync BC Customers</span>
                     </a>
-
                     <a href="{{ route('staff.index') }}" class="sync-btn">
-                        <i class="bi bi-person-badge-fill"></i>
+                        {{-- <i class="bi "></i> --}}
+                        <img class="bi-person-badge-fill" src="/images/management/staff.png" alt="">
                         <span class="sync-btn-divider"></span>
                         <span class="sync-btn-text">Staff Accounts</span>
                     </a>

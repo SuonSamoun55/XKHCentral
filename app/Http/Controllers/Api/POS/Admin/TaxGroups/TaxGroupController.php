@@ -23,19 +23,9 @@ class TaxGroupController extends Controller
             ->orderBy('code')
             ->get();
 
-        // Codes Business Central has sent on synced items but that have no
-        // percent configured yet — surfaced so the admin knows what still
-        // needs a rate before checkout math for those items is correct.
-        $unconfiguredCodes = Item::where('company_id', $companyId)
-            ->whereNotNull('tax_group_code')
-            ->where('tax_group_code', '!=', '')
-            ->whereNotIn('tax_group_code', $taxGroups->pluck('code'))
-            ->distinct()
-            ->pluck('tax_group_code');
-
         return view(
             'POSViews.POSAdminViews.TaxGroups.index',
-            compact('taxGroups', 'unconfiguredCodes')
+            compact('taxGroups')
         );
     }
 

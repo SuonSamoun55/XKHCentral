@@ -62,19 +62,21 @@
                             <small class="form-text text-muted">Controls which admin pages this login can reach. Manage roles under Settings &rarr; Roles.</small>
                         </div>
 
-                        <div class="mb-3" id="oldPasswordGroup" style="display:none;">
-                            <label class="form-label custom-label">Old Password:</label>
-                            <input type="password" name="old_password" id="oldPassword" class="form-control custom-input">
+                        <div class="mb-3 form-check form-switch" id="editPasswordToggleGroup" style="display:none;">
+                            <input class="form-check-input" type="checkbox" role="switch" id="editPasswordToggle">
+                            <label class="form-check-label custom-label" for="editPasswordToggle">Set a new password for this customer</label>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label custom-label">Password:</label>
-                            <input type="password" name="password" id="password" class="form-control custom-input">
-                        </div>
+                        <div id="passwordFieldsGroup">
+                            <div class="mb-3">
+                                <label class="form-label custom-label" id="passwordFieldLabel">Password:</label>
+                                <input type="password" name="password" id="password" class="form-control custom-input">
+                            </div>
 
-                        <div class="mb-3">
-                            <label class="form-label custom-label">Confirm Password:</label>
-                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control custom-input">
+                            <div class="mb-3">
+                                <label class="form-label custom-label">Confirm Password:</label>
+                                <input type="password" name="password_confirmation" id="password_confirmation" class="form-control custom-input">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -109,8 +111,10 @@ document.addEventListener('click', function (e) {
     const submitBtn = document.getElementById('submitBtn');
     const userForm = document.getElementById('userForm');
     const methodBox = document.getElementById('methodBox');
-    const oldPasswordGroup = document.getElementById('oldPasswordGroup');
-    const oldPassword = document.getElementById('oldPassword');
+    const editPasswordToggleGroup = document.getElementById('editPasswordToggleGroup');
+    const editPasswordToggle = document.getElementById('editPasswordToggle');
+    const passwordFieldsGroup = document.getElementById('passwordFieldsGroup');
+    const passwordFieldLabel = document.getElementById('passwordFieldLabel');
 
     const modalName = document.getElementById('modalName');
     const modalEmail = document.getElementById('modalEmail');
@@ -135,7 +139,6 @@ document.addEventListener('click', function (e) {
     profileImage.value = '';
     password.value = '';
     passwordConfirmation.value = '';
-    oldPassword.value = '';
     methodBox.innerHTML = '';
 
     if (imageUrl) {
@@ -159,8 +162,13 @@ document.addEventListener('click', function (e) {
         userForm.action = '/users/update/' + id;
         methodBox.innerHTML = '<input type="hidden" name="_method" value="PUT">';
         roleInput.value = role;
-        oldPasswordGroup.style.display = 'block';
-        oldPassword.setAttribute('required', 'required');
+
+        // Edit mode: password is off by default (role-only change keeps
+        // the customer's existing password) — the toggle reveals it.
+        editPasswordToggleGroup.style.display = 'block';
+        editPasswordToggle.checked = false;
+        passwordFieldLabel.textContent = 'New Password for this customer:';
+        passwordFieldsGroup.style.display = 'none';
         password.removeAttribute('required');
         passwordConfirmation.removeAttribute('required');
     } else {
@@ -168,10 +176,34 @@ document.addEventListener('click', function (e) {
         submitBtn.textContent = 'Connect';
         userForm.action = '/users/store/' + id;
         roleInput.value = '';
-        oldPasswordGroup.style.display = 'none';
-        oldPassword.removeAttribute('required');
+
+        // Connect mode: always needs a password, no toggle involved.
+        editPasswordToggleGroup.style.display = 'none';
+        passwordFieldLabel.textContent = 'Password:';
+        passwordFieldsGroup.style.display = 'block';
         password.setAttribute('required', 'required');
         passwordConfirmation.setAttribute('required', 'required');
+    }
+});
+
+// Edit mode's "set a new password" toggle — shows/hides and (un)requires
+// the password fields. Bound once here since the toggle element is a
+// permanent part of the modal, not re-created per open-user-modal click.
+document.getElementById('editPasswordToggle')?.addEventListener('change', function () {
+    const passwordFieldsGroup = document.getElementById('passwordFieldsGroup');
+    const password = document.getElementById('password');
+    const passwordConfirmation = document.getElementById('password_confirmation');
+
+    if (this.checked) {
+        passwordFieldsGroup.style.display = 'block';
+        password.setAttribute('required', 'required');
+        passwordConfirmation.setAttribute('required', 'required');
+    } else {
+        passwordFieldsGroup.style.display = 'none';
+        password.removeAttribute('required');
+        passwordConfirmation.removeAttribute('required');
+        password.value = '';
+        passwordConfirmation.value = '';
     }
 });
 

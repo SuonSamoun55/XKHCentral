@@ -32,7 +32,7 @@
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>No.</th>
                     <th>Name</th>
                     <th>Display Name</th>
                     <th>Pages Accessible</th>
@@ -42,7 +42,7 @@
             <tbody>
                 @forelse ($roles as $role)
                     <tr>
-                        <td class="id-cell" data-label="ID">{{ $role->id }}</td>
+                        <td class="id-cell" data-label="No.">{{ $loop->iteration }}</td>
                         <td class="key-cell" data-label="Name"><code>{{ $role->name }}</code></td>
                         <td class="label-cell" data-label="Display Name">{{ $role->display_name }}</td>
                         <td class="pages-cell" data-label="Pages Accessible">

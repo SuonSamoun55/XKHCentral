@@ -2,6 +2,7 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('/css/views/Management/company_list.css') }}">
+    <link rel="stylesheet" href="{{ asset('/css/views/Management/Password/adminchangepassword.css') }}">
 @endpush
 
 @section('title', 'Companies')
@@ -147,19 +148,16 @@
                                     d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
                             </svg>
                         </a>
-                        <form action="{{ route('companies.destroy', $company->id) }}" method="POST"
-                            onsubmit="return confirm('Delete this company? This cannot be undone.')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="icon-btn danger" title="Delete">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2">
-                                    <path d="M3 6h18" />
-                                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                                </svg>
-                            </button>
-                        </form>
+                        <button type="button" class="icon-btn danger open-delete-confirm" title="Delete"
+                            data-url="{{ route('companies.destroy', $company->id) }}"
+                            data-label="{{ $company->display_name ?? $company->name }}">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18" />
+                                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
             @empty
@@ -168,6 +166,23 @@
         </div>
 
     </div>
+
+    {{-- Delete confirmation overlay (same reused pattern as the Staff list) --}}
+    <div class="pw-confirm-overlay" id="deleteConfirmOverlay">
+        <div class="pw-confirm-box">
+            <div class="pw-confirm-icon"><i class="bi bi-trash3-fill"></i></div>
+            <h3 class="pw-confirm-title" id="deleteConfirmTitle">Delete this company?</h3>
+            <p class="pw-confirm-text">This action cannot be undone.</p>
+            <div class="pw-confirm-actions">
+                <button type="button" class="pw-confirm-btn cancel" id="deleteConfirmCancel">Cancel</button>
+                <button type="button" class="pw-confirm-btn confirm" id="deleteConfirmOk">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+    <form method="POST" id="deleteConfirmForm" style="display:none;">
+        @csrf
+        @method('DELETE')
+    </form>
 @endsection
 
 @push('scripts')
@@ -204,6 +219,45 @@
                     }
                 });
             }
+
+            // Delete confirmation — shared overlay + form for every delete button.
+            (function() {
+                const overlay = document.getElementById('deleteConfirmOverlay');
+                const titleEl = document.getElementById('deleteConfirmTitle');
+                const form = document.getElementById('deleteConfirmForm');
+                const okBtn = document.getElementById('deleteConfirmOk');
+                const cancelBtn = document.getElementById('deleteConfirmCancel');
+                if (!overlay || !form) return;
+
+                function openModal() {
+                    overlay.classList.add('show');
+                }
+
+                function closeModal() {
+                    overlay.classList.remove('show');
+                }
+
+                document.querySelectorAll('.open-delete-confirm').forEach(function(trigger) {
+                    trigger.addEventListener('click', function() {
+                        form.action = trigger.dataset.url;
+                        titleEl.textContent = trigger.dataset.label ?
+                            ('Delete ' + trigger.dataset.label + '?') :
+                            'Delete this company?';
+                        openModal();
+                    });
+                });
+
+                okBtn?.addEventListener('click', function() {
+                    form.submit();
+                });
+                cancelBtn?.addEventListener('click', closeModal);
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === overlay) closeModal();
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && overlay.classList.contains('show')) closeModal();
+                });
+            })();
         });
     </script>
 @endpush

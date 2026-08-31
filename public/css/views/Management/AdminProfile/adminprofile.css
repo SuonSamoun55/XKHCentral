@@ -464,3 +464,11 @@ a.ap-list-row:hover {
         justify-content: center;
     }
 }
+
+.icon-img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    vertical-align: -3px;
+    margin-right: 2px;
+}

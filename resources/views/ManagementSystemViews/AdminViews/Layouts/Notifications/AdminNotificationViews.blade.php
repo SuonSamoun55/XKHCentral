@@ -50,7 +50,7 @@
                             @if ($canAccessChat)
                                 <a href="{{ route('admin.chat.index') }}" class="btn-send-message btn-inbox"
                                     style="text-decoration:none;">
-                                    <img src="{{ asset('images/AdminPOS/chatting.png') }}" alt=""
+                                    <img src="{{ asset('/images/aside/chat.png') }}" alt=""
                                         class="btn-send-message-icon">
                                     <span>Chat</span>
                                 </a>
@@ -63,10 +63,6 @@
                             </button>
                         </div>
                     </div>
-
-                    <!-- Row 2: date filter. Always visible on desktop; on mobile it's kept
-                         off-screen and opened directly by the calendar icon (see
-                         bindMobileDateToggle) instead of a toggled dropdown row. -->
                     <div class="date-row" id="notifDateRow">
                         <div class="date-filter-box"
                             onclick="document.getElementById('date').showPicker && document.getElementById('date').showPicker()">
@@ -87,8 +83,8 @@
                                 <span class="tab-icon-wrap">
                                     <img src="{{ asset($activeTab === 'order_notification' ? '/images/management/cart.png' : '/images/management/cart icon.png') }}"
                                         alt="Order Notification">
-                                    <span class="tab-badge"
-                                        data-tab-badge="order_notification">{{ $orderCount ?? 0 }}</span>
+                                    <span class="tab-badge" data-tab-badge="order_notification"
+                                        style="{{ ($orderCount ?? 0) > 0 ? '' : 'display:none;' }}">{{ $orderCount ?? 0 }}</span>
                                 </span>
                                 <span class="tab-label">Order Notification</span>
                             </a>
@@ -97,8 +93,8 @@
                                 <span class="tab-icon-wrap">
                                     <img src="{{ asset($activeTab === 'user_contact' ? '/images/management/user contact.png' : '/images/management/user contact inactive.png') }}"
                                         alt="User Contact">
-                                    <span class="tab-badge"
-                                        data-tab-badge="user_contact">{{ $userContactCount ?? 0 }}</span>
+                                    <span class="tab-badge" data-tab-badge="user_contact"
+                                        style="{{ ($userContactCount ?? 0) > 0 ? '' : 'display:none;' }}">{{ $userContactCount ?? 0 }}</span>
                                 </span>
                                 <span class="tab-label">User Contact</span>
                             </a>
@@ -107,8 +103,8 @@
                                 <span class="tab-icon-wrap">
                                     <img src="{{ asset($activeTab === 'out_of_stock' ? '/images/management/out of stock alert.png' : '/images/management/out of stock.png') }}"
                                         alt="Out of Stock Item">
-                                    <span class="tab-badge"
-                                        data-tab-badge="out_of_stock">{{ $outOfStockCount ?? 0 }}</span>
+                                    <span class="tab-badge" data-tab-badge="out_of_stock"
+                                        style="{{ ($outOfStockCount ?? 0) > 0 ? '' : 'display:none;' }}">{{ $outOfStockCount ?? 0 }}</span>
                                 </span>
                                 <span class="tab-label">Out of Stock Item</span>
                             </a>
@@ -117,8 +113,8 @@
                                 <span class="tab-icon-wrap">
                                     <img src="{{ asset($activeTab === 'global_message' ? '/images/management/global message (2).png' : '/images/management/global message.png') }}"
                                         alt="Global Message">
-                                    <span class="tab-badge"
-                                        data-tab-badge="global_message">{{ $globalMessageCount ?? 0 }}</span>
+                                    <span class="tab-badge" data-tab-badge="global_message"
+                                        style="{{ ($globalMessageCount ?? 0) > 0 ? '' : 'display:none;' }}">{{ $globalMessageCount ?? 0 }}</span>
                                 </span>
                                 <span class="tab-label">Global Message</span>
                             </a>
@@ -1306,7 +1302,10 @@ $rowUrl =
             if (!counts) return;
             Object.entries(counts).forEach(([key, count]) => {
                 const badge = document.querySelector(`[data-tab-badge="${key}"]`);
-                if (badge) badge.textContent = Number(count || 0);
+                if (!badge) return;
+                const n = Number(count || 0);
+                badge.textContent = n;
+                badge.style.display = n > 0 ? '' : 'none';
             });
         }
 

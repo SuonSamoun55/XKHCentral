@@ -52,12 +52,15 @@ body {
 }
 
 .page-title {
-    font-size: 18px;
+    font-size: 24px;
     font-weight: 700;
-    color: #18bfd0;
+    color: #3BACB4;
     margin-bottom: 8px;
 }
-
+.bi-person-badge-fill{
+    width: 15px ;
+    height: 15px;
+}
 .top-bar {
     display: flex;
     justify-content: space-between;
@@ -564,6 +567,9 @@ body {
 @media (max-width: 768px) {
     .main-wrapper {
         flex-direction: column;
+    }
+    .app-content{
+        padding:0px;
     }
 
     .bottom-bar>div:nth-child(2) {

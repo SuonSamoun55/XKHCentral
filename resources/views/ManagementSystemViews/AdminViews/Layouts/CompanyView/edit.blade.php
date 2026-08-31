@@ -42,7 +42,7 @@
                 <div class="page-grid">
                     <div class="logo-panel">
                         <div class="logo-avatar-wrap">
-                            <div class="logo-circle">
+                            <div class="logo-box">
                                 {{-- Add your logo image/markup here --}}
                                 <img id="logoPreview"
                                     src="{{ !empty($company->logo) ? asset('storage/' . $company->logo) : '' }}"
@@ -62,7 +62,7 @@
                         <div class="logo-hint">JPG, PNG or WEBP<br>max 2MB</div>
 
                         <div class="logo-avatar-wrap mt-3">
-                            <div class="logo-circle" style="width:48px;height:48px;">
+                            <div class="logo-box">
                                 <img id="faviconPreview"
                                     src="{{ !empty($company->favicon) ? asset('storage/' . $company->favicon) : '' }}"
                                     alt="Favicon Preview" style="{{ empty($company->favicon) ? 'display:none;' : '' }}">
@@ -73,7 +73,7 @@
                             </button>
                         </div>
 
-                        <div class="logo-word">Browser Tab Icon</div>
+                        <div class="logo-word">Company Favicon</div>
 
                         <input type="file" name="favicon" id="faviconInput" class="file-picker"
                             accept=".jpg,.jpeg,.png,.webp,.ico,image/jpeg,image/png,image/webp,image/x-icon">

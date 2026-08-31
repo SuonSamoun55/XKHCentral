@@ -2,8 +2,7 @@
 @section('title', 'Dashboard')
 
 @push('styles')
-    <link rel="stylesheet"
-        href="{{ asset('/css/views/Management/Daskboard/POSadminDaskboard.css') }}?v={{ filemtime(public_path('css/views/Management/Daskboard/POSadminDaskboard.css')) }}">
+    <link rel="stylesheet" href="{{ asset('/css/views/Management/Daskboard/POSadminDaskboard.css') }}">
 @endpush
 
 @section('content')
@@ -324,11 +323,6 @@
                 .catch(err => console.error('Failed to load overview stats:', err));
         });
 
-        // Report Today / This Week / This Month / This Year filter, plus the year
-        // select (only relevant when period is "year"). Both drive the same
-        // fetch-and-redraw-in-place: no page reload, chart bars come back already
-        // scaled to the real numbers for that period (see niceAxisSteps() server-side)
-        // instead of a fixed ceiling that dwarfs a quiet day/week.
         const reportPeriodSelect = document.getElementById('reportPeriodSelect');
         const reportYearSelect = document.getElementById('reportYearSelect');
 

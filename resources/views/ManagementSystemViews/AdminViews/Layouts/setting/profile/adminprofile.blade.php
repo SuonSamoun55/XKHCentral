@@ -90,13 +90,13 @@
     </div>
 
     <div class="ap-card">
-        <h2><i class="bi bi-person-vcard"></i> Contact &amp; Account</h2>
+        <h2><img src="{{ asset('images/Profile/human.png') }}" class="icon-img" alt=""> Contact &amp; Account</h2>
         <dl class="ap-field-list">
-            <dt>Email</dt><dd class="{{ $field($user->email) ? '' : 'empty' }}">{{ $field($user->email) ?? '—' }}</dd>
-            <dt>Phone</dt><dd class="{{ $field($user->phone) ? '' : 'empty' }}">{{ $field($user->phone) ?? '—' }}</dd>
-            <dt>Date of Birth</dt><dd class="{{ $field($user->dob) ? '' : 'empty' }}">{{ $user->dob ? \Carbon\Carbon::parse($user->dob)->format('M d, Y') : '—' }}</dd>
-            <dt>Location</dt><dd class="{{ $field($user->location) ? '' : 'empty' }}">{{ $field($user->location) ?? '—' }}</dd>
-            <dt>Role</dt><dd>{{ ucfirst($user->role ?? 'admin') }}</dd>
+            <dt><img src="{{ asset('images/Profile/email.png') }}" class="icon-img" alt=""> Email</dt><dd class="{{ $field($user->email) ? '' : 'empty' }}">{{ $field($user->email) ?? '—' }}</dd>
+            <dt><img src="{{ asset('images/Profile/smartphone.png') }}" class="icon-img" alt=""> Phone</dt><dd class="{{ $field($user->phone) ? '' : 'empty' }}">{{ $field($user->phone) ?? '—' }}</dd>
+            <dt><img src="{{ asset('images/Profile/clock-three.png') }}" class="icon-img" alt=""> Date of Birth</dt><dd class="{{ $field($user->dob) ? '' : 'empty' }}">{{ $user->dob ? \Carbon\Carbon::parse($user->dob)->format('M d, Y') : '—' }}</dd>
+            <dt><img src="{{ asset('images/Profile/gps.png') }}" class="icon-img" alt=""> Location</dt><dd class="{{ $field($user->location) ? '' : 'empty' }}">{{ $field($user->location) ?? '—' }}</dd>
+            <dt><img src="{{ asset('images/Profile/tags.png') }}" class="icon-img" alt=""> Role</dt><dd>{{ ucfirst($user->role ?? 'admin') }}</dd>
         </dl>
     </div>
 </div>

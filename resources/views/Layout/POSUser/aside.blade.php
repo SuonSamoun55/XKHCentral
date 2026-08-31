@@ -190,7 +190,7 @@
 
                 <div class="settings-menu">
                     <a href="{{ route('profile') }}" class="settings-link nav-link-mobile-close">My Profile</a>
-                    <a href="{{ route('user.password.change') }}" class="settings-link nav-link-mobile-close">Change new password</a>
+                    <a href="{{ route('user.password.change') }}" class="settings-link nav-link-mobile-close">Change password</a>
                     <a href="{{ route('profile') }}" class="settings-link">Policy</a>
                     @if ($isAdmin)
                         <a href="{{ url('/admin') }}" class="settings-link nav-link-mobile-close">Open Admin</a>

@@ -1,6 +1,7 @@
-.main-wrapper{
-gap:10px;
+.main-wrapper {
+    gap: 10px;
 }
+
 .alert-container {
     position: fixed;
     top: 60px;
@@ -47,8 +48,15 @@ gap:10px;
 }
 
 @keyframes customAlertIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .confirm-action-modal .modal-dialog {
@@ -119,18 +127,20 @@ gap:10px;
     background: #cbd0d8;
 }
 
-.content-area{
+.content-area {
     background-color: white;
 
     border-radius: 12px;
 }
-.content-wrapper{
+
+.content-wrapper {
     background-color: white;
     border-radius: 12px;
     padding: 20px;
     height: 100vh;
     overflow-y: auto;
 }
+
 .notification-detail-page *,
 .notification-detail-page *::before,
 .notification-detail-page *::after {
@@ -161,9 +171,9 @@ gap:10px;
 
 .notification-detail-page .page-title {
     margin: 0;
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 700;
-    color: #2aaab5;
+    color: #3BACB4;
 }
 
 .notification-detail-page .page-subtitle {
@@ -201,9 +211,11 @@ gap:10px;
     border: 1px solid #E2E8F0;
     flex-shrink: 0;
 }
-.sumary{
+
+.sumary {
     padding-top: 30px;
 }
+
 .notification-detail-page .avatar-box.large img {
     width: 100%;
     height: 100%;
@@ -420,7 +432,7 @@ gap:10px;
 .notification-detail-page .image-viewer-img {
     max-width: 100%;
     max-height: calc(100vh - 120px);
-    border-radius:5px;
+    border-radius: 5px;
     box-shadow: 0 20px 44px rgba(0, 0, 0, 0.28);
     background: #fff;
 }
@@ -550,6 +562,7 @@ gap:10px;
     font-size: 18px;
     text-decoration: none;
 }
+
 .notification-detail-page .detail-card.order-info-row {
     align-items: center;
     flex-wrap: wrap;
@@ -621,9 +634,20 @@ gap:10px;
     font-size: 12px;
 }
 
-.notification-detail-page .order-status-chip.cancelled { background: #fde2e2; color: #dc2626; }
-.notification-detail-page .order-status-chip.pending { background: #fef3c7; color: #b45309; }
-.notification-detail-page .order-status-chip.confirmed { background: #dcfce7; color: #15803d; }
+.notification-detail-page .order-status-chip.cancelled {
+    background: #fde2e2;
+    color: #dc2626;
+}
+
+.notification-detail-page .order-status-chip.pending {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.notification-detail-page .order-status-chip.confirmed {
+    background: #dcfce7;
+    color: #15803d;
+}
 
 .notification-detail-page .order-status-group {
     display: flex;
@@ -661,9 +685,20 @@ gap:10px;
     font-size: 16px;
 }
 
-.notification-detail-page .alert-icon-badge.cancelled { background: #fecaca; color: #dc2626; }
-.notification-detail-page .alert-icon-badge.pending { background: #fde68a; color: #b45309; }
-.notification-detail-page .alert-icon-badge.confirmed { background: #bbf7d0; color: #15803d; }
+.notification-detail-page .alert-icon-badge.cancelled {
+    background: #fecaca;
+    color: #dc2626;
+}
+
+.notification-detail-page .alert-icon-badge.pending {
+    background: #fde68a;
+    color: #b45309;
+}
+
+.notification-detail-page .alert-icon-badge.confirmed {
+    background: #bbf7d0;
+    color: #15803d;
+}
 
 .notification-detail-page .order-alert-banner .rendered-message {
     color: inherit;
@@ -709,7 +744,7 @@ gap:10px;
 }
 
 .notification-detail-page .order-detail-title {
-    margin: 10px  0px 0px 0px ;
+    margin: 10px 0px 0px 0px;
     font-size: 16px;
     font-weight: 700;
     color: #17bfd0;
@@ -723,6 +758,7 @@ gap:10px;
     gap: 16px;
     margin-bottom: 16px;
 }
+
 .notification-detail-page .order-items-card,
 .notification-detail-page .order-summary-card {
     max-height: 100%;
@@ -732,7 +768,7 @@ gap:10px;
 }
 
 .notification-detail-page .order-items-card {
-    padding: 5px  0px;
+    padding: 5px 0px;
     display: flex;
 
 }
@@ -768,7 +804,7 @@ gap:10px;
     font-size: 12px;
     font-weight: 600;
     color: #64748b;
-    padding:  10px 10px;
+    padding: 10px 10px;
     border-bottom: 1px solid #eef2f6;
     white-space: nowrap;
     background: #fff;
@@ -780,10 +816,11 @@ gap:10px;
 
 .notification-detail-page .order-items-table tbody tr {
     box-shadow: rgba(14, 63, 126, 0.06) 0px 0px 0px 1px, rgba(42, 51, 70, 0.03) 0px 1px 1px -0.5px, rgba(42, 51, 70, 0.04) 0px 2px 2px -1px, rgba(42, 51, 70, 0.04) 0px 3px 3px -1.5px, rgba(42, 51, 70, 0.03) 0px 5px 5px -2.5px, rgba(42, 51, 70, 0.03) 0px 10px 10px -5px, rgba(42, 51, 70, 0.03) 0px 24px 24px -8px;
-        border-radius: 10px;
+    border-radius: 10px;
 
 
 }
+
 .notification-detail-page .order-items-table tbody td {
     padding: 14px 10px;
     background: #fff;
@@ -954,9 +991,21 @@ gap:10px;
     font-weight: 700;
     color: #0f172a;
 }
-.notification-detail-page .order-status-chip.critical { background: #fde2e2; color: #dc2626; }
-.notification-detail-page .order-status-chip.warning { background: #fef3c7; color: #b45309; }
-.notification-detail-page .order-status-chip.notice { background: #dbeafe; color: #1d4ed8; }
+
+.notification-detail-page .order-status-chip.critical {
+    background: #fde2e2;
+    color: #dc2626;
+}
+
+.notification-detail-page .order-status-chip.warning {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.notification-detail-page .order-status-chip.notice {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
 
 .notification-detail-page .stock-alert-card,
 .notification-detail-page .affected-product-card,
@@ -968,10 +1017,12 @@ gap:10px;
     padding: 18px;
     box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
 }
-.affected-product-card{
+
+.affected-product-card {
     height: 40%;
 }
-.stock-summary-card{
+
+.stock-summary-card {
     height: 60%;
 }
 
@@ -986,9 +1037,20 @@ gap:10px;
     margin-bottom: 12px;
 }
 
-.notification-detail-page .stock-alert-icon.critical { background: #fde2e2; color: #dc2626; }
-.notification-detail-page .stock-alert-icon.warning { background: #fef3c7; color: #b45309; }
-.notification-detail-page .stock-alert-icon.notice { background: #dbeafe; color: #1d4ed8; }
+.notification-detail-page .stock-alert-icon.critical {
+    background: #fde2e2;
+    color: #dc2626;
+}
+
+.notification-detail-page .stock-alert-icon.warning {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.notification-detail-page .stock-alert-icon.notice {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
 
 .notification-detail-page .stock-card-label {
     display: block;
@@ -1170,7 +1232,7 @@ gap:10px;
 .notification-detail-page .global-meta-header {
     display: flex;
     justify-content: flex-end;
-    border-bottom:1px solid #E2E8F0 ;
+    border-bottom: 1px solid #E2E8F0;
 }
 
 .notification-detail-page .global-subject-pill {
@@ -1253,9 +1315,11 @@ gap:10px;
     color: #94a3b8;
     white-space: nowrap;
 }
+
 .notification-detail-page .mobile-order-receipt {
     display: none;
 }
+
 @media (max-width: 768px) {
     .notification-detail-page .global-meta-row {
         display: grid;
@@ -1306,18 +1370,23 @@ gap:10px;
         justify-content: flex-end;
         margin-bottom: 12px;
     }
-    .content-wrapper{
-        padding:0px;
+
+    .content-wrapper {
+        padding: 0px;
     }
-    .order-detail-title{
+
+    .order-detail-title {
         display: none;
     }
+
     .notification-detail-page .header-title-group {
         display: none;
     }
+
     .notification-detail-page .order-detail-grid {
         grid-template-columns: 1fr;
     }
+
     .notification-detail-page .detail-card.order-info-row {
         flex-direction: column !important;
         align-items: flex-start !important;
@@ -1342,9 +1411,11 @@ gap:10px;
         border-left: none;
         padding-left: 0;
     }
+
     .notification-detail-page .detail-grid {
         grid-template-columns: 1fr;
     }
+
     .notification-detail-page .top-user-box {
         /* flex-direction: ; */
         align-items: flex-start;
@@ -1364,21 +1435,26 @@ gap:10px;
     .notification-detail-page .bottom-actions .delete-btn {
         width: 100%;
     }
+
     .notification-detail-page .image-viewer {
         padding: 24px 16px;
     }
+
     .notification-detail-page .image-viewer-stage {
         gap: 12px;
     }
+
     .notification-detail-page .image-viewer-btn {
         width: 42px;
         height: 42px;
         font-size: 20px;
     }
+
     .notification-detail-page .stock-alert-footer {
         flex-direction: column;
         align-items: stretch;
     }
+
     .notification-detail-page .stock-view-order-btn {
         justify-content: center;
     }
@@ -1420,12 +1496,14 @@ gap:10px;
     .notification-detail-page .stock-stat-value {
         font-size: 19px;
     }
+
     .notification-detail-page.has-mobile-receipt .detail-card.order-info-row,
     .notification-detail-page.has-mobile-receipt .order-alert-banner,
     .notification-detail-page.has-mobile-receipt .order-detail-grid,
     .notification-detail-page.has-mobile-receipt .bottom-actions {
         display: none;
     }
+
     .notification-detail-page .mobile-order-receipt {
         display: block;
         background: #fff;
@@ -1434,6 +1512,7 @@ gap:10px;
         box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
         padding: 16px;
     }
+
     .notification-detail-page .receipt-row {
         display: flex;
         align-items: center;
@@ -1443,21 +1522,26 @@ gap:10px;
         border-bottom: 1px solid #f1f5f9;
         font-size: 13px;
     }
+
     .notification-detail-page .receipt-label {
         color: #64748b;
     }
+
     .notification-detail-page .receipt-value {
         font-weight: 700;
         color: #0f172a;
         text-align: right;
     }
+
     .notification-detail-page .receipt-value.strong {
         font-weight: 700;
     }
+
     .notification-detail-page .receipt-value.muted {
         font-weight: 600;
         color: #64748b;
     }
+
     .notification-detail-page .receipt-sender {
         display: flex;
         align-items: center;
@@ -1465,15 +1549,18 @@ gap:10px;
         padding: 14px 0;
         border-bottom: 1px solid #f1f5f9;
     }
+
     .notification-detail-page .receipt-sender .avatar-box.large {
         width: 40px;
         height: 40px;
     }
+
     .notification-detail-page .receipt-sender-name {
         font-size: 14px;
         font-weight: 700;
         color: #0f172a;
     }
+
     .notification-detail-page .receipt-note-label {
         margin-top: 16px;
         margin-bottom: 8px;
@@ -1481,6 +1568,7 @@ gap:10px;
         font-weight: 700;
         color: #0f172a;
     }
+
     .notification-detail-page .receipt-note-card {
         display: flex;
         align-items: flex-start;
@@ -1568,6 +1656,7 @@ gap:10px;
         font-weight: 500;
         color: #94a3b8;
     }
+
     .notification-detail-page .receipt-item-meta-row {
         display: flex;
         align-items: center;
@@ -1576,10 +1665,12 @@ gap:10px;
         font-size: 12px;
         color: #94a3b8;
     }
+
     .notification-detail-page .receipt-item-meta-row span:nth-last-child(-n+2) {
         font-weight: 700;
         color: #0f172a;
     }
+
     .notification-detail-page .receipt-payment-head {
         margin-top: 20px;
         margin-bottom: 4px;
@@ -1587,28 +1678,34 @@ gap:10px;
         font-weight: 700;
         color: #0f172a;
     }
+
     .notification-detail-page .receipt-payment .receipt-row {
         font-size: 13px;
         color: #64748b;
     }
+
     .notification-detail-page .receipt-payment .receipt-row span:last-child {
         font-weight: 600;
         color: #0f172a;
     }
+
     .notification-detail-page .receipt-divider {
         height: 1px;
         background: #e2e8f0;
         margin: 6px 0;
     }
+
     .notification-detail-page .receipt-payment .receipt-row.total {
         border-bottom: none;
         padding: 6px 0;
     }
+
     .notification-detail-page .receipt-payment .receipt-row.total span {
         font-weight: 800;
         color: #0f172a;
         font-size: 14px;
     }
+
     .notification-detail-page .receipt-trash-btn {
         width: 100%;
         margin-top: 20px;
@@ -1625,6 +1722,7 @@ gap:10px;
         gap: 8px;
         cursor: pointer;
     }
+
     .notification-detail-page .receipt-trash-btn:hover {
         background: #dc2626;
     }

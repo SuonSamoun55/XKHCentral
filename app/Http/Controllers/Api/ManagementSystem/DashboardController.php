@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\ManagementSystem;
 
 use App\Http\Controllers\Controller;
+use App\Models\ManagementSystem\Company;
 use App\Models\ManagementSystem\Notification;
 use App\Models\ManagementSystem\User;
 use App\Models\POS\Item;
@@ -16,24 +17,27 @@ class DashboardController extends Controller
 {
     private const DEFAULT_AVATAR = 'images/pos/Rectangle 2.png';
 
+
+    private function resolveCompanyId(): ?int
+    {
+        return session('selected_company_id') ?? Company::query()->value('id');
+    }
+
+//show page daskboard admin and offer filter
     public function index()
     {
         /** @var \App\Models\ManagementSystem\User|null $user */
         $user = Auth::user();
-
-        // check if login
         if (!$user) {
             return redirect()->route('login');
         }
-
-        // allow admin, or any role granted the 'dashboard' page
         if (!$user->isAdmin() && !$user->hasPermission('dashboard')) {
             abort(403, 'You do not have access to this page.');
         }
 
         ini_set('memory_limit', '512M');
 
-        $selectedCompanyId = session('selected_company_id');
+        $selectedCompanyId = $this->resolveCompanyId();
         $now = Carbon::now();
 
         $orderQuery = Order::query()
@@ -58,27 +62,26 @@ class DashboardController extends Controller
         if (!in_array($reportPeriod, ['today', 'week', 'month', 'year'], true)) {
             $reportPeriod = 'year';
         }
-
-        // ================================================================
-        // HERO ROW (counts shown on the 3 hero cards, if you wire text in)
-        // ================================================================
+        // hero 3 card
         $totalProducts = Item::query()
             ->when($selectedCompanyId, fn($q) => $q->where('company_id', $selectedCompanyId))
             ->count();
-        $totalCustomers = User::where('role', 'customer')
+        $totalCustomers = User::where('bc_customer_no', 'not like', 'STAFF-%')
             ->when($selectedCompanyId, fn($q) => $q->where('company_id', $selectedCompanyId))
             ->count();
-        $onlineCustomers = User::where('role', 'customer')
+        $onlineCustomers = User::where('bc_customer_no', 'not like', 'STAFF-%')
             ->when($selectedCompanyId, fn($q) => $q->where('company_id', $selectedCompanyId))
             ->online()
             ->count();
         [$chartData, $yAxisSteps, $yAxisMax] = $this->buildReportChart($orderQuery, $reportPeriod, $now, $selectedYear);
 
+        //unread notification
         $unreadNotificationCount = Notification::query()
             ->where('user_id', $user->id)
             ->where('is_read', false)
             ->count();
 
+        // notification
         $notifications = Notification::query()
             ->with('sender')
             ->where('user_id', $user->id)
@@ -94,6 +97,7 @@ class DashboardController extends Controller
                 ];
             })
             ->all();
+        // filter top 10 product
         $topProductsPeriod = request()->get('products_period', 'today');
         if (!in_array($topProductsPeriod, ['today', 'week', 'month', 'year'], true)) {
             $topProductsPeriod = 'today';
@@ -139,12 +143,12 @@ class DashboardController extends Controller
             'reportPeriod'
         ));
     }
-
+// graph chat inside daskbord
     public function reportChart()
     {
         $this->authorizeAjaxAdmin();
 
-        $selectedCompanyId = session('selected_company_id');
+        $selectedCompanyId = $this->resolveCompanyId();
         $now = Carbon::now();
 
         $orderQuery = Order::query()
@@ -173,12 +177,14 @@ class DashboardController extends Controller
         [$chartData, $yAxisSteps, $yAxisMax] = $this->buildReportChart($orderQuery, $reportPeriod, $now, $selectedYear);
 
         return response()->json(compact('chartData', 'yAxisSteps', 'yAxisMax', 'selectedYear'));
+
     }
+//top product
     public function topProductsData()
     {
         $this->authorizeAjaxAdmin();
 
-        $selectedCompanyId = session('selected_company_id');
+        $selectedCompanyId = $this->resolveCompanyId();
         $now = Carbon::now();
 
         $period = request()->get('period', 'today');
@@ -204,7 +210,7 @@ class DashboardController extends Controller
     {
         $this->authorizeAjaxAdmin();
 
-        $selectedCompanyId = session('selected_company_id');
+        $selectedCompanyId = $this->resolveCompanyId();
         $now = Carbon::now();
 
         $orderQuery = Order::query()
@@ -344,15 +350,6 @@ class DashboardController extends Controller
 
         return $chartData;
     }
-
-    /**
-     * "Nice round number" axis: 5 evenly-spaced gridlines (0..max) where the
-     * step is 1/2/5 × a power of ten and the top gridline is always >= the
-     * real max — instead of a fixed ceiling that dwarfs small real numbers
-     * on a quiet day/week.
-     *
-     * @return array{0: array<float>, 1: float} [rawSteps (5 values), axisMax]
-     */
     private function niceAxisSteps(float $maxValue): array
     {
         $roughStep = $maxValue / 4;
@@ -393,14 +390,6 @@ class DashboardController extends Controller
 
         return number_format($value, 0);
     }
-
-    /**
-     * Total Income / Total Confirmed / Pending Product for the given period,
-     * each with a % change vs the prior equivalent period. Pending Product
-     * itself is a live, unfiltered "how many are pending right now" snapshot
-     * — only its trend comparison moves with the period filter, against the
-     * count as of the start of the selected period.
-     */
     private function buildOverviewStats($orderQuery, ?int $companyId, Carbon $now, string $period): array
     {
         [$from, $to, $prevFrom, $prevTo] = $this->periodRange($now, $period);
@@ -417,9 +406,6 @@ class DashboardController extends Controller
         $totalConfirmedPrev = $confirmedOrders($prevFrom, $prevTo)->count();
         $totalConfirmedChangePct = $this->percentChange((float) $totalConfirmedPrev, (float) $totalConfirmedOrders);
 
-        // TODO: swap the 'is_visible' condition below if "pending" should
-        // mean something else in your data model (e.g. a dedicated
-        // approval/status column instead of visibility).
         $pendingProductBase = fn() => Item::query()
             ->where('is_visible', false)
             ->when($companyId, fn($q) => $q->where('company_id', $companyId));
@@ -437,11 +423,6 @@ class DashboardController extends Controller
         ];
     }
 
-    /**
-     * Top N products by qty sold within the given period (null = no limit,
-     * i.e. "All"), each annotated with % change in qty vs the prior
-     * equivalent period (e.g. this week vs last week).
-     */
     private function topSellingProducts(?int $companyId, Carbon $now, string $period, ?int $limit = 20): array
     {
         [$from, $to, $prevFrom, $prevTo] = $this->periodRange($now, $period);
@@ -487,10 +468,6 @@ class DashboardController extends Controller
         })->values()->all();
     }
 
-    /**
-     * [from, to, prevFrom, prevTo] boundaries for a named period, used to
-     * rank top-selling products and compute their period-over-period change.
-     */
     private function periodRange(Carbon $now, string $period): array
     {
         return match ($period) {

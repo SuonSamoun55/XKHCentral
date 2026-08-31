@@ -1,5 +1,5 @@
 :root{
-        --primary:#1bb8c9;
+        --primary:#3BACB4;
         --primary-dark:#12a5b5;
         --bg:#f5f6f8;
         --white:#ffffff;
@@ -23,7 +23,7 @@
     .main-wrap *{
         box-sizing:border-box;
         background: white;
-        border-radius:15px  ; 
+        border-radius:15px  ;
     }
 
     .main-wrap{
@@ -35,7 +35,7 @@
         height:100vh;
         overflow-y:auto;
         overflow-x:hidden;
-        padding:28px 26px 30px;
+        padding:20;
     }
 
     .page-title{

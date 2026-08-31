@@ -14,7 +14,9 @@ class CompanyController extends Controller
     public function index()
     {
         $companies = Company::with('companyConnection')
-            ->withCount('users')
+            ->withCount(['users as users_count' => function ($query) {
+                $query->where('bc_customer_no', 'not like', 'STAFF-%');
+            }])
             ->latest()
             ->get();
 
@@ -25,16 +27,11 @@ class CompanyController extends Controller
             compact('companies', 'selectedCompanyId')
         );
     }
-
     public function create()
     {
         return view('ManagementSystemViews.AdminViews.Layouts.CompanyView.create');
     }
 
-    /**
-     * Switches the acting (cross-tenant) user's session into one company's
-     * data — everything gated by session('selected_company_id') follows.
-     */
     public function select($id)
     {
         $company = Company::findOrFail($id);
@@ -44,8 +41,6 @@ class CompanyController extends Controller
         return redirect()->route('pos.index')
             ->with('success', 'Now viewing ' . ($company->display_name ?? $company->name) . '.');
     }
-
-    /** Back to the unscoped "all companies" view. */
     public function clearSelection()
     {
         session()->forget('selected_company_id');
@@ -231,19 +226,16 @@ class CompanyController extends Controller
             'tenant_id' => $validated['tenant_id'],
             'client_id' => $validated['client_id'],
             'company_bc_id' => $validated['company_bc_id'],
-            'environment' => $validated['environment'] ?? null,
-            'base_url' => $validated['base_url'] ?? null,
-            'token_url' => $validated['token_url'] ?? null,
             'status' => $request->has('status'),
             'is_default' => true,
         ];
 
-        // These endpoint fields live only on the separate API Setup form —
-        // this "Edit Company" form doesn't submit them at all, so setting
-        // them unconditionally here would silently wipe whatever was
-        // configured on API Setup back to null every time basic company
-        // info is saved. Only touch them when actually present in the
-        // request (i.e. this was submitted from API Setup, not here).
+        foreach (['environment', 'base_url', 'token_url'] as $connectionField) {
+            if ($request->has($connectionField)) {
+                $connectionData[$connectionField] = $validated[$connectionField] ?? null;
+            }
+        }
+
         foreach ([
             'api_scope',
             'customers_endpoint',

@@ -17,7 +17,6 @@ class PermissionController extends Controller
         return view('ManagementSystemViews.AdminViews.Layouts.PermissionsViews.PermissionView', compact('permissions'));
     }
 
-   
     private function availablePageKeys(): array
     {
         $existingNames = Permission::pluck('name')->all();

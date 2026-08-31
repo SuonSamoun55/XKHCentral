@@ -8,10 +8,10 @@ use App\Models\POS\Favorite;
 use App\Models\POS\Item;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use App\Models\POS\ItemVariant;
-use Illuminate\Support\Facades\Log;
 
 class ItemListController extends Controller
 {
@@ -288,52 +288,49 @@ class ItemListController extends Controller
             ], 401);
         }
 
-        $qty = max(1, (int) $request->input('qty', 1));
-        $variantId = $request->input('variant_id')
-            ?? $request->input('variantId')
-            ?? $request->input('selected_variant_id')
-            ?? $request->input('selectedVariantId');
-        if (!$variantId) {
-            $variantIds = $request->input('variant_ids') ?? $request->input('variantIds');
-            if (is_array($variantIds) && count($variantIds) > 0) {
-                $variantId = $variantIds[0];
-            }
-        }
-        Log::info('CART ADD DEBUG', [
-            'raw_all' => $request->all(),
-            'resolved_variant_id' => $variantId,
-            'item_id' => $request->item_id,
-            'qty' => $qty,
+        $validated = $request->validate([
+            'item_id' => ['required', 'integer', 'exists:items,id'],
+            'variant_id' => ['nullable', 'integer'],
+            'variant_ids' => ['nullable', 'array'],
+            'variant_ids.*' => ['integer'],
+            'qty' => ['nullable', 'integer', 'min:1'],
         ]);
 
-        $cart = Cart::firstOrCreate([
-            'user_id' => $user->id,
-            'status' => 'active'
-        ]);
+        $qty = $validated['qty'] ?? 1;
+        // A product can expose multiple option groups (Size, Beef Type, ...),
+        // but a cart line only tracks one variant, so the first selection wins.
+        $variantId = $validated['variant_id'] ?? ($validated['variant_ids'][0] ?? null);
 
-        $cartItem = $cart->items()
-            ->where('item_id', $request->item_id)
-            ->where('item_variant_id', $variantId)
-            ->first();
-
-        if ($cartItem) {
-            $cartItem->increment('qty', $qty);
-        } else {
-            $cart->items()->create([
-                'item_id' => $request->item_id,
-                'item_variant_id' => $variantId,
-                'qty' => $qty,
+        $count = DB::transaction(function () use ($user, $validated, $variantId, $qty) {
+            $cart = Cart::firstOrCreate([
+                'user_id' => $user->id,
+                'status' => 'active',
             ]);
-        }
 
-        $count = (int) $cart->items()->sum('qty');
+            $cartItem = $cart->items()
+                ->where('item_id', $validated['item_id'])
+                ->where('item_variant_id', $variantId)
+                ->lockForUpdate()
+                ->first();
+
+            if ($cartItem) {
+                $cartItem->increment('qty', $qty);
+            } else {
+                $cart->items()->create([
+                    'item_id' => $validated['item_id'],
+                    'item_variant_id' => $variantId,
+                    'qty' => $qty,
+                ]);
+            }
+
+            return (int) $cart->items()->sum('qty');
+        });
 
         return response()->json([
             'success' => true,
             'count' => $count,
             'cartCount' => $count,
-            'variant_id_received' => $variantId, // temporary, for debugging
-            'message' => 'Added to cart successfully.'
+            'message' => 'Added to cart successfully.',
         ]);
     }
 

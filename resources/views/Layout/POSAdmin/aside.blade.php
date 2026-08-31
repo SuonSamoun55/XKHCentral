@@ -109,14 +109,14 @@
             'url' => '/discounts',
             'match' => ['discounts', 'discounts/*'],
             'icon' => '/images/AdminPOS/Admin_POS_Discount.png',
-            'icon_active' => '/images/AdminPOS/Admin_POS_Discount_active.png',
+            'icon_active' => '/images/AdminPOS/Admin_POS_Discount_Active.png',
         ],
         [
             'name' => 'Tax Groups',
             'url' => '/tax-groups',
             'match' => ['tax-groups', 'tax-groups/*'],
-            'icon' => '/images/AdminPOS/Admin_POS_Discount.png',
-            'icon_active' => '/images/AdminPOS/Admin_POS_Discount_active.png',
+            'icon' => '/images/management/tax.png',
+            'icon_active' => '/images/management/tax_active.png',
         ],
         [
             'name' => 'Notification',
@@ -127,6 +127,11 @@
             'notification' => $unreadNotificationCount > 0,
         ],
     ];
+
+    $bottomNavItems = array_values(array_filter(
+        $navItems,
+        fn($item) => !in_array($item['name'], ['Discount', 'Tax Groups'])
+    ));
 
     $activeNavItem = null;
     foreach ($navItems as $item) {
@@ -213,7 +218,7 @@
 <div class="mobile-menu-backdrop" id="mobileMenuBackdrop"></div>
 
 <nav class="mobile-bottom-nav">
-    @foreach ($navItems as $item)
+    @foreach ($bottomNavItems as $item)
         @php
             $isActive = false;
             foreach ($item['match'] as $pattern) {

@@ -738,9 +738,9 @@
     .app-shell {
         display: flex;
         flex-direction: column;
-        height: auto;
-        min-height: 100vh;
-        overflow: visible;
+        /* height: auto; */
+        /* min-height: 100vh; */
+        /* overflow: visible; */
         padding: 0 0px 90px 0px;
         background-color: white;
     }
@@ -767,8 +767,6 @@
         top: 0;
         z-index: 40;
         height: 70px;
-        /* Cancel .app-shell's 10px side padding so the bar still spans
-           edge-to-edge like it did as position:fixed;left:0;right:0. */
         margin: 0 -10px;
         padding: 15px 20px;
         background: #fff;
@@ -847,7 +845,7 @@
         background: #fff;
         border-top: 1px solid #eceef2;
         box-shadow: 0 -2px 12px rgba(15, 23, 42, 0.06);
-        padding: 15px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+        padding: 15px 4px ;
     }
 
     .mobile-bottom-nav-item {

@@ -72,32 +72,25 @@
     height: 100%;
 }
 
-/* Wrapper owns the positioning context for the pencil badge. The circle
-   itself keeps overflow:hidden to clip the logo image to a circle, but a
-   child positioned at its corner (right/bottom: -2px) would fall outside
-   that circular clip and never paint or receive clicks — so the badge is
-   promoted to a sibling of the circle instead, both nested in this
-   overflow-visible wrapper. */
 .logo-avatar-wrap {
     position: relative;
     width: 84px;
     height: 84px;
     margin-bottom: 10px;
 }
-
-.logo-circle {
+.logo-box {
     width: 84px;
     height: 84px;
-    border-radius: 50%;
-    border: 2px solid var(--brand);
+    border-radius: 12px;
+    border: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #ffffff;
+    background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 100%);
     overflow: hidden;
 }
 
-.logo-circle img {
+.logo-box img {
     width: 100%;
     height: 100%;
     object-fit: cover;

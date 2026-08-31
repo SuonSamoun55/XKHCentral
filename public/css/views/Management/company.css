@@ -1,6 +1,4 @@
-/* ==========================================================================
-   Company Page — Design Tokens
-   ========================================================================== */
+
 :root {
     --company-primary: #0891b2;
     --company-primary-dark: #0e7490;
@@ -39,9 +37,6 @@
     --company-shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.10);
 }
 
-/* ==========================================================================
-   Layout
-   ========================================================================== */
 .main-wrapper {
     display: flex;
     gap: 10px;
@@ -78,10 +73,7 @@
     color: var(--company-text);
     margin-bottom: var(--company-space-5);
 }
-
-/* ==========================================================================
-   Card shell
-   ========================================================================== */
+ */
 .container {
     padding: 0;
 }
@@ -165,31 +157,6 @@
     transform: scale(1.06);
 }
 
-.logo-note {
-    width: 100%;
-    background: var(--company-primary-light);
-    border: 1px solid var(--company-primary-border);
-    border-radius: var(--company-radius-sm);
-    padding: var(--company-space-3) var(--company-space-4);
-    color: #0e7490;
-    font-size: 12px;
-    line-height: 1.6;
-}
-
-.logo-note strong {
-    display: flex;
-    align-items: center;
-    color: var(--company-text);
-    font-size: 11px;
-    letter-spacing: 0.04em;
-    margin-bottom: var(--company-space-2);
-}
-
-.logo-note ul {
-    padding-left: 16px;
-    margin: 0;
-}
-
 /* --- Form fields --- */
 .form-section-title {
     display: flex;
@@ -222,8 +189,7 @@
 }
 
 .custom-input,
-.custom-textarea,
-.custom-file {
+.custom-textarea {
     width: 100%;
     border: 1px solid var(--company-border);
     outline: none;
@@ -233,6 +199,22 @@
     font-size: 14px;
     color: var(--company-text);
     transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+/* The pencil button on each box already opens this input via .click() —
+   the browser's own "Choose File" control is redundant, so it stays in
+   the DOM (for the JS trigger + form submission) but isn't shown. A
+   plain title takes its place instead, same as the Edit page. */
+.custom-file {
+    display: none;
+}
+
+.logo-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--company-primary);
+    text-align: center;
+    margin: var(--company-space-2) 0;
 }
 
 .custom-input::placeholder,

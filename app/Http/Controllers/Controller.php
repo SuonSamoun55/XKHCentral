@@ -107,7 +107,6 @@ class Controller extends BaseController
         if (!$this->connection) {
             return null;
         }
-
         return Cache::remember('bc_token_' . $this->connection->id, 3300, function () {
             $response = Http::withoutVerifying()->asForm()->timeout(15)->post($this->connection->token_url, [
                 'grant_type' => 'client_credentials',
@@ -115,24 +114,17 @@ class Controller extends BaseController
                 'client_secret' => trim($this->connection->client_secret),
                 'scope' => trim($this->connection->api_scope ?: 'https://api.businesscentral.dynamics.com/.default'),
             ]);
-
             if (!$response->successful()) {
                 logger()->error('BC token failed from base controller', [
                     'company_id' => $this->connection->company_id,
                     'status' => $response->status(),
                     'body' => $response->body(),
                 ]);
-
                 return null;
             }
-
             return $response->json()['access_token'] ?? null;
         });
     }
-
-    /**
-     * Laravel-side order stats for the customer detail page (WebUserController::show()).
-     */
     protected function buildOrderStats(?User $user): array
     {
         $stats = [
@@ -149,14 +141,7 @@ class Controller extends BaseController
             return $stats;
         }
         $cancelledStatuses = ['cancelled', 'canceled'];
-
-        // "Confirmed" here means "approved and not cancelled" — it also
-        // covers the later stages an order moves through once Business
-        // Central posts its shipment/invoice (delivery, on-the-way,
-        // delivered), so those orders don't silently drop out of every
-        // bucket once OrderStatusController advances them past 'confirmed'.
         $confirmedStatuses = ['confirmed', 'delivery', 'on-the-way', 'delivered'];
-
         $stats['pending_count'] = Order::where('user_id', $user->id)->where('status', 'pending')->count();
         $stats['confirmed_count'] = Order::where('user_id', $user->id)->whereIn('status', $confirmedStatuses)->count();
         $stats['cancelled_count'] = Order::where('user_id', $user->id)->whereIn('status', $cancelledStatuses)->count();
@@ -164,7 +149,6 @@ class Controller extends BaseController
         $stats['confirmed_amount'] = Order::where('user_id', $user->id)->whereIn('status', $confirmedStatuses)->sum('total_amount');
         $stats['cancelled_amount'] = Order::where('user_id', $user->id)->whereIn('status', $cancelledStatuses)->sum('total_amount');
         $stats['last_order_at'] = Order::where('user_id', $user->id)->max('created_at');
-
         return $stats;
     }
     protected function bc(string $token)
