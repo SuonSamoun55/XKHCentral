@@ -140,6 +140,58 @@ class StoreManagementController extends Controller
         ]);
     }
 
+    public function toggleOversell(Request $request, $id)
+    {
+        $companyId = session('selected_company_id');
+
+        $item = Item::where('company_id', $companyId)->findOrFail($id);
+        $item->allow_oversell = !$item->allow_oversell;
+        $item->save();
+
+        return response()->json([
+            'success' => true,
+            'id' => $item->id,
+            'allow_oversell' => (bool) $item->allow_oversell,
+            'message' => $item->allow_oversell
+                ? 'Customers can now buy this product even when it is out of stock.'
+                : 'This product will be hidden from customers and blocked from admin confirm once out of stock.',
+        ]);
+    }
+
+    /**
+     * "Open All" / "Close All" master control for the Oversell column —
+     * bulk-flips allow_oversell, but only for products that are currently
+     * out of stock. In-stock products are left untouched since the flag
+     * has no effect on them either way.
+     */
+    public function bulkUpdateOversellOutOfStock(Request $request)
+    {
+        $companyId = session('selected_company_id');
+
+        if (!$companyId) {
+            return response()->json(['success' => false, 'message' => 'No company selected.'], 422);
+        }
+
+        $action = $request->input('action');
+        $status = $action === 'open';
+
+        $outOfStockIds = Item::where('company_id', $companyId)
+            ->get()
+            ->filter(fn (Item $item) => (float) ($item->sellable_inventory ?? 0) <= 0)
+            ->pluck('id');
+
+        Item::whereIn('id', $outOfStockIds)->update(['allow_oversell' => $status]);
+
+        return response()->json([
+            'success' => true,
+            'allow_oversell' => $status,
+            'count' => $outOfStockIds->count(),
+            'message' => $status
+                ? "Oversell turned on for {$outOfStockIds->count()} out-of-stock product(s)."
+                : "Oversell turned off for {$outOfStockIds->count()} out-of-stock product(s).",
+        ]);
+    }
+
     public function toggleProduct(Request $request, $id)
     {
         $companyId = session('selected_company_id');

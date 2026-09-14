@@ -1391,11 +1391,15 @@
     }
 
     .notification-detail-page .detail-card.order-info-row {
-        flex-direction: column !important;
+        flex-direction: row !important;
         align-items: flex-start !important;
         justify-content: flex-start !important;
         gap: 12px !important;
     }
+
+.notification-detail-page .detail-card{
+    display: block;
+}
 
     .notification-detail-page .stock-profile-card {
         flex-direction: column;
@@ -1408,7 +1412,9 @@
     .notification-detail-page .stock-profile-status {
         width: 100%;
     }
-
+    .stock-profile-status{
+        margin-top: 10px;
+    }
     .notification-detail-page .order-meta-item,
     .notification-detail-page .order-status-group {
         border-left: none;

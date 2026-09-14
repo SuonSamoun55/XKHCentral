@@ -76,7 +76,9 @@ class FavoriteController extends Controller
         })
             ->where('company_id', $user->company_id)
             ->where('is_visible', true)
-            ->get();
+            ->get()
+            ->filter(fn (Item $item) => $item->isPurchasable())
+            ->values();
         $itemIds = $favorites->pluck('id');
 
         $variantsByItem = ItemVariant::whereIn('item_id', $itemIds)

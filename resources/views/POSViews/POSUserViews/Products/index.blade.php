@@ -117,6 +117,11 @@
                                 $vatPercent      = max(0, (float) ($item->resolved_vat_percent ?? 0));
                                 $vatAmount       = round($salePrice * ($vatPercent / 100), 2);
 
+                                // Only shown when the store's "Allow oversell" setting is what's
+                                // keeping this zero-stock item visible — otherwise it wouldn't be
+                                // in $items at all (see ItemListController::filterPurchasable()).
+                                $isLowStock      = (float) ($item->sellable_inventory ?? 0) <= 0;
+
                                 // Variants relationship — same source the product detail page queries
                                 // from item_variants. Embedded as JSON so the popup doesn't need an
                                 // extra AJAX call when "Add to cart" is clicked.
@@ -155,6 +160,10 @@
                                         <div class="pl-discount-badge">
                                             SAVE {{ rtrim(rtrim(number_format($discountPercent, 2), '0'), '.') }} %
                                         </div>
+                                    @endif
+
+                                    @if ($isLowStock)
+                                        <div class="pl-lowstock-badge">Limited stock</div>
                                     @endif
 
                                     <button class="pl-fav-btn" data-item-id="{{ $item->id }}">

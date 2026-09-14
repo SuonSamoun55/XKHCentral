@@ -156,11 +156,59 @@ class AdminOrderController extends Controller
             return back()->with('error', 'Order has no items.');
         }
 
+        foreach ($order->items as $orderItem) {
+            if (empty($orderItem->item_id)) {
+                return back()->with('error', "Order item {$orderItem->id} is missing item reference.");
+            }
+        }
+
         $orderItems = $order->items()->get();
 
         DB::beginTransaction();
 
         try {
+            // Lock and check stock *before* touching Business Central, so an
+            // out-of-stock order never leaves a dangling BC sales order behind.
+            $requestedQtyByItemId = $orderItems
+                ->groupBy('item_id')
+                ->map(fn($rows) => round((float) $rows->sum('qty'), 2))
+                ->filter(fn($qty) => $qty > 0);
+
+            $lockedItems = collect();
+            $outOfStockNames = collect();
+            $blockedNames = collect();
+
+            if ($requestedQtyByItemId->isNotEmpty()) {
+                $lockedItems = Item::query()
+                    ->whereIn('id', $requestedQtyByItemId->keys()->all())
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('id');
+
+                foreach ($requestedQtyByItemId as $itemId => $requestedQty) {
+                    $product = $lockedItems->get($itemId);
+
+                    if (!$product) {
+                        throw new \Exception("Item not found for stock update. Item ID: {$itemId}");
+                    }
+
+                    $availableQty = (float) ($product->inventory ?? 0);
+                    if ($availableQty < $requestedQty) {
+                        $outOfStockNames->push($product->display_name);
+                        if (!$product->allow_oversell) {
+                            $blockedNames->push($product->display_name);
+                        }
+                    }
+                }
+            }
+
+            if ($blockedNames->isNotEmpty()) {
+                throw new \Exception(
+                    'Out of stock and oversell not allowed: ' . $blockedNames->unique()->implode(', ')
+                    . '. Enable "Oversell" for this product in Store Management to confirm this order anyway.'
+                );
+            }
+
             $token = $this->getToken();
 
             if (!$token) {
@@ -215,46 +263,11 @@ class AdminOrderController extends Controller
                 }
             }
 
-            foreach ($orderItems as $orderItem) {
-                if (empty($orderItem->item_id)) {
-                    throw new \Exception("Order item {$orderItem->id} is missing item reference.");
-                }
-            }
-
-            $requestedQtyByItemId = $orderItems
-                ->groupBy('item_id')
-                ->map(fn($rows) => round((float) $rows->sum('qty'), 2))
-                ->filter(fn($qty) => $qty > 0);
-
             $outOfStockItems = collect();
 
             if ($requestedQtyByItemId->isNotEmpty()) {
-                $lockedItems = Item::query()
-                    ->whereIn('id', $requestedQtyByItemId->keys()->all())
-                    ->lockForUpdate()
-                    ->get()
-                    ->keyBy('id');
-
                 foreach ($requestedQtyByItemId as $itemId => $requestedQty) {
                     $product = $lockedItems->get($itemId);
-
-                    if (!$product) {
-                        throw new \Exception("Item not found for stock update. Item ID: {$itemId}");
-                    }
-
-                    $availableQty = (float) ($product->inventory ?? 0);
-                    if ($availableQty < $requestedQty) {
-                        throw new \Exception(
-                            "Insufficient stock for item {$product->number}. Requested {$requestedQty}, available {$availableQty}."
-                        );
-                    }
-                }
-
-                foreach ($requestedQtyByItemId as $itemId => $requestedQty) {
-                    $product = $lockedItems->get($itemId);
-                    if (!$product) {
-                        continue;
-                    }
 
                     $oldInventory = (float) ($product->inventory ?? 0);
                     $newInventory = $oldInventory - $requestedQty;
@@ -325,7 +338,12 @@ class AdminOrderController extends Controller
             // making whoever opens the report next pay dompdf's render cost.
             app(OrderReportController::class)->warmCache($order);
 
-            return back()->with('success', 'Order confirmed and stored in BC Sales Order successfully.');
+            $successMessage = 'Order confirmed and stored in BC Sales Order successfully.';
+            if ($outOfStockNames->isNotEmpty()) {
+                $successMessage .= ' Warning: oversold and now out of stock — ' . $outOfStockNames->unique()->implode(', ') . '.';
+            }
+
+            return back()->with('success', $successMessage);
         } catch (\Throwable $e) {
             DB::rollBack();
 
@@ -639,15 +657,8 @@ class AdminOrderController extends Controller
 
         return false;
     }
-
-    /**
-     * Log when a line insert succeeds but critical fields were dropped from the payload.
-     * This ensures we don't silently lose discountPercent or variantCode when falling back
-     * to endpoints that don't support these required fields.
-     */
     private function logFieldDropIfNeeded(array $originalPayload, array $actualPayload, string $endpoint): void
     {
-        // Check if discount was present in original but missing in actual
         $discountDropped = (
             array_key_exists('discountPercent', $originalPayload)
             && $originalPayload['discountPercent'] > 0

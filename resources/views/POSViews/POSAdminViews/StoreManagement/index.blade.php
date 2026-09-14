@@ -33,9 +33,23 @@ document.addEventListener('DOMContentLoaded', function () {
         const alertEl = flashBox.querySelector('.custom-alert');
 
         setTimeout(() => {
-            if (!alertEl) return;
+            if (!alertEl || !flashBox.contains(alertEl)) return;
+
+            // Clear on whichever fires first: the fade-out transition, or a
+            // fallback timer. transitionend can silently never fire (e.g. the
+            // element's still-running entrance animation swallows it, or the
+            // user has reduced-motion styles disabling transitions) — without
+            // the fallback the alert was staying on screen forever in that case.
+            let cleared = false;
+            const clear = () => {
+                if (cleared) return;
+                cleared = true;
+                if (flashBox.contains(alertEl)) flashBox.innerHTML = '';
+            };
+
             alertEl.classList.add('fade-out');
-            alertEl.addEventListener('transitionend', () => flashBox.innerHTML = '', { once: true });
+            alertEl.addEventListener('transitionend', clear, { once: true });
+            setTimeout(clear, 350);
         }, 2200);
     }
 
@@ -650,6 +664,36 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        const oversellToggle = e.target.closest('.js-toggle-oversell');
+        if (oversellToggle) {
+            e.preventDefault();
+
+            if (oversellToggle.classList.contains('loading')) return;
+            oversellToggle.classList.add('loading');
+
+            try {
+                const result = await postJson(oversellToggle.dataset.url);
+
+                if (!result.success) {
+                    showMessage(result.message || 'Failed to update product.', 'error');
+                    return;
+                }
+
+                oversellToggle.classList.toggle('on', result.allow_oversell);
+                oversellToggle.classList.toggle('off', !result.allow_oversell);
+                oversellToggle.title = result.allow_oversell
+                    ? 'Customers can buy this out of stock'
+                    : 'Hidden from customers once out of stock';
+
+                showMessage(result.message || 'Updated successfully.');
+            } catch (error) {
+                showMessage('Failed to update product.', 'error');
+            } finally {
+                oversellToggle.classList.remove('loading');
+            }
+            return;
+        }
+
         const bulkActionBtn = e.target.closest('.js-bulk-action');
         if (bulkActionBtn) {
             e.preventDefault();
@@ -677,6 +721,32 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             return;
         }
+
+        const bulkOversellBtn = e.target.closest('.js-bulk-oversell');
+        if (bulkOversellBtn) {
+            e.preventDefault();
+
+            if (bulkOversellBtn.classList.contains('loading')) return;
+            bulkOversellBtn.classList.add('loading');
+
+            const action = bulkOversellBtn.dataset.action;
+
+            try {
+                const result = await postJson(bulkOversellBtn.dataset.url, { action });
+                if (!result.success) {
+                    showMessage(result.message || 'Failed to update.', 'error');
+                    return;
+                }
+                showMessage(result.message || 'Updated successfully.');
+                fetchPage({ preserveState: true });
+            } catch {
+                showMessage('Failed to update.', 'error');
+            } finally {
+                bulkOversellBtn.classList.remove('loading');
+            }
+            return;
+        }
+
         const productRow = e.target.closest('.product-row');
         if (productRow && window.innerWidth <= 768) {
             if (e.target.closest('input') || e.target.closest('button') || e.target.closest('a')) {

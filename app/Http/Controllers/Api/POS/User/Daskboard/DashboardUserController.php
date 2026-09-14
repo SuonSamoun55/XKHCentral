@@ -30,6 +30,10 @@ class DashboardUserController extends Controller
             ->when($selectedCompanyId, function ($query) use ($selectedCompanyId) {
                 $query->where('company_id', $selectedCompanyId);
             });
+        // Matches ItemListController's customer-facing listing exactly: visible
+        // items that are also actually buyable (in stock, or oversell allowed
+        // for that product) — otherwise this count would include products the
+        // user can't actually see/buy anywhere else in the app.
         $totalProducts = Item::query()
             ->when($selectedCompanyId, function ($query) use ($selectedCompanyId) {
                 $query->where('company_id', $selectedCompanyId);
@@ -41,6 +45,8 @@ class DashboardUserController extends Controller
             ->where(function ($q) {
                 $q->where('category_visible', true)->orWhereNull('category_visible');
             })
+            ->get()
+            ->filter(fn (Item $item) => $item->isPurchasable())
             ->count();
 
         $now = Carbon::now();

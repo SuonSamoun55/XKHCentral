@@ -24,6 +24,7 @@ class Item extends Model
         'inventory',
         'blocked',
         'is_visible',
+        'allow_oversell',
         'category_visible',
         'item_category_code',
         'base_unit_of_measure_code',
@@ -36,6 +37,7 @@ class Item extends Model
     protected $casts = [
         'blocked' => 'boolean',
         'is_visible' => 'boolean',
+        'allow_oversell' => 'boolean',
         'category_visible' => 'boolean',
         'price_includes_tax' => 'boolean',
         'unit_price' => 'decimal:2',
@@ -95,6 +97,23 @@ class Item extends Model
         $match = $locations->firstWhere('location_code', $setting->selling_location_code);
 
         return $match ? (float) $match->inventory : 0.0;
+    }
+
+    /**
+     * Whether a customer can actually buy this item: either it still has
+     * stock, or the admin has switched "Oversell" on for it specifically
+     * (Store Management > product row / "Open All" for out-of-stock items).
+     * Anywhere customer-facing code counts, lists, or lets someone buy a
+     * product should gate on this — not just is_visible — so a product
+     * hidden by this rule doesn't get counted as "available" elsewhere.
+     */
+    public function isPurchasable(): bool
+    {
+        if ((float) ($this->sellable_inventory ?? 0) > 0) {
+            return true;
+        }
+
+        return (bool) $this->allow_oversell;
     }
 
     public function inventoryMovements()

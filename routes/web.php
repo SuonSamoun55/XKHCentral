@@ -68,6 +68,8 @@ Route::post('/store-management/categories/{code}/toggle', [StoreManagementContro
 Route::post('/store-management/products/bulk-update', [StoreManagementController::class, 'bulkUpdateProducts'])->name('store.management.products.bulkUpdate');
 Route::post('/store-management/categories/bulk-update', [StoreManagementController::class, 'bulkUpdateCategories'])->name('store.management.categories.bulkUpdate');
 Route::post('/store-management/selling-location', [StoreManagementController::class, 'updateSellingLocation'])->name('store.management.sellingLocation.update');
+Route::post('/store-management/products/{id}/toggle-oversell', [StoreManagementController::class, 'toggleOversell'])->name('store.management.products.toggleOversell');
+Route::post('/store-management/products/oversell/bulk-out-of-stock', [StoreManagementController::class, 'bulkUpdateOversellOutOfStock'])->name('store.management.products.oversell.bulkOutOfStock');
 Route::get('/store/management/products/{id}/images', [StoreManagementController::class, 'editImages'])
     ->name('store.management.product.images');
 Route::post('/store/management/products/{id}/image', [StoreManagementController::class, 'uploadMainImage'])

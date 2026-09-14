@@ -52,6 +52,8 @@ class ItemListController extends Controller
             return $this->decorateItem($item);
         });
 
+        $items = $this->filterPurchasable($items);
+
         $favoriteIds = Favorite::where('user_id', $user->id)
             ->pluck('item_id')
             ->toArray();
@@ -137,6 +139,8 @@ class ItemListController extends Controller
             return $this->decorateItem($item);
         });
 
+        $items = $this->filterPurchasable($items);
+
         return view('POSViews.POSUserViews.mobile.POSitemCategoryProductsMobileView', compact('items', 'categoryTitle', 'categoryCode'));
     }
 
@@ -178,6 +182,8 @@ class ItemListController extends Controller
 
             return $this->decorateItem($item);
         });
+
+        $items = $this->filterPurchasable($items);
 
         // ✅ FAVORITES (for ❤️ state)
         $favoriteIds = [];
@@ -235,6 +241,8 @@ class ItemListController extends Controller
         $items->transform(function (Item $item) {
             return $this->decorateItem($item);
         });
+
+        $items = $this->filterPurchasable($items);
 
         return response()->json([
             'count' => $items->count(),
@@ -299,6 +307,15 @@ class ItemListController extends Controller
             'qty' => ['nullable', 'numeric', 'min:0.01'],
         ]);
 
+        $item = Item::findOrFail($validated['item_id']);
+
+        if (!$this->isItemPurchasable($item)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This product is out of stock and cannot be added to cart.',
+            ], 422);
+        }
+
         $qty = round((float) ($validated['qty'] ?? 1), 2);
         // A product can expose multiple option groups (Size, Beef Type, ...),
         // but a cart line only tracks one variant, so the first selection wins.
@@ -361,6 +378,11 @@ class ItemListController extends Controller
             ->firstOrFail();
 
         $item = $this->decorateItem($item);
+
+        if (!$this->isItemPurchasable($item)) {
+            return redirect()->route('user.posinterface')
+                ->with('error', 'This product is currently out of stock and unavailable.');
+        }
 
         $discountPercent = $item->effective_discount_percent;
         $finalPrice = $item->final_price;
@@ -439,6 +461,8 @@ class ItemListController extends Controller
             return $this->decorateItem($relatedItem);
         });
 
+        $relatedItems = $this->filterPurchasable($relatedItems);
+
         return view('POSViews.POSUserViews.Products.show', compact(
             'item', 'discountPercent', 'finalPrice', 'unitPrice', 'cartCount', 'variants', 'favoriteIds', 'relatedItems'
         ));
@@ -489,6 +513,29 @@ class ItemListController extends Controller
             'favorited' => $favorited,
             'message' => $favorited ? 'Added to favorites.' : 'Removed from favorites.',
         ]);
+    }
+
+    /**
+     * A product is purchasable if it still has sellable stock, or if the
+     * admin has switched "Oversell" on for that specific product in Store
+     * Management (see StoreManagementController::toggleOversell /
+     * AdminOrderController::confirm) — a per-product decision, not a
+     * store-wide one, since some products may be fine to backorder and
+     * others may not.
+     */
+    private function isItemPurchasable(Item $item): bool
+    {
+        return $item->isPurchasable();
+    }
+
+    /**
+     * Drop out-of-stock items from a listing when that specific product
+     * doesn't allow oversell, so customers never see something they can't
+     * actually buy.
+     */
+    private function filterPurchasable($items)
+    {
+        return $items->filter(fn (Item $item) => $this->isItemPurchasable($item))->values();
     }
 
     private function decorateItem(Item $item): Item

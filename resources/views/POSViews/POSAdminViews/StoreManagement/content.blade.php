@@ -77,14 +77,14 @@
                             </select>
                         </div>
 
-                        <a
+                        {{-- <a
                             href="{{ route('store.management.tracking') }}"
                             class="store-action-btn btn-active-custom store-menu-btn"
                             style="text-decoration:none;"
                         >
                             <i class="bi bi-activity"></i>
                             Track Stock
-                        </a>
+                        </a> --}}
 
                         <button
                             type="button"
@@ -129,6 +129,29 @@
                             <i class="bi bi-x-circle"></i>
                             Deactivate
                         </button>
+
+                        <div class="store-menu-item products-only-btn" style="border-top:1px solid #e5e7eb; padding-top:8px; margin-top:4px;">
+                            <label class="store-menu-label">Oversell (out-of-stock products only)</label>
+                            <button
+                                type="button"
+                                class="store-action-btn btn-active-custom store-menu-btn js-bulk-oversell"
+                                data-action="open"
+                                data-url="{{ route('store.management.products.oversell.bulkOutOfStock') }}"
+                            >
+                                <i class="bi bi-unlock"></i>
+                                Open All
+                            </button>
+
+                            <button
+                                type="button"
+                                class="store-action-btn btn-inactive-custom store-menu-btn js-bulk-oversell"
+                                data-action="close"
+                                data-url="{{ route('store.management.products.oversell.bulkOutOfStock') }}"
+                            >
+                                <i class="bi bi-lock"></i>
+                                Close All
+                            </button>
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -155,6 +178,8 @@
                         <th>Price</th>
                         <th>Stock</th>
                         <th>Location</th>
+                        <th>Visible</th>
+                        <th>Oversell</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -217,41 +242,56 @@
                             <td>{{ (int) $item->sellable_inventory }}</td>
                             <td>
                                 @if (optional($storeSetting)->selling_location_code)
-                                    <div style="font-size:12px; white-space:nowrap;">{{ $storeSetting->selling_location_name ?: $storeSetting->selling_location_code }}</div>
+                                    <div style="font-size:11px; white-space:nowrap;">{{ $storeSetting->selling_location_name ?: $storeSetting->selling_location_code }}</div>
                                 @else
                                     <span style="color:#9ca3af;">No location selected</span>
                                 @endif
                             </td>
 
+                            <td class="col-toggle">
+                                <span class="mobile-only-label">Visible:</span>
+                                <button
+                                    type="button"
+                                    class="toggle-switch js-toggle-product {{ is_null($item->is_visible) ? 'not-setup' : ($item->is_visible ? 'on' : 'off') }}"
+                                    data-url="{{ route('store.management.products.toggle', $item->id) }}"
+                                    title="{{ is_null($item->is_visible) ? 'Not set up yet — click to activate' : 'Toggle product visibility' }}"
+                                >
+                                    <span class="toggle-dot"></span>
+                                </button>
+                            </td>
+
+                            <td class="col-toggle">
+                                <span class="mobile-only-label">Oversell:</span>
+                                <button
+                                    type="button"
+                                    class="toggle-switch js-toggle-oversell {{ $item->allow_oversell ? 'on' : 'off' }}"
+                                    data-url="{{ route('store.management.products.toggleOversell', $item->id) }}"
+                                    title="{{ $item->allow_oversell ? 'Customers can buy this out of stock' : 'Hidden from customers once out of stock' }}"
+                                >
+                                    <span class="toggle-dot"></span>
+                                </button>
+                            </td>
+
                             <td>
                                 <div class="status-action-wrap">
-                                    <button
-                                        type="button"
-                                        class="toggle-switch js-toggle-product {{ is_null($item->is_visible) ? 'not-setup' : ($item->is_visible ? 'on' : 'off') }}"
-                                        data-url="{{ route('store.management.products.toggle', $item->id) }}"
-                                        title="{{ is_null($item->is_visible) ? 'Not set up yet — click to activate' : 'Toggle product visibility' }}"
-                                    >
-                                        <span class="toggle-dot"></span>
-                                    </button>
-
-                                    <a href="{{ route('store.management.products.detail', $item->id) }}" class="store-action-btn btn-active-custom" style="height:30px; padding:0 10px; font-size:12px; text-decoration:none;">
+                                    <a href="{{ route('store.management.products.detail', $item->id) }}" class="store-action-btn btn-active-custom" style="height:30px; padding:0 10px; font-size:11px; text-decoration:none;">
                                         <i class="bi bi-eye"></i> <span class="btn-text">View Detail</span>
                                     </a>
 
-                                    <a href="{{ route('store.management.product.images', $item->id) }}" class="store-action-btn btn-active-custom" style="height:30px; padding:0 10px; font-size:12px; text-decoration:none;">
+                                    <a href="{{ route('store.management.product.images', $item->id) }}" class="store-action-btn btn-active-custom" style="height:30px; padding:0 10px; font-size:11px; text-decoration:none;">
                                         <i class="bi bi-image"></i> <span class="btn-text">Update</span>
                                     </a>
                                 </div>
 
-                                <div class="setup-badges-row" style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;">
+                                <div class="setup-badges-row" style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap; justify-content:flex-end;">
                                     @if($item->main_image_done)
-                                        <span style="font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; background:#d1fae5; color:#065f46;">
+                                        <span style="font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; background:#d1fae5; color:#065f46;">
                                             <i class="bi bi-check-circle"></i> Image Setup
                                         </span>
                                     @endif
 
                                     @if($item->variants_done)
-                                        <span style="font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; background:#d1fae5; color:#065f46;">
+                                        <span style="font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; background:#d1fae5; color:#065f46;">
                                             <i class="bi bi-check-circle"></i> Variants Setup
                                         </span>
                                     @endif
@@ -260,7 +300,7 @@
                         </tr>
                     @empty
                         <tr id="noProductRow">
-                            <td colspan="8">
+                            <td colspan="10">
                                 <div class="empty-state-box">No products found.</div>
                             </td>
                         </tr>
