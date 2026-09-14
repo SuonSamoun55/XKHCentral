@@ -1,18 +1,6 @@
-:root{
-        --primary:#1bb8c9;
-        --primary-dark:#12a5b5;
-        --bg:#f5f6f8;
-        --white:#ffffff;
-        --text:#202938;
-        --muted:#8b95a7;
-        --border:#eceef2;
-        --danger:#ef4444;
-        --warning:#f59e0b;
-        --success:#10b981;
-        --info:#3b82f6;
-        --shadow:0 8px 24px rgba(15, 23, 42, 0.06);
-        --radius:16px;
-    }
+/* Design tokens (colors, shadow) now live in
+   public/css/views/shared/admin-variables.css, loaded by the layout
+   before this file. */
 
     *{
         margin:0;
@@ -986,10 +974,10 @@
         body{
             overflow-x:hidden;
         }
-
-        /* .footer-label{
-            display: none;
-        } */
+        .main-wrapper, .app-shell{
+            padding:0;
+            height: 100%;
+        }
         .mobile-topbar-title{
             display:none;
         }
@@ -998,7 +986,7 @@
         }
         .filter-select{max-width: 50px;}
         .main-wrap{
-            padding:10px;
+            padding:0px;
             border-radius:0;
             overflow-x:hidden;
             height:auto;
@@ -1184,6 +1172,14 @@
         .table-wrap{
             /* max-height:none; */
             overflow:visible;
+
+        }
+        .table-card{
+            border:none;
+            box-shadow:none;
+            border-radius:0;
+            flex:1;
+            min-height:0;
         }
 
         .discount-table{

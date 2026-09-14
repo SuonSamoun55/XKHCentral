@@ -3,8 +3,10 @@
 @section('content')
 <div class="store-page-wrap">
     <div class="store-panel">
-        <div id="storeFlashBox"></div>
-        <div id="storeAjaxContainer"></div>
+        <div id="storeFlashBox" class="alert-container"></div>
+        <div id="storeAjaxContainer">
+            @include('POSViews.POSAdminViews.StoreManagement.content')
+        </div>
     </div>
 </div>
 @endsection
@@ -22,13 +24,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function showMessage(message, type = 'success') {
         flashBox.innerHTML = `
-            <div class="alert alert-${type === 'success' ? 'success' : 'danger'} custom-alert">
-                ${message}
+            <div class="custom-alert ${type === 'success' ? 'alert-success' : 'alert-danger'}">
+                <i class="bi ${type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'}"></i>
+                <span>${message}</span>
             </div>
         `;
 
+        const alertEl = flashBox.querySelector('.custom-alert');
+
         setTimeout(() => {
-            flashBox.innerHTML = '';
+            if (!alertEl) return;
+            alertEl.classList.add('fade-out');
+            alertEl.addEventListener('transitionend', () => flashBox.innerHTML = '', { once: true });
         }, 2200);
     }
 
@@ -224,19 +231,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        const banner = document.getElementById('storeSelectionBanner');
-        const bannerText = document.getElementById('storeSelectionBannerText');
-        if (banner && bannerText) {
-            if (activeChecked.length > 0) {
-                const noun = activeTab === 'products'
-                    ? (activeChecked.length === 1 ? 'product' : 'products')
-                    : (activeChecked.length === 1 ? 'category' : 'categories');
-                bannerText.textContent = `${activeChecked.length} ${noun} selected`;
-                banner.classList.add('show');
-            } else {
-                banner.classList.remove('show');
-            }
-        }
     }
 
     function createPagination(container, totalPages, currentPage, onPageClick) {
@@ -537,6 +531,28 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
+        const sellingLocation = document.getElementById('storeSellingLocation');
+        if (sellingLocation) {
+            sellingLocation.addEventListener('change', async function () {
+                this.disabled = true;
+                try {
+                    const data = await postJson('{{ route('store.management.sellingLocation.update') }}', {
+                        location_code: this.value
+                    });
+
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to update selling location.');
+                    }
+
+                    showMessage('Selling location updated.');
+                    await fetchPage({ preserveState: true });
+                } catch (error) {
+                    showMessage('Failed to update selling location.', 'error');
+                    this.disabled = false;
+                }
+            });
+        }
+
         runCurrentTabFilter();
     }
 
@@ -587,6 +603,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     row.dataset.status = result.is_visible ? 'active' : 'inactive';
                 }
 
+                productToggle.classList.remove('not-setup');
                 productToggle.classList.toggle('on', result.is_visible);
                 productToggle.classList.toggle('off', !result.is_visible);
 
@@ -660,12 +677,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             return;
         }
-
-        // Phone only: the View Detail / Update links are hidden there (see
-        // .status-action-wrap a.store-action-btn in index.css) in favor of
-        // tapping the card itself. Desktop keeps its explicit icon links —
-        // the row's other cells hold selectable text there, so making the
-        // whole row a nav target would fight text selection.
         const productRow = e.target.closest('.product-row');
         if (productRow && window.innerWidth <= 768) {
             if (e.target.closest('input') || e.target.closest('button') || e.target.closest('a')) {
@@ -706,7 +717,10 @@ document.addEventListener('DOMContentLoaded', function () {
             updateSelectedCounts();
         }
     });
-
-    fetchPage();
+    fixAjaxTabLayout();
+    bindClientFiltering();
+    bindMenuToggle();
+    updateSelectedCounts();
+    switchTab(activeTab);
 });
 </script>

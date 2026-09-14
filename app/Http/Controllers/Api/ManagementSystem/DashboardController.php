@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\ManagementSystem;
 
+use App\Http\Controllers\Concerns\ResolvesImageUrl;
 use App\Http\Controllers\Controller;
 use App\Models\ManagementSystem\Company;
 use App\Models\ManagementSystem\Notification;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    use ResolvesImageUrl;
+
     private const DEFAULT_AVATAR = 'images/pos/Rectangle 2.png';
 
 
@@ -23,7 +26,7 @@ class DashboardController extends Controller
         return session('selected_company_id') ?? Company::query()->value('id');
     }
 
-//show page daskboard admin and offer filter
+    //show page daskboard admin and offer filter
     public function index()
     {
         /** @var \App\Models\ManagementSystem\User|null $user */
@@ -143,7 +146,7 @@ class DashboardController extends Controller
             'reportPeriod'
         ));
     }
-// graph chat inside daskbord
+    // graph chat inside daskbord
     public function reportChart()
     {
         $this->authorizeAjaxAdmin();
@@ -177,9 +180,8 @@ class DashboardController extends Controller
         [$chartData, $yAxisSteps, $yAxisMax] = $this->buildReportChart($orderQuery, $reportPeriod, $now, $selectedYear);
 
         return response()->json(compact('chartData', 'yAxisSteps', 'yAxisMax', 'selectedYear'));
-
     }
-//top product
+    //top product
     public function topProductsData()
     {
         $this->authorizeAjaxAdmin();
@@ -462,7 +464,7 @@ class DashboardController extends Controller
                 'name' => $row->item_name,
                 'sub' => ((int) $row->total_qty) . '+ Sales',
                 'value' => '$' . number_format((float) $row->unit_price, 0),
-                'thumb' => $row->custom_image_url ?: $row->image_url,
+                'thumb' => $this->resolveImageUrl($row->custom_image_url ?: $row->image_url),
                 'change' => $this->percentChange($prevQty, (float) $row->total_qty),
             ];
         })->values()->all();

@@ -1,7 +1,7 @@
 @extends('Layout.Management.app')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('/css/views/Management/company_list.css') }}">
+    <link rel="stylesheet" href="{{ asset('/css/views/Management/Company/company_list.css') }}">
     <link rel="stylesheet" href="{{ asset('/css/views/Management/Password/adminchangepassword.css') }}">
 @endpush
 
@@ -89,7 +89,7 @@
 
                     <div class="info">
                         <div class="info-name-row">
-                            <span class="info-name">{{ $company->display_name ?? $company->name }}</span>
+                            <span class="info-name">{{ ucwords($company->display_name ?? $company->name) }}</span>
                             @if ($isSelected)
                                 <span class="selected-tag">CURRENT</span>
                             @endif
@@ -150,7 +150,7 @@
                         </a>
                         <button type="button" class="icon-btn danger open-delete-confirm" title="Delete"
                             data-url="{{ route('companies.destroy', $company->id) }}"
-                            data-label="{{ $company->display_name ?? $company->name }}">
+                            data-label="{{ ucwords($company->display_name ?? $company->name) }}">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="2">
                                 <path d="M3 6h18" />

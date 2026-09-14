@@ -53,7 +53,10 @@ class AuthController extends Controller
         $user->last_seen_at = now();
         $user->save();
         if ($user->company_id) {
+            // Pinned to one company — always that one, same as before.
             session(['selected_company_id' => $user->company_id]);
+        } elseif ($user->last_company_id) {
+            session(['selected_company_id' => $user->last_company_id]);
         } else {
             session()->forget('selected_company_id');
         }

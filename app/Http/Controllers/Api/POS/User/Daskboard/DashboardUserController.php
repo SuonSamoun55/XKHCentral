@@ -6,9 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\ManagementSystem\Notification;
 use App\Models\POS\Order;
 use App\Models\POS\OrderItem;
-use App\Models\POS\Item; // adjust namespace if your Item model lives elsewhere
+use App\Models\POS\Item;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -31,49 +30,37 @@ class DashboardUserController extends Controller
             ->when($selectedCompanyId, function ($query) use ($selectedCompanyId) {
                 $query->where('company_id', $selectedCompanyId);
             });
-
-        $totalOrders = (clone $orderQuery)->count();
-        $pendingOrders = (clone $orderQuery)->where('status', 'pending')->count();
-        $totalOrderAmount = (float) ((clone $orderQuery)->sum('total_amount') ?? 0);
-
         $totalProducts = Item::query()
             ->when($selectedCompanyId, function ($query) use ($selectedCompanyId) {
                 $query->where('company_id', $selectedCompanyId);
             })
+            ->where(function ($q) {
+                $q->where('blocked', false)->orWhereNull('blocked');
+            })
+            ->where('is_visible', true)
+            ->where(function ($q) {
+                $q->where('category_visible', true)->orWhereNull('category_visible');
+            })
             ->count();
 
         $now = Carbon::now();
-        $thisMonthOrders = (clone $orderQuery)
-            ->whereYear('created_at', $now->year)
-            ->whereMonth('created_at', $now->month)
-            ->count();
-        $thisMonthAmount = (float) ((clone $orderQuery)
-            ->whereYear('created_at', $now->year)
-            ->whereMonth('created_at', $now->month)
-            ->sum('total_amount') ?? 0);
-
-        // ================================================================
-        // PRODUCTS SUMMARY (Admin Confirmed / Pending / Cancel cards)
-        // One grouped query gives us the count + amount per status in a
-        // single pass instead of three separate sum()/count() calls.
-        // ================================================================
         $statusBreakdown = (clone $orderQuery)
             ->select('status', DB::raw('COUNT(*) as cnt'), DB::raw('COALESCE(SUM(total_amount), 0) as amt'))
             ->groupBy('status')
             ->get()
             ->keyBy('status');
 
+        $totalOrders = (int) $statusBreakdown->sum('cnt');
+
         $confirmedOrders = (int) ($statusBreakdown['confirmed']->cnt ?? 0);
         $confirmedAmount = (float) ($statusBreakdown['confirmed']->amt ?? 0);
 
         $pendingOrdersCount = (int) ($statusBreakdown['pending']->cnt ?? 0);
+        $pendingOrders = $pendingOrdersCount;
         $pendingAmount = (float) ($statusBreakdown['pending']->amt ?? 0);
 
         $cancelledOrders = (int) ($statusBreakdown['cancelled']->cnt ?? 0);
         $cancelledAmount = (float) ($statusBreakdown['cancelled']->amt ?? 0);
-
-        // "Pending" card shows item count (not order count) in the mockup,
-        // so total qty across items belonging to pending orders.
         $pendingItems = (int) (OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.user_id', $user->id)
@@ -82,9 +69,6 @@ class DashboardUserController extends Controller
                 $query->where('orders.company_id', $selectedCompanyId);
             })
             ->sum('order_items.qty') ?? 0);
-
-        // Ring fill % = this status's share of all orders. Guard against
-        // divide-by-zero when the user has no orders yet.
         $confirmedPct = $totalOrders > 0 ? (int) round(($confirmedOrders / $totalOrders) * 100) : 0;
         $pendingPct = $totalOrders > 0 ? (int) round(($pendingOrdersCount / $totalOrders) * 100) : 0;
         $cancelledPct = $totalOrders > 0 ? (int) round(($cancelledOrders / $totalOrders) * 100) : 0;
@@ -93,7 +77,7 @@ class DashboardUserController extends Controller
             ->selectRaw('DISTINCT YEAR(created_at) as yr')
             ->orderByDesc('yr')
             ->pluck('yr')
-            ->map(fn ($yr) => (int) $yr)
+            ->map(fn($yr) => (int) $yr)
             ->values();
 
         if ($availableYears->isEmpty()) {
@@ -110,7 +94,7 @@ class DashboardUserController extends Controller
             ? (int) $requestedMonth
             : null;
 
-        $monthOptions = collect(range(1, 12))->map(fn ($m) => [
+        $monthOptions = collect(range(1, 12))->map(fn($m) => [
             'value' => $m,
             'label' => Carbon::create($selectedYear, $m, 1)->format('F'),
         ]);
@@ -124,23 +108,18 @@ class DashboardUserController extends Controller
             ->latest()
             ->take(8)
             ->get();
-
-        // Eager-load sender so decorateNotificationIcon() can pick a
-        // profile image for admin-type notifications, same as the full
-        // notification list page does.
         $recentNotifications = Notification::query()
             ->with('sender')
             ->where('user_id', $user->id)
             ->latest()
             ->take(4)
             ->get()
-            ->map(fn ($notification) => $this->decorateNotificationIcon($notification));
+            ->map(fn($notification) => $this->decorateNotificationIcon($notification));
 
         $unreadNotificationCount = (int) Notification::query()
             ->where('user_id', $user->id)
             ->where('is_read', false)
             ->count();
-
         $purchasedItemsBase = OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.user_id', $user->id)
@@ -172,7 +151,7 @@ class DashboardUserController extends Controller
         $purchaseTotals = (clone $purchasedItemsBase)
             ->selectRaw('COALESCE(SUM(order_items.qty), 0) as qty_total, COALESCE(SUM(order_items.line_total), 0) as amount_total')
             ->first();
-        $purchaseQtyTotal = (int) ($purchaseTotals->qty_total ?? 0);
+        $purchaseQtyTotal = (float) ($purchaseTotals->qty_total ?? 0);
         $purchaseAmountTotal = (float) ($purchaseTotals->amount_total ?? 0);
 
         $reportLabels = [];
@@ -224,9 +203,6 @@ class DashboardUserController extends Controller
             'totalOrders',
             'pendingOrders',
             'totalProducts',
-            'totalOrderAmount',
-            'thisMonthOrders',
-            'thisMonthAmount',
             'confirmedAmount',
             'confirmedOrders',
             'confirmedPct',
@@ -249,32 +225,6 @@ class DashboardUserController extends Controller
             'selectedYear',
             'monthOptions',
             'selectedMonth'
-        ));
-    }
-
-    public function mobileDashboard()
-    {
-        $user = Auth::user();
-
-        $totalOrder = Order::where('user_id', $user->id)
-            ->sum('total_amount');
-
-        $totalReturn = Order::where('user_id', $user->id)
-            ->where('status', 'returned')
-            ->sum('total_amount');
-
-        $start = Carbon::now()->subDays(6)->startOfDay();
-
-        $dailySales = Order::where('user_id', $user->id)
-            ->whereBetween('created_at', [$start, Carbon::now()->endOfWeek()])
-            ->selectRaw('DATE(created_at) as date, SUM(total_amount) as total')
-            ->groupBy('date')
-            ->pluck('total', 'date');
-
-        return view('views.POSViews.POSUserViews.Daskboard.DashboardUser', compact(
-            'totalOrder',
-            'totalReturn',
-            'dailySales'
         ));
     }
 

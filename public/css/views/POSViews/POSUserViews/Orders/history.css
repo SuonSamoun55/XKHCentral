@@ -1,3 +1,13 @@
+:root {
+    --oh-primary: #18bfd0;
+    --oh-primary-hover: #14a7b6;
+    --oh-border: #d6dde5;
+    --oh-text-dark: #0f172a;
+    --oh-text-mid: #334155;
+    --oh-text-muted: #475569;
+    --oh-text-light: #64748b;
+}
+
 body {
     background: #f4f6f8;
 }
@@ -15,8 +25,6 @@ body {
 
 .page-wrap {
     padding: 20px;
-    /* padding-left: 20px;
-    padding-right: 20px; */
     padding-top: 0;
     background: var(--card);
     border-radius: 14px;
@@ -73,19 +81,19 @@ body {
     width: 100%;
     height: 32px;
     padding: 0 40px 0 12px;
-    border: 1px solid #d6dde5;
+    border: 1px solid var(--oh-border);
     border-radius: 5px;
     box-sizing: border-box;
     background-color: #fff;
     position: relative;
     z-index: 1;
     font-size: 11px;
-    color: #475569;
+    color: var(--oh-text-muted);
     outline: none;
 }
 
 #dateInput:focus {
-    border-color: #18bfd0;
+    border-color: var(--oh-primary);
     box-shadow: 0 0 0 2px rgba(24, 191, 208, 0.10);
 }
 
@@ -112,7 +120,7 @@ body {
     left: 12px;
     background: white;
     font-size: 11px;
-    color: #475569;
+    color: var(--oh-text-muted);
     font-weight: 500;
     z-index: 10;
 }
@@ -174,18 +182,18 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     width: 100%;
     padding: 0 10px 0 30px;
     height: 100%;
-    border: 1px solid #d6dde5;
+    border: 1px solid var(--oh-border);
     border-radius: 5px;
     outline: none;
     font-size: 11px;
-    color: #334155;
+    color: var(--oh-text-mid);
     background: #fff;
     transition: 0.2s ease;
     box-sizing: border-box;
 }
 
 .search-box input:focus {
-    border-color: #18bfd0;
+    border-color: var(--oh-primary);
     box-shadow: 0 0 0 2px rgba(24, 191, 208, 0.10);
 }
 
@@ -195,14 +203,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .tab-btn {
-    border: 1px solid #d6dde5;
+    border: 1px solid var(--oh-border);
     background: #fff;
     height: 32px;
     padding: 0 11px;
     border-radius: 5px;
     font-size: 11px;
     font-weight: 600;
-    color: #475569;
+    color: var(--oh-text-muted);
     cursor: pointer;
     transition: 0.2s ease;
     display: inline-flex;
@@ -211,18 +219,18 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .tab-btn:hover {
-    border-color: #18bfd0;
-    color: #18bfd0;
+    border-color: var(--oh-primary);
+    color: var(--oh-primary);
 }
 
 .tab-btn.active {
-    background: #18bfd0;
+    background: var(--oh-primary);
     color: #fff;
-    border-color: #18bfd0;
+    border-color: var(--oh-primary);
 }
 
 .right-section input {
-    border: 1px solid #d6dde5;
+    border: 1px solid var(--oh-border);
     border-radius: 5px;
     padding: 6px 10px;
     font-size: 11px;
@@ -260,7 +268,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .table thead th {
-    background: #18bfd0 !important;
+    background: var(--oh-primary) !important;
     color: #fff;
     border: none;
     font-size: 14px;
@@ -284,7 +292,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .table tbody td {
     padding: 7px 6px;
     font-size: 11px;
-    color: #475569;
+    color: var(--oh-text-muted);
     border-bottom: 1px solid #e8eef4;
     vertical-align: middle;
 }
@@ -294,7 +302,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .order-link {
-    color: #18bfd0;
+    color: var(--oh-primary);
     font-weight: 500;
     text-decoration: none;
     font-size: 11px;
@@ -302,20 +310,20 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .date-text {
     font-weight: 500;
-    color: #0f172a;
+    color: var(--oh-text-dark);
     font-size: 11px;
 }
 
 .time-text {
     font-size: 11px;
-    color: #64748b;
+    color: var(--oh-text-light);
     margin-top: 2px;
 }
 
 .total-text {
     font-weight: 500;
     font-size: 11px;
-    color: #334155;
+    color: var(--oh-text-mid);
 }
 
 .status-badge {
@@ -368,7 +376,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .btn-download {
-    background: #18bfd0;
+    background: var(--oh-primary);
     color: #fff;
     border: none;
     padding: 0 14px;
@@ -387,7 +395,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .btn-download:hover {
-    background: #14a7b6;
+    background: var(--oh-primary-hover);
     color: #fff;
 }
 
@@ -424,7 +432,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     left: 0;
     right: 0;
     background: white;
-    border: 1px solid #d6dde5;
+    border: 1px solid var(--oh-border);
     border-radius: 5px;
     z-index: 1000;
     display: none;
@@ -435,8 +443,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .search-suggestions.active {
     display: block;
     font-size: 11px;
-    border: 1px solid #d6dde5;
-    color: #475569;
+    border: 1px solid var(--oh-border);
+    color: var(--oh-text-muted);
 }
 
 .suggestion-item {
@@ -482,7 +490,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     height: 32px;
     border-radius: 5px;
     font-size: 11px;
-    color: #475569;
+    color: var(--oh-text-muted);
     z-index: 5;
 }
 
@@ -505,8 +513,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 #cancelSelection {
     background: #fff;
-    border: 1px solid #d6dde5;
-    color: #334155;
+    border: 1px solid var(--oh-border);
+    color: var(--oh-text-mid);
     height: 26px;
     padding: 0 10px;
     border-radius: 5px;
@@ -525,7 +533,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     gap: 10px;
     flex-wrap: wrap;
     padding: 12px 2px 0;
-    color: #64748b;
+    color: var(--oh-text-light);
     font-size: 11px;
 }
 
@@ -539,12 +547,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .pager-size-form select {
     height: 32px;
     min-width: 80px;
-    border: 1px solid #d6dde5;
+    border: 1px solid var(--oh-border);
     border-radius: 5px;
     padding: 0 8px;
     background: #fff;
     font-size: 11px;
-    color: #475569;
+    color: var(--oh-text-muted);
     outline: none;
 }
 
@@ -552,9 +560,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     height: 30px;
     min-width: 70px;
     padding: 0 10px;
-    border: 1px solid #d6dde5;
+    border: 1px solid var(--oh-border);
     background: #fff;
-    color: #334155;
+    color: var(--oh-text-mid);
     border-radius: 5px;
     font-size: 11px;
     font-weight: 600;
@@ -572,13 +580,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .pager-page-info {
     font-size: 11px;
-    color: #475569;
+    color: var(--oh-text-muted);
     font-weight: 600;
 }
 
 .pager-result-count {
     font-size: 11px;
-    color: #64748b;
+    color: var(--oh-text-light);
     white-space: nowrap;
 }
 
@@ -603,13 +611,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .order-empty-state-title {
     font-size: 14px;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--oh-text-dark);
     margin: 0 0 8px;
 }
 
 .order-empty-state-subtitle {
     font-size: 11px;
-    color: #64748b;
+    color: var(--oh-text-light);
     line-height: 1.6;
     margin: 0;
     max-width: 360px;
@@ -801,7 +809,6 @@ screen and (max-width: 926px) and (orientation: landscape) {
         overflow: auto;
         height: 100%;
         padding-bottom: 75px;
-        /* padding: 4px 4px 90px; */
     }
 
     .order-card-mobile {
@@ -831,20 +838,20 @@ screen and (max-width: 926px) and (orientation: landscape) {
     .order-card-id {
         font-size: 12px;
         font-weight: 600;
-        color: #0f172a;
+        color: var(--oh-text-dark);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
     .order-card-id span {
-        color: #18bfd0;
+        color: var(--oh-primary);
     }
 
     .order-card-price {
         font-size: 14px;
         font-weight: 800;
-        color: #18bfd0;
+        color: var(--oh-primary);
         margin-top: 2px;
     }
 
@@ -896,7 +903,7 @@ screen and (max-width: 926px) and (orientation: landscape) {
     .status-pill.canceled,
     .status-pill.failed {
         background: #f1f5f9;
-        color: #64748b;
+        color: var(--oh-text-light);
     }
 
     .mobile-download-btn {
@@ -904,7 +911,7 @@ screen and (max-width: 926px) and (orientation: landscape) {
         height: 30px;
         border-radius: 50%;
         background: #e6f7fb;
-        color: #18bfd0;
+        color: var(--oh-primary);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -914,7 +921,7 @@ screen and (max-width: 926px) and (orientation: landscape) {
     }
 
     .mobile-download-btn:active {
-        background: #18bfd0;
+        background: var(--oh-primary);
         color: #fff;
     }
 

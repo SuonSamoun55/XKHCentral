@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api\POS\User\Favorites;
 
+use App\Http\Controllers\Concerns\ResolvesImageUrl;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use App\Models\POS\Favorite;
 use App\Models\POS\Item;
 use App\Models\POS\ItemVariant;
@@ -14,6 +14,8 @@ use Carbon\Carbon;
 
 class FavoriteController extends Controller
 {
+    use ResolvesImageUrl;
+
     public function toggle(Request $request)
     {
         $validated = $request->validate([
@@ -69,18 +71,12 @@ class FavoriteController extends Controller
 
         $favorites = Item::whereIn('id', function ($query) use ($user) {
             $query->select('item_id')
-                  ->from('favorites')
-                  ->where('user_id', $user->id);
+                ->from('favorites')
+                ->where('user_id', $user->id);
         })
-        ->where('company_id', $user->company_id)
-        ->where('is_visible', true)
-        ->get();
-
-        // ── Batch-load variants for every favorite item in one query,
-        // same pattern as ItemListController::getItems(), so the Blade
-        // view's $item->variants works and the variant popup can fire.
-        // We do NOT filter out blocked variants here on purpose — the
-        // popup wants to show blocked variants too (disabled/struck-through).
+            ->where('company_id', $user->company_id)
+            ->where('is_visible', true)
+            ->get();
         $itemIds = $favorites->pluck('id');
 
         $variantsByItem = ItemVariant::whereIn('item_id', $itemIds)
@@ -98,7 +94,9 @@ class FavoriteController extends Controller
 
         $cartCount = 0;
         if ($user) {
+            $companyId = session('selected_company_id') ?? $user->company_id;
             $activeCart = Cart::where('user_id', $user->id)
+                ->where('company_id', $companyId)
                 ->where('status', 'active')
                 ->first();
 
@@ -109,14 +107,6 @@ class FavoriteController extends Controller
 
         return view('POSViews.POSUserViews.Favorites.index', compact('favorites', 'cartCount'));
     }
-
-    /**
-     * Apply discount/price + resolved image_url to a single item.
-     * Mirrors ItemListController::decorateItem() so favorites and the
-     * product list stay visually/behaviorally consistent (same image
-     * resolution, same discount math, same final_price attribute the
-     * Blade view and variant popup both depend on).
-     */
     private function decorateItem(Item $item): Item
     {
         $discountPercent = $this->resolveDiscountPercent($item);
@@ -150,31 +140,5 @@ class FavoriteController extends Controller
         }
 
         return min(100, $discount);
-    }
-
-    /**
-     * Make sure image_url is always a full, browser-loadable URL,
-     * whether it's stored as a full URL, a public disk path, or empty.
-     * Same logic as ItemListController::resolveImageUrl().
-     */
-    private function resolveImageUrl(?string $rawPath): string
-    {
-        if (!$rawPath) {
-            return asset('images/no-image.png');
-        }
-
-        if (str_starts_with($rawPath, 'http://') || str_starts_with($rawPath, 'https://')) {
-            return $rawPath;
-        }
-
-        if (str_starts_with($rawPath, '/')) {
-            return asset(ltrim($rawPath, '/'));
-        }
-
-        if (Storage::disk('public')->exists($rawPath)) {
-            return asset('storage/' . $rawPath);
-        }
-
-        return asset($rawPath);
     }
 }

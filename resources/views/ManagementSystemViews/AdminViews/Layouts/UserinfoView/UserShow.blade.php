@@ -147,7 +147,12 @@
         <!-- Info cards -->
         <div class="info-grid">
             <div class="detail-card">
-                <h2><img src="{{ asset('images/Profile/smartphone.png') }}" class="icon-img" alt=""> Contact</h2>
+                <div class="detail-card-head">
+                    <h2><img src="{{ asset('images/Profile/smartphone.png') }}" class="icon-img" alt=""> Contact</h2>
+                    <button type="button" class="source-action" data-bs-toggle="modal" data-bs-target="#editContactModal">
+                        <i class="bi bi-pencil-square"></i> Edit
+                    </button>
+                </div>
                 <dl class="field-list">
                     <dt><img src="{{ asset('images/Profile/smartphone.png') }}" class="icon-img" alt=""> Phone</dt><dd class="{{ $field($customer->phone) ? '' : 'empty' }}">{{ $field($customer->phone) ?? '—' }}</dd>
                     <dt><img src="{{ asset('images/Profile/mobile.png') }}" class="icon-img" alt=""> Mobile</dt><dd class="{{ $field($customer->mobile_phone_no) ? '' : 'empty' }}">{{ $field($customer->mobile_phone_no) ?? '—' }}</dd>
@@ -157,13 +162,84 @@
             </div>
 
             <div class="detail-card">
-                <h2><img src="{{ asset('images/Profile/delivery-truck.png') }}" class="icon-img" alt=""> Fulfillment &amp; Payment</h2>
+                <div class="detail-card-head">
+                    <h2><img src="{{ asset('images/Profile/delivery-truck.png') }}" class="icon-img" alt=""> Fulfillment &amp; Payment</h2>
+                    <button type="button" class="source-action" data-bs-toggle="modal" data-bs-target="#editContactModal">
+                        <i class="bi bi-pencil-square"></i> Edit
+                    </button>
+                </div>
                 <dl class="field-list">
                     <dt><img src="{{ asset('images/Profile/gps.png') }}" class="icon-img" alt=""> Location</dt><dd class="{{ $field($customer->location_code) ? '' : 'empty' }}">{{ $field($customer->location_code) ?? '—' }}</dd>
                     <dt><img src="{{ asset('images/Profile/delivery-truck.png') }}" class="icon-img" alt=""> Ship-to Code</dt><dd class="{{ $field($customer->ship_to_code) ? '' : 'empty' }}">{{ $field($customer->ship_to_code) ?? '—' }}</dd>
                     <dt><img src="{{ asset('images/Profile/clock-three.png') }}" class="icon-img" alt=""> Payment Terms</dt><dd class="{{ $field($customer->payment_terms_code) ? '' : 'empty' }}">{{ $field($customer->payment_terms_code) ?? '—' }}</dd>
                     <dt><img src="{{ asset('images/Profile/tags.png') }}" class="icon-img" alt=""> Price Group</dt><dd class="{{ $field($customer->customer_price_group) ? '' : 'empty' }}">{{ $field($customer->customer_price_group) ?? '—' }}</dd>
                 </dl>
+            </div>
+        </div>
+
+        {{-- ===== Edit Contact / Fulfillment Modal ===== --}}
+        <div class="modal fade" id="editContactModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form method="POST" action="{{ route('users.contactDetails.update', $customer->id) }}">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit Customer Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <p class="text-muted small">
+                                This edits the local copy only — Business Central stays the source of
+                                truth, so the next sync can overwrite these fields again.
+                            </p>
+
+                            <div class="mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="text" name="phone" class="form-control" value="{{ old('phone', $customer->phone) }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Mobile</label>
+                                <input type="text" name="mobile_phone_no" class="form-control" value="{{ old('mobile_phone_no', $customer->mobile_phone_no) }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control" value="{{ old('email', $customer->email) }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Address</label>
+                                <input type="text" name="address" class="form-control" value="{{ old('address', $customer->address) }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">City</label>
+                                <input type="text" name="city" class="form-control" value="{{ old('city', $customer->city) }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Location Code</label>
+                                <input type="text" name="location_code" class="form-control" value="{{ old('location_code', $customer->location_code) }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Ship-to Code</label>
+                                <input type="text" name="ship_to_code" class="form-control" value="{{ old('ship_to_code', $customer->ship_to_code) }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Payment Terms</label>
+                                <input type="text" name="payment_terms_code" class="form-control" value="{{ old('payment_terms_code', $customer->payment_terms_code) }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Price Group</label>
+                                <input type="text" name="customer_price_group" class="form-control" value="{{ old('customer_price_group', $customer->customer_price_group) }}">
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 

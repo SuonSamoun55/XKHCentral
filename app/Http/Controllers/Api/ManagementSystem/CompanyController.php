@@ -8,14 +8,15 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use App\Models\ManagementSystem\Company;
 use App\Models\ManagementSystem\CompanyConnection;
-
+use App\Models\ManagementSystem\User;
 class CompanyController extends Controller
 {
     public function index()
     {
         $companies = Company::with('companyConnection')
             ->withCount(['users as users_count' => function ($query) {
-                $query->where('bc_customer_no', 'not like', 'STAFF-%');
+                $query->where('bc_customer_no', 'not like', 'STAFF-%')
+                    ->where('status', true);
             }])
             ->latest()
             ->get();
@@ -37,6 +38,10 @@ class CompanyController extends Controller
         $company = Company::findOrFail($id);
 
         session(['selected_company_id' => $company->id]);
+
+        /** @var \App\Models\ManagementSystem\User $user */
+        $user = auth()->user();
+        $user->update(['last_company_id' => $company->id]);
 
         return redirect()->route('pos.index')
             ->with('success', 'Now viewing ' . ($company->display_name ?? $company->name) . '.');
@@ -75,10 +80,8 @@ class CompanyController extends Controller
             'sales_orders_endpoint' => ['nullable', 'string'],
             'sales_order_lines_endpoint' => ['nullable', 'string'],
             'sales_orders_by_number_endpoint' => ['nullable', 'string'],
-            'sales_order_pdf_endpoint' => ['nullable', 'string'],
             'posted_sales_invoice_endpoint' => ['nullable', 'string'],
             'posted_sales_invoice_lines_endpoint' => ['nullable', 'string'],
-            'posted_sales_invoice_pdf_endpoint' => ['nullable', 'string'],
         ]);
 
         $logoPath = null;
@@ -121,10 +124,8 @@ class CompanyController extends Controller
             'sales_orders_endpoint' => $validated['sales_orders_endpoint'] ?? null,
             'sales_order_lines_endpoint' => $validated['sales_order_lines_endpoint'] ?? null,
             'sales_orders_by_number_endpoint' => $validated['sales_orders_by_number_endpoint'] ?? null,
-            'sales_order_pdf_endpoint' => $validated['sales_order_pdf_endpoint'] ?? null,
             'posted_sales_invoice_endpoint' => $validated['posted_sales_invoice_endpoint'] ?? null,
             'posted_sales_invoice_lines_endpoint' => $validated['posted_sales_invoice_lines_endpoint'] ?? null,
-            'posted_sales_invoice_pdf_endpoint' => $validated['posted_sales_invoice_pdf_endpoint'] ?? null,
             'is_default' => true,
             'status' => true,
         ];
@@ -177,10 +178,8 @@ class CompanyController extends Controller
             'sales_orders_endpoint' => ['nullable', 'string'],
             'sales_order_lines_endpoint' => ['nullable', 'string'],
             'sales_orders_by_number_endpoint' => ['nullable', 'string'],
-            'sales_order_pdf_endpoint' => ['nullable', 'string'],
             'posted_sales_invoice_endpoint' => ['nullable', 'string'],
             'posted_sales_invoice_lines_endpoint' => ['nullable', 'string'],
-            'posted_sales_invoice_pdf_endpoint' => ['nullable', 'string'],
             'status' => ['nullable'],
         ]);
 
@@ -244,10 +243,8 @@ class CompanyController extends Controller
             'sales_orders_endpoint',
             'sales_order_lines_endpoint',
             'sales_orders_by_number_endpoint',
-            'sales_order_pdf_endpoint',
             'posted_sales_invoice_endpoint',
             'posted_sales_invoice_lines_endpoint',
-            'posted_sales_invoice_pdf_endpoint',
         ] as $endpointField) {
             if ($request->has($endpointField)) {
                 $connectionData[$endpointField] = $validated[$endpointField] ?? null;
@@ -297,10 +294,8 @@ class CompanyController extends Controller
             'sales_orders_endpoint' => ['required', 'string'],
             'sales_order_lines_endpoint' => ['required', 'string'],
             'sales_orders_by_number_endpoint' => ['required', 'string'],
-            'sales_order_pdf_endpoint' => ['required', 'string'],
             'posted_sales_invoice_endpoint' => ['nullable', 'string'],
             'posted_sales_invoice_lines_endpoint' => ['nullable', 'string'],
-            'posted_sales_invoice_pdf_endpoint' => ['nullable', 'string'],
             'status' => ['nullable'],
         ]);
 
@@ -319,10 +314,8 @@ class CompanyController extends Controller
             'sales_orders_endpoint' => trim($validated['sales_orders_endpoint']),
             'sales_order_lines_endpoint' => trim($validated['sales_order_lines_endpoint']),
             'sales_orders_by_number_endpoint' => trim($validated['sales_orders_by_number_endpoint']),
-            'sales_order_pdf_endpoint' => trim($validated['sales_order_pdf_endpoint']),
             'posted_sales_invoice_endpoint' => trim($validated['posted_sales_invoice_endpoint'] ?? ''),
             'posted_sales_invoice_lines_endpoint' => trim($validated['posted_sales_invoice_lines_endpoint'] ?? ''),
-            'posted_sales_invoice_pdf_endpoint' => trim($validated['posted_sales_invoice_pdf_endpoint'] ?? ''),
             'status' => $request->has('status'),
             'is_default' => true,
         ];
@@ -372,11 +365,13 @@ class CompanyController extends Controller
 
     private function filterConnectionDataByExistingColumns(array $data): array
     {
-        return collect($data)
-            ->filter(function ($value, $key) {
-                return Schema::hasColumn('company_connections', $key);
-            })
-            ->all();
+        static $columns = null;
+
+        if ($columns === null) {
+            $columns = array_flip(Schema::getColumnListing('company_connections'));
+        }
+
+        return array_intersect_key($data, $columns);
     }
 
     private function normalizeBusinessCentralApiInput(string $baseUrl, string $customersEndpoint): array

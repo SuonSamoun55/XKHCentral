@@ -1,0 +1,322 @@
+/* The shared admin layout's .content-wrapper is height:100vh + overflow:hidden
+   by default, which clips this page's content instead of letting it scroll
+   once the form is taller than the viewport. This only affects pages that
+   load this stylesheet — so it's safe to override just for this page. */
+.content-wrapper {
+    height: 100vh !important;
+    overflow-y: auto !important;
+}
+
+/* No color override here — .pagelist-page h1 already gets the shared
+   teal (#3BACB4) from TaxList.css, matching every other admin page's
+   heading instead of this page having its own one-off black title. */
+.pagelist-page h1 {
+    margin: 0 0 20px;
+}
+
+.rs-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.rs-card {
+    background: #fff;
+    border: 1px solid #eee7db;
+    border-radius: 14px;
+    padding: 18px 20px;
+}
+
+.rs-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 4px;
+}
+
+.rs-card-title i {
+    font-size: 15px;
+    color: #0EA8B2;
+}
+
+.rs-card-subtitle {
+    font-size: 11.5px;
+    color: #9ca3af;
+    margin: 0 0 14px;
+}
+
+.rs-logo-upload {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 16px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #f0ece2;
+}
+
+.rs-logo-preview {
+    width: 68px;
+    height: 68px;
+    border-radius: 12px;
+    border: 1px dashed #d8d0c0;
+    background: #faf8f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.rs-logo-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.rs-logo-placeholder {
+    font-size: 10.5px;
+    color: #9ca3af;
+    text-align: center;
+}
+
+.rs-logo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #0EA8B2;
+    border: 1px solid #0EA8B2;
+    border-radius: 8px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.rs-logo-btn:hover {
+    background: #e6f9fa;
+}
+
+/* Toggle rows laid out as a responsive 2-column grid of pill switches,
+   rather than a plain stacked checkbox list — each row reads as a distinct
+   control instead of blending into the one above/below it. */
+.rs-toggle-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px 20px;
+}
+
+.rs-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    color: #374151;
+    padding: 9px 0;
+    cursor: pointer;
+    border-bottom: 1px solid #f7f5f0;
+}
+
+.rs-toggle:last-child {
+    border-bottom: none;
+}
+
+.rs-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.rs-toggle-label i {
+    font-size: 14px;
+    color: #9ca3af;
+    width: 16px;
+    text-align: center;
+}
+
+/* Hide the native checkbox but keep it in the DOM (still submits with the
+   form) — the pill/knob below is drawn from its :checked state instead. */
+.rs-toggle input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.rs-switch {
+    position: relative;
+    display: inline-block;
+    width: 38px;
+    height: 22px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: #e5e7eb;
+    transition: background 0.15s;
+}
+
+.rs-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    transition: transform 0.15s;
+}
+
+.rs-toggle input:checked + .rs-switch {
+    background: #0EA8B2;
+}
+
+.rs-toggle input:checked + .rs-switch::after {
+    transform: translateX(16px);
+}
+
+.rs-toggle input:focus-visible + .rs-switch {
+    outline: 2px solid #0EA8B2;
+    outline-offset: 2px;
+}
+
+/* Spacing picker as a segmented control instead of bare radio dots — same
+   pattern as the report preview page's own Fit Width/Fit Page toggle. */
+.rs-segmented {
+    display: inline-flex;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.rs-segmented input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.rs-segmented label {
+    padding: 9px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    background: #f9fafb;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.rs-segmented label:not(:last-of-type) {
+    border-right: 1px solid #e5e7eb;
+}
+
+.rs-segmented input[type="radio"]:checked + label {
+    background: #0EA8B2;
+    color: #fff;
+}
+
+.rs-signature-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #f0ece2;
+}
+
+.action-row {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-main {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #0EA8B2;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 24px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.btn-main:hover {
+    background: #0c8f98;
+}
+
+.field-input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+.field-input:focus {
+    outline: none;
+    border-color: #0EA8B2;
+}
+
+.field-help {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 6px;
+}
+
+@media (max-width: 900px) {
+    .rs-toggle-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .rs-card {
+        padding: 14px 16px;
+        border-radius: 12px;
+    }
+
+    /* Both are explanatory copy that just eats vertical space on a small
+       screen without changing what the controls below them do. */
+    .rs-card-subtitle,
+    .rs-logo-upload .field-help {
+        display: none;
+    }
+
+    .rs-logo-upload {
+        flex-wrap: wrap;
+    }
+
+    .rs-toggle {
+        padding: 10px 0;
+    }
+
+    .rs-segmented {
+        display: flex;
+        width: 100%;
+    }
+
+    .rs-segmented label {
+        flex: 1;
+        text-align: center;
+        padding: 9px 8px;
+    }
+
+    .action-row {
+        justify-content: stretch;
+    }
+
+    .btn-main {
+        width: 100%;
+        justify-content: center;
+    }
+}

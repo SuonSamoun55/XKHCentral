@@ -1,12 +1,6 @@
-:root{
-            --primary:#18b8c7;
-            --primary-dark:#119aa7;
-            --bg:#f5f6f8;
-            --white:#ffffff;
-            --text:#1f2937;
-            --muted:#6b7280;
-            --border:#e5e7eb;
-        }
+/* Design tokens (colors) now live in
+   public/css/views/shared/admin-variables.css, loaded by the layout
+   before this file. */
 
         *{
             box-sizing:border-box;

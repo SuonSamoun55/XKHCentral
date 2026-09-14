@@ -428,6 +428,17 @@ body {
     box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
 }
 
+.detail-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.detail-card-head h2 {
+    margin: 0;
+}
+
 .detail-card h2 {
     display: flex;
     align-items: center;
@@ -492,12 +503,14 @@ body {
 
 @media (max-width: 680px) {
 
-    /* Shared mobile topbar already shows a back chevron + title once
-       @section('backUrl', ...) is set — avoid a duplicate back button. */
     .page-top-row {
         display: none;
     }
 
+    .app-content{
+
+        padding: 10px;
+    }
     .source-grid,
     .info-grid {
         grid-template-columns: 1fr;

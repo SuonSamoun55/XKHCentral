@@ -14,6 +14,7 @@ class Item extends Model
         'bc_id',
         'number',
         'display_name',
+        'description',
         'unit_price',
         'tax_group_code',
         'tax_amount',
@@ -38,6 +39,7 @@ class Item extends Model
         'category_visible' => 'boolean',
         'price_includes_tax' => 'boolean',
         'unit_price' => 'decimal:2',
+        'inventory' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'discount_start_date' => 'datetime',
@@ -59,16 +61,53 @@ class Item extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function locationInventories()
+    {
+        return $this->hasMany(ItemLocationInventory::class, 'item_id');
+    }
+
+    // BC-synced names are inconsistently cased (e.g. "PARIS Guest Chair,
+    // black" — every word capitalized except the trailing color). ucwords()
+    // capitalizes the first letter of each word without touching letters
+    // that are already uppercase, so "PARIS" stays as-is while "black"
+    // becomes "Black" — fixes the inconsistency without needing to touch
+    // the stored value or every place display_name gets rendered.
+    public function getDisplayNameAttribute($value)
+    {
+        return $value !== null ? ucwords($value) : $value;
+    }
+
+    // Stock shown to/used by customers: the single warehouse location the
+    // store owner has picked as their selling location, falling back to the
+    // aggregate BC inventory if no location has been selected yet.
+    public function getSellableInventoryAttribute()
+    {
+        $setting = StoreSetting::forCompany($this->company_id);
+
+        if (empty($setting->selling_location_code)) {
+            return (float) $this->inventory;
+        }
+
+        $locations = $this->relationLoaded('locationInventories')
+            ? $this->locationInventories
+            : $this->locationInventories()->get();
+
+        $match = $locations->firstWhere('location_code', $setting->selling_location_code);
+
+        return $match ? (float) $match->inventory : 0.0;
+    }
+
     public function inventoryMovements()
     {
         return $this->hasMany(InventoryMovement::class, 'item_id');
     }
 
     /**
-     * The real VAT rate for this item — resolved live from Tax Groups by
-     * its tax_group_code (the code Business Central actually sends), rather
-     * than a cached percent on the item itself. Editing a tax group's rate
-     * takes effect immediately everywhere this is read.
+     * The real VAT rate for this item — resolved live from BC's synced VAT
+     * Posting Setup by matching tax_group_code (the item's VAT Prod. Posting
+     * Group, as sent by BC) against vat_prod_posting_group, rather than a
+     * cached percent on the item itself. Re-syncing VAT Posting Setup takes
+     * effect immediately everywhere this is read.
      */
     public function getResolvedVatPercentAttribute(): float
     {
@@ -76,9 +115,10 @@ class Item extends Model
             return 0.0;
         }
 
-        return (float) (TaxGroup::where('company_id', $this->company_id)
-            ->where('code', $this->tax_group_code)
-            ->value('percent') ?? 0);
+        return (float) (VatPostingSetup::where('company_id', $this->company_id)
+            ->where('vat_prod_posting_group', $this->tax_group_code)
+            ->where('blocked', false)
+            ->value('vat_pct') ?? 0);
     }
 
     public function getActiveDiscountPercentAttribute(): float

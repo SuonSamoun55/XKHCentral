@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
 use App\Models\POS\Cart;
 use App\Models\ManagementSystem\Company;
+use App\View\Composers\POSUserSidebarComposer;
+use App\View\Composers\ManagementSidebarComposer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,14 +33,16 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        // Keep existing pagination config
         Paginator::useBootstrapFive();
 
         // Share cart count with all views
         View::composer('*', function ($view) {
 
             if (Auth::check()) {
+                $companyId = session('selected_company_id') ?? Auth::user()->company_id;
+
                 $cart = Cart::where('user_id', Auth::id())
+                    ->where('company_id', $companyId)
                     ->where('status', 'active')
                     ->with('items')
                     ->first();
@@ -51,13 +55,12 @@ class AppServiceProvider extends ServiceProvider
             $view->with('cartCount', $cartCount);
             $view->with('activeFaviconUrl', $this->resolveActiveFaviconUrl());
         });
+
+        View::composer('Layout.POSUser.aside', POSUserSidebarComposer::class);
+        View::composer('Layout.Management.aside', ManagementSidebarComposer::class);
     }
 
-    /**
-     * The favicon of the currently selected company, falling back to the
-     * default app icon when none is set. Memoized per-request since this
-     * composer runs once for every view/partial rendered on the page.
-     */
+
     private ?string $resolvedFaviconUrl = null;
     private bool $faviconResolved = false;
 

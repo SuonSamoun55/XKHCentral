@@ -5,20 +5,6 @@
             height:100vh;
             display:flex;
         }
-
-:root{
-            --primary:#1bb8c9;
-            --primary-dark:#12a5b5;
-            --bg:#f5f6f8;
-            --white:#ffffff;
-            --text:#202938;
-            --muted:#8b95a7;
-            --border:#eceef2;
-            --danger:#ef4444;
-            --success:#10b981;
-            --shadow:0 8px 24px rgba(15, 23, 42, 0.06);
-        }
-
         .main-wrap,
         .main-wrap *{
             box-sizing:border-box;
@@ -308,7 +294,7 @@
 
         @media (max-width: 1100px){
             .main-wrap{
-                padding:24px 22px 26px;
+                padding:20px;
             }
         }
 
@@ -321,12 +307,11 @@
         @media (max-width: 768px){
             .main-wrap{
                 height:auto;
-                min-height:100vh;
+                min-height:100% ;
                 overflow-y:visible;
-                padding:10px;
+                padding:0px;
             }
 
-            /* The app's mobile top bar already shows "Create Discount", with a back arrow */
             .page-title{
                 display:none;
             }
@@ -350,9 +335,10 @@
             }
 
             .action-row{
-                flex-direction:column;
-                margin-top:20px;
-            }
+            flex-direction:row;
+            flex-wrap:nowrap;
+            margin-top:20px;
+        }
 
             .btn-main,
             .btn-light-main{

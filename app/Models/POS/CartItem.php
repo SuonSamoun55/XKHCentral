@@ -13,6 +13,9 @@ class CartItem extends Model
         'unit_price',
         'line_total',
     ];
+    protected $casts = [
+        'qty' => 'decimal:2',
+    ];
     public function cart()
     {
         return $this->belongsTo(Cart::class, 'cart_id');

@@ -21,7 +21,7 @@
                     <div class="main-image">
                         <img
                             id="mainImage"
-                            src="{{ $item['customImageUrl'] ?? url('/item-image/' . $item['id']) }}"
+                            src="{{ $item['imageUrl'] ?? $item['customImageUrl'] ?? asset('images/no-image.png') }}"
                             alt="{{ $item['displayName'] ?? 'Item Image' }}"
                             onerror="this.src='https://placehold.co/800x600/e5e7eb/94a3b8?text=No+Photo'">
                     </div>
@@ -62,7 +62,7 @@
 
 <script>
     const LOCAL_ITEM_ID = "{{ $item['localItemId'] ?? '' }}";
-    const DEFAULT_IMAGE = "{{ $item['customImageUrl'] ?? url('/item-image/' . $item['id']) }}";
+    const DEFAULT_IMAGE = "{{ $item['imageUrl'] ?? $item['customImageUrl'] ?? asset('images/no-image.png') }}";
 
     // Load variants for this item when the page opens
     window.addEventListener('DOMContentLoaded', function () {

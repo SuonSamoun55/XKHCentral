@@ -1,14 +1,24 @@
 @extends('Layout.Management.app')
-<link rel="stylesheet" href="{{ asset('/css/views/Management/company_api.css') }}">
 
 @section('title', 'Company API Setup')
 
 @push('styles')
+    <link rel="stylesheet" href="{{ asset('/css/views/Management/Company/company_api.css') }}">
 @endpush
 
 @section('content')
     @php
+        $defaultBaseUrl = '';
+        $defaultTokenUrl = '';
+        $defaultApiScope = 'https://api.businesscentral.dynamics.com/.default';
+        $defaultCustomersEndpoint = 'Customers';
+        $defaultItemsEndpoint = 'items';
+        $defaultItemVariantsEndpoint = 'itemVariants';
+        $defaultSalesOrdersEndpoint = 'salesOrders';
+        $defaultSalesOrderLinesEndpoint = 'salesOrderLines';
         $defaultSalesOrderByNumberEndpoint = "salesOrders?\$filter=number eq '{documentNo}'&\$top=1";
+        $defaultPostedSalesInvoiceEndpoint = 'postedSalesInvoices';
+        $defaultPostedSalesInvoiceLinesEndpoint = 'postedSalesInvoiceLines';
     @endphp
     <div class="api-setup-wrap">
         <div class="api-card">
@@ -38,114 +48,119 @@
                     </span>
                 </div>
             @endif
-            <form method="POST" action="{{ route('companies.api.setup.update', $company->id) }}">
+            <form method="POST" action="{{ route('companies.api.setup.update', $company->id) }}" id="apiSetupForm">
                 @csrf
                 @method('PUT')
 
                 <div class="api-grid">
+                    <div class="full section-title">Connection</div>
+
                     <div class="full">
                         <div class="field-label">Base URL</div>
                         <input type="text" class="field-input" name="base_url"
+                            placeholder="https://api.businesscentral.dynamics.com/v2.0/SandboxKH/api/XKH/LaravelAPI/v1.0"
+                            data-default="{{ $defaultBaseUrl }}"
                             value="{{ old('base_url', $company->companyConnection->base_url ?? '') }}" required>
-                        <div class="field-help">Use only the API base here:
-                            https://api.businesscentral.dynamics.com/v2.0/SandboxKH/api/XKH/LaravelAPI/v1.0</div>
                     </div>
 
                     <div>
                         <div class="field-label">Token URL</div>
                         <input type="text" class="field-input" name="token_url"
+                            placeholder="https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token"
+                            data-default="{{ $defaultTokenUrl }}"
                             value="{{ old('token_url', $company->companyConnection->token_url ?? '') }}" required>
                     </div>
 
                     <div>
                         <div class="field-label">API Scope</div>
                         <input type="text" class="field-input" name="api_scope"
-                            value="{{ old('api_scope', $company->companyConnection->api_scope ?? 'https://api.businesscentral.dynamics.com/.default') }}"
+                            placeholder="{{ $defaultApiScope }}"
+                            data-default="{{ $defaultApiScope }}"
+                            value="{{ old('api_scope', $company->companyConnection->api_scope ?? $defaultApiScope) }}"
                             required>
                     </div>
 
                     <div class="full">
-                        <label style="display:flex;align-items:center;gap:8px;">
-                            <input type="checkbox" name="status"
+                        <label class="connection-toggle">
+                            <input type="checkbox" name="status" id="statusCheckbox"
                                 {{ old('status', $company->companyConnection->status ?? true) ? 'checked' : '' }}>
                             Connection Active
                         </label>
                     </div>
 
-                    <div class="full">
+                    <div class="full section-title">Product &amp; Customer Endpoints</div>
+
+                    <div>
                         <div class="field-label">Users/Customers List Endpoint</div>
                         <input type="text" class="field-input" name="customers_endpoint"
-                            value="{{ old('customers_endpoint', $company->companyConnection->customers_endpoint ?? 'Customers') }}"
+                            placeholder="{{ $defaultCustomersEndpoint }}"
+                            data-default="{{ $defaultCustomersEndpoint }}"
+                            value="{{ old('customers_endpoint', $company->companyConnection->customers_endpoint ?? $defaultCustomersEndpoint) }}"
                             required>
-                        <div class="field-help">Use <code>Customers</code>. If you paste the full Customers URL by mistake,
-                            Laravel will convert it when saving.</div>
                     </div>
 
-                    <div class="full">
+                    <div>
                         <div class="field-label">Items List Endpoint</div>
                         <input type="text" class="field-input" name="items_endpoint"
-                            value="{{ old('items_endpoint', $company->companyConnection->items_endpoint ?? 'items') }}"
+                            placeholder="{{ $defaultItemsEndpoint }}"
+                            data-default="{{ $defaultItemsEndpoint }}"
+                            value="{{ old('items_endpoint', $company->companyConnection->items_endpoint ?? $defaultItemsEndpoint) }}"
                             required>
                     </div>
 
                     <div class="full">
                         <div class="field-label">Item Variants List Endpoint</div>
                         <input type="text" class="field-input" name="item_variants_endpoint"
-                            value="{{ old('item_variants_endpoint', $company->companyConnection->item_variants_endpoint ?? 'itemVariants') }}">
-                        <div class="field-help">Used when syncing item variants. Defaults to <code>itemVariants</code> if
-                            left blank — set this if your API exposes variants at a different path.</div>
+                            placeholder="{{ $defaultItemVariantsEndpoint }}"
+                            data-default="{{ $defaultItemVariantsEndpoint }}"
+                            value="{{ old('item_variants_endpoint', $company->companyConnection->item_variants_endpoint ?? $defaultItemVariantsEndpoint) }}">
                     </div>
+
+                    <div class="full section-title">Sales Order Endpoints</div>
 
                     <div>
                         <div class="field-label">Sales Order Create Endpoint</div>
                         <input type="text" class="field-input" name="sales_orders_endpoint"
-                            value="{{ old('sales_orders_endpoint', $company->companyConnection->sales_orders_endpoint ?? 'salesOrders') }}"
+                            placeholder="{{ $defaultSalesOrdersEndpoint }}"
+                            data-default="{{ $defaultSalesOrdersEndpoint }}"
+                            value="{{ old('sales_orders_endpoint', $company->companyConnection->sales_orders_endpoint ?? $defaultSalesOrdersEndpoint) }}"
                             required>
                     </div>
 
                     <div>
                         <div class="field-label">Sales Order Line Create Endpoint</div>
                         <input type="text" class="field-input" name="sales_order_lines_endpoint"
-                            value="{{ old('sales_order_lines_endpoint', $company->companyConnection->sales_order_lines_endpoint ?? 'salesOrderLines') }}"
+                            placeholder="{{ $defaultSalesOrderLinesEndpoint }}"
+                            data-default="{{ $defaultSalesOrderLinesEndpoint }}"
+                            value="{{ old('sales_order_lines_endpoint', $company->companyConnection->sales_order_lines_endpoint ?? $defaultSalesOrderLinesEndpoint) }}"
                             required>
-                        <div class="field-help">Use <code>salesOrderLines</code> when your custom API exposes lines as their
-                            own page. Use <code>salesOrders({salesOrderId})/salesOrderLines</code> only if the AL API
-                            exposes a nested line part.</div>
                     </div>
 
                     <div class="full">
                         <div class="field-label">Sales Order Search by Number Endpoint</div>
                         <input type="text" class="field-input" name="sales_orders_by_number_endpoint"
+                            placeholder="{{ $defaultSalesOrderByNumberEndpoint }}"
+                            data-default="{{ $defaultSalesOrderByNumberEndpoint }}"
                             value="{{ old('sales_orders_by_number_endpoint', $company->companyConnection->sales_orders_by_number_endpoint ?? $defaultSalesOrderByNumberEndpoint) }}"
                             required>
-                        <div class="field-help">Placeholder: <code>{documentNo}</code></div>
                     </div>
 
-                    <div class="full">
-                        <div class="field-label">PDF Print Endpoint</div>
-                        <input type="text" class="field-input" name="sales_order_pdf_endpoint"
-                            value="{{ old('sales_order_pdf_endpoint', $company->companyConnection->sales_order_pdf_endpoint ?? 'salesOrders({salesOrderId})/pdfDocument/pdfDocumentContent') }}"
-                            required>
-                        <div class="field-help">Placeholder: <code>{salesOrderId}</code></div>
-                    </div>
+                    <div class="full section-title">Invoice Endpoints</div>
 
-                    <div class="full">
+                    <div>
                         <div class="field-label">Posted Sales Invoice Lookup Endpoint</div>
                         <input type="text" class="field-input" name="posted_sales_invoice_endpoint"
-                            value="{{ old('posted_sales_invoice_endpoint', $company->companyConnection->posted_sales_invoice_endpoint ?? 'postedSalesInvoices') }}">
+                            placeholder="{{ $defaultPostedSalesInvoiceEndpoint }}"
+                            data-default="{{ $defaultPostedSalesInvoiceEndpoint }}"
+                            value="{{ old('posted_sales_invoice_endpoint', $company->companyConnection->posted_sales_invoice_endpoint ?? $defaultPostedSalesInvoiceEndpoint) }}">
                     </div>
 
                     <div>
                         <div class="field-label">Posted Sales Invoice Lines Endpoint</div>
                         <input type="text" class="field-input" name="posted_sales_invoice_lines_endpoint"
-                            value="{{ old('posted_sales_invoice_lines_endpoint', $company->companyConnection->posted_sales_invoice_lines_endpoint ?? 'postedSalesInvoiceLines') }}">
-                    </div>
-
-                    <div>
-                        <div class="field-label">Posted Sales Invoice PDF Endpoint</div>
-                        <input type="text" class="field-input" name="posted_sales_invoice_pdf_endpoint"
-                            value="{{ old('posted_sales_invoice_pdf_endpoint', $company->companyConnection->posted_sales_invoice_pdf_endpoint ?? 'postedSalesInvoices({invoiceId})/pdfDocument/pdfDocumentContent') }}">
-                        <div class="field-help">Placeholder: <code>{invoiceId}</code></div>
+                            placeholder="{{ $defaultPostedSalesInvoiceLinesEndpoint }}"
+                            data-default="{{ $defaultPostedSalesInvoiceLinesEndpoint }}"
+                            value="{{ old('posted_sales_invoice_lines_endpoint', $company->companyConnection->posted_sales_invoice_lines_endpoint ?? $defaultPostedSalesInvoiceLinesEndpoint) }}">
                     </div>
 
                 </div>
@@ -153,29 +168,40 @@
                 <div class="action-row">
                     <a href="{{ route('companies.index') }}" class="btn-light">Back to Company</a>
                     <a href="{{ route('companies.edit', $company->id) }}" class="btn-light">Edit Company</a>
+                    <button type="button" class="btn-light" id="resetDefaultsBtn">Reset to Default</button>
                     <button type="submit" class="btn-main">Save API Setup</button>
                 </div>
             </form>
-            <div class="example-box">
-                <strong>Placeholders you can use:</strong>
-                <br><code>{salesOrderId}</code> for line/PDF endpoint, <code>{documentNo}</code> for order search,
-                <code>{companyId}</code> if needed.
-            </div>
         </div>
     </div>
 
 @endsection
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const alerts = document.querySelectorAll('.custom-alert');
 
-        alerts.forEach(function(alert) {
-            setTimeout(function() {
-                alert.style.animation = 'fadeOut 0.5s ease-in forwards';
-                alert.addEventListener('animationend', function() {
-                    alert.remove();
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.custom-alert');
+
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.animation = 'fadeOut 0.5s ease-in forwards';
+                    alert.addEventListener('animationend', function() {
+                        alert.remove();
+                    });
+                }, 4000);
+            });
+
+            const resetBtn = document.getElementById('resetDefaultsBtn');
+            const form = document.getElementById('apiSetupForm');
+
+            resetBtn?.addEventListener('click', function() {
+                form.querySelectorAll('.field-input[data-default]').forEach(function(input) {
+                    input.value = input.dataset.default;
                 });
-            }, 4000);
+
+                const statusCheckbox = document.getElementById('statusCheckbox');
+                if (statusCheckbox) statusCheckbox.checked = true;
+            });
         });
-    });
-</script>
+    </script>
+@endpush

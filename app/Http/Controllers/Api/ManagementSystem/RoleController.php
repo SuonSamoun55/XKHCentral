@@ -52,11 +52,13 @@ class RoleController extends Controller
             'display_name' => 'nullable|string|max:255',
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
+            'is_cross_company' => 'nullable|boolean',
         ]);
         $role = Role::create([
             'company_id' => $companyId,
             'name' => $request->name,
             'display_name' => $request->display_name,
+            'is_cross_company' => $request->boolean('is_cross_company'),
         ]);
 
         $role->permissions()->sync($request->permissions ?? []);
@@ -86,10 +88,12 @@ class RoleController extends Controller
             'display_name' => 'nullable|string|max:255',
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
+            'is_cross_company' => 'nullable|boolean',
         ]);
         $role->update([
             'name' => $request->name,
             'display_name' => $request->display_name,
+            'is_cross_company' => $request->boolean('is_cross_company'),
         ]);
         $role->permissions()->sync($request->permissions ?? []);
 

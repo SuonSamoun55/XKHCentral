@@ -41,6 +41,16 @@
                         <option value="all">All Status</option>
                         <option value="active">Active Only</option>
                         <option value="inactive">Inactive Only</option>
+                        <option value="not_setup">Not Setup</option>
+                    </select>
+
+                    <select id="storeSellingLocation" class="store-select-control" title="Selling location — only this location's stock is shown and sold to customers">
+                        <option value="">— Not set (using total stock) —</option>
+                        @foreach ($sellingLocations as $loc)
+                            <option value="{{ $loc->location_code }}" {{ optional($storeSetting)->selling_location_code === $loc->location_code ? 'selected' : '' }}>
+                                {{ $loc->location_name ?: 'Unassigned' }}{{ $loc->location_code ? ' (' . $loc->location_code . ')' : '' }}
+                            </option>
+                        @endforeach
                     </select>
 
                     <div class="store-menu-wrap" id="storeMenuWrap">
@@ -131,11 +141,6 @@
         </div>
     </div>
 
-    <div class="store-selection-banner" id="storeSelectionBanner">
-        <i class="bi bi-check-circle-fill"></i>
-        <span id="storeSelectionBannerText"></span>
-    </div>
-
     <div id="productsTabContent" class="store-tab-content">
         <div class="table-scroll-wrap store-table-scroll">
             <table class="manage-store-table">
@@ -149,18 +154,25 @@
                         <th>Category</th>
                         <th>Price</th>
                         <th>Stock</th>
+                        <th>Location</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="productTableBody">
                     @forelse($products as $item)
+                        @php
+                            // Null is_visible = just synced, not reviewed yet.
+                            $visibilityStatus = is_null($item->is_visible)
+                                ? 'not_setup'
+                                : ($item->is_visible ? 'active' : 'inactive');
+                        @endphp
                         <tr
                             class="product-row"
                             data-name="{{ strtolower($item->display_name ?? '') }}"
                             data-number="{{ strtolower($item->number ?? '') }}"
                             data-category="{{ strtolower($item->item_category_code ?? '') }}"
-                            data-status="{{ $item->is_visible ? 'active' : 'inactive' }}"
-                            data-stock="{{ (int) $item->inventory > 0 ? 'in' : 'out' }}"
+                            data-status="{{ $visibilityStatus }}"
+                            data-stock="{{ (int) $item->sellable_inventory > 0 ? 'in' : 'out' }}"
                             data-setup="{{ ($item->main_image_done && $item->variants_done) ? 'complete' : 'incomplete' }}"
                             data-href="{{ route('store.management.products.detail', $item->id) }}"
                         >
@@ -173,7 +185,7 @@
                                     <div class="product-thumb-box">
                                         @if(!empty($item->custom_image_url) || !empty($item->image_url))
                                             <img
-                                                src="{{ $item->custom_image_url ?? $item->image_url }}"
+                                                src="{{ $item->resolved_image_url }}"
                                                 alt="{{ $item->display_name }}"
                                                 onerror="this.onerror=null;this.parentElement.innerHTML='<div class=&quot;thumb-placeholder&quot;><i class=&quot;bi bi-image&quot;></i></div>';"
                                             >
@@ -189,11 +201,11 @@
                                         <div class="product-sub-line">{{ $item->number ?: '-' }}</div>
 
                                         <div class="product-mobile-meta">
-                                            ${{ number_format((float) $item->unit_price, 2) }} &bull; {{ (int) $item->inventory }} in stock
+                                            ${{ number_format((float) $item->unit_price, 2) }} &bull; {{ (int) $item->sellable_inventory }} in stock
                                         </div>
 
-                                        <div class="product-mobile-status {{ $item->is_visible ? 'active' : 'inactive' }}">
-                                            {{ $item->is_visible ? 'Active' : 'Inactive' }}
+                                        <div class="product-mobile-status {{ $visibilityStatus }}">
+                                            {{ is_null($item->is_visible) ? 'Not Setup' : ($item->is_visible ? 'Active' : 'Inactive') }}
                                         </div>
                                     </div>
                                 </div>
@@ -202,15 +214,22 @@
                             <td>{{ $item->number ?: '-' }}</td>
                             <td>{{ $item->item_category_code ?: '-' }}</td>
                             <td>${{ number_format((float) $item->unit_price, 2) }}</td>
-                            <td>{{ (int) $item->inventory }}</td>
+                            <td>{{ (int) $item->sellable_inventory }}</td>
+                            <td>
+                                @if (optional($storeSetting)->selling_location_code)
+                                    <div style="font-size:12px; white-space:nowrap;">{{ $storeSetting->selling_location_name ?: $storeSetting->selling_location_code }}</div>
+                                @else
+                                    <span style="color:#9ca3af;">No location selected</span>
+                                @endif
+                            </td>
 
                             <td>
                                 <div class="status-action-wrap">
                                     <button
                                         type="button"
-                                        class="toggle-switch js-toggle-product {{ $item->is_visible ? 'on' : 'off' }}"
+                                        class="toggle-switch js-toggle-product {{ is_null($item->is_visible) ? 'not-setup' : ($item->is_visible ? 'on' : 'off') }}"
                                         data-url="{{ route('store.management.products.toggle', $item->id) }}"
-                                        title="Toggle product visibility"
+                                        title="{{ is_null($item->is_visible) ? 'Not set up yet — click to activate' : 'Toggle product visibility' }}"
                                     >
                                         <span class="toggle-dot"></span>
                                     </button>
@@ -241,7 +260,7 @@
                         </tr>
                     @empty
                         <tr id="noProductRow">
-                            <td colspan="7">
+                            <td colspan="8">
                                 <div class="empty-state-box">No products found.</div>
                             </td>
                         </tr>

@@ -3,7 +3,7 @@
 @section('title', $item->display_name ?? 'Product Detail')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSUserViews/Products/show.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSUserViews/Products/show.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSUserViews/Products/show.css')) }}">
 @endpush
 
 @section('content')
@@ -29,7 +29,7 @@
         // Use description2 as the group label ("Beef Type") if any variant has one
         $variantGroupLabel = $variants->pluck('description2')->filter()->first() ?? 'Options';
 
-        $inStock = (int) ($item->inventory ?? 0) > 0;
+        $inStock = (int) ($item->sellable_inventory ?? 0) > 0;
 
         $vatPercent = max(0, (float) ($item->resolved_vat_percent ?? 0));
         $vatAmount = round($finalPrice * ($vatPercent / 100), 2);
@@ -38,9 +38,26 @@
         // item-list index page) — array of item IDs the current user has favorited.
         $favoriteIds = $favoriteIds ?? [];
         $isFavorited = in_array($item->id, $favoriteIds);
+
+        $categoryLabel = $item->item_category_code
+            ? ucwords(strtolower(str_replace(['_', '-'], ' ', $item->item_category_code)))
+            : 'Products';
+
+        $stockQty = rtrim(rtrim(number_format((float) $item->sellable_inventory, 2), '0'), '.');
+        $saveAmount = $unitPrice - $finalPrice;
     @endphp
 
+    {{-- Layout.POSUser.app's shell (.app-shell) is a flex ROW with the
+         sidebar and @yield('content') as direct siblings and no wrapper of
+         its own — without this .page-wrap (the class every other POSUser
+         page uses, carrying flex:1 from aside.css), this content becomes an
+         unconstrained flex item sized by its own natural content width
+         instead of filling the remaining space, which is what let the
+         product image/thumbnails/info overflow past the phone viewport's
+         right edge instead of being properly constrained to it. --}}
+    <div class="page-wrap">
     <div id="pos-product-detail-scope">
+        @include('Layout.POSUser.footer')
         <div id="pdToast" class="pd-toast" aria-live="polite" aria-atomic="true"></div>
 
         <div class="detail-wrap">
@@ -50,6 +67,11 @@
                     onclick="event.preventDefault(); (window.history.length > 1) ? window.history.back() : (window.location.href = this.href);">
                     <i class="bi bi-arrow-left"></i>
                 </a>
+
+                <div class="pd-heading">
+                    <h1 class="pd-page-title">Product View Detail</h1>
+                </div>
+
                 <div class="top-nav-actions">
                     <a href="{{ route('user.pos.cart') }}" class="cart-box" title="Cart">
                         <i class="bi bi-cart3"></i>
@@ -58,6 +80,7 @@
                 </div>
             </div>
 
+            <div class="pd-card">
             <div class="detail-grid">
                 {{-- Left: main image + one thumbnail per variant --}}
                 <div class="gallery-col">
@@ -87,10 +110,6 @@
 
                     @if ($gallery->count() > 1)
                         <div class="thumb-strip">
-                            <button type="button" class="thumb-arrow thumb-arrow-left" onclick="pdScrollThumbs(-1)" title="Previous">
-                                <i class="bi bi-chevron-left"></i>
-                            </button>
-
                             <div class="thumb-row" id="pdThumbRow">
                                 @foreach ($gallery as $index => $g)
                                     <button type="button"
@@ -103,29 +122,44 @@
                                     </button>
                                 @endforeach
                             </div>
-
-                            <button type="button" class="thumb-arrow thumb-arrow-right" onclick="pdScrollThumbs(1)" title="Next">
-                                <i class="bi bi-chevron-right"></i>
-                            </button>
                         </div>
                     @endif
                 </div>
 
                 {{-- Right: info --}}
                 <div class="info-col">
+                    <div class="info-col-bordered">
                     <h1 class="product-title">{{ $item->display_name ?? 'Unnamed Product' }}</h1>
 
-                    @if ($discountPercent > 0)
-                        <div class="price-old">${{ number_format($unitPrice, 2) }}</div>
-                    @endif
-                    <div class="price-new">${{ number_format($finalPrice, 2) }}</div>
-                    @if ($vatPercent > 0)
-                        <div class="pd-vat-chip">VAT {{ rtrim(rtrim(number_format($vatPercent, 2), '0'), '.') }}%: ${{ number_format($vatAmount, 2) }}</div>
-                    @endif
+                    <div class="pd-price-row">
+                        @if ($discountPercent > 0)
+                            <span class="price-old">${{ number_format($unitPrice, 2) }}</span>
+                        @endif
+                        <span class="price-new">${{ number_format($finalPrice, 2) }}</span>
+                        @if ($discountPercent > 0)
+                            <span class="save-badge">Save ${{ number_format($saveAmount, 2) }} ({{ round($discountPercent) }}%)</span>
+                        @endif
+                    </div>
 
                     @if (!empty($item->description))
                         <div class="product-desc">{{ $item->description }}</div>
                     @endif
+
+                    {{-- Item No / Unit / VAT / Stock — grouped together --}}
+                    <div class="product-meta">
+                        <span><strong>Item No:</strong> {{ $item->number }}</span>
+                        @if (!empty($item->base_unit_of_measure_code))
+                            <span><strong>Unit:</strong> {{ $item->base_unit_of_measure_code }}</span>
+                        @endif
+                        @if ($vatPercent > 0)
+                            <span><strong>VAT:</strong> {{ rtrim(rtrim(number_format($vatPercent, 2), '0'), '.') }}% (${{ number_format($vatAmount, 2) }}, excl. VAT)</span>
+                        @endif
+                    </div>
+
+                    <div class="stock-badge {{ $inStock ? 'in-stock' : 'out-of-stock' }}">
+                        <i class="bi {{ $inStock ? 'bi-check-circle-fill' : 'bi-x-circle-fill' }}"></i>
+                        {{ $inStock ? 'In stock' : 'Out of stock' }} ({{ $stockQty }} {{ $item->base_unit_of_measure_code ?: 'units' }} available)
+                    </div>
 
                     @if ($variants->isNotEmpty())
                         <div class="variant-section">
@@ -144,13 +178,6 @@
                             </div>
                         </div>
                     @endif
-
-                    <div class="product-meta">
-                        <span><strong>Item No:</strong> {{ $item->number }}</span>
-                        @if (!empty($item->base_unit_of_measure_code))
-                            <span><strong>Unit:</strong> {{ $item->base_unit_of_measure_code }}</span>
-                        @endif
-                        <span><strong>Availability:</strong> {{ $inStock ? 'In Stock' : 'Out of Stock' }}</span>
                     </div>
 
                     <div id="pdAddToCartForm">
@@ -161,22 +188,24 @@
                         <div class="quantity-wrapper">
                             <div class="qty-box">
                                 <button type="button" class="qty-btn" onclick="pdChangeQty(-1)">−</button>
-                                <input type="number" name="qty" id="pdQtyInput" class="qty-input" value="1" min="1" readonly>
+                                <input type="number" name="qty" id="pdQtyInput" class="qty-input" value="1" min="0.01" step="0.01" inputmode="decimal">
                                 <button type="button" class="qty-btn" onclick="pdChangeQty(1)">+</button>
                             </div>
                         </div>
 
                         <button type="button" class="add-to-cart-btn" id="pdAddToCartBtn" onclick="pdAddToCart(this)">
-                            <span class="add-to-cart-text">Add to cart</span>
+                            <i class="bi bi-cart3"></i>
+                            <span class="add-to-cart-text">Add to Cart</span>
                         </button>
                     </div>
                 </div>
+            </div>
             </div>
 
             {{-- Related products — same category, current item excluded --}}
             @if (isset($relatedItems) && $relatedItems->isNotEmpty())
                 <div class="related-section">
-                    <h2 class="related-title">More in this category</h2>
+                    <h2 class="related-title">You may also like</h2>
 
                     <div class="related-grid">
                         @foreach ($relatedItems as $related)
@@ -217,16 +246,25 @@
                                 data-image="{{ $related->image_url ?: asset('images/no-image.png') }}"
                                 data-variants="{{ $relatedVariants->toJson() }}">
 
-                                <a href="{{ route('user.pos.product.detail', $related->id) }}" class="related-card-image-link">
-                                    <div class="related-card-image">
-                                        @if ($related->effective_discount_percent > 0)
-                                            <div class="related-badge">SAVE {{ round($related->effective_discount_percent) }}%</div>
-                                        @endif
-                                        <img src="{{ $related->image_url }}"
-                                            alt="{{ $related->display_name }}"
-                                            onerror="this.onerror=null;this.classList.add('is-fallback');this.src='{{ asset('images/no-image.png') }}';">
-                                    </div>
-                                </a>
+                                <div class="related-card-image-wrap">
+                                    <a href="{{ route('user.pos.product.detail', $related->id) }}" class="related-card-image-link">
+                                        <div class="related-card-image">
+                                            @if ($related->effective_discount_percent > 0)
+                                                <div class="related-badge">SAVE {{ round($related->effective_discount_percent) }}%</div>
+                                            @endif
+                                            <img src="{{ $related->image_url }}"
+                                                alt="{{ $related->display_name }}"
+                                                onerror="this.onerror=null;this.classList.add('is-fallback');this.src='{{ asset('images/no-image.png') }}';">
+                                        </div>
+                                    </a>
+
+                                    <button type="button"
+                                        class="related-fav-btn {{ in_array($related->id, $favoriteIds) ? 'is-favorited' : '' }}"
+                                        data-item-id="{{ $related->id }}"
+                                        title="{{ in_array($related->id, $favoriteIds) ? 'Remove from favorites' : 'Save to favorites' }}">
+                                        <i class="bi {{ in_array($related->id, $favoriteIds) ? 'bi-heart-fill text-danger' : 'bi-heart' }}"></i>
+                                    </button>
+                                </div>
 
                                 <a href="{{ route('user.pos.product.detail', $related->id) }}" class="related-card-title">
                                     {{ $related->display_name }}
@@ -239,12 +277,29 @@
                                     <span class="related-price-new">${{ number_format($related->final_price, 2) }}</span>
                                 </div>
 
+                                <div class="related-qty-row">
+                                    <span class="related-qty-label">Quantity:</span>
+                                    <div class="related-qty-box">
+                                        <button type="button" class="related-qty-btn" data-action="minus">−</button>
+                                        <span class="related-qty-value">1</span>
+                                        <button type="button" class="related-qty-btn" data-action="plus">+</button>
+                                    </div>
+                                </div>
+
                                 {{-- phone-only quick add button (squircle "+"), hidden on desktop.
                                      If the related item has variants, this opens the popup;
                                      otherwise it adds straight to cart. --}}
                                 <button type="button" class="related-add-btn" data-id="{{ $related->id }}" title="Add to cart">
                                     <span class="related-add-text">Add to cart</span>
                                 </button>
+
+                                {{-- full-width Add to Cart + View Detail, shown on tablet/desktop --}}
+                                <button type="button" class="related-add-full-btn" data-id="{{ $related->id }}">
+                                    <i class="bi bi-cart3"></i> Add to cart
+                                </button>
+                                <a href="{{ route('user.pos.product.detail', $related->id) }}" class="related-view-detail-btn">
+                                    View detail
+                                </a>
                             </div>
                         @endforeach
                     </div>
@@ -292,6 +347,7 @@
             </div>
         </div>
     </div>
+    </div>
 
     <script>
         function pdShowToast(type, text) {
@@ -302,11 +358,36 @@
             setTimeout(() => { toastEl.className = 'pd-toast'; }, 2500);
         }
 
+        // Updates every cart badge on the page, not just this page's own
+        // #pdCartCount — header_mobile's hamburger-menu cart link (#cartCount
+        // / #mobileCartDot) is now included here too, and would otherwise go
+        // stale after an add-to-cart until the next full page load.
+        function pdUpdateCartBadges(newCount) {
+            if (newCount === undefined) return;
+
+            const pdBadge = document.getElementById('pdCartCount');
+            if (pdBadge) {
+                pdBadge.textContent = newCount;
+                pdBadge.classList.toggle('is-empty', newCount <= 0);
+            }
+
+            const mobileBadge = document.getElementById('cartCount');
+            if (mobileBadge) {
+                mobileBadge.textContent = newCount;
+                mobileBadge.classList.toggle('is-empty', newCount <= 0);
+            }
+
+            const mobileDot = document.getElementById('mobileCartDot');
+            if (mobileDot) {
+                mobileDot.classList.toggle('show', newCount > 0);
+            }
+        }
+
         function pdAddToCart(btn) {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
             const itemId    = document.getElementById('pdItemId').value;
             const variantId = document.getElementById('pdSelectedVariantId').value;
-            const qty       = parseInt(document.getElementById('pdQtyInput').value || '1', 10) || 1;
+            const qty       = parseFloat(document.getElementById('pdQtyInput').value || '1') || 1;
 
             if (!itemId) {
                 pdShowToast('error', 'Item ID not found.');
@@ -330,12 +411,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        const newCount = data.cartCount ?? data.count;
-                        const badge = document.getElementById('pdCartCount');
-                        if (badge && newCount !== undefined) {
-                            badge.textContent = newCount;
-                            badge.classList.toggle('is-empty', newCount <= 0);
-                        }
+                        pdUpdateCartBadges(data.cartCount ?? data.count);
                         pdShowToast('success', data.message || 'Added to cart successfully.');
                     } else {
                         pdShowToast('error', data.message || 'Failed to add to cart.');
@@ -472,14 +548,34 @@
 
         function pdChangeQty(delta) {
             const input = document.getElementById('pdQtyInput');
-            const next = Math.max(1, parseInt(input.value || '1', 10) + delta);
+            const next = Math.max(0.01, Math.round((parseFloat(input.value || '1') + delta) * 100) / 100);
             input.value = next;
         }
 
-        function pdScrollThumbs(direction) {
+        // Click-and-drag to scroll the thumbnail row horizontally (mouse) —
+        // touch/trackpad swipe already works natively via overflow-x: auto.
+        function pdBindThumbDragScroll() {
             const row = document.getElementById('pdThumbRow');
             if (!row) return;
-            row.scrollBy({ left: direction * 90, behavior: 'smooth' });
+
+            let isDown = false;
+            let startX = 0;
+            let startScroll = 0;
+
+            row.addEventListener('mousedown', (e) => {
+                isDown = true;
+                startX = e.pageX;
+                startScroll = row.scrollLeft;
+            });
+
+            document.addEventListener('mouseup', () => { isDown = false; });
+            document.addEventListener('mouseleave', () => { isDown = false; });
+
+            row.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                row.scrollLeft = startScroll - (e.pageX - startX);
+            });
         }
 
         /* ─────────────────────────────────────────────────────────────
@@ -658,12 +754,7 @@
                     const result = await response.json();
 
                     if (result.success) {
-                        const newCount = result.cartCount ?? result.count;
-                        const badge = document.getElementById('pdCartCount');
-                        if (badge && newCount !== undefined) {
-                            badge.textContent = newCount;
-                            badge.classList.toggle('is-empty', newCount <= 0);
-                        }
+                        pdUpdateCartBadges(result.cartCount ?? result.count);
                         pdShowToast('success', result.message || 'Added to cart successfully.');
                         pdCloseVariantModal();
                     } else {
@@ -682,7 +773,7 @@
         function pdBindRelatedAddButtons() {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
-            document.querySelectorAll('#pos-product-detail-scope .related-add-btn').forEach(btn => {
+            document.querySelectorAll('#pos-product-detail-scope .related-add-btn, #pos-product-detail-scope .related-add-full-btn').forEach(btn => {
                 btn.addEventListener('click', async function (e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -700,6 +791,9 @@
                     if (this.disabled) return;
                     this.disabled = true;
 
+                    const qtyEl = card.querySelector('.related-qty-value');
+                    const qty = parseFloat(qtyEl?.textContent || '1') || 1;
+
                     try {
                         const response = await fetch('{{ route("user.pos.cart.add") }}', {
                             method: 'POST',
@@ -708,17 +802,12 @@
                                 'X-CSRF-TOKEN': csrfToken,
                                 'Accept': 'application/json'
                             },
-                            body: JSON.stringify({ item_id: data.id, variant_id: null, qty: 1 })
+                            body: JSON.stringify({ item_id: data.id, variant_id: null, qty: qty })
                         });
                         const result = await response.json();
 
                         if (result.success) {
-                            const newCount = result.cartCount ?? result.count;
-                            const badge = document.getElementById('pdCartCount');
-                            if (badge && newCount !== undefined) {
-                                badge.textContent = newCount;
-                                badge.classList.toggle('is-empty', newCount <= 0);
-                            }
+                            pdUpdateCartBadges(result.cartCount ?? result.count);
                             pdShowToast('success', result.message || 'Added to cart successfully.');
                         } else {
                             pdShowToast('error', result.message || 'Failed to add to cart.');
@@ -733,10 +822,70 @@
             });
         }
 
+        function pdBindRelatedQtySteppers() {
+            document.querySelectorAll('#pos-product-detail-scope .related-qty-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const box = this.closest('.related-qty-box');
+                    const valueEl = box.querySelector('.related-qty-value');
+                    const current = parseFloat(valueEl.textContent) || 1;
+                    const next = this.dataset.action === 'plus' ? current + 1 : current - 1;
+                    valueEl.textContent = Math.max(1, next);
+                });
+            });
+        }
+
+        function pdBindRelatedFavoriteButtons() {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+            document.querySelectorAll('#pos-product-detail-scope .related-fav-btn').forEach(btn => {
+                btn.addEventListener('click', async function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const itemId = this.dataset.itemId;
+                    const icon = this.querySelector('i');
+                    if (!itemId || !icon || this.disabled) return;
+
+                    this.disabled = true;
+                    const wasFavorited = this.classList.contains('is-favorited');
+
+                    try {
+                        const response = await fetch('{{ route("user.pos.favorite.toggle") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ item_id: itemId })
+                        });
+
+                        const data = await response.json();
+                        if (data.success === false) {
+                            pdShowToast('error', data.message || 'Favorite update failed.');
+                            return;
+                        }
+
+                        const flag = pdExtractFavoritedFlag(data);
+                        const isFavorited = flag === null ? !wasFavorited : flag;
+                        pdApplyFavoriteState(this, icon, isFavorited);
+                    } catch (error) {
+                        console.error(error);
+                        pdShowToast('error', 'Favorite update failed.');
+                    } finally {
+                        this.disabled = false;
+                    }
+                });
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             pdBindFavoriteButton();
             pdBindRelatedAddButtons();
+            pdBindRelatedQtySteppers();
+            pdBindRelatedFavoriteButtons();
             pdBindVariantModal();
+            pdBindThumbDragScroll();
         });
     </script>
 @endsection

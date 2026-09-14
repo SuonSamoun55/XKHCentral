@@ -13,7 +13,7 @@
         $company = Company::first();
     }
 
-    $companyName = $company->display_name ?? $company->name ?? 'Company';
+    $companyName = ucwords($company->display_name ?? $company->name ?? 'Company');
     $companyLogoUrl = asset('images/default-company.png');
 
     if ($company && !empty($company->logo)) {
@@ -92,9 +92,17 @@
     </button>
 
     <div class="logo-wrap">
+        {{-- This is the page's LCP element (Chrome flagged ~2.8s). Explicit
+             width/height stop the browser waiting on the image to know its
+             box size (avoids a layout shift too), and fetchpriority tells
+             it to fetch this ahead of the sidebar's own several <img> icons
+             that would otherwise compete with it for early bandwidth. --}}
         <img src="{{ $companyLogoUrl }}"
              alt="{{ $companyName }} Logo"
              class="logo"
+             width="50"
+             height="50"
+             fetchpriority="high"
              onerror="this.onerror=null;this.src='{{ asset('images/default-company.png') }}';">
     </div>
 

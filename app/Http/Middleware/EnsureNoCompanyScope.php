@@ -12,7 +12,7 @@ class EnsureNoCompanyScope
     {
         $user = $request->user();
 
-        if ($user && $user->company_id) {
+        if ($user && $user->company_id && !$user->canManageStaffAcrossCompanies()) {
             abort(403, 'You do not have access to this page.');
         }
 

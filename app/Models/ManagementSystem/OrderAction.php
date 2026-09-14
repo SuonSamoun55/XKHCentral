@@ -12,6 +12,7 @@ class OrderAction extends Model
     protected $table = 'order_actions';
 
     protected $fillable = [
+        'entry_no',
         'order_id',
         'user_id',
         'action_by',

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\POS\User\Orders;
 
 use App\Http\Controllers\Controller;
-use App\Models\POS\{Cart, Order, OrderItem, OrderHistory, Item};
+use App\Models\POS\{Cart, Order, OrderItem, OrderHistory, Item, NumberSeries};
 use App\Models\ManagementSystem\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, DB, Log};
@@ -31,31 +31,47 @@ class OrderController extends Controller
             'success' => true,
             'data' => $this->orders()
                 ->with('items')
-                ->when($r->status && $r->status != 'all', fn($q) =>
+                ->when(
+                    $r->status && $r->status != 'all',
+                    fn($q) =>
                     $q->where('status', strtolower(str_replace(' ', '-', $r->status)))
                 )
                 ->latest()
                 ->paginate($r->limit ?? 10),
         ]);
     }
+    private function generateOrderNo(int $companyId): string
+    {
+        try {
+            return NumberSeries::issue($companyId, 'ORDER');
+        } catch (\Throwable $e) {
+            Log::warning('Order number series unavailable, using fallback format', [
+                'company_id' => $companyId,
+                'message' => $e->getMessage(),
+            ]);
+
+            return 'ORD-' . now()->format('YmdHis') . Str::upper(Str::random(4));
+        }
+    }
 
     public function checkout(Request $r)
     {
         $user = $this->user();
 
+        // The customer's own company, not an arbitrary/admin-session one —
+        // checkout doesn't run inside the admin panel's tenant context.
+        $companyId = $user->company_id;
+        if (!$companyId) return $this->fail('Your account is not linked to a company.');
+
         $cart = Cart::with('items.item', 'items.itemVariant')
             ->where('user_id', $user->id)
+            ->where('company_id', $companyId)
             ->where('status', 'active')
             ->first();
 
         if (!$cart || $cart->items->isEmpty()) {
             return $this->fail('Cart is empty');
         }
-
-        // The customer's own company, not an arbitrary/admin-session one —
-        // checkout doesn't run inside the admin panel's tenant context.
-        $companyId = $user->company_id;
-        if (!$companyId) return $this->fail('Your account is not linked to a company.');
 
         DB::beginTransaction();
 
@@ -65,7 +81,7 @@ class OrderController extends Controller
 
             $order = Order::create([
                 'company_id' => $companyId,
-                'order_no' => 'ORD-' . now()->format('YmdHis') . Str::upper(Str::random(4)),
+                'order_no' => $this->generateOrderNo($companyId),
                 'user_id' => $user->id,
                 'customer_no' => $user->bc_customer_no,
                 'subtotal' => $subtotal,
@@ -94,7 +110,6 @@ class OrderController extends Controller
                 'order_id' => $order->id,
                 'order_no' => $order->order_no,
             ]);
-
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error($e->getMessage());
@@ -113,7 +128,7 @@ class OrderController extends Controller
                 throw new \Exception("Invalid item");
             }
 
-            $line = $this->calculateLinePricing($item, (int) ($i->qty ?? 0));
+            $line = $this->calculateLinePricing($item, (float) ($i->qty ?? 0));
 
             $subtotal += $line['subtotal'];
             $discount += $line['discount_amount'];
@@ -127,7 +142,7 @@ class OrderController extends Controller
     {
         foreach ($cart->items as $i) {
             $item = $i->item;
-            $line = $this->calculateLinePricing($item, (int) ($i->qty ?? 0));
+            $line = $this->calculateLinePricing($item, (float) ($i->qty ?? 0));
 
             OrderItem::create([
                 'order_id' => $order->id,
@@ -165,15 +180,6 @@ class OrderController extends Controller
             'message' => $msg
         ], 422);
     }
-
-    /**
-     * Same pending-vs-stock risk classification used on the admin Product
-     * Detail page (StoreManagementController::productDetail): warn once
-     * pending demand reaches 80% of stock, escalate once it would oversell
-     * outright. Fires an admin notification the moment a fresh checkout
-     * pushes an item into that zone, instead of waiting for an admin to
-     * happen to open the product page.
-     */
     private function notifyLowStockIfNeeded($itemId): void
     {
         $item = Item::find($itemId);
@@ -181,9 +187,9 @@ class OrderController extends Controller
             return;
         }
 
-        $stock = (int) $item->inventory;
+        $stock = (float) $item->sellable_inventory;
 
-        $pendingQty = (int) OrderItem::query()
+        $pendingQty = (float) OrderItem::query()
             ->from('order_items as oi')
             ->join('orders as o', 'o.id', '=', 'oi.order_id')
             ->where('oi.item_id', $itemId)
@@ -204,9 +210,6 @@ class OrderController extends Controller
         if (!$level) {
             return;
         }
-
-        // Don't spam a fresh notification on every checkout while an
-        // existing alert for this item is still unread/unresolved.
         $alreadyAlerted = Notification::where('item_id', $item->id)
             ->where('type', 'out_of_stock')
             ->where('is_read', false)
@@ -262,6 +265,7 @@ class OrderController extends Controller
 
         $cart = Cart::with('items.item')
             ->where('user_id', auth()->id())
+            ->where('company_id', auth()->user()->company_id)
             ->where('status', 'active')
             ->first();
 
@@ -271,12 +275,7 @@ class OrderController extends Controller
             'showOrderDetail' => true,
         ]);
     }
-
-    /**
-     * Same pricing logic used in CartController::calculateLinePricing()
-     * so cart totals and order totals never diverge.
-     */
-    private function calculateLinePricing($item, int $qty): array
+    private function calculateLinePricing($item, float $qty): array
     {
         $unitPrice = (float) ($item->unit_price ?? 0);
         $subtotal = max(0, $unitPrice * $qty);

@@ -15,6 +15,7 @@ class BcCustomer extends Model
         'company_id',
         'bc_id',
         'bc_customer_no',
+        'local_customer_no',
         'name',
         'display_name',
         'email',

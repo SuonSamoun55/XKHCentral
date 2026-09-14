@@ -23,6 +23,9 @@ class InventoryMovement extends Model
 
     protected $casts = [
         'happened_at' => 'datetime',
+        'quantity_change' => 'decimal:2',
+        'old_inventory' => 'decimal:2',
+        'new_inventory' => 'decimal:2',
     ];
 
     public function item()

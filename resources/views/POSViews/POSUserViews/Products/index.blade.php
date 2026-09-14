@@ -3,7 +3,7 @@
     @section('title', 'POS User Item List')
 
     @push('styles')
-        <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSUserViews/Products/item-list.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSUserViews/Products/item-list.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSUserViews/Products/item-list.css')) }}">
     @endpush
 
     @section('content')
@@ -112,8 +112,10 @@
                                 $discountPercent = (float) ($item->effective_discount_percent ?? 0);
                                 $salePrice       = (float) ($item->final_price ?? $normalPrice);
                                 $oldPrice        = $discountPercent > 0 ? $normalPrice : 0;
-                                $descText        = $item->short_description ?? '';
+                                $descText        = $item->description ?? '';
                                 $sizeLabel       = strtoupper($item->base_unit_of_measure_code ?? 'S');
+                                $vatPercent      = max(0, (float) ($item->resolved_vat_percent ?? 0));
+                                $vatAmount       = round($salePrice * ($vatPercent / 100), 2);
 
                                 // Variants relationship — same source the product detail page queries
                                 // from item_variants. Embedded as JSON so the popup doesn't need an
@@ -166,7 +168,19 @@
 
                                 <div class="pl-product-info">
                                     <div class="pl-product-title">{{ $item->display_name ?: 'No Name' }}</div>
-                                    {{-- <div class="pl-product-subtitle">Size {{ $sizeLabel }}</div> --}}
+                                    @if (!empty($item->base_unit_of_measure_code) || $vatPercent > 0)
+                                        <div class="pl-unit-vat-row">
+                                            @if (!empty($item->base_unit_of_measure_code))
+                                                <span class="pl-product-subtitle">Unit: {{ $sizeLabel }}</span>
+                                            @endif
+                                            @if ($vatPercent > 0)
+                                                <span class="pl-vat-plain">VAT {{ rtrim(rtrim(number_format($vatPercent, 2), '0'), '.') }}%</span>
+                                            @endif
+                                        </div>
+                                    @endif
+                                    @if (!empty($descText))
+                                        <div class="pl-product-desc-line">{{ $descText }}</div>
+                                    @endif
 
                                     <div class="pl-price-row {{ $oldPrice > $salePrice ? 'has-discount' : 'no-discount' }}">
                                         <div class="pl-old-price">
@@ -174,14 +188,19 @@
                                                 ${{ number_format($oldPrice, 2) }}
                                             @endif
                                         </div>
-                                        <div class="pl-new-price">${{ number_format($salePrice, 2) }}</div>
+                                        <div class="pl-new-price-wrap">
+                                            <div class="pl-new-price">${{ number_format($salePrice, 2) }}</div>
+                                            @if ($vatPercent > 0)
+                                                <div class="pl-price-note">(excl. VAT)</div>
+                                            @endif
+                                        </div>
                                     </div>
 
                                     <div class="pl-qty-section">
                                         <span class="pl-qty-label">Quantity:</span>
                                         <div class="pl-qty-box">
                                             <button type="button" class="pl-qty-btn minus">−</button>
-                                            <span class="pl-qty">1</span>
+                                            <input type="number" class="pl-qty" value="1" min="0.01" step="0.01" inputmode="decimal">
                                             <button type="button" class="pl-qty-btn plus">+</button>
                                         </div>
                                     </div>
@@ -234,7 +253,7 @@
                         <div class="pl-variant-modal-qty">
                             <div class="pl-qty-box">
                                 <button type="button" class="pl-qty-btn" id="variantModalQtyMinus">−</button>
-                                <span class="pl-qty" id="variantModalQty">1</span>
+                                <input type="number" class="pl-qty" id="variantModalQty" value="1" min="0.01" step="0.01" inputmode="decimal">
                                 <button type="button" class="pl-qty-btn" id="variantModalQtyPlus">+</button>
                             </div>
                         </div>
@@ -534,17 +553,31 @@
         // else in this file that calls bindSidebar() needs to change.
         function bindSidebar() {}
 
+        // Rounds to 2 decimals and floors at 0.01, same rule the Cart page's
+        // own qty editor already uses — keeps every qty input in the app
+        // consistent with what the backend (qty numeric|min:0.01) accepts.
+        function normalizeQty(value, fallback = 1) {
+            const rounded = Math.round((parseFloat(value) || 0) * 100) / 100;
+            return rounded >= 0.01 ? rounded : fallback;
+        }
+
         function bindQuantityButtons() {
             els.productCards.forEach(card => {
                 const plusBtn = card.querySelector(".plus");
                 const minusBtn = card.querySelector(".minus");
                 const qtyEl   = card.querySelector(".pl-qty");
                 plusBtn?.addEventListener("click",  () => {
-                    if (qtyEl) qtyEl.textContent = parseInt(qtyEl.textContent || "0", 10) + 1;
+                    if (qtyEl) qtyEl.value = normalizeQty((parseFloat(qtyEl.value) || 0) + 1);
                 });
                 minusBtn?.addEventListener("click", () => {
-                    const cur = parseInt(qtyEl?.textContent || "0", 10);
-                    if (cur > 1 && qtyEl) qtyEl.textContent = cur - 1;
+                    if (qtyEl) qtyEl.value = normalizeQty((parseFloat(qtyEl.value) || 0) - 1, 0.01);
+                });
+                qtyEl?.addEventListener("input", () => {
+                    // allow digits and a single decimal point as they type
+                    qtyEl.value = qtyEl.value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
+                });
+                qtyEl?.addEventListener("blur", () => {
+                    qtyEl.value = normalizeQty(qtyEl.value);
                 });
             });
         }
@@ -560,8 +593,8 @@
                 },
                 body: JSON.stringify({
                     item_id: itemId,
-                    variant_id: variantId || null,     // kept for backward compatibility (single-variant case)
-                    variant_ids: variantIds || null,    // populated when a product has multiple option groups
+                    variant_id: variantId || null,   
+                    variant_ids: variantIds || null,    
                     qty: qty
                 })
             });
@@ -569,7 +602,10 @@
 
             if (data.success && data.cartCount !== undefined) {
                 if (els.cartCount)       els.cartCount.textContent = data.cartCount;
-                if (els.mobileCartCount) els.mobileCartCount.textContent = data.cartCount;
+                if (els.mobileCartCount) {
+                    els.mobileCartCount.textContent = data.cartCount;
+                    els.mobileCartCount.classList.toggle("is-empty", data.cartCount <= 0);
+                }
                 if (els.asideCartCount) {
                     els.asideCartCount.classList.toggle("show", data.cartCount > 0);
                 }
@@ -579,12 +615,6 @@
             }
             return data;
         }
-
-        /* ─────────────────────────────────────────────────────────────
-           Products WITH variants  -> open the popup (grouped options).
-           Products WITHOUT variants -> add straight to cart, no popup,
-           using the qty already set on the card itself.
-           ───────────────────────────────────────────────────────────── */
         function bindAddToCart() {
             els.productCards.forEach(card => {
                 const addBtn = card.querySelector(".pl-add-cart-btn");
@@ -598,14 +628,14 @@
                         return;
                     }
 
-                    const qty = parseInt(qtyEl?.textContent || "1", 10);
+                    const qty = normalizeQty(qtyEl?.value, 1);
                     this.disabled = true;
                     const textEl = this.querySelector(".pl-add-cart-text");
                     if (textEl) textEl.textContent = "Adding..."; else this.textContent = "Adding...";
                     try {
                         const result = await sendAddToCart({ itemId: data.id, variantId: null, variantIds: null, qty });
                         if (result.success) {
-                            if (qtyEl) qtyEl.textContent = "1";
+                            if (qtyEl) qtyEl.value = "1";
                             showToast("success", result.message || "Added to cart successfully.");
                         } else {
                             showToast("error", result.message || "Failed to add to cart.");
@@ -621,13 +651,11 @@
             });
         }
 
-        /* ── variant selection popup ── */
         let activeVariantCard = null;
-        let activeVariantSelections = {}; // { "Size": variantId, "Beef Type": variantId, ... }
+        let activeVariantSelections = {}; 
         let activeVariantQty  = 1;
 
         function visibleCards() {
-            // Only cards currently shown (respects active search/category filter)
             return els.productCards.filter(card => card.style.display !== "none");
         }
 
@@ -645,7 +673,7 @@
         function renderVariantModal(card) {
             const data = getCardData(card);
             const cardQtyEl = card.querySelector(".pl-qty");
-            activeVariantQty = Math.max(1, parseInt(cardQtyEl?.textContent || "1", 10));
+            activeVariantQty = normalizeQty(cardQtyEl?.value, 1);
             activeVariantSelections = {};
 
             const hasVariants = data.variants && data.variants.length > 0;
@@ -654,7 +682,7 @@
             els.variantModalImage.alt = data.displayName;
             els.variantModalTitle.textContent = data.displayName;
             els.variantModalPrice.textContent = `$${data.price}`;
-            els.variantModalQty.textContent = activeVariantQty;
+            els.variantModalQty.value = activeVariantQty;
             els.variantModalViewDetail.href = card.dataset.detailUrl || "#";
 
             const oldPriceAttr = card.dataset.oldPrice;
@@ -768,12 +796,19 @@
             els.variantModalNext?.addEventListener("click", () => goToAdjacentProduct(1));
 
             els.variantModalQtyMinus?.addEventListener("click", () => {
-                activeVariantQty = Math.max(1, activeVariantQty - 1);
-                els.variantModalQty.textContent = activeVariantQty;
+                activeVariantQty = normalizeQty(activeVariantQty - 1, 0.01);
+                els.variantModalQty.value = activeVariantQty;
             });
             els.variantModalQtyPlus?.addEventListener("click", () => {
-                activeVariantQty += 1;
-                els.variantModalQty.textContent = activeVariantQty;
+                activeVariantQty = normalizeQty(activeVariantQty + 1);
+                els.variantModalQty.value = activeVariantQty;
+            });
+            els.variantModalQty?.addEventListener("input", () => {
+                els.variantModalQty.value = els.variantModalQty.value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
+            });
+            els.variantModalQty?.addEventListener("blur", () => {
+                activeVariantQty = normalizeQty(els.variantModalQty.value, 1);
+                els.variantModalQty.value = activeVariantQty;
             });
 
             els.variantModalConfirm?.addEventListener("click", async function () {
@@ -784,6 +819,9 @@
                 const selectedIds = Object.values(activeVariantSelections);
                 // Backward-compatible single id when there's only one option group.
                 const singleVariantId = selectedIds.length === 1 ? selectedIds[0] : null;
+                // Read straight from the field in case the user typed a value and
+                // clicked Add to cart without the input losing focus first.
+                activeVariantQty = normalizeQty(els.variantModalQty?.value, 1);
 
                 this.disabled = true;
                 const textEl = this.querySelector(".pl-add-cart-text");
@@ -798,7 +836,7 @@
                     });
                     if (result.success) {
                         const cardQtyEl = activeVariantCard.querySelector(".pl-qty");
-                        if (cardQtyEl) cardQtyEl.textContent = "1";
+                        if (cardQtyEl) cardQtyEl.value = "1";
                         showToast("success", result.message || "Added to cart successfully.");
                         closeVariantModal();
                     } else {
@@ -911,7 +949,7 @@
         function bindProductDetailNavigation() {
             els.productCards.forEach(card => {
                 card.addEventListener("click", (e) => {
-                    if (e.target.closest(".pl-qty-btn, .pl-add-cart-btn, .pl-fav-btn, .pl-search-preview-btn, .pl-view-detail-btn")) return;
+                    if (e.target.closest(".pl-qty-btn, .pl-qty, .pl-add-cart-btn, .pl-fav-btn, .pl-search-preview-btn, .pl-view-detail-btn")) return;
                     const isMobile = window.matchMedia("(max-width: 768px)").matches;
                     if (!isMobile) return;
                     const detailUrl = card.dataset.detailUrl;

@@ -83,40 +83,77 @@
 
     $navItems = [
         [
-            'name' => 'Pos System',
-            'url' => '/pos/interface',
-            'match' => ['pos/interface', 'pos/*'],
+            'name' => 'Item',
+            'match' => [
+                'pos/interface', 'pos/*',
+                'store-management', 'store-management/*', 'store/management/*',
+                'discounts', 'discounts/*',
+                'vat-posting-setup', 'vat-posting-setup/*',
+                'report-settings', 'report-settings/*',
+            ],
             'icon' => '/images/management/managemetn_POS.png',
             'icon_active' => '/images/management/management_POS_active.png',
+            'children' => [
+                [
+                    'name' => 'Pos System',
+                    'url' => '/pos/interface',
+                    'match' => ['pos/interface', 'pos/*'],
+                    'icon' => '/images/management/managemetn_POS.png',
+                    'icon_active' => '/images/management/management_POS_active.png',
+                ],
+                [
+                    'name' => 'Store',
+                    'url' => '/store-management',
+                    'match' => ['store-management', 'store-management/*', 'store/management/*'],
+                    'icon' => '/images/AdminPOS/admin_store_management.png',
+                    'icon_active' => '/images/AdminPOS/admin_store_management_active.png',
+                ],
+                [
+                    'name' => 'Discount',
+                    'url' => '/discounts',
+                    'match' => ['discounts', 'discounts/*'],
+                    'icon' => '/images/AdminPOS/Admin_POS_Discount.png',
+                    'icon_active' => '/images/AdminPOS/Admin_POS_Discount_Active.png',
+                ],
+                [
+                    'name' => 'Tax Groups',
+                    'url' => '/vat-posting-setup',
+                    'match' => ['vat-posting-setup', 'vat-posting-setup/*'],
+                    'icon' => '/images/management/tax.png',
+                    'icon_active' => '/images/management/tax_active.png',
+                ],
+                [
+                    'name' => 'Report Settings',
+                    'url' => '/report-settings',
+                    'match' => ['report-settings', 'report-settings/*'],
+                    'icon' => '/images/pos/Report.png',
+                    'icon_active' => '/images/pos/ReportActive.png',
+                ],
+            ],
         ],
         [
-            'name' => 'Approval Order',
-            'url' => '/admin/orders',
-            'match' => ['admin/orders', 'admin/orders/*'],
+            'name' => 'Approval',
+            'match' => ['admin/orders', 'admin/orders/*', 'approval-entries', 'approval-entries/*'],
             'icon' => '/images/AdminPOS/Admin_POS_Approval_Order.png',
             'icon_active' => '/images/AdminPOS/Admin_POS_Approval_Order_active.png',
             'notification' => $pendingOrdersCount > 0,
-        ],
-        [
-            'name' => 'Store',
-            'url' => '/store-management',
-            'match' => ['store-management', 'store-management/*'],
-            'icon' => '/images/AdminPOS/admin_store_management.png',
-            'icon_active' => '/images/AdminPOS/admin_store_management_active.png',
-        ],
-        [
-            'name' => 'Discount',
-            'url' => '/discounts',
-            'match' => ['discounts', 'discounts/*'],
-            'icon' => '/images/AdminPOS/Admin_POS_Discount.png',
-            'icon_active' => '/images/AdminPOS/Admin_POS_Discount_Active.png',
-        ],
-        [
-            'name' => 'Tax Groups',
-            'url' => '/tax-groups',
-            'match' => ['tax-groups', 'tax-groups/*'],
-            'icon' => '/images/management/tax.png',
-            'icon_active' => '/images/management/tax_active.png',
+            'children' => [
+                [
+                    'name' => 'Approval Order',
+                    'url' => '/admin/orders',
+                    'match' => ['admin/orders', 'admin/orders/*'],
+                    'icon' => '/images/AdminPOS/Admin_POS_Approval_Order.png',
+                    'icon_active' => '/images/AdminPOS/Admin_POS_Approval_Order_active.png',
+                    'notification' => $pendingOrdersCount > 0,
+                ],
+                [
+                    'name' => 'Approval Entry',
+                    'url' => '/approval-entries',
+                    'match' => ['approval-entries', 'approval-entries/*'],
+                    'icon' => '/images/pos/ApprovalEntry.png',
+                    'icon_active' => '/images/pos/ApprovalEntryActive.png',
+                ],
+            ],
         ],
         [
             'name' => 'Notification',
@@ -128,11 +165,29 @@
         ],
     ];
 
-    $bottomNavItems = array_values(array_filter(
-        $navItems,
-        fn($item) => !in_array($item['name'], ['Discount', 'Tax Groups'])
-    ));
+    // Mobile header/footer have no dropdown interaction, so grouped desktop
+    // items (e.g. "Item" -> Pos System/Store/Discount/Tax Groups) are shown
+    // flattened back into their individual icons there, same as before
+    // grouping existed on desktop.
+    $flattenForMobile = function (array $items) {
+        $flat = [];
+        foreach ($items as $item) {
+            if (!empty($item['children'])) {
+                foreach ($item['children'] as $child) {
+                    $flat[] = $child;
+                }
+            } else {
+                $flat[] = $item;
+            }
+        }
+        return $flat;
+    };
 
+    $mobileMenuItems = $flattenForMobile($navItems);
+    $bottomNavItems = array_values(array_filter(
+        $flattenForMobile($navItems),
+        fn($item) => !in_array($item['name'], ['Discount', 'Tax Groups', 'Report Settings', 'Approval Entry'])
+    ));
     $activeNavItem = null;
     foreach ($navItems as $item) {
         foreach ($item['match'] as $pattern) {
@@ -151,20 +206,17 @@
 <header class="mobile-topbar">
     @if ($backUrl !== '')
         <a href="{{ $backUrl }}" class="mobile-topbar-btn" aria-label="Go back">
-            <i class="bi bi-chevron-left"></i>
+            <i class="bi bi-arrow-left"></i>
         </a>
     @else
         <button type="button" class="mobile-topbar-btn" id="mobileMenuToggle" aria-label="Open menu" aria-controls="mobileMenuPanel" aria-expanded="false" aria-haspopup="true">
             <i class="bi bi-list"></i>
-            {{-- Combines both signals — the menu this opens holds both the
-                 Notification and Approval Order items. --}}
             <span class="noti-dot {{ ($unreadNotificationCount > 0 || $pendingOrdersCount > 0) ? 'show' : '' }}" aria-hidden="true"></span>
         </button>
     @endif
 
     <span class="mobile-topbar-title">
         @if ($backUrl === '' && $activeNavIcon)
-            {{-- <img src="{{ asset($activeNavIcon) }}" alt="" class="mobile-topbar-title-icon"> --}}
         @endif
         @yield('title', 'POS Admin')
     </span>
@@ -176,7 +228,7 @@
 
     @if ($backUrl === '')
         <nav class="mobile-menu-panel" id="mobileMenuPanel">
-            @foreach ($navItems as $item)
+            @foreach ($mobileMenuItems as $item)
                 @php
                     $isActive = false;
                     foreach ($item['match'] as $pattern) {
@@ -186,13 +238,17 @@
                         }
                     }
 
-                    $iconToShow = $item['icon'];
+                    $iconToShow = $item['icon'] ?? null;
                     if ($isActive && !empty($item['icon_active'])) {
                         $iconToShow = $item['icon_active'];
                     }
                 @endphp
                 <a href="{{ $item['url'] }}" class="mobile-menu-link {{ $isActive ? 'active' : '' }}">
-                    <img src="{{ asset($iconToShow) }}" alt="" class="mobile-menu-link-icon">
+                    @if(!empty($iconToShow))
+                        <img src="{{ asset($iconToShow) }}" alt="" class="mobile-menu-link-icon">
+                    @else
+                        <i class="bi {{ $item['icon_class'] ?? 'bi-circle' }} mobile-menu-link-icon"></i>
+                    @endif
                     {{ $item['name'] }}
                 </a>
             @endforeach
@@ -228,14 +284,18 @@
                 }
             }
 
-            $iconToShow = $item['icon'];
+            $iconToShow = $item['icon'] ?? null;
             if ($isActive && !empty($item['icon_active'])) {
                 $iconToShow = $item['icon_active'];
             }
         @endphp
         <a href="{{ $item['url'] }}" class="mobile-bottom-nav-item {{ $isActive ? 'active' : '' }}">
             <span class="mobile-bottom-nav-icon {{ !empty($item['notification']) ? 'nav-icon-notification' : '' }}">
-                <img src="{{ asset($iconToShow) }}" alt="{{ $item['name'] }} Icon">
+                @if(!empty($iconToShow))
+                    <img src="{{ asset($iconToShow) }}" alt="{{ $item['name'] }} Icon">
+                @else
+                    <i class="bi {{ $item['icon_class'] ?? 'bi-circle' }}"></i>
+                @endif
                 @if (!empty($item['notification']))
                     <span class="noti-dot show" aria-hidden="true"></span>
                 @endif
@@ -268,27 +328,65 @@
                                 break;
                             }
                         }
-
-                        $iconToShow = $item['icon'];
+                        $iconToShow = $item['icon'] ?? null;
                         if ($isActive && !empty($item['icon_active'])) {
                             $iconToShow = $item['icon_active'];
                         }
                     @endphp
-                    <a href="{{ $item['url'] }}" class="nav-link-mobile-close">
-                        <button class="nav-btn {{ $isActive ? 'active' : '' }}" type="button">
-                            <span class="nav-icon {{ !empty($item['notification']) ? 'nav-icon-notification' : '' }}">
-                                @if(!empty($iconToShow))
-                                    <img src="{{ asset($iconToShow) }}" alt="{{ $item['name'] }} Icon">
-                                @else
-                                    <i class="bi bi-percent" style="font-size:14px;"></i>
-                                @endif
-                                @if (!empty($item['notification']))
-                                    <span class="noti-dot show" aria-hidden="true"></span>
-                                @endif
-                            </span>
-                            <span class="nav-label">{{ $item['name'] }}</span>
-                        </button>
-                    </a>
+                    @if (!empty($item['children']))
+                        <div class="nav-group" data-nav-group-key="{{ \Illuminate\Support\Str::slug($item['name']) }}">
+                            <button class="nav-btn nav-btn-group {{ $isActive ? 'active' : '' }}" type="button" data-nav-group-toggle>
+                                <span class="nav-icon {{ !empty($item['notification']) ? 'nav-icon-notification' : '' }}">
+                                    @if(!empty($iconToShow))
+                                        <img src="{{ asset($iconToShow) }}" alt="{{ $item['name'] }} Icon">
+                                    @else
+                                        <i class="bi {{ $item['icon_class'] ?? 'bi-percent' }}" style="font-size:14px;"></i>
+                                    @endif
+                                    @if (!empty($item['notification']))
+                                        <span class="noti-dot show" aria-hidden="true"></span>
+                                    @endif
+                                </span>
+                                <span class="nav-label">{{ $item['name'] }}</span>
+                                <i class="bi bi-chevron-down nav-group-chevron"></i>
+                            </button>
+
+                            <div class="nav-submenu">
+                                @foreach ($item['children'] as $child)
+                                    @php
+                                        $childActive = false;
+                                        foreach ($child['match'] as $pattern) {
+                                            if (request()->is($pattern)) {
+                                                $childActive = true;
+                                                break;
+                                            }
+                                        }
+                                    @endphp
+                                    <a href="{{ $child['url'] }}" class="nav-sublink nav-link-mobile-close {{ $childActive ? 'active' : '' }}">
+                                        <span class="nav-sublink-label">{{ $child['name'] }}</span>
+                                        @if (!empty($child['notification']))
+                                            <span class="noti-dot show" aria-hidden="true"></span>
+                                        @endif
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @else
+                        <a href="{{ $item['url'] }}" class="nav-link-mobile-close">
+                            <button class="nav-btn {{ $isActive ? 'active' : '' }}" type="button">
+                                <span class="nav-icon {{ !empty($item['notification']) ? 'nav-icon-notification' : '' }}">
+                                    @if(!empty($iconToShow))
+                                        <img src="{{ asset($iconToShow) }}" alt="{{ $item['name'] }} Icon">
+                                    @else
+                                        <i class="bi {{ $item['icon_class'] ?? 'bi-percent' }}" style="font-size:14px;"></i>
+                                    @endif
+                                    @if (!empty($item['notification']))
+                                        <span class="noti-dot show" aria-hidden="true"></span>
+                                    @endif
+                                </span>
+                                <span class="nav-label">{{ $item['name'] }}</span>
+                            </button>
+                        </a>
+                    @endif
                 @endforeach
             </nav>
         </div>
@@ -299,7 +397,7 @@
                     onerror="this.onerror=null;this.src='{{ asset('images/default-user.png') }}';">
                 <div class="profile-text">
                     <div class="user-meta">
-                        <div class="user-name">{{ $authUser->name ?? 'Guest' }}</div>
+                        <div class="user-name">{{ $authUser ? ucwords($authUser->name) : 'Guest' }}</div>
                         <div class="user-role">{{ ucfirst($authUser->role ?? 'Guest') }}</div>
                     </div>
                 </div>
@@ -382,6 +480,51 @@
             if (e.key === 'Escape' && overlay.classList.contains('show')) closeLogoutModal();
         });
     }
+})();
+
+(function () {
+    const STORAGE_KEY = 'posAdminOpenNavGroups';
+
+    function getOpenGroups() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        } catch (_) {
+            return [];
+        }
+    }
+
+    function setGroupOpen(key, isOpen) {
+        if (!key) return;
+        try {
+            const open = new Set(getOpenGroups());
+            if (isOpen) {
+                open.add(key);
+            } else {
+                open.delete(key);
+            }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify([...open]));
+        } catch (_) {
+            // localStorage unavailable — state just won't persist across page loads.
+        }
+    }
+
+    // Restore each group's open/closed state from the last page before this
+    // one navigated away — full page loads otherwise reset every group shut.
+    const openGroups = new Set(getOpenGroups());
+    document.querySelectorAll('.nav-group[data-nav-group-key]').forEach(function (group) {
+        if (openGroups.has(group.dataset.navGroupKey)) {
+            group.classList.add('open');
+        }
+    });
+
+    document.querySelectorAll('[data-nav-group-toggle]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const group = btn.closest('.nav-group');
+            if (!group) return;
+            group.classList.toggle('open');
+            setGroupOpen(group.dataset.navGroupKey, group.classList.contains('open'));
+        });
+    });
 })();
 
 (function () {

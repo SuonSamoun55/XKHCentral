@@ -179,7 +179,7 @@ class AdminNotificationController extends Controller
             $stockItem = Item::find($notification->item_id);
 
             if ($stockItem) {
-                $stockCurrent = (int) $stockItem->inventory;
+                $stockCurrent = (float) $stockItem->inventory;
 
                 $stockReserved = (int) \App\Models\POS\OrderItem::query()
                     ->from('order_items as oi')
@@ -253,23 +253,13 @@ class AdminNotificationController extends Controller
             ]);
 
         $mapped = $customers->map(function ($customer) {
-            $avatar = asset('images/default-avatar.png');
-
-            if (!empty($customer->profile_image)) {
-                $avatar = asset('storage/' . ltrim($customer->profile_image, '/'));
-            } elseif (!empty($customer->profile_image_url)) {
-                $avatar = $customer->profile_image_url;
-            } elseif (!empty($customer->bc_customer_no)) {
-                $avatar = route('users.bc-image', ['bcId' => $customer->bc_customer_no]);
-            }
-
             return [
                 'id' => $customer->id,
                 'name' => $customer->name,
                 'email' => $customer->email ?? 'No Email',
                 'phone' => $customer->phone ?? '',
                 'customer_no' => $customer->bc_customer_no ?? 'No Customer No',
-                'avatar' => $avatar,
+                'avatar' => $this->getCustomerImageDisplay($customer),
             ];
         })->values();
 
@@ -326,34 +316,17 @@ class AdminNotificationController extends Controller
             ->latest('updated_at')
             ->limit(20)
             ->get();
-
         $mapped = $notifications->map(function ($notification) {
             $user = $notification->user;
             $sender = $notification->sender;
             $isUserContact = ($notification->type === 'user_contact');
             $contactUser = $isUserContact ? ($sender ?: $user) : ($user ?: $sender);
-            $avatar = asset('images/default-avatar.png');
-
-            if ($contactUser && !empty($contactUser->profile_image)) {
-                $avatar = asset('storage/' . ltrim($contactUser->profile_image, '/'));
-            } elseif ($contactUser && !empty($contactUser->profile_image_url)) {
-                $avatar = $contactUser->profile_image_url;
-            } elseif ($contactUser && !empty($contactUser->bc_customer_no)) {
-                $avatar = route('users.bc-image', ['bcId' => $contactUser->bc_customer_no]);
-            } elseif ($sender && !empty($sender->profile_image)) {
-                $avatar = asset('storage/' . ltrim($sender->profile_image, '/'));
-            } elseif ($sender && !empty($sender->profile_image_url)) {
-                $avatar = $sender->profile_image_url;
-            }
+            $avatar = $this->getCustomerImageDisplay($contactUser, $sender);
 
             $displayName = optional($contactUser)->name
                 ?? ($notification->sender_name ?: optional($sender)->name)
                 ?? 'System';
 
-            // User-contact rows skip the generic notification detail page
-            // entirely and open the chat with that customer directly —
-            // matches the same rule used for the row link rendered
-            // server-side in AdminNotificationViews.blade.php.
             $chatUrl = optional($contactUser)->id
                 ? route('admin.chat.index', ['user_id' => $contactUser->id])
                 : null;
@@ -440,10 +413,7 @@ class AdminNotificationController extends Controller
 
             $groupKey = 'broadcast-' . Str::uuid();
 
-            foreach ($customers as $customer) {
-                $this->createSingleUserNotification($customer, $request, $cleanMessage, $sender, $groupKey, 'global_message');
-            }
-
+            $this->createBulkUserNotifications($customers, $request, $cleanMessage, $sender, $groupKey, 'global_message');
             $this->createBulkSummaryNotification($customers, $request, $cleanMessage, $sender, $groupKey, 'global_message');
 
             if ($request->expectsJson() || $request->ajax()) {
@@ -499,10 +469,7 @@ class AdminNotificationController extends Controller
 
         $groupKey = 'broadcast-' . Str::uuid();
 
-        foreach ($customers as $customer) {
-            $this->createSingleUserNotification($customer, $request, $cleanMessage, $sender, $groupKey);
-        }
-
+        $this->createBulkUserNotifications($customers, $request, $cleanMessage, $sender, $groupKey);
         $this->createBulkSummaryNotification($customers, $request, $cleanMessage, $sender, $groupKey);
 
         if ($request->expectsJson() || $request->ajax()) {
@@ -628,18 +595,33 @@ class AdminNotificationController extends Controller
         return back()->with('success', 'Notification deleted successfully.');
     }
 
-    protected function getCustomerImageDisplay($user)
+    /**
+     * @param mixed $fallbackUser Checked for a profile image/URL when $user has neither
+     *                            (used for notification rows where the primary contact
+     *                            has no image but the sender does).
+     */
+    protected function getCustomerImageDisplay($user, $fallbackUser = null)
     {
-        if (!empty($user->profile_image)) {
-            return asset('storage/' . $user->profile_image);
+        if ($user && !empty($user->profile_image)) {
+            return asset('storage/' . ltrim($user->profile_image, '/'));
         }
 
-        if (!empty($user->profile_image_url)) {
+        if ($user && !empty($user->profile_image_url)) {
             return $user->profile_image_url;
         }
 
-        if (!empty($user->bc_customer_no)) {
+        if ($user && !empty($user->bc_customer_no)) {
             return route('users.bc-image', ['bcId' => $user->bc_customer_no]);
+        }
+
+        if ($fallbackUser) {
+            if (!empty($fallbackUser->profile_image)) {
+                return asset('storage/' . ltrim($fallbackUser->profile_image, '/'));
+            }
+
+            if (!empty($fallbackUser->profile_image_url)) {
+                return $fallbackUser->profile_image_url;
+            }
         }
 
         return asset('images/default-avatar.png');
@@ -658,6 +640,15 @@ class AdminNotificationController extends Controller
                         $uq->where('company_id', $selectedCompanyId);
                     })->orWhere('is_group_summary', true);
                 });
+            })
+            // 'user_contact' is the one type where `user_id` names a specific
+            // admin (the one a customer picked to message via ChatController::
+            // userSend()), not a customer — so unlike every other type, it must
+            // not be visible to every admin in the company, only the one it
+            // was actually sent to.
+            ->where(function ($q) {
+                $q->where('type', '!=', 'user_contact')
+                    ->orWhere('user_id', Auth::id());
             });
     }
 
@@ -735,6 +726,48 @@ class AdminNotificationController extends Controller
             'unread_count' => 1,
             'is_read' => false,
         ]);
+    }
+
+    /**
+     * Same rows createSingleUserNotification() would create one-by-one, but
+     * as a single bulk INSERT — sending to "all customers" was issuing one
+     * query per recipient (a few hundred/thousand for a large company).
+     */
+    protected function createBulkUserNotifications(
+        $customers,
+        Request $request,
+        string $cleanMessage,
+        ?User $sender,
+        ?string $groupKey,
+        ?string $forcedType = null
+    ): void {
+        if ($customers->isEmpty()) {
+            return;
+        }
+
+        $senderProfileImage = $this->getSenderProfileImage($sender);
+        $type = $forcedType ?: $request->type;
+        $now = now();
+
+        $rows = $customers->map(fn ($customer) => [
+            'user_id' => $customer->id,
+            'sender_id' => $sender?->id,
+            'sender_name' => $sender?->name,
+            'sender_profile_image' => $senderProfileImage,
+            'order_id' => null,
+            'item_id' => null,
+            'type' => $type,
+            'title' => $request->title,
+            'message' => $cleanMessage,
+            'group_key' => $groupKey,
+            'is_group_summary' => false,
+            'unread_count' => 1,
+            'is_read' => false,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ])->all();
+
+        Notification::insert($rows);
     }
 
     protected function createBulkSummaryNotification(

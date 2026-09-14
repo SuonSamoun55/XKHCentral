@@ -12,82 +12,83 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Models\POS\Order;
 use App\Models\POS\OrderItem;
-
+use \App\Models\POS\ItemVariant;
 class CartController extends Controller
 {
-public function index()
-{
-    $user = Auth::user();
+    public function index()
+    {
+        $user = Auth::user();
 
-    $cart = Cart::with('items.item','items.itemVariant')
-        ->where('user_id', $user->id)
-        ->where('status', 'active')
-        ->first();
+        $cart = Cart::with('items.item', 'items.itemVariant')
+            ->where('user_id', $user->id)
+            ->where('company_id', $this->resolveCompanyId($user))
+            ->where('status', 'active')
+            ->first();
+        $subtotal = 0;
+        $discount = 0;
+        $taxAmount = 0;
+        $total = 0;
+        $itemCount = 0;
 
-    $subtotal = 0;
-    $discount = 0;
-    $taxAmount = 0;
-    $total = 0;
-    $itemCount = 0;
+        if ($cart && $cart->items->count()) {
+            $totals = $this->calculateCartTotals($cart);
+            $subtotal = $totals['subtotal'];
+            $discount = $totals['discount_amount'];
+            $taxAmount = $totals['tax_amount'];
+            $total = $totals['total'];
+            $itemCount = $cart->items->sum('qty');
+        }
 
-    if ($cart && $cart->items->count()) {
+        return view('POSViews.POSUserViews.Cart.index', compact(
+            'cart',
+            'subtotal',
+            'discount',
+            'taxAmount',
+            'total',
+            'itemCount'
+        ));
+    }
+    public function checkout()
+    {
+        $user = Auth::user();
+
+        $cart = Cart::with('items.item', 'items.itemVariant')
+            ->where('user_id', $user->id)
+            ->where('company_id', $this->resolveCompanyId($user))
+            ->where('status', 'active')
+            ->first();
+
+        if (!$cart || $cart->items->isEmpty()) {
+            return redirect('/pos-system/cart');
+        }
+
         $totals = $this->calculateCartTotals($cart);
-        $subtotal = $totals['subtotal'];
-        $discount = $totals['discount_amount'];
-        $taxAmount = $totals['tax_amount'];
-        $total = $totals['total'];
-        $itemCount = $cart->items->sum('qty');
+
+        return view('POSViews.POSUserViews.Cart.index', [
+            'cart' => $cart,
+            'subtotal' => $totals['subtotal'],
+            'discount' => $totals['discount_amount'],
+            'taxAmount' => $totals['tax_amount'],
+            'total' => $totals['total'],
+            'itemCount' => $cart->items->sum('qty'),
+            'showCheckout' => true,
+        ]);
     }
-
-    return view('POSViews.POSUserViews.Cart.index', compact(
-        'cart',
-        'subtotal',
-        'discount',
-        'taxAmount',
-        'total',
-        'itemCount'
-    ));
-}
-public function checkout()
-{
-    $user = Auth::user();
-
-    $cart = Cart::with('items.item', 'items.itemVariant')
-        ->where('user_id', $user->id)
-        ->where('status', 'active')
-        ->first();
-
-    if (!$cart || $cart->items->isEmpty()) {
-        return redirect('/pos-system/cart');
+    public function itemVariant()
+    {
+        return $this->belongsTo(ItemVariant::class, 'item_variant_id');
     }
+    public function success(Request $request)
+    {
+        $order = Order::where('id', $request->order)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
 
-    $totals = $this->calculateCartTotals($cart);
-
-    return view('POSViews.POSUserViews.Cart.index', [
-        'cart' => $cart,
-        'subtotal' => $totals['subtotal'],
-        'discount' => $totals['discount_amount'],
-        'taxAmount' => $totals['tax_amount'],
-        'total' => $totals['total'],
-        'itemCount' => $cart->items->sum('qty'),
-        'showCheckout' => true,
-    ]);
-}
-public function itemVariant()
-{
-    return $this->belongsTo(\App\Models\POS\ItemVariant::class, 'item_variant_id');
-}
-public function success(Request $request)
-{
-    $order = Order::where('id', $request->order)
-        ->where('user_id', Auth::id())
-        ->firstOrFail();
-
-    return view('POSViews.POSUserViews.mobile.POSPlaceOrder_mobile', [
-        'orderNumber' => $order->order_no,
-        'amountPaid'  => $order->amount_paid,
-    ]);
-}
+        return view('POSViews.POSUserViews.mobile.POSPlaceOrder_mobile', [
+            'orderNumber' => $order->order_no,
+            'amountPaid'  => $order->amount_paid,
+        ]);
+    }
 
     public function getCart()
     {
@@ -100,14 +101,13 @@ public function success(Request $request)
             ], 401);
         }
 
-        $cart = Cart::with('items.item','items.itemVariant')->firstOrCreate(
+        $companyId = $this->resolveCompanyId($user);
+
+        $cart = Cart::with('items.item', 'items.itemVariant')->firstOrCreate(
             [
-                'user_id' => $user->id,
-                'status'  => 'active',
-            ],
-            [
-                'user_id' => $user->id,
-                'status'  => 'active',
+                'user_id'    => $user->id,
+                'company_id' => $companyId,
+                'status'     => 'active',
             ]
         );
 
@@ -125,102 +125,93 @@ public function success(Request $request)
         ]);
     }
 
-  public function addToCart(Request $request)
-{
-    $validated = $request->validate([
-        'item_id' => ['required', 'exists:items,id'],
-        'qty'     => ['nullable', 'integer', 'min:1'],
-    ]);
+    public function addToCart(Request $request)
+    {
+        $validated = $request->validate([
+            'item_id' => ['required', 'exists:items,id'],
+            'qty'     => ['nullable', 'numeric', 'min:0.01'],
+        ]);
 
-    $user = Auth::user();
+        $user = Auth::user();
 
-    if (!$user) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Unauthenticated.',
-        ], 401);
-    }
-
-    $qty = (int) ($validated['qty'] ?? 1);
-
-    // Accept every shape the frontend might send for a variant selection
-    $variantId = $request->input('variant_id')
-        ?? $request->input('variantId')
-        ?? $request->input('selected_variant_id')
-        ?? $request->input('selectedVariantId');
-
-    if (!$variantId) {
-        $variantIds = $request->input('variant_ids') ?? $request->input('variantIds');
-        if (is_array($variantIds) && count($variantIds) > 0) {
-            $variantId = $variantIds[0];
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated.',
+            ], 401);
         }
-    }
 
-    $cart = Cart::firstOrCreate(
-        [
-            'user_id' => $user->id,
-            'status'  => 'active',
-        ],
-        [
-            'user_id' => $user->id,
-            'status'  => 'active',
-        ]
-    );
+        $qty = round((float) ($validated['qty'] ?? 1), 2);
+        $variantId = $request->input('variant_id')
+            ?? $request->input('variantId')
+            ?? $request->input('selected_variant_id')
+            ?? $request->input('selectedVariantId');
 
-    $companyId = $user->company_id ?? session('selected_company_id');
+        if (!$variantId) {
+            $variantIds = $request->input('variant_ids') ?? $request->input('variantIds');
+            if (is_array($variantIds) && count($variantIds) > 0) {
+                $variantId = $variantIds[0];
+            }
+        }
 
-    $item = Item::where('id', $validated['item_id'])
-        ->when($companyId, function ($q) use ($companyId) {
-            $q->where('company_id', $companyId);
-        })
-        ->firstOrFail();
+        $companyId = $this->resolveCompanyId($user);
 
-    if (!$item->is_visible) {
+        $cart = Cart::firstOrCreate(
+            [
+                'user_id'    => $user->id,
+                'company_id' => $companyId,
+                'status'     => 'active',
+            ]
+        );
+
+        $item = Item::where('id', $validated['item_id'])
+            ->when($companyId, function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
+            })
+            ->firstOrFail();
+
+        if (!$item->is_visible) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This product is inactive and cannot be added to cart.',
+            ], 422);
+        }
+        $cartItem = CartItem::where('cart_id', $cart->id)
+            ->where('item_id', $item->id)
+            ->where('item_variant_id', $variantId)
+            ->first();
+        if ($cartItem) {
+            $cartItem->qty = round((float) $cartItem->qty + $qty, 2);
+            $linePricing = $this->calculateLinePricing($item, (float) $cartItem->qty);
+            $cartItem->line_total = $linePricing['line_total'];
+            $cartItem->save();
+        } else {
+            $linePricing = $this->calculateLinePricing($item, $qty);
+            $cartItem = CartItem::create([
+                'cart_id'         => $cart->id,
+                'item_id'         => $item->id,
+                'item_variant_id' => $variantId,
+                'item_no'         => $item->number,
+                'item_name'       => $item->display_name,
+                'qty'             => $qty,
+                'unit_price'      => $item->unit_price,
+                'line_total'      => $linePricing['line_total'],
+            ]);
+        }
+
+        $itemCount = (int) $cart->items()->sum('qty');
+
         return response()->json([
-            'success' => false,
-            'message' => 'This product is inactive and cannot be added to cart.',
-        ], 422);
-    }
-
-    // IMPORTANT: match on item_variant_id too, so different variants of the
-    // same item don't get merged into one cart line.
-    $cartItem = CartItem::where('cart_id', $cart->id)
-        ->where('item_id', $item->id)
-        ->where('item_variant_id', $variantId)
-        ->first();
-
-    if ($cartItem) {
-        $cartItem->qty += $qty;
-        $linePricing = $this->calculateLinePricing($item, (int) $cartItem->qty);
-        $cartItem->line_total = $linePricing['line_total'];
-        $cartItem->save();
-    } else {
-        $linePricing = $this->calculateLinePricing($item, $qty);
-        $cartItem = CartItem::create([
-            'cart_id'         => $cart->id,
-            'item_id'         => $item->id,
-            'item_variant_id' => $variantId,
-            'item_no'         => $item->number,
-            'item_name'       => $item->display_name,
-            'qty'             => $qty,
-            'unit_price'      => $item->unit_price,
-            'line_total'      => $linePricing['line_total'],
+            'success'    => true,
+            'cartCount'  => $itemCount,
+            'variant_id_received' => $variantId,
         ]);
     }
-
-    $itemCount = $cart->items()->sum('qty');
-
-    return response()->json([
-        'success'    => true,
-        'cartCount'  => $itemCount,
-        'variant_id_received' => $variantId,
-    ]);
-}
 
     public function updateQty(Request $request, $id)
     {
         $validated = $request->validate([
-            'qty' => ['required', 'integer', 'min:1'],
+            'qty' => ['required', 'numeric', 'min:0.01'],
         ]);
 
         $user = Auth::user();
@@ -233,6 +224,7 @@ public function success(Request $request)
         }
 
         $cart = Cart::where('user_id', $user->id)
+            ->where('company_id', $this->resolveCompanyId($user))
             ->where('status', 'active')
             ->firstOrFail();
 
@@ -240,8 +232,8 @@ public function success(Request $request)
             ->where('id', $id)
             ->firstOrFail();
 
-        $cartItem->qty = (int) $validated['qty'];
-        $linePricing = $this->calculateLinePricing($cartItem->item, (int) $cartItem->qty);
+        $cartItem->qty = round((float) $validated['qty'], 2);
+        $linePricing = $this->calculateLinePricing($cartItem->item, (float) $cartItem->qty);
         $cartItem->line_total = $linePricing['line_total'];
         $cartItem->save();
 
@@ -264,6 +256,7 @@ public function success(Request $request)
         }
 
         $cart = Cart::where('user_id', $user->id)
+            ->where('company_id', $this->resolveCompanyId($user))
             ->where('status', 'active')
             ->firstOrFail();
 
@@ -291,6 +284,7 @@ public function success(Request $request)
         }
 
         $cart = Cart::where('user_id', $user->id)
+            ->where('company_id', $this->resolveCompanyId($user))
             ->where('status', 'active')
             ->first();
 
@@ -316,15 +310,12 @@ public function success(Request $request)
             if (!$item) {
                 continue;
             }
-
-            $line = $this->calculateLinePricing($item, (int) $cartItem->qty);
+            $line = $this->calculateLinePricing($item, (float) $cartItem->qty);
             $subtotal += $line['subtotal'];
             $discountAmount += $line['discount_amount'];
             $taxAmount += $line['tax_amount'];
         }
-
         $total = ($subtotal - $discountAmount) + $taxAmount;
-
         return [
             'subtotal' => round($subtotal, 2),
             'discount_amount' => round($discountAmount, 2),
@@ -333,7 +324,7 @@ public function success(Request $request)
         ];
     }
 
-    private function calculateLinePricing(Item $item, int $qty): array
+    private function calculateLinePricing(Item $item, float $qty): array
     {
         $unitPrice = (float) ($item->unit_price ?? 0);
         $subtotal = max(0, $unitPrice * $qty);
@@ -364,8 +355,20 @@ public function success(Request $request)
         ];
     }
 
-   private function resolveDiscountPercent(Item $item): float
-{
-    return $item->active_discount_percent;
-}
+    private function resolveDiscountPercent(Item $item): float
+    {
+        return $item->active_discount_percent;
+    }
+
+    /**
+     * The company whose items/cart the current request should operate on.
+     * Session's "currently selected" company wins so a cross-company admin
+     * switching companies gets that company's own cart, not their pinned
+     * user_id's company — falls back to the user's own company only when
+     * nothing is selected.
+     */
+    private function resolveCompanyId($user): ?int
+    {
+        return session('selected_company_id') ?? $user->company_id;
+    }
 }

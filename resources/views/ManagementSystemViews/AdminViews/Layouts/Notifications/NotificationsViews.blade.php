@@ -134,24 +134,24 @@ if ($isOrderNotification) {
                         <div class="top-user-box">
                             <div class="avatar-box large">
                                 @if ($hasRealAvatar)
-                                    <img src="{{ $avatarSrc }}" alt="{{ $displayName }}"
+<img src="{{ $avatarSrc }}" alt="{{ $displayName }}"
                                         onerror="this.onerror=null;this.parentElement.innerHTML='{{ $avatarInitial }}';this.parentElement.classList.add('letter-avatar');">
-                                @else
-                                    <span class="letter-avatar">{{ $avatarInitial }}</span>
-                                @endif
+@else
+<span class="letter-avatar">{{ $avatarInitial }}</span>
+@endif
                             </div>
 
                             <div class="user-info-box">
                                 <h3>{{ $displayName }}</h3>
                                 <p class="sent-to-line">Sent to {!! $sentToHtml !!}</p>
                                 @unless ($isOrderNotification)
-                                    <p class="time-ago-line">{{ optional($notification->updated_at)->diffForHumans() }}</p>
-                                @endunless
+<p class="time-ago-line">{{ optional($notification->updated_at)->diffForHumans() }}</p>
+@endunless
                             </div>
                         </div>
 
                         @if ($isOrderNotification)
-                            <div class="order-meta-item">
+<div class="order-meta-item">
                                 <label>Order ID</label>
                                 <div class="plain-value">{{ $order->order_no }}</div>
                             </div>
@@ -168,7 +168,7 @@ if ($isOrderNotification) {
                                 </span>
                                 <span class="order-status-timestamp">{{ $orderNotifiedAt }}</span>
                             </div>
-                        @else
+                            @else
                             <div class="detail-grid">
                                 <div class="detail-item">
                                     <label>Type</label>
@@ -188,9 +188,9 @@ if ($isOrderNotification) {
                                         <div class="rendered-message">
                                             @if (filled($cleanMessage))
                                                 {!! $cleanMessage !!}
-                                            @else
+                                                @else
                                                 <p>No message content available.</p>
-                                            @endif
+                                                @endif
                                         </div>
                                     </div>
                                 </div>
@@ -227,11 +227,12 @@ if ($isOrderNotification) {
                                     </thead>
                                     <tbody>
                                         @foreach ($orderItems as $line)
-                                            @php
+@php
                                                 $lineImage =
                                                     optional($line->itemVariant)->image_url ??
                                                     (optional($line->item)->custom_image_url ??
-                                                        optional($line->item)->image_url);
+                                                        optional($line->item)->image_url)
+;
                                                 $lineImage = $lineImage
                                                     ? (str_starts_with($lineImage, 'http')
                                                         ? $lineImage
@@ -245,416 +246,406 @@ if ($isOrderNotification) {
                                                     );
                                                 $lineDiscountPercent = (float) ($line->discount_percent ?? 0);
                                             @endphp
-                                            <tr>
-                                                <td class="oi-item-cell">
-                                                    <img class="order-line-img" src="{{ $lineImage }}"
-                                                        alt="{{ $line->item_name }}"
-                                                        onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
-                                                    <div class="order-line-info">
-                                                        <div class="order-line-name">{{ $line->item_name }}</div>
-                                                        <div class="order-line-meta">
-                                                            VAT {{ $lineVatPercent }}%
-                                                            &middot; SKU: {{ $line->item_no ?: 'N/A' }}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div class="qty-stepper" role="group"
-                                                        aria-label="Quantity {{ (int) $line->qty }}">
-                                                        <span class="qty-btn" aria-hidden="true">&minus;</span>
-                                                        <span class="qty-value">{{ (int) $line->qty }}</span>
-                                                        <span class="qty-btn" aria-hidden="true">+</span>
-                                                    </div>
-                                                </td>
-                                                <td>${{ number_format($line->unit_price ?? 0, 2) }}</td>
-                                                <td>{{ $lineDiscountPercent > 0 ? rtrim(rtrim(number_format($lineDiscountPercent, 2), '0'), '.') . '%' : '—' }}
-                                                </td>
-                                                <td class="oi-total">${{ number_format($line->line_total ?? 0, 2) }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
+    <tr>
+        <td class="oi-item-cell">
+            <img class="order-line-img" src="{{ $lineImage }}" alt="{{ $line->item_name }}"
+                onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
+            <div class="order-line-info">
+                <div class="order-line-name">{{ $line->item_name }}</div>
+                <div class="order-line-meta">
+                    VAT {{ $lineVatPercent }}%
+                    &middot; SKU: {{ $line->item_no ?: 'N/A' }}
+                </div>
+            </div>
+        </td>
+        <td>
+            <div class="qty-stepper" role="group" aria-label="Quantity {{ (int) $line->qty }}">
+                <span class="qty-btn" aria-hidden="true">&minus;</span>
+                <span class="qty-value">{{ (int) $line->qty }}</span>
+                <span class="qty-btn" aria-hidden="true">+</span>
+            </div>
+        </td>
+        <td>${{ number_format($line->unit_price ?? 0, 2) }}</td>
+        <td>{{ $lineDiscountPercent > 0 ? rtrim(rtrim(number_format($lineDiscountPercent, 2), '0'), '.') . '%' : '—' }}
+        </td>
+        <td class="oi-total">${{ number_format($line->line_total ?? 0, 2) }}</td>
+    </tr>
+    @endforeach
+    </tbody>
+    </table>
+    </div>
 
-                            @if ($orderItems->hasPages())
-                                <div class="order-items-pagination">
-                                    <a class="page-arrow {{ $orderItems->onFirstPage() ? 'disabled' : '' }}"
-                                        href="{{ $orderItems->onFirstPage() ? '#' : $orderItems->previousPageUrl() }}"
-                                        aria-label="Previous page"><i class="bi bi-chevron-left"></i></a>
+    @if ($orderItems->hasPages())
+        <div class="order-items-pagination">
+            <a class="page-arrow {{ $orderItems->onFirstPage() ? 'disabled' : '' }}"
+                href="{{ $orderItems->onFirstPage() ? '#' : $orderItems->previousPageUrl() }}"
+                aria-label="Previous page"><i class="bi bi-chevron-left"></i></a>
 
-                                    @for ($p = 1; $p <= $orderItems->lastPage(); $p++)
-                                        <a class="page-num {{ $p === $orderItems->currentPage() ? 'active' : '' }}"
-                                            href="{{ $orderItems->url($p) }}">{{ $p }}</a>
-                                    @endfor
+            @for ($p = 1; $p <= $orderItems->lastPage(); $p++)
+                <a class="page-num {{ $p === $orderItems->currentPage() ? 'active' : '' }}"
+                    href="{{ $orderItems->url($p) }}">{{ $p }}</a>
+            @endfor
 
-                                    <a class="page-arrow {{ $orderItems->hasMorePages() ? '' : 'disabled' }}"
-                                        href="{{ $orderItems->hasMorePages() ? $orderItems->nextPageUrl() : '#' }}"
-                                        aria-label="Next page"><i class="bi bi-chevron-right"></i></a>
-                                </div>
-                            @endif
-                        </div>
+            <a class="page-arrow {{ $orderItems->hasMorePages() ? '' : 'disabled' }}"
+                href="{{ $orderItems->hasMorePages() ? $orderItems->nextPageUrl() : '#' }}" aria-label="Next page"><i
+                    class="bi bi-chevron-right"></i></a>
+        </div>
+    @endif
+    </div>
 
-                        <div class="sumary">
-                            <div class="order-summary-card">
-                                <h4 class="order-summary-title">Order summary</h4>
-                                <div class="order-items-count">{{ $orderItemsTotal }} items</div>
-                                <div class="order-summary-align-spacer"></div>
-                                <div class="order-summary-row">
-                                    <span>Subtotal</span>
-                                    <span>${{ number_format($order->subtotal ?? 0, 2) }}</span>
-                                </div>
-                                @if ($shipping > 0)
-                                    <div class="order-summary-row">
-                                        <span>Delivery</span>
-                                        <span>${{ number_format($shipping, 2) }}</span>
-                                    </div>
-                                @endif
-                                <div class="order-summary-row">
-                                    <span>VAT</span>
-                                    <span>${{ number_format($orderVat, 2) }}</span>
-                                </div>
-                                @if ($orderDiscount > 0)
-                                    <div class="order-summary-row discount">
-                                        <span>Discount</span>
-                                        <span>-${{ number_format($orderDiscount, 2) }}</span>
-                                    </div>
-                                @endif
+    <div class="sumary">
+        <div class="order-summary-card">
+            <h4 class="order-summary-title">Order summary</h4>
+            <div class="order-items-count">{{ $orderItemsTotal }} items</div>
+            <div class="order-summary-align-spacer"></div>
+            <div class="order-summary-row">
+                <span>Subtotal</span>
+                <span>${{ number_format($order->subtotal ?? 0, 2) }}</span>
+            </div>
+            @if ($shipping > 0)
+                <div class="order-summary-row">
+                    <span>Delivery</span>
+                    <span>${{ number_format($shipping, 2) }}</span>
+                </div>
+            @endif
+            <div class="order-summary-row">
+                <span>VAT</span>
+                <span>${{ number_format($orderVat, 2) }}</span>
+            </div>
+            @if ($orderDiscount > 0)
+                <div class="order-summary-row discount">
+                    <span>Discount</span>
+                    <span>-${{ number_format($orderDiscount, 2) }}</span>
+                </div>
+            @endif
 
-                                <div class="order-summary-divider"></div>
+            <div class="order-summary-divider"></div>
 
-                                <div class="order-summary-row total">
-                                    <span>Total in USD</span>
-                                    <span>${{ number_format($orderTotalUsd, 2) }}</span>
-                                </div>
+            <div class="order-summary-row total">
+                <span>Total in USD</span>
+                <span>${{ number_format($orderTotalUsd, 2) }}</span>
+            </div>
 
-                                <a href="{{ route('admin.orders.invoice', $order->id) }}" class="download-invoice-btn">
-                                    <i class="bi bi-download"></i> Download invoice
-                                </a>
-                            </div>
-                        </div>
+            <a href="{{ route('orders.report.preview', $order->id) }}" class="download-invoice-btn">
+                <i class="bi bi-file-earmark-pdf"></i> View Report
+            </a>
+        </div>
+    </div>
 
-                    </div>
-                @elseif ($isStockNotification)
-                    <div class="order-detail-grid stock-detail-grid">
-                        <div class="stock-left-col">
-                            <div class="detail-card order-info-row stock-profile-card">
-                                <div class="stock-profile-user">
-                                    <div class="avatar-box large">
-                                        @if ($hasRealAvatar)
-                                            <img src="{{ $avatarSrc }}" alt="{{ $displayName }}"
-                                                onerror="this.onerror=null;this.parentElement.innerHTML='{{ $avatarInitial }}';this.parentElement.classList.add('letter-avatar');">
-                                        @else
-                                            <span class="letter-avatar">{{ $avatarInitial }}</span>
-                                        @endif
-                                    </div>
-
-                                    <div class="user-info-box">
-                                        <h3>{{ $displayName }}</h3>
-                                        <p class="sent-to-line">Sent to {!! $sentToHtml !!}</p>
-                                    </div>
-                                </div>
-
-                                <div class="stock-profile-status">
-                                    <span class="order-status-chip {{ $stockLevel['class'] }}">
-                                        <i class="bi bi-exclamation-circle-fill"></i>
-                                        {{ $stockLevel['label'] }}
-                                    </span>
-                                    <span class="order-status-timestamp">
-                                        <i class="bi bi-calendar3"></i>
-                                        {{ $messageDate }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="stock-alert-card">
-                                <div class="stock-alert-icon {{ $stockLevel['class'] }}">
-                                    <i class="bi bi-exclamation-triangle-fill"></i>
-                                </div>
-                                <span class="stock-card-label">INVENTORY ALERT</span>
-                                <h4 class="stock-alert-title">{{ $cleanTitle !== '' ? $cleanTitle : 'Stock alert' }}</h4>
-                                <p class="stock-alert-message">
-                                    {{ trim($cleanMessage) !== '' ? trim($cleanMessage) : 'No further details available.' }}
-                                </p>
-
-                                <div class="stock-alert-divider"></div>
-                                <div class="stock-alert-footer {{ $stockOrder ? '' : 'single' }}">
-                                    @if ($stockOrder)
-                                        <a href="{{ route('admin.orders.show', $stockOrder->id) }}"
-                                            class="stock-order-link">
-                                            Order #{{ $stockOrder->order_no }} <i class="bi bi-box-arrow-up-right"></i>
-                                        </a>
-                                    @endif
-                                    <a href="{{ route('store.management.products.detail', $stockItem->id) }}"
-                                        class="stock-view-order-btn">
-                                        View product detail <i class="bi bi-box-arrow-up-right"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="stock-side-col">
-                            <div class="affected-product-card">
-                                <span class="stock-card-label">AFFECTED PRODUCT</span>
-                                @php
-                                    $stockItemImage = $stockItem->image_url
-                                        ? (str_starts_with($stockItem->image_url, 'http')
-                                            ? $stockItem->image_url
-                                            : asset($stockItem->image_url))
-                                        : asset('images/no-image.png');
-                                @endphp
-                                <a href="{{ route('store.management.products.detail', $stockItem->id) }}"
-                                    class="affected-product-row">
-                                    <img class="affected-product-img" src="{{ $stockItemImage }}"
-                                        alt="{{ $stockItem->display_name }}"
-                                        onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
-                                    <div class="affected-product-info">
-                                        <div class="affected-product-name">{{ $stockItem->display_name }}</div>
-                                        <div class="affected-product-meta">SKU:
-                                            <strong>{{ $stockItem->number ?: 'N/A' }}</strong></div>
-                                        @if ($stockItem->item_category_code)
-                                            <div class="affected-product-meta">Category:
-                                                <strong>{{ $stockItem->item_category_code }}</strong></div>
-                                        @endif
-                                    </div>
-                                </a>
-                            </div>
-
-                            <div class="stock-summary-card">
-                                <span class="stock-card-label">STOCK SUMMARY</span>
-                                <div class="stock-stat-row">
-                                    <div class="stock-stat-box current">
-                                        <span class="stock-stat-label">Current Stock</span>
-                                        <span class="stock-stat-value">{{ $stockCurrent }}</span>
-                                    </div>
-                                    <div class="stock-stat-box reserved">
-                                        <span class="stock-stat-label">Reserved</span>
-                                        <span class="stock-stat-value">{{ $stockReserved }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @elseif ($isGlobalMessageNotification)
-                    <div class="detail-card global-meta-card">
-                        <div class="global-meta-header">
-                            <span class="global-subject-pill">
-                                <span class="global-subject-dot"></span>
-                                Subject: {{ $cleanTitle !== '' ? $cleanTitle : 'N/A' }}
-                            </span>
-                        </div>
-
-                        <div class="global-meta-row">
-                            <div class="global-meta-item">
-                                <span class="global-meta-label"><i class="bi bi-person-fill"></i> SENDER</span>
-                                <div class="global-meta-value">{{ $notification->sender_name ?: 'System' }}</div>
-                                @if (optional($sender)->email)
-                                    <div class="global-meta-sub">{{ $sender->email }}</div>
-                                @endif
-                            </div>
-
-                            <div class="global-meta-item">
-                                <span class="global-meta-label"><i class="bi bi-envelope-fill"></i> RECIPIENT</span>
-                                <div class="global-meta-value">{!! $sentToHtml !!}</div>
-                            </div>
-
-                            <div class="global-meta-item">
-                                <span class="global-meta-label"><i class="bi bi-broadcast"></i> TYPE</span>
-                                <div class="global-meta-value">Global Message</div>
-                            </div>
-
-                            <div class="global-meta-item">
-                                <span class="global-meta-label"><i class="bi bi-clock-fill"></i> SENT TIME</span>
-                                <div class="global-meta-value">{{ $messageDate }}</div>
-                            </div>
-                        </div>
+    </div>
+@elseif ($isStockNotification)
+    <div class="order-detail-grid stock-detail-grid">
+        <div class="stock-left-col">
+            <div class="detail-card order-info-row stock-profile-card">
+                <div class="stock-profile-user">
+                    <div class="avatar-box large">
+                        @if ($hasRealAvatar)
+                            <img src="{{ $avatarSrc }}" alt="{{ $displayName }}"
+                                onerror="this.onerror=null;this.parentElement.innerHTML='{{ $avatarInitial }}';this.parentElement.classList.add('letter-avatar');">
+                        @else
+                            <span class="letter-avatar">{{ $avatarInitial }}</span>
+                        @endif
                     </div>
 
-                    <div class="detail-card global-message-card">
-                        <div class="top-user-box">
-                            <div class="avatar-box large">
-                                @if ($hasRealAvatar)
-                                    <img src="{{ $avatarSrc }}" alt="{{ $displayName }}"
-                                        onerror="this.onerror=null;this.parentElement.innerHTML='{{ $avatarInitial }}';this.parentElement.classList.add('letter-avatar');">
-                                @else
-                                    <span class="letter-avatar">{{ $avatarInitial }}</span>
-                                @endif
-                            </div>
-
-                            <div class="user-info-box">
-                                <h3>{{ $displayName }}</h3>
-                                @if (optional($sender)->email)
-                                    <p class="sent-to-line">{{ $sender->email }}</p>
-                                @endif
-                            </div>
-
-                            <span class="global-message-timestamp">{{ $messageDate }}</span>
-                        </div>
-
-                        <div class="content-card global-message-body">
-                            {{-- <h4 class="content-title">{{ $cleanTitle !== '' ? $cleanTitle : 'Message' }}</h4> --}}
-                            <div class="content-divider"></div>
-                            <div class="rendered-message">
-                                @if (filled($cleanMessage))
-                                    {!! $cleanMessage !!}
-                                @else
-                                    <p>No message content available.</p>
-                                @endif
-                            </div>
-                        </div>
+                    <div class="user-info-box">
+                        <h3>{{ $displayName }}</h3>
+                        <p class="sent-to-line">Sent to {!! $sentToHtml !!}</p>
                     </div>
-                @endif
+                </div>
 
-                @if ($isOrderNotification)
-                    {{-- Phone-only receipt-style layout — the desktop info
-                     card / alert banner / order-detail-grid above are
-                     hidden below 768px (see .has-mobile-receipt in the
-                     CSS) and this replaces them with a single scrolling
-                     receipt matching the reference mockup. --}}
-                    <div class="mobile-order-receipt">
-                        <div class="receipt-row">
-                            <span class="receipt-label">Order ID</span>
-                            <span class="receipt-value">{{ $order->order_no }}</span>
-                        </div>
+                <div class="stock-profile-status">
+                    <span class="order-status-chip {{ $stockLevel['class'] }}">
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                        {{ $stockLevel['label'] }}
+                    </span>
+                    <span class="order-status-timestamp">
+                        <i class="bi bi-calendar3"></i>
+                        {{ $messageDate }}
+                    </span>
+                </div>
+            </div>
 
-                        <div class="receipt-sender">
-                            <div class="avatar-box large">
-                                @if ($hasRealAvatar)
-                                    <img src="{{ $avatarSrc }}" alt="{{ $displayName }}"
-                                        onerror="this.onerror=null;this.parentElement.innerHTML='{{ $avatarInitial }}';this.parentElement.classList.add('letter-avatar');">
-                                @else
-                                    <span class="letter-avatar">{{ $avatarInitial }}</span>
-                                @endif
-                            </div>
-                            <div class="receipt-sender-name">{{ $displayName }}</div>
-                        </div>
+            <div class="stock-alert-card">
+                <div class="stock-alert-icon {{ $stockLevel['class'] }}">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <span class="stock-card-label">INVENTORY ALERT</span>
+                <h4 class="stock-alert-title">{{ $cleanTitle !== '' ? $cleanTitle : 'Stock alert' }}</h4>
+                <p class="stock-alert-message">
+                    {{ trim($cleanMessage) !== '' ? trim($cleanMessage) : 'No further details available.' }}
+                </p>
 
-                        <div class="receipt-row">
-                            <span class="receipt-label">Approved by</span>
-                            <span class="receipt-value strong">{{ $displayName }}</span>
-                        </div>
-                        <div class="receipt-row">
-                            <span class="receipt-label">Order date</span>
-                            <span class="receipt-value muted">{{ $orderPlacedAt }}</span>
-                        </div>
+                <div class="stock-alert-divider"></div>
+                <div class="stock-alert-footer {{ $stockOrder ? '' : 'single' }}">
+                    @if ($stockOrder)
+                        <a href="{{ route('admin.orders.show', $stockOrder->id) }}" class="stock-order-link">
+                            Order #{{ $stockOrder->order_no }} <i class="bi bi-box-arrow-up-right"></i>
+                        </a>
+                    @endif
+                    <a href="{{ route('store.management.products.detail', $stockItem->id) }}" class="stock-view-order-btn">
+                        View product detail <i class="bi bi-box-arrow-up-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
 
-                        @if (filled($cleanMessage))
-                            <div class="receipt-note-label">Note from admin</div>
-                            <div class="receipt-note-card">
-                                <i class="bi bi-sticky-fill"></i>
-                                <div class="rendered-message">{!! $cleanMessage !!}</div>
+        <div class="stock-side-col">
+            <div class="affected-product-card">
+                <span class="stock-card-label">AFFECTED PRODUCT</span>
+                @php
+                    $stockItemImage = $stockItem->image_url
+                        ? (str_starts_with($stockItem->image_url, 'http')
+                            ? $stockItem->image_url
+                            : asset($stockItem->image_url))
+                        : asset('images/no-image.png');
+                @endphp
+                <a href="{{ route('store.management.products.detail', $stockItem->id) }}" class="affected-product-row">
+                    <img class="affected-product-img" src="{{ $stockItemImage }}" alt="{{ $stockItem->display_name }}"
+                        onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
+                    <div class="affected-product-info">
+                        <div class="affected-product-name">{{ $stockItem->display_name }}</div>
+                        <div class="affected-product-meta">SKU:
+                            <strong>{{ $stockItem->number ?: 'N/A' }}</strong>
+                        </div>
+                        @if ($stockItem->item_category_code)
+                            <div class="affected-product-meta">Category:
+                                <strong>{{ $stockItem->item_category_code }}</strong>
                             </div>
                         @endif
+                    </div>
+                </a>
+            </div>
 
-                        <div class="receipt-summary-head">
-                            <span>Order Summary</span>
-                            <span class="receipt-item-count">{{ $orderItemsTotal }} Items</span>
+            <div class="stock-summary-card">
+                <span class="stock-card-label">STOCK SUMMARY</span>
+                <div class="stock-stat-row">
+                    <div class="stock-stat-box current">
+                        <span class="stock-stat-label">Current Stock</span>
+                        <span class="stock-stat-value">{{ $stockCurrent }}</span>
+                    </div>
+                    <div class="stock-stat-box reserved">
+                        <span class="stock-stat-label">Reserved</span>
+                        <span class="stock-stat-value">{{ $stockReserved }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@elseif ($isGlobalMessageNotification)
+    <div class="detail-card global-meta-card">
+        <div class="global-meta-header">
+            <span class="global-subject-pill">
+                <span class="global-subject-dot"></span>
+                Subject: {{ $cleanTitle !== '' ? $cleanTitle : 'N/A' }}
+            </span>
+        </div>
+
+        <div class="global-meta-row">
+            <div class="global-meta-item">
+                <span class="global-meta-label"><i class="bi bi-person-fill"></i> SENDER</span>
+                <div class="global-meta-value">{{ $notification->sender_name ?: 'System' }}</div>
+                @if (optional($sender)->email)
+                    <div class="global-meta-sub">{{ $sender->email }}</div>
+                @endif
+            </div>
+
+            <div class="global-meta-item">
+                <span class="global-meta-label"><i class="bi bi-envelope-fill"></i> RECIPIENT</span>
+                <div class="global-meta-value">{!! $sentToHtml !!}</div>
+            </div>
+
+            <div class="global-meta-item">
+                <span class="global-meta-label"><i class="bi bi-broadcast"></i> TYPE</span>
+                <div class="global-meta-value">Global Message</div>
+            </div>
+
+            <div class="global-meta-item">
+                <span class="global-meta-label"><i class="bi bi-clock-fill"></i> SENT TIME</span>
+                <div class="global-meta-value">{{ $messageDate }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-card global-message-card">
+        <div class="top-user-box">
+            <div class="avatar-box large">
+                @if ($hasRealAvatar)
+                    <img src="{{ $avatarSrc }}" alt="{{ $displayName }}"
+                        onerror="this.onerror=null;this.parentElement.innerHTML='{{ $avatarInitial }}';this.parentElement.classList.add('letter-avatar');">
+                @else
+                    <span class="letter-avatar">{{ $avatarInitial }}</span>
+                @endif
+            </div>
+
+            <div class="user-info-box">
+                <h3>{{ $displayName }}</h3>
+                @if (optional($sender)->email)
+                    <p class="sent-to-line">{{ $sender->email }}</p>
+                @endif
+            </div>
+
+            <span class="global-message-timestamp">{{ $messageDate }}</span>
+        </div>
+
+        <div class="content-card global-message-body">
+            {{-- <h4 class="content-title">{{ $cleanTitle !== '' ? $cleanTitle : 'Message' }}</h4> --}}
+            <div class="content-divider"></div>
+            <div class="rendered-message">
+                @if (filled($cleanMessage))
+                    {!! $cleanMessage !!}
+                @else
+                    <p>No message content available.</p>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if ($isOrderNotification)
+    
+        <div class="mobile-order-receipt">
+            <div class="receipt-row">
+                <span class="receipt-label">Order ID</span>
+                <span class="receipt-value">{{ $order->order_no }}</span>
+            </div>
+
+            <div class="receipt-sender">
+                <div class="avatar-box large">
+                    @if ($hasRealAvatar)
+                        <img src="{{ $avatarSrc }}" alt="{{ $displayName }}"
+                            onerror="this.onerror=null;this.parentElement.innerHTML='{{ $avatarInitial }}';this.parentElement.classList.add('letter-avatar');">
+                    @else
+                        <span class="letter-avatar">{{ $avatarInitial }}</span>
+                    @endif
+                </div>
+                <div class="receipt-sender-name">{{ $displayName }}</div>
+            </div>
+
+            <div class="receipt-row">
+                <span class="receipt-label">Approved by</span>
+                <span class="receipt-value strong">{{ $displayName }}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Order date</span>
+                <span class="receipt-value muted">{{ $orderPlacedAt }}</span>
+            </div>
+
+            @if (filled($cleanMessage))
+                <div class="receipt-note-label">Note from admin</div>
+                <div class="receipt-note-card">
+                    <i class="bi bi-sticky-fill"></i>
+                    <div class="rendered-message">{!! $cleanMessage !!}</div>
+                </div>
+            @endif
+
+            <div class="receipt-summary-head">
+                <span>Order Summary</span>
+                <span class="receipt-item-count">{{ $orderItemsTotal }} Items</span>
+            </div>
+
+            <div class="receipt-items">
+                @foreach ($allOrderItems as $line)
+                    @php
+                        $lineImage =
+                            optional($line->itemVariant)->image_url ??
+                            (optional($line->item)->custom_image_url ?? optional($line->item)->image_url);
+                        $lineImage = $lineImage
+                            ? (str_starts_with($lineImage, 'http')
+                                ? $lineImage
+                                : asset($lineImage))
+                            : asset('images/no-image.png');
+                        $lineVatPercent = !empty(optional($line->item)->price_includes_tax)
+                            ? 0
+                            : max(0, (float) (optional($line->item)->resolved_vat_percent ?? 0));
+                        $lineDiscountPercent = (float) ($line->discount_percent ?? 0);
+                    @endphp
+                    <div class="receipt-item">
+                        <img class="receipt-item-img" src="{{ $lineImage }}" alt="{{ $line->item_name }}"
+                            onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
+                        <div class="receipt-item-info">
+                            <div class="receipt-item-name">
+                                {{ $line->item_name }}
+                                @if ($line->variant_description)
+                                    <span class="receipt-item-size">&middot;
+                                        {{ $line->variant_description }}</span>
+                                @endif
+                            </div>
+                            <div class="receipt-item-meta-row">
+                                <span>VAT: {{ $lineVatPercent }}%</span>
+                                <span>Discount:
+                                    {{ $lineDiscountPercent > 0 ? rtrim(rtrim(number_format($lineDiscountPercent, 2), '0'), '.') . '%' : '0' }}</span>
+                                <span>${{ number_format($line->unit_price ?? 0, 2) }}</span>
+                                <span>Qty: {{ (int) $line->qty }}</span>
+                            </div>
                         </div>
+                    </div>
+                @endforeach
+            </div>
 
-                        <div class="receipt-items">
-                            @foreach ($allOrderItems as $line)
-                                @php
-                                    $lineImage =
-                                        optional($line->itemVariant)->image_url ??
-                                        (optional($line->item)->custom_image_url ?? optional($line->item)->image_url);
-                                    $lineImage = $lineImage
-                                        ? (str_starts_with($lineImage, 'http')
-                                            ? $lineImage
-                                            : asset($lineImage))
-                                        : asset('images/no-image.png');
-                                    $lineVatPercent = !empty(optional($line->item)->price_includes_tax)
-                                        ? 0
-                                        : max(0, (float) (optional($line->item)->resolved_vat_percent ?? 0));
-                                    $lineDiscountPercent = (float) ($line->discount_percent ?? 0);
-                                @endphp
-                                <div class="receipt-item">
-                                    <img class="receipt-item-img" src="{{ $lineImage }}"
-                                        alt="{{ $line->item_name }}"
-                                        onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
-                                    <div class="receipt-item-info">
-                                        <div class="receipt-item-name">
-                                            {{ $line->item_name }}
-                                            @if ($line->variant_description)
-                                                <span class="receipt-item-size">&middot;
-                                                    {{ $line->variant_description }}</span>
-                                            @endif
-                                        </div>
-                                        <div class="receipt-item-meta-row">
-                                            <span>VAT: {{ $lineVatPercent }}%</span>
-                                            <span>Discount:
-                                                {{ $lineDiscountPercent > 0 ? rtrim(rtrim(number_format($lineDiscountPercent, 2), '0'), '.') . '%' : '0' }}</span>
-                                            <span>${{ number_format($line->unit_price ?? 0, 2) }}</span>
-                                            <span>Qty: {{ (int) $line->qty }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-
-                        <div class="receipt-payment-head">Payment</div>
-                        <div class="receipt-payment">
-                            <div class="receipt-row">
-                                <span>Subtotal</span>
-                                <span>${{ number_format($order->subtotal ?? 0, 2) }}</span>
-                            </div>
-                            @if ($orderDiscount > 0)
-                                <div class="receipt-row">
-                                    <span>Discount</span>
-                                    <span>-${{ number_format($orderDiscount, 2) }}</span>
-                                </div>
-                            @endif
-                            <div class="receipt-row">
-                                <span>Delivery Fee</span>
-                                <span>${{ number_format($shipping, 2) }}</span>
-                            </div>
-                            <div class="receipt-row">
-                                <span>Estimated Tax</span>
-                                <span>${{ number_format($orderVat, 2) }}</span>
-                            </div>
-
-                            <div class="receipt-divider"></div>
-
-                            <div class="receipt-row total">
-                                <span>Total in USD</span>
-                                <span>${{ number_format($orderTotalUsd, 2) }}</span>
-                            </div>
-                        </div>
-
-                        <button type="button" class="receipt-trash-btn" id="mobileReceiptDeleteBtn">
-                            <i class="bi bi-trash"></i> Trash
-                        </button>
+            <div class="receipt-payment-head">Payment</div>
+            <div class="receipt-payment">
+                <div class="receipt-row">
+                    <span>Subtotal</span>
+                    <span>${{ number_format($order->subtotal ?? 0, 2) }}</span>
+                </div>
+                @if ($orderDiscount > 0)
+                    <div class="receipt-row">
+                        <span>Discount</span>
+                        <span>-${{ number_format($orderDiscount, 2) }}</span>
                     </div>
                 @endif
+                <div class="receipt-row">
+                    <span>Delivery Fee</span>
+                    <span>${{ number_format($shipping, 2) }}</span>
+                </div>
+                <div class="receipt-row">
+                    <span>Estimated Tax</span>
+                    <span>${{ number_format($orderVat, 2) }}</span>
+                </div>
 
-                <div class="bottom-actions">
-                    <a href="{{ route('admin.notifications.index') }}" class="back-btn secondary"
-                        id="detailBackToList">Back to List</a>
+                <div class="receipt-divider"></div>
 
-                    <form action="{{ route('admin.notifications.destroy', $notification->id) }}" method="POST"
-                        class="js-detail-delete-form" id="detailDeleteForm">
-                        @csrf
-                        @method('DELETE')
-                        <button type="button" class="delete-btn" id="detailDeleteBtn">Delete</button>
-                    </form>
+                <div class="receipt-row total">
+                    <span>Total in USD</span>
+                    <span>${{ number_format($orderTotalUsd, 2) }}</span>
+                </div>
+            </div>
+
+            <button type="button" class="receipt-trash-btn" id="mobileReceiptDeleteBtn">
+                <i class="bi bi-trash"></i> Trash
+            </button>
+        </div>
+    @endif
+
+    <div class="bottom-actions">
+        <a href="{{ route('admin.notifications.index') }}" class="back-btn secondary" id="detailBackToList">Back to
+            List</a>
+
+        <form action="{{ route('admin.notifications.destroy', $notification->id) }}" method="POST"
+            class="js-detail-delete-form" id="detailDeleteForm">
+            @csrf
+            @method('DELETE')
+            <button type="button" class="delete-btn" id="detailDeleteBtn">Delete</button>
+        </form>
+    </div>
+    </div>
+    </div>
+
+    <div class="modal fade confirm-action-modal" id="confirmActionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content confirm-action-content">
+                <div class="modal-body confirm-action-body">
+                    <h5 class="confirm-action-title">Are you sure?</h5>
+                    <p class="confirm-action-message" id="confirmActionMessage"></p>
+                </div>
+                <div class="modal-footer confirm-action-footer">
+                    <button type="button" class="confirm-action-delete-btn" id="confirmActionConfirmBtn">Delete</button>
+                    <button type="button" class="confirm-action-cancel-btn" data-bs-dismiss="modal">Cancel
+                        Request</button>
                 </div>
             </div>
         </div>
-
-        <div class="modal fade confirm-action-modal" id="confirmActionModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content confirm-action-content">
-                    <div class="modal-body confirm-action-body">
-                        <h5 class="confirm-action-title">Are you sure?</h5>
-                        <p class="confirm-action-message" id="confirmActionMessage"></p>
-                    </div>
-                    <div class="modal-footer confirm-action-footer">
-                        <button type="button" class="confirm-action-delete-btn"
-                            id="confirmActionConfirmBtn">Delete</button>
-                        <button type="button" class="confirm-action-cancel-btn" data-bs-dismiss="modal">Cancel
-                            Request</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    </div>
     </div>
 @endsection
 

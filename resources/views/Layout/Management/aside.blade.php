@@ -1,170 +1,3 @@
-@php
-    use Illuminate\Support\Facades\Auth;
-    use Illuminate\Support\Facades\Storage;
-    use Illuminate\Support\Facades\Route;
-    use App\Models\ManagementSystem\Company;
-    use App\Models\ManagementSystem\Notification;
-
-    $authUser = Auth::user();
-    $unreadNotificationCount = Notification::adminUnreadTotal(session('selected_company_id'));
-    $company = null;
-    if (session('selected_company_id')) {
-        $company = Company::find(session('selected_company_id'));
-    }
-
-    if (!$company) {
-        $company = Company::first();
-    }
-
-    $userAvatar = asset('images/default-user.png');
-
-    if ($authUser) {
-        $possibleUserImages = [
-            $authUser->profile_image_display ?? null,
-            $authUser->avatar ?? null,
-            $authUser->profile_image ?? null,
-            $authUser->image ?? null,
-            $authUser->photo ?? null,
-            $authUser->bc_image_url ?? null,
-            $authUser->profile_image_url ?? null,
-        ];
-
-        foreach ($possibleUserImages as $img) {
-            if (empty($img)) {
-                continue;
-            }
-
-            if (preg_match('/^https?:\/\//i', $img)) {
-                $userAvatar = $img;
-                break;
-            }
-
-            if (str_starts_with($img, 'storage/')) {
-                $userAvatar = asset($img);
-                break;
-            }
-
-            if (
-                str_starts_with($img, 'profile_') ||
-                str_starts_with($img, 'profile-images/') ||
-                str_starts_with($img, 'profile_images/') ||
-                str_starts_with($img, 'avatars/') ||
-                str_starts_with($img, 'users/') ||
-                str_starts_with($img, 'uploads/') ||
-                str_starts_with($img, 'user_images/')
-            ) {
-                $userAvatar = Storage::url($img);
-                break;
-            }
-
-            $userAvatar = asset($img);
-            break;
-        }
-    }
-
-    $companyName = $company->display_name ?? ($company->name ?? 'Orange');
-    $companyLogoUrl = asset('images/default-company.png');
-
-    if ($company && !empty($company->logo)) {
-        if (preg_match('/^https?:\/\//i', $company->logo)) {
-            $companyLogoUrl = $company->logo;
-        } else {
-            $companyLogoUrl = Storage::url($company->logo);
-        }
-    }
-
-    // 3. Setup User Avatar Logic
-    $userAvatar = $authUser->profile_image_display ?? asset('images/default-user.png');
-
-    // A role only bypasses page-permission checks if it's the legacy 'admin'
-// string flag — same rule as CheckPagePermission middleware, so the nav
-// never shows a link the user would immediately get a 403 from.
-$canAccessPage = function (string $page) use ($authUser) {
-    if (!$authUser) {
-        return false;
-    }
-
-    if (strtolower((string) $authUser->role) === 'admin') {
-        return true;
-    }
-
-    return $authUser->hasPermission($page);
-};
-
-$navItems = [
-    [
-        'name' => 'Dashboard',
-        'url' => '/admin',
-        'match' => ['admin'],
-        'icon' => '/images/aside/SidbarDaskboards.png',
-        'icon_active' => '/images/aside/UserDaskboardActive.png',
-        'permission' => 'dashboard',
-    ],
-    [
-        'name' => 'Users',
-        'url' => '/users',
-        'match' => ['users', 'users/*'],
-        'icon' => '/images/management/management_user.png',
-        'icon_active' => '/images/management/management_user_active.png',
-        'permission' => 'users',
-    ],
-    [
-        'name' => 'Pos System',
-        'url' => '/pos/interface',
-        'match' => ['pos/interface', 'pos/*'],
-        'icon' => '/images/management/managemetn_POS.png',
-        'icon_active' => '/images/management/management_POS_active.png',
-        'permission' => 'pos',
-    ],
-    [
-        'name' => 'Companies',
-        'url' => '/companies',
-        'match' => ['companies', 'companies/*'],
-        'icon' => 'images/management/management_company.png',
-        'icon_active' => 'images/management/management_company_active.png',
-        'permission' => 'companies',
-    ],
-    [
-        'name' => 'Roles',
-        'url' => '/roles',
-        'match' => ['roles', 'roles/*'],
-        'icon' => '/images/management/role.png',
-        'icon_active' => '/images/management/role_active.png',
-        'permission' => 'roles',
-    ],
-    [
-        'name' => 'Page List',
-        'url' => '/permissions',
-        'match' => ['permissions', 'permissions/*'],
-        'icon' => '/images/management/pagelist.png',
-        'icon_active' => '/images/management/pagelist_active.png',
-        'permission' => 'page_management',
-    ],
-];
-$navItems = array_values(array_filter($navItems, fn($item) => $canAccessPage($item['permission'])));
-$bottomNavItems = array_values(array_filter(
-    $navItems,
-    fn($item) => !in_array($item['permission'], ['roles', 'page_management'])
-));
-
-$activeNavItem = null;
-foreach ($navItems as $item) {
-    foreach ($item['match'] as $pattern) {
-        if (request()->is($pattern)) {
-            $activeNavItem = $item;
-            break 2;
-        }
-    }
-    if ($item['name'] === 'Companies' && request()->is('companies/select')) {
-        $activeNavItem = null;
-    }
-}
-$activeNavIcon = $activeNavItem['icon_active'] ?? ($activeNavItem['icon'] ?? null);
-
-$backUrl = trim((string) $__env->yieldContent('backUrl', ''));
-$hideMobileChrome = trim((string) $__env->yieldContent('hideMobileNav', '')) !== '';
-@endphp
-
 @unless ($hideMobileChrome)
     <header class="mobile-topbar">
         @if ($backUrl !== '')
@@ -192,7 +25,7 @@ $hideMobileChrome = trim((string) $__env->yieldContent('hideMobileNav', '')) !==
 
         @if ($backUrl === '')
             <nav class="mobile-menu-panel" id="mobileMenuPanel">
-                @foreach ($navItems as $item)
+                @foreach ($mobileMenuItems as $item)
                     @php
                         $isActive = false;
                         foreach ($item['match'] as $pattern) {
@@ -202,17 +35,21 @@ $hideMobileChrome = trim((string) $__env->yieldContent('hideMobileNav', '')) !==
                             }
                         }
 
-                        if ($item['name'] === 'Companies' && request()->is('companies/select')) {
+                        if ($onCompanySelectScreen) {
                             $isActive = false;
                         }
 
-                        $iconToShow = $item['icon'];
+                        $iconToShow = $item['icon'] ?? null;
                         if ($isActive && !empty($item['icon_active'])) {
                             $iconToShow = $item['icon_active'];
                         }
                     @endphp
                     <a href="{{ $item['url'] }}" class="mobile-menu-link {{ $isActive ? 'active' : '' }}">
-                        <img src="{{ asset($iconToShow) }}" alt="" class="mobile-menu-link-icon">
+                        @if (!empty($iconToShow))
+                            <img src="{{ asset($iconToShow) }}" alt="" class="mobile-menu-link-icon">
+                        @else
+                            <i class="bi {{ $item['icon_class'] ?? 'bi-circle' }} mobile-menu-link-icon"></i>
+                        @endif
                         {{ $item['name'] }}
                     </a>
                 @endforeach
@@ -257,21 +94,40 @@ $hideMobileChrome = trim((string) $__env->yieldContent('hideMobileNav', '')) !==
                         break;
                     }
                 }
-                if ($item['name'] === 'Companies' && request()->is('companies/select')) {
+                if ($onCompanySelectScreen) {
                     $isActive = false;
                 }
 
-                $iconToShow = $item['icon'];
+                $iconToShow = $item['icon'] ?? null;
                 if ($isActive && !empty($item['icon_active'])) {
                     $iconToShow = $item['icon_active'];
                 }
+
             @endphp
-            <a href="{{ $item['url'] }}" class="mobile-bottom-nav-item {{ $isActive ? 'active' : '' }}">
-                <span class="mobile-bottom-nav-icon">
-                    <img src="{{ asset($iconToShow) }}" alt="{{ $item['name'] }} Icon">
-                </span>
-                <span class="mobile-bottom-nav-label">{{ $item['name'] }}</span>
-            </a>
+            @if (!empty($item['children']))
+                <button type="button" class="mobile-bottom-nav-item {{ $isActive ? 'active' : '' }}"
+                    data-open-mobile-menu>
+                    <span class="mobile-bottom-nav-icon">
+                        @if (!empty($iconToShow))
+                            <img src="{{ asset($iconToShow) }}" alt="{{ $item['name'] }} Icon">
+                        @else
+                            <i class="bi {{ $item['icon_class'] ?? 'bi-circle' }}"></i>
+                        @endif
+                    </span>
+                    <span class="mobile-bottom-nav-label">{{ $item['name'] }}</span>
+                </button>
+            @else
+                <a href="{{ $item['url'] }}" class="mobile-bottom-nav-item {{ $isActive ? 'active' : '' }}">
+                    <span class="mobile-bottom-nav-icon">
+                        @if (!empty($iconToShow))
+                            <img src="{{ asset($iconToShow) }}" alt="{{ $item['name'] }} Icon">
+                        @else
+                            <i class="bi {{ $item['icon_class'] ?? 'bi-circle' }}"></i>
+                        @endif
+                    </span>
+                    <span class="mobile-bottom-nav-label">{{ $item['name'] }}</span>
+                </a>
+            @endif
         @endforeach
     </nav>
 @endunless
@@ -284,8 +140,11 @@ $hideMobileChrome = trim((string) $__env->yieldContent('hideMobileNav', '')) !==
                     <img src="{{ $companyLogoUrl }}" alt="Company Logo" class="company-logo-img"
                         onerror="this.onerror=null;this.src='{{ asset('images/default-company.png') }}';">
                 </div>
-                {{-- <div class="brand-text">{{ $companyName }}</div> --}}
             </div>
+            {{-- <div class="brand-text">{{ $companyName }}</div> --}}
+            {{-- <marquee behavior="scroll" direction="left">
+                <span class="brand-text">{{ $companyName }}</span>
+            </marquee> --}}
             <nav class="nav-list">
                 @foreach ($navItems as $item)
                     @php
@@ -297,40 +156,81 @@ $hideMobileChrome = trim((string) $__env->yieldContent('hideMobileNav', '')) !==
                             }
                         }
 
-                        // "Companies" should not appear active on the select-company screen
-                        if ($item['name'] === 'Companies' && request()->is('companies/select')) {
-                            $isActive = false;
-                        }
+                        // The select-company screen shouldn't appear active on
+// the Companies/Company nav item.
+if ($onCompanySelectScreen) {
+    $isActive = false;
+}
 
-                        $iconToShow = $item['icon'];
-                        if ($isActive && !empty($item['icon_active'])) {
-                            $iconToShow = $item['icon_active'];
+$iconToShow = $item['icon'] ?? null;
+if ($isActive && !empty($item['icon_active'])) {
+    $iconToShow = $item['icon_active'];
                         }
                     @endphp
-                    <a href="{{ $item['url'] }}" class="nav-link-mobile-close">
-                        <button class="nav-btn {{ $isActive ? 'active' : '' }}" type="button">
-                            <span class="nav-icon">
-                                <img src="{{ asset($iconToShow) }}" alt="{{ $item['name'] }} Icon">
-                            </span>
-                            <span class="nav-label">{{ $item['name'] }}</span>
-                        </button>
-                    </a>
+                    @if (!empty($item['children']))
+                        <div class="nav-group" data-nav-group-key="{{ \Illuminate\Support\Str::slug($item['name']) }}">
+                            <button class="nav-btn nav-btn-group {{ $isActive ? 'active' : '' }}" type="button"
+                                data-nav-group-toggle>
+                                <span class="nav-icon">
+                                    @if (!empty($iconToShow))
+                                        <img src="{{ asset($iconToShow) }}" alt="{{ $item['name'] }} Icon">
+                                    @else
+                                        <i class="bi {{ $item['icon_class'] ?? 'bi-circle' }}"
+                                            style="font-size:16px;"></i>
+                                    @endif
+                                </span>
+                                <span class="nav-label">{{ $item['name'] }}</span>
+                                <i class="bi bi-chevron-down nav-group-chevron"></i>
+                            </button>
+
+                            <div class="nav-submenu">
+                                @foreach ($item['children'] as $child)
+                                    @php
+                                        $childActive = false;
+                                        foreach ($child['match'] as $pattern) {
+                                            if (request()->is($pattern)) {
+                                                $childActive = true;
+                                                break;
+                                            }
+                                        }
+                                        if ($onCompanySelectScreen) {
+                                            $childActive = false;
+                                        }
+                                    @endphp
+                                    <a href="{{ $child['url'] }}"
+                                        class="nav-sublink nav-link-mobile-close {{ $childActive ? 'active' : '' }}">
+                                        <span class="nav-sublink-label">{{ $child['name'] }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @else
+                        <a href="{{ $item['url'] }}" class="nav-link-mobile-close">
+                            <button class="nav-btn {{ $isActive ? 'active' : '' }}" type="button">
+                                <span class="nav-icon">
+                                    @if (!empty($iconToShow))
+                                        <img src="{{ asset($iconToShow) }}" alt="{{ $item['name'] }} Icon">
+                                    @else
+                                        <i class="bi {{ $item['icon_class'] ?? 'bi-circle' }}"
+                                            style="font-size:16px;"></i>
+                                    @endif
+                                </span>
+                                <span class="nav-label">{{ $item['name'] }}</span>
+                            </button>
+                        </a>
+                    @endif
                 @endforeach
             </nav>
         </div>
 
         <div class="sidebar-bottom">
-            @php $authUser = Auth::user(); @endphp
             {{-- <a href="{{ route('admin.profile') }}" class="user-link"> --}}
-            @php
-                $avatarUrl = $userAvatar;
-            @endphp
             <div class="profiles">
-                <img src="{{ $avatarUrl }}" alt="User" id="sidebarProfileImage"
+                <img src="{{ $userAvatar }}" alt="User" id="sidebarProfileImage"
                     onerror="this.onerror=null;this.src='{{ asset('images/default-user.png') }}';">
                 <div class="profile-text">
                     <div class="user-meta">
-                        <div class="user-name">{{ $authUser ? $authUser->name : 'Guest' }}</div>
+                        <div class="user-name">{{ $authUser ? ucwords($authUser->name) : 'Guest' }}</div>
                         <div class="user-role">{{ $authUser ? ucfirst($authUser->role ?? 'User') : 'Guest' }}</div>
                     </div>
                 </div>
@@ -438,10 +338,22 @@ $hideMobileChrome = trim((string) $__env->yieldContent('hideMobileNav', '')) !==
             const collapseHandle = document.getElementById('collapseHandle');
             const settingsBtn = document.getElementById('settingsBtn');
             const settingsBox = document.getElementById('settingsBox');
+            // Restoring the collapsed class itself happens synchronously in
+            // an inline <script> right after #managementShell opens (see
+            // app.blade.php), so it's applied before this file even runs —
+            // no flash of the expanded sidebar on page load.
+            const COLLAPSE_STORAGE_KEY = 'managementSidebarCollapsed';
 
             if (collapseHandle) {
                 collapseHandle.addEventListener('click', () => {
                     appShell.classList.toggle('collapsed');
+
+                    try {
+                        localStorage.setItem(COLLAPSE_STORAGE_KEY, appShell.classList.contains(
+                            'collapsed'));
+                    } catch (_) {
+                        // localStorage unavailable — nothing to do.
+                    }
 
                     if (appShell.classList.contains('collapsed')) {
                         settingsBox?.classList.remove('open');
@@ -533,9 +445,65 @@ $hideMobileChrome = trim((string) $__env->yieldContent('hideMobileNav', '')) !==
                 link.addEventListener('click', closeMenu);
             });
 
+            // Bottom-nav items that represent a group (User, Company) have no
+            // page of their own — tapping them opens the full slide-out menu
+            // instead, where their individual pages are listed.
+            document.querySelectorAll('.mobile-bottom-nav-item[data-open-mobile-menu]').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    openMenu();
+                });
+            });
+
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') closeMenu();
             });
         }
+    })();
+
+    (function() {
+        const STORAGE_KEY = 'managementOpenNavGroups';
+
+        function getOpenGroups() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            } catch (_) {
+                return [];
+            }
+        }
+
+        function setGroupOpen(key, isOpen) {
+            if (!key) return;
+            try {
+                const open = new Set(getOpenGroups());
+                if (isOpen) {
+                    open.add(key);
+                } else {
+                    open.delete(key);
+                }
+                localStorage.setItem(STORAGE_KEY, JSON.stringify([...open]));
+            } catch (_) {
+                // localStorage unavailable — state just won't persist across page loads.
+            }
+        }
+
+        // Restore each group's open/closed state from the last page before
+        // this one navigated away — full page loads otherwise reset every
+        // group shut.
+        const openGroups = new Set(getOpenGroups());
+        document.querySelectorAll('.nav-group[data-nav-group-key]').forEach(function(group) {
+            if (openGroups.has(group.dataset.navGroupKey)) {
+                group.classList.add('open');
+            }
+        });
+
+        document.querySelectorAll('[data-nav-group-toggle]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const group = btn.closest('.nav-group');
+                if (!group) return;
+                group.classList.toggle('open');
+                setGroupOpen(group.dataset.navGroupKey, group.classList.contains('open'));
+            });
+        });
     })();
 </script>

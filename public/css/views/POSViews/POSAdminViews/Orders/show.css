@@ -580,6 +580,40 @@
         font-weight: 700;
     }
 
+    .mobile-status-actions{
+        display: flex;
+        gap: 10px;
+    }
+
+    .mobile-status-actions .mobile-status-view{
+        flex: 1;
+    }
+
+    .mobile-view-report-btn{
+        flex: 1;
+        height: 44px;
+        border-radius: 10px;
+        background: #0EA8B2;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .mobile-view-report-btn:hover{
+        background: #0c959e;
+        color: #fff;
+    }
+
+    .mobile-view-report-btn-block{
+        width: 100%;
+        margin-bottom: 12px;
+    }
+
     @media (max-width: 768px){
         .header-title{
             display: none;
@@ -598,44 +632,18 @@
         }
     }
 
-    @media (max-width: 900px){
-        .approval-page-inner{
-            padding: 22px 16px 16px;
-        }
 
-        .info-cards-row{
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .mini-summary{
-            max-width: 100%;
-        }
-
-        .approval-footer{
-            flex-direction: column-reverse;
-            align-items: center;
-        }
-
-        .complete-approval-form{
-            display: flex;
-            justify-content: center;
-            width: 100%;
-        }
-
-        .reject-link-btn{
-            text-align: center;
-        }
-    }
-
-    @media (max-width: 700px){
+    @media (max-width: 768px){
         .info-cards-row{
             grid-template-columns: 1fr;
         }
+        .main-wrapper{
+            height: 100%;
+        }
+        .approval-page-inner{
+            padding: 0px;
+        }
 
-        /* 6 columns don't comfortably fit a phone width without
-           squashing the product name — scroll horizontally instead,
-           like a real spreadsheet-style table, rather than truncating
-           everything to fit. */
         .items-table{
             table-layout: fixed;
             min-width: 560px;

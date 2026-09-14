@@ -14,9 +14,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
     appShell.dataset.sidebarReady = "true";
 
+    // Restoring the collapsed class itself happens synchronously in an
+    // inline <script> right after #posAdminShell opens (see app.blade.php),
+    // so it's applied before this file even loads — no flash of the
+    // expanded sidebar on page load.
+    const COLLAPSE_STORAGE_KEY = "posAdminSidebarCollapsed";
+
     if (collapseHandle && appShell) {
         collapseHandle.addEventListener("click", function () {
             appShell.classList.toggle("collapsed");
+
+            try {
+                localStorage.setItem(COLLAPSE_STORAGE_KEY, appShell.classList.contains("collapsed"));
+            } catch (_) {
+                // localStorage unavailable — nothing to do.
+            }
 
             if (appShell.classList.contains("collapsed") && settingsBox) {
                 settingsBox.classList.remove("open");

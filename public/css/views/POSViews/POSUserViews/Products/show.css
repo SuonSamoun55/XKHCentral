@@ -24,6 +24,7 @@
     padding: 10px 20px;
     font-family: 'Poppins', sans-serif;
     width: 100%;
+    height: 100%;
     color: var(--text-main);
     border-radius: 11px;
 }
@@ -31,17 +32,49 @@
 #pos-product-detail-scope .detail-wrap {
     width: 100%;
     margin: 0 auto;
+    height: 100%;
+    overflow: scroll;
 }
-.related-section{
-        display: none;
-    }
+.detail-wrap::-webkit-scrollbar {
+    width: 0px;
+}
 
-/* ── top nav ─────────────────────────────────────────────── */
+/* ── top nav / page heading ──────────────────────────────── */
 #pos-product-detail-scope .top-nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+#pos-product-detail-scope .pd-heading {
+    flex: 1;
+    min-width: 0;
+}
+
+#pos-product-detail-scope .pd-page-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 0;
+    line-height: 1.2;
+}
+
+#pos-product-detail-scope .pd-breadcrumb {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* ── card wrapper around gallery + info ──────────────────── */
+#pos-product-detail-scope .pd-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow-sm);
+    padding: 15px;
+  
 }
 
 #pos-product-detail-scope .top-nav-actions {
@@ -117,8 +150,32 @@
 #pos-product-detail-scope .detail-grid {
     display: grid;
     grid-template-columns: 38% 1fr;
-    gap: 4%;
+    gap: 2%;
     align-items: start;
+}
+
+#pos-product-detail-scope .info-col-bordered {
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 0px 0px 1px;
+    border-radius: 5px;
+    padding: 15px ;
+    max-height: 300px;
+    min-height: 300px;
+    overflow-y: auto;
+
+}
+ .info-col-bordered::-webkit-scrollbar {
+    width: 0px;
+ }
+
+#pos-product-detail-scope #pdAddToCartForm {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+#pos-product-detail-scope #pdAddToCartForm .add-to-cart-btn {
+    flex: 1;
 }
 
 #pos-product-detail-scope .gallery-col {
@@ -133,7 +190,9 @@
     background-color: white;
     border-radius: 5px;
     width: 100%;
-    height: 380px;
+    height: 300px;
+    max-height: 300px;
+    min-height: 300px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -193,47 +252,30 @@
 /* Active (favorited) state for the wishlist icon.
    The JS toggles this class on the button itself as a backup source of
    truth, in addition to swapping the bi-heart / bi-heart-fill classes on
-   the inner <i>, so the red color is driven by CSS state, not only by
+   the inner <i>, so the color is driven by CSS state, not only by
    whatever key name the backend happens to return. */
 #pos-product-detail-scope .wishlist-btn.is-favorited i {
-    color: #e11d48;
+    color: var(--primary);
 }
 
 #pos-product-detail-scope .thumb-strip {
     display: flex;
     align-items: center;
-    gap: 5px;
-    margin-top: 3%;
     width: 100%;
-}
-
-#pos-product-detail-scope .thumb-arrow {
-    flex: 0 0 28px;
-    width: 5px;
-    background-color: white;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.pdThumbRow {
-    margin: 0px 20px;
-}
-
-#pos-product-detail-scope .thumb-arrow:hover {
-    color: var(--primary);
-    border-color: var(--primary);
+    margin-top: 3%;
 }
 
 #pos-product-detail-scope .thumb-row {
     display: flex;
     gap: 10px;
+    width: 100%;
     overflow-x: auto;
     scroll-behavior: smooth;
-    flex: 1;
+    cursor: grab;
+}
+
+#pos-product-detail-scope .thumb-row:active {
+    cursor: grabbing;
 }
 
 #pos-product-detail-scope .thumb-row::-webkit-scrollbar {
@@ -241,12 +283,10 @@
 }
 
 #pos-product-detail-scope .thumb-btn {
-    flex: 0 0 18%;      /* % instead of a fixed 64px — thumbnails scale
-                            with the gallery column instead of overflowing
-                            it on narrower desktop widths */
-    max-width: 64px;
-    height: 64px;       /* plain fixed height, matches max-width so it
-                            stays roughly square without aspect-ratio */
+    flex: 1 1 0;        /* stretch evenly to fill the full row width
+                            instead of a small fixed 64px tile */
+    min-width: 64px;
+    aspect-ratio: 1 / 1;
     border-radius: var(--radius-sm);
     border: 2px solid var(--border);
     background: var(--bg-soft);
@@ -270,8 +310,15 @@
     font-size: 20px;
     font-weight: 700;
     color: #1f2937;
-    margin: 0 0 20px 0;
     line-height: 1.2;
+}
+
+#pos-product-detail-scope .pd-price-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 8px;
 }
 
 #pos-product-detail-scope .price-old {
@@ -279,25 +326,58 @@
     color: var(--text-muted);
     text-decoration: line-through;
     font-weight: 500;
-    margin-bottom: 5px;
 }
 
 #pos-product-detail-scope .price-new {
-    font-size: 20px;
-    color: #111827;
+    font-size: 16px;
+    color: #059669;
+    font-weight: 800;
+}
+
+#pos-product-detail-scope .save-badge {
+    font-size: 12.5px;
     font-weight: 700;
-    margin-bottom: 8px;
+    color: #059669;
+    background: #ecfdf5;
+    padding: 4px 12px;
+    border-radius: 999px;
 }
 
 #pos-product-detail-scope .pd-vat-chip {
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 12px;
     font-weight: 600;
     color: var(--primary);
     background: color-mix(in srgb, var(--primary) 12%, transparent);
     border-radius: var(--radius-sm);
     padding: 4px 10px;
-    margin-bottom: 20px;
+    margin-bottom: 14px;
+    width: fit-content;
+}
+
+#pos-product-detail-scope .pd-vat-note {
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+#pos-product-detail-scope .stock-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    width: fit-content;
+    margin-bottom: 5px;
+}
+
+#pos-product-detail-scope .stock-badge.in-stock {
+    color: #059669;
+}
+
+#pos-product-detail-scope .stock-badge.out-of-stock {
+    color: #dc2626;
 }
 
 #pos-product-detail-scope .product-desc {
@@ -356,16 +436,17 @@
 
 /* ── meta details ────────────────────────────────────────── */
 #pos-product-detail-scope .product-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     color: var(--text-muted);
-    font-size: 12px;
-    line-height: 1.8;
-    margin-bottom: 24px;
-    padding-top: 18px;
+    font-size: 12.5px;
+    gap: 8px 16px;
+    margin-bottom: 5px;
 }
 
 #pos-product-detail-scope .product-meta span {
-    display: block;
-    margin-bottom: 8px;
+    display: inline-block;
 }
 
 #pos-product-detail-scope .product-meta strong {
@@ -407,7 +488,18 @@
 #pos-product-detail-scope .quantity-wrapper {
     display: flex;
     align-items: center;
-    margin-bottom: 25px;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-bottom: 0;
+}
+
+#pos-product-detail-scope .qty-uom {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 4px 10px;
+    border-radius: 999px;
 }
 
 #pos-product-detail-scope .qty-box {
@@ -462,15 +554,21 @@
     color: white;
     border: none;
     padding: 14px 40px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     border-radius: var(--radius-sm);
     cursor: pointer;
     transition: background 0.2s;
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     width: 100%;
-    max-width: 260px;
     text-align: center;
+}
+
+#pos-product-detail-scope .add-to-cart-btn i {
+    font-size: 16px;
 }
 
 #pos-product-detail-scope .add-to-cart-btn:hover {
@@ -493,7 +591,7 @@
 
 #pos-product-detail-scope .related-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
 }
 
@@ -531,14 +629,46 @@
     z-index: 2;
 }
 
+#pos-product-detail-scope .related-card-image-wrap {
+    position: relative;
+    width: 100%;
+}
+
 #pos-product-detail-scope .related-card-image-link {
     display: block;
     text-decoration: none;
 }
 
+#pos-product-detail-scope .related-fav-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg-card);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: var(--text-main);
+    cursor: pointer;
+    z-index: 2;
+}
+
+#pos-product-detail-scope .related-fav-btn:hover {
+    color: var(--primary);
+}
+
+#pos-product-detail-scope .related-fav-btn.is-favorited i {
+    color: var(--primary);
+}
+
 #pos-product-detail-scope .related-card-image {
     width: 100%;
-    height: 140px;
+    height: 150px;
     background: var(--bg-soft);
     display: flex;
     align-items: center;
@@ -575,8 +705,7 @@
     display: flex;
     align-items: baseline;
     gap: 6px;
-    padding: 6px 12px 12px;
-    margin-top: auto;
+    padding: 6px 12px;
 }
 
 #pos-product-detail-scope .related-price-old {
@@ -591,15 +720,95 @@
     color: #111827;
 }
 
-/* quick-add "+" button only makes sense in the compact phone layout below —
-   hidden everywhere else */
+#pos-product-detail-scope .related-qty-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 12px 10px;
+}
+
+#pos-product-detail-scope .related-qty-label {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+#pos-product-detail-scope .related-qty-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#pos-product-detail-scope .related-qty-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-soft);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-main);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#pos-product-detail-scope .related-qty-btn:hover {
+    background: #e9ecef;
+}
+
+#pos-product-detail-scope .related-qty-value {
+    min-width: 16px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #111827;
+}
+
+#pos-product-detail-scope .related-add-full-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 0 12px 10px;
+    padding: 9px 10px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#pos-product-detail-scope .related-add-full-btn:hover {
+    background: var(--primary-hover);
+}
+
+#pos-product-detail-scope .related-view-detail-btn {
+    display: block;
+    margin: 0 12px 12px;
+    padding: 8px 10px;
+    text-align: center;
+    background: var(--bg-card);
+    color: var(--primary);
+    border: 1.5px solid var(--primary);
+    border-radius: var(--radius-sm);
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+#pos-product-detail-scope .related-view-detail-btn:hover {
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
 #pos-product-detail-scope .related-add-btn {
     display: none;
 }
 
-/* ==========================================================
-   VARIANT SELECTION POPUP (related-products quick-add)
-   ========================================================== */
 #pos-product-detail-scope .pd-variant-modal-overlay {
     position: fixed;
     inset: 0;
@@ -730,21 +939,40 @@
     .aside-sidebar-wrap {
         display: none !important;
     }
+
+    #pos-product-detail-scope .top-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        z-index: 50;
+        background: var(--bg-card);
+        margin-bottom: 0;
+    }
+
 #pos-product-detail-scope .cart-count {
     right: -3px;
 }
 
 
     #pos-product-detail-scope {
-        /* margin: 10px; */
         padding: 0;
         overflow-x: hidden;
         width: 100%;
     }
+    #pos-product-detail-scope .pd-card {
+        padding: 0px;
+        border:none;
+        
+    }
 
     #pos-product-detail-scope .detail-wrap {
         width: 100%;
-        overflow-x: hidden;
+        height: 100vh;
+        padding-top: 62px;
+        overflow: scroll;
+
     }
 
     #pos-product-detail-scope .info-col {
@@ -753,14 +981,40 @@
         height: 100%;
     }
 
+    #pos-product-detail-scope .info-col-bordered {
+        padding: 16px;
+        margin-top: 14px;
+        max-height: none;
+        min-height: 0;
+        overflow-y: visible;
+    }
+
     #pos-product-detail-scope .top-nav {
         padding: 10px 10px 0px 10px ;
     }
 
-    #pos-product-detail-scope .nav-btn,
-    #pos-product-detail-scope .cart-box {
+    #pos-product-detail-scope .pd-page-title {
+        font-size: 16px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Back button stays circular — matches every other back/nav-btn in
+       the app (e.g. the report preview page's own back button). */
+    #pos-product-detail-scope .nav-btn {
         width: 42px;
         height: 42px;
+        border-radius: 100%;
+    }
+
+    /* Cart icon: rounded-square (44px, 5px radius), matching the cart
+       icon used everywhere else (Products list, Favorites, Cart page) —
+       this page's own circular cart icon was a one-off, inconsistent
+       with the rest of the app. */
+    #pos-product-detail-scope .cart-box {
+        width: 44px;
+        height: 44px;
         border-radius: 5px;
     }
 
@@ -769,10 +1023,13 @@
         width: 100%;
         padding: 10px;
         gap: 0;
+        border: none;
+        box-shadow: none;
     }
 
     #pos-product-detail-scope .gallery-col {
         max-width: 100%;
+        min-width: 0;
     }
 
 
@@ -784,10 +1041,6 @@
 
 
 
-
-    /* #pos-product-detail-scope .info-col {
-        margin-top: 4px;
-    } */
 
     #pos-product-detail-scope .product-title {
         font-size: 20px;
@@ -812,35 +1065,41 @@
         font-size: 12.5px;
     }
 
-    #pos-product-detail-scope .product-meta {
-        padding-top: 12px;
+    /* Extra bottom room on the last block before the sticky Add-to-cart
+       bar, so it doesn't get covered. */
+    #pos-product-detail-scope .variant-section {
         margin-bottom: 40px;
     }
 
-    /* reference screenshot has no qty stepper on the detail page —
-       just a full-width Add to cart button */
-    #pos-product-detail-scope .quantity-wrapper {
-        display: none;
+    #pos-product-detail-scope .product-meta:last-of-type,
+    #pos-product-detail-scope .stock-badge:last-child {
+        margin-bottom: 40px;
     }
 
-    /* sticky full-width Add to cart bar pinned to the bottom of the screen */
+    /* sticky Add to cart bar pinned above the mobile bottom nav — qty
+       stepper sits beside the button (same layout the card grid uses).
+       bottom: 80px, not 0 — the bottom nav (.mobile-bottom-nav, now
+       included on this page) is itself a fixed, 80px-tall, bottom: 0 bar
+       with a higher z-index (999 vs this bar's 500), so leaving this at
+       bottom: 0 would put it underneath the nav, hiding the button. */
     #pos-product-detail-scope #pdAddToCartForm {
         position: fixed;
         left: 0;
         right: 0;
-        bottom: 0;
+        bottom: 80px;
+        padding: 10px 16px;
         background: #fff;
         box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08);
         z-index: 500;
     }
-    /* #pdMainImage{
-        width: 100%;
-    } */
+
+    #pos-product-detail-scope .qty-box {
+        flex-shrink: 0;
+    }
     #pos-product-detail-scope .add-to-cart-btn {
         max-width: 100%;
         padding: 15px;
         font-size: 15px;
-        /* border-radius: 12px; */
     }
     .sidebar-wrap{
         display: none;
@@ -852,7 +1111,7 @@
     }
 
     #pos-product-detail-scope .related-section {
-        padding: 0 10px 90px 10px; /* extra bottom padding so the sticky add-to-cart bar doesn't cover the last row */
+        padding: 0 10px 170px 10px; /* clears both fixed bars stacked at the bottom: the add-to-cart bar (bottom: 80px) plus the 80px mobile bottom nav underneath it */
         margin-top: 24px;
     }
 
@@ -886,10 +1145,12 @@
 
     #pos-product-detail-scope .related-card-image-link {
         grid-area: image;
+        width: 100%;
     }
 
     #pos-product-detail-scope .related-card-image {
         height: 130px;
+        width:  200px;
         background: #fff;
     }
 
@@ -953,8 +1214,14 @@
     #pos-product-detail-scope .related-add-text {
         display: none;
     }
-    .related-section{
-        display: block;
+
+    /* Keep the phone layout's compact "+" quick-add — the full-width
+       Add to Cart / View Detail / qty-row are desktop & tablet only,
+       and have no slot in the grid-template-areas above. */
+    #pos-product-detail-scope .related-qty-row,
+    #pos-product-detail-scope .related-add-full-btn,
+    #pos-product-detail-scope .related-view-detail-btn {
+        display: none;
     }
 
     /* variant popup: stack image above info, full-width modal.

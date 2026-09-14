@@ -216,13 +216,19 @@
 
 /* ============================================================
    DESKTOP GRID — cleaner card layout
-   Left: item table (tall). Right: Payment Summary +
-   Order Details side-by-side, Approval/Cancel full width below.
+   Top: Payment Summary, Order Details, Approval/Cancel side by
+   side. Below, full width: the order items table.
    ============================================================ */
 
 #order-detail-page .od-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+#order-detail-page .od-top-row {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     align-items: start;
     gap: 18px;
 }
@@ -303,17 +309,17 @@
 }
 
 /* ---- Column widths ----
-   7 columns: Product, Variant, Qty, Unit Price, Discount, VAT, Line Total.
+   8 columns: Product, Variant, Unit, Qty, Unit Price, Discount, VAT, Line Total.
    table-layout:fixed requires every column to be sized explicitly, or
    text will overflow/clip instead of wrapping cleanly. Widths sum to 100%. */
 #order-detail-page .od-table th:nth-child(1),
 #order-detail-page .od-table td:nth-child(1) {
-    width: 26%;
+    width: 24%;
 }
 
 #order-detail-page .od-table th:nth-child(2),
 #order-detail-page .od-table td:nth-child(2) {
-    width: 12%;
+    width: 11%;
     white-space: nowrap;
 }
 
@@ -326,28 +332,35 @@
 
 #order-detail-page .od-table th:nth-child(4),
 #order-detail-page .od-table td:nth-child(4) {
-    width: 14%;
+    width: 7%;
     white-space: nowrap;
-    text-align: right;
+    text-align: center;
 }
 
 #order-detail-page .od-table th:nth-child(5),
 #order-detail-page .od-table td:nth-child(5) {
-    width: 16%;
+    width: 13%;
     white-space: nowrap;
     text-align: right;
 }
 
 #order-detail-page .od-table th:nth-child(6),
 #order-detail-page .od-table td:nth-child(6) {
-    width: 11%;
+    width: 15%;
     white-space: nowrap;
     text-align: right;
 }
 
 #order-detail-page .od-table th:nth-child(7),
 #order-detail-page .od-table td:nth-child(7) {
-    width: 14%;
+    width: 10%;
+    white-space: nowrap;
+    text-align: right;
+}
+
+#order-detail-page .od-table th:nth-child(8),
+#order-detail-page .od-table td:nth-child(8) {
+    width: 13%;
     white-space: nowrap;
     text-align: right;
 }
@@ -391,21 +404,8 @@
 
 
 /* ============================================================
-   RIGHT COLUMN — Payment Summary / Order Details / Approval
+   TOP ROW — Payment Summary / Order Details / Approval
    ============================================================ */
-
-#order-detail-page .od-right {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-/* Payment Summary + Order Details sit side by side on wide screens */
-#order-detail-page .od-right-row {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
-}
 
 #order-detail-page .od-sum-row {
     display: flex;
@@ -487,18 +487,8 @@
     text-align: right;
 }
 
-@media (min-width: 1400px) {
-    #order-detail-page .od-right-row {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-
 @media (max-width: 1080px) {
-    #order-detail-page .od-grid {
-        grid-template-columns: 1fr;
-    }
-
-    #order-detail-page .od-right-row {
+    #order-detail-page .od-top-row {
         grid-template-columns: 1fr 1fr;
     }
 }

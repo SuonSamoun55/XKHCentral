@@ -354,7 +354,7 @@
                         <div class="product-image">
                             ${pricing.hasDiscount ? `<span class="sale-badge">SAVE ${pricing.discountPercent}%</span>` : ``}
                             <img
-                                src="/item-image/${esc(item.id)}"
+                                src="${esc(item.imageUrl || item.customImageUrl || '')}"
                                 alt="${esc(name)}"
                                 loading="lazy"
                                 onerror="this.src='https://placehold.co/500x320/e5e7eb/94a3b8?text=No+Photo'">
@@ -362,7 +362,6 @@
 
                         <div class="product-body">
                             <div class="product-title">${esc(name)}</div>
-                            <div class="product-sub">${esc(description)}</div>
 
                             <div class="price-row">
                                 <div class="product-price">${money(pricing.nowPrice)}</div>
@@ -391,7 +390,7 @@
                     <a href="/pos/items/${item.id}" class="list-card">
                         <div class="list-image">
                             <img
-                                src="/item-image/${esc(item.id)}"
+                                src="${esc(item.imageUrl || item.customImageUrl || '')}"
                                 alt="${esc(name)}"
                                 loading="lazy"
                                 onerror="this.src='https://placehold.co/500x320/e5e7eb/94a3b8?text=No+Photo'">
@@ -431,33 +430,14 @@
         btn.innerHTML = `<i class="bi bi-arrow-repeat"></i> Syncing...`;
 
         try {
+            // The server fetches from Business Central itself and saves the
+            // result — the browser no longer talks to BC directly.
             const res = await fetch('/items/sync-from-al', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    items: PRODUCTS.map(item => ({
-                        id: item.id,
-                        number: item.number || item.no || item.No || item.itemNo || item.itemNumber,
-                        displayName: item.displayName || item.display_name || item.description || item.Description || item.name,
-                        unitPrice: item.unitPrice ?? item.unit_price ?? item.price ?? item.UnitPrice ?? 0,
-                        taxGroupCode: item.taxGroupCode ?? item.taxgroupcode ?? item.vatProdPostingGroup ?? item.vatprodpostinggroup ?? null,
-                        taxAmount: item.taxAmount ?? item.tax_amount ?? item.taxamount ?? 0,
-                        discountAmount: item.discountAmount ?? item.discount_amount ?? item.discountamount ?? 0,
-                        discountStartDate: item.discountStartDate ?? item.discount_start_date ?? item.discountstartdate ?? null,
-                        discountEndDate: item.discountEndDate ?? item.discount_end_date ?? item.discountenddate ?? null,
-                        inventory: item.inventory ?? item.Inventory ?? item.quantityOnHand ?? item.qtyOnHand ?? 0,
-                        blocked: item.blocked ?? item.Blocked ?? item.isBlocked ?? false,
-                        itemCategoryCode: item.itemCategoryCode || item.item_category_code || item.categoryCode || item.CategoryCode,
-                        baseUnitOfMeasureCode: item.baseUnitOfMeasureCode || item.base_unit_of_measure_code || item.unitOfMeasureCode,
-                        priceIncludesTax: item.priceIncludesTax ?? item.price_includes_tax ?? false,
-                        imageUrl: `/item-image/${item.id}`,
-                        defaultLocationCode: item.defaultLocationCode || item.locationCode || null
-                    }))
-                })
+                }
             });
 
             let data = null;
@@ -471,7 +451,7 @@
                 throw new Error(data?.message || 'Sync failed.');
             }
 
-            const syncedCount = data?.count ?? PRODUCTS.length;
+            const syncedCount = data?.count ?? 0;
             const variantsSaved = data?.variantsSaved ?? 0;
             const variantsSkipped = data?.variantsSkipped ?? 0;
             const variantsError = data?.variantsError ?? null;
@@ -485,6 +465,9 @@
                 }
                 showSyncToast('success', 'Sync Successful', `${syncedCount} item(s) synced. ${variantMsg}.`);
             }
+
+            // Reload so the freshly synced items (and photos) show up.
+            setTimeout(() => window.location.reload(), 1200);
         } catch (error) {
             console.error(error);
             showSyncToast('error', 'Sync Failed', error?.message || 'Could not sync items.');

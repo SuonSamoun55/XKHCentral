@@ -3,7 +3,7 @@
 @section('title', 'Edit Company')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('/css/views/Management/edit_company.css') }}">
+    <link rel="stylesheet" href="{{ asset('/css/views/Management/Company/edit_company.css') }}">
 @endpush
 
 @section('content')
@@ -54,7 +54,7 @@
                             </button>
                         </div>
 
-                        <div class="logo-word">{{ $company->display_name ?? $company->name }}</div>
+                        <div class="logo-word">{{ ucwords($company->display_name ?? $company->name) }}</div>
 
                         <input type="file" name="logo" id="logoInput" class="file-picker"
                             accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">

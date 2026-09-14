@@ -1,9 +1,9 @@
 @extends('Layout.POSAdmin.app')
-<link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSAdminViews/AdminNotification/admin_notification.css') }}">
+
 @section('title', 'Admin Notifications')
 
 @push('styles')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSAdminViews/AdminNotification/admin_notification.css') }}">
 @endpush
 @section('content')
     <div class="app-shell" id="appShell">

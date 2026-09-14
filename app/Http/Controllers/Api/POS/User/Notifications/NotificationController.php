@@ -120,10 +120,7 @@ class NotificationController extends Controller
             return;
         }
 
-        $query->where(function ($q) {
-            $q->where('category', 'inbox')
-              ->orWhereNull('category');
-        });
+        $query->whereNotIn('type', self::ADMIN_TYPES);
     }
 
     private function applyFilters(Builder $query, Request $request): void
@@ -197,48 +194,18 @@ class NotificationController extends Controller
             ?? $notification->sender?->name
             ?? 'Admin';
     }
-    private function isAdminNotification(Notification $notification): bool
-    {
-        if ($notification->type === 'admin_message') {
-            return true;
-        }
-
-        if ($notification->type === 'global_message') {
-            return false;
-        }
-        $title = strtolower($notification->title ?? '');
-        $message = strtolower($notification->message ?? '');
-
-        $orderKeywords = ['order', 'cancel', 'confirm', 'approve', 'received'];
-
-        foreach ($orderKeywords as $keyword) {
-            if (str_contains($title, $keyword) || str_contains($message, $keyword)) {
-                return false;
-            }
-        }
-        if (str_contains($title, 'chat message') || str_contains($message, 'chat message')) {
-            return true;
-        }
-        if (str_contains($title, 'admin') || str_contains($message, 'admin')) {
-            return true;
-        }
-        return false;
-    }
     private function decorateOrderNotification(Notification $notification): Notification
     {
         $titleLower = strtolower($notification->title ?? '');
         $messageLower = strtolower($notification->message ?? '');
 
-        $notification->is_admin_notification = $this->isAdminNotification($notification);
+        // This bucket is built from a query that already excludes
+        // self::ADMIN_TYPES (see applyTab()), so every row here is a real
+        // order/stock notification — no need to re-guess from its text.
+        $notification->is_admin_notification = false;
         $notification->has_attachment = str_contains($messageLower, 'attachment');
 
-        if ($notification->is_admin_notification) {
-            $notification->display_icon = 'admin';
-            $notification->display_subject = 'Admin Message';
-        } elseif ($notification->type === 'global_message') {
-            $notification->display_icon = 'global';
-            $notification->display_subject = 'New Deal';
-        } elseif (str_contains($titleLower, 'cancel')) {
+        if (str_contains($titleLower, 'cancel')) {
             $notification->display_icon = 'cancelled';
             $notification->display_subject = 'Order Cancelled';
         } elseif (str_contains($titleLower, 'confirm') || str_contains($titleLower, 'approve')) {
@@ -267,34 +234,14 @@ class NotificationController extends Controller
     }
     private function classifyNotificationTabs(LengthAwarePaginator $notifications, LengthAwarePaginator $adminMessages): array
     {
-        $orderNotifications = collect();
-        $reclassifiedAsAdmin = collect();
+        // applyTab() already did the real order-vs-admin split at the SQL
+        // level (by `type`), so both collections here are already exactly
+        // the rows their tab should show — just decorate for display.
+        $orderNotifications = $notifications->getCollection()
+            ->each(fn ($notification) => $this->decorateOrderNotification($notification));
 
-        foreach ($notifications->getCollection() as $notification) {
-            $this->decorateOrderNotification($notification);
-
-            $isAdmin = $notification->is_admin_notification;
-            $isGlobal = $notification->type === 'global_message';
-
-            if ($isAdmin || $isGlobal) {
-                if ($isAdmin && !$isGlobal) {
-                    $reclassifiedAsAdmin->push($notification);
-                }
-                continue;
-            }
-
-            $orderNotifications->push($notification);
-        }
-
-        foreach ($adminMessages->getCollection() as $notification) {
-            $this->decorateAdminNotification($notification);
-        }
-
-        foreach ($reclassifiedAsAdmin as $notification) {
-            $this->decorateAdminNotification($notification);
-        }
-
-        $adminMessagesDisplay = $adminMessages->getCollection()->concat($reclassifiedAsAdmin);
+        $adminMessagesDisplay = $adminMessages->getCollection()
+            ->each(fn ($notification) => $this->decorateAdminNotification($notification));
 
         return [
             'orderNotifications' => $orderNotifications,
@@ -317,14 +264,8 @@ class NotificationController extends Controller
             ?? $this->resolveImagePath($orderItem->item?->custom_image_url ?? null)
             ?? $this->resolveImagePath($orderItem->item?->image_url ?? null);
     }
-    private function resolveOrderAction(Notification $notification): ?OrderAction
+    private function classifyOrderStatus(Notification $notification): array
     {
-        $isOrderNotification = $notification->type !== 'admin_message' && $notification->type !== 'global_message';
-
-        if (!$isOrderNotification || !$notification->order_id) {
-            return null;
-        }
-
         $titleLower = strtolower($notification->title ?? '');
         $messageLower = strtolower($notification->message ?? '');
 
@@ -334,27 +275,30 @@ class NotificationController extends Controller
             || str_contains($messageLower, 'confirm')
             || str_contains($messageLower, 'approve');
 
+        return [$isCancelled, $isApproved];
+    }
+
+    private function resolveOrderAction(Notification $notification): ?OrderAction
+    {
+        $isOrderNotification = $notification->type !== 'admin_message' && $notification->type !== 'global_message';
+
+        if (!$isOrderNotification || !$notification->order_id) {
+            return null;
+        }
+
+        [$isCancelled, $isApproved] = $this->classifyOrderStatus($notification);
+
         if (!$isCancelled && !$isApproved) {
             return null;
         }
 
         $query = OrderAction::with('actionBy')
             ->where('order_id', $notification->order_id);
-
-        // order_actions.action_type is 'cancelled' / 'confirmed' per the
-        // seeded data — adjust the values here if your table uses different
-        // wording (e.g. 'approved').
+    
         $query->where('action_type', $isCancelled ? 'cancelled' : 'confirmed');
 
         return $query->latest('id')->first();
     }
-
-    /**
-     * Builds every value the notification-detail view needs: status badge,
-     * sender display, and the order summary/pricing block. Used to be a
-     * @php block living in the Blade file — moved here so the view only
-     * ever displays variables.
-     */
     private function buildNotificationDetail(Notification $notification, ?OrderAction $orderAction): array
     {
         $isOrderNotification = $notification->type !== 'admin_message' && $notification->type !== 'global_message';
@@ -365,14 +309,7 @@ class NotificationController extends Controller
             $orderItems = collect();
         }
 
-        $titleLower = strtolower($notification->title ?? '');
-        $messageLower = strtolower($notification->message ?? '');
-
-        $isCancelled = str_contains($titleLower, 'cancel') || str_contains($messageLower, 'cancel');
-        $isApproved = str_contains($titleLower, 'confirm')
-            || str_contains($titleLower, 'approve')
-            || str_contains($messageLower, 'confirm')
-            || str_contains($messageLower, 'approve');
+        [$isCancelled, $isApproved] = $this->classifyOrderStatus($notification);
 
         $actionAdmin = $orderAction?->actionBy;
 
@@ -433,7 +370,7 @@ class NotificationController extends Controller
             $discountPercent = (float) ($orderItem->discount_percent ?? 0);
             $vatPercent = (float) ($orderItem->tax_percent ?? 0);
             $vatAmount = (float) ($orderItem->tax_amount ?? 0);
-            $qty = (int) ($orderItem->qty ?? 0);
+            $qty = (float) ($orderItem->qty ?? 0);
             $unitPrice = (float) ($orderItem->unit_price ?? 0);
             $gross = $unitPrice * $qty;
             $discountAmount = $gross * $discountPercent / 100;
@@ -520,9 +457,19 @@ class NotificationController extends Controller
         return null;
     }
 
-    public function getNotificationItems(int $notificationId): JsonResponse
+    public function getNotificationItems(Request $request, int $notificationId): JsonResponse
     {
+        $user = $request->user();
+
+        if (!$user instanceof User) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated.',
+            ], 401);
+        }
+
         $notification = Notification::with('relatedOrderItems.item', 'relatedOrderItems.itemVariant')
+            ->where('user_id', $user->id)
             ->find($notificationId);
 
         if (!$notification) {
@@ -616,15 +563,19 @@ class NotificationController extends Controller
             ], 401);
         }
 
-        $unread = Notification::where('user_id', $user->id)
-            ->where('is_read', false)
+        $unreadQuery = Notification::where('user_id', $user->id)
+            ->where('is_read', false);
+
+        $count = (clone $unreadQuery)->count();
+
+        $unread = $unreadQuery
             ->latest()
             ->limit(10)
             ->get(['id', 'title', 'message', 'type', 'created_at']);
 
         return response()->json([
             'success' => true,
-            'count' => $unread->count(),
+            'count' => $count,
             'notifications' => $unread,
         ]);
     }

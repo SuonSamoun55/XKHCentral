@@ -1,15 +1,6 @@
-:root{
-        --primary:#3BACB4;
-        --primary-dark:#12a5b5;
-        --bg:#f5f6f8;
-        --white:#ffffff;
-        --text:#202938;
-        --muted:#8b95a7;
-        --border:#eceef2;
-        --danger:#ef4444;
-        --success:#10b981;
-        --shadow:0 8px 24px rgba(15, 23, 42, 0.06);
-    }
+/* Design tokens (colors, shadow) now live in
+   public/css/views/shared/admin-variables.css, loaded by the layout
+   before this file. */
 
     .containter{
         flex:1;
@@ -231,11 +222,17 @@
 
     @media (max-width: 768px){
         .main-wrap{
-            height:auto;
-            min-height:100vh;
+            height:100%;
+            max-height:100%;
             overflow-y:visible;
-            padding:10px;
+            padding:0px;
             border-radius: 0;
+        }
+        .main-wrapper, .app-shell{
+            height:100%;
+            max-height:100%;
+            overflow-y:visible;
+
         }
         .page-title{
             display:none;
@@ -263,7 +260,8 @@
         }
 
         .action-row{
-            flex-direction:column;
+            flex-direction:row;
+            flex-wrap:nowrap;
             margin-top:20px;
         }
 

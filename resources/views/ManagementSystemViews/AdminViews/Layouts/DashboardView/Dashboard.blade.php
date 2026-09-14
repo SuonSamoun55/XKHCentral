@@ -14,7 +14,7 @@
                 </div>
                 <span class="hero-label">
                     <span class="hero-card-title">Products</span><span class="hero-colon">: </span><span
-                        class="hero-card-value">{{ number_format($totalProducts) }}</span>
+                        class="hero-card-value">{{ number_format($totalProducts) }}</span><span class="hero-chevron">&rsaquo;</span>
                 </span>
             </div>
 
@@ -25,7 +25,7 @@
                 </div>
                 <span class="hero-label">
                     <span class="hero-card-title">Total Customers</span><span class="hero-colon">: </span><span
-                        class="hero-card-value">{{ number_format($totalCustomers) }}</span>
+                        class="hero-card-value">{{ number_format($totalCustomers) }}</span><span class="hero-chevron">&rsaquo;</span>
                 </span>
             </div>
             <div class="hero-card soft-card" data-href="{{ route('users.index', ['active' => 'online']) }}">
@@ -35,7 +35,7 @@
                 </div>
                 <span class="hero-label">
                     <span class="hero-card-title">Online Customers</span><span class="hero-colon">: </span><span
-                        class="hero-card-value">{{ number_format($onlineCustomers) }}</span>
+                        class="hero-card-value">{{ number_format($onlineCustomers) }}</span><span class="hero-chevron">&rsaquo;</span>
                 </span>
             </div>
         </section>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\POS\User\Products;
 
+use App\Http\Controllers\Concerns\ResolvesImageUrl;
 use App\Http\Controllers\Controller;
 use App\Models\POS\Cart;
 use App\Models\POS\Favorite;
@@ -9,16 +10,17 @@ use App\Models\POS\Item;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use App\Models\POS\ItemVariant;
 
 class ItemListController extends Controller
 {
+    use ResolvesImageUrl;
+
     public function getItems()
     {
         $user = Auth::user();
-        $companyId = $user->company_id ?? session('selected_company_id');
+        $companyId = session('selected_company_id') ?? $user->company_id;
 
         $items = Item::query()
             ->when($companyId, function ($q) use ($companyId) {
@@ -27,9 +29,9 @@ class ItemListController extends Controller
             ->where(function ($q) {
                 $q->where('blocked', false)->orWhereNull('blocked');
             })
-            ->where(function ($q) {
-                $q->where('is_visible', true)->orWhereNull('is_visible');
-            })
+            // A null is_visible means the item was just synced and hasn't been
+            // reviewed by the admin yet — keep it hidden from customers until decided.
+            ->where('is_visible', true)
             ->where(function ($q) {
                 $q->where('category_visible', true)->orWhereNull('category_visible');
             })
@@ -57,6 +59,7 @@ class ItemListController extends Controller
         $cartCount = 0;
         if ($user) {
             $activeCart = Cart::where('user_id', $user->id)
+                ->where('company_id', $companyId)
                 ->where('status', 'active')
                 ->first();
 
@@ -74,9 +77,9 @@ class ItemListController extends Controller
             ->where(function ($q) {
                 $q->where('blocked', false)->orWhereNull('blocked');
             })
-            ->where(function ($q) {
-                $q->where('is_visible', true)->orWhereNull('is_visible');
-            })
+            // A null is_visible means the item was just synced and hasn't been
+            // reviewed by the admin yet — keep it hidden from customers until decided.
+            ->where('is_visible', true)
             ->where(function ($q) {
                 $q->where('category_visible', true)->orWhereNull('category_visible');
             })
@@ -107,9 +110,9 @@ class ItemListController extends Controller
             ->where(function ($q) {
                 $q->where('blocked', false)->orWhereNull('blocked');
             })
-            ->where(function ($q) {
-                $q->where('is_visible', true)->orWhereNull('is_visible');
-            })
+            // A null is_visible means the item was just synced and hasn't been
+            // reviewed by the admin yet — keep it hidden from customers until decided.
+            ->where('is_visible', true)
             ->where(function ($q) {
                 $q->where('category_visible', true)->orWhereNull('category_visible');
             })
@@ -151,9 +154,9 @@ class ItemListController extends Controller
             ->where(function ($q) {
                 $q->where('blocked', false)->orWhereNull('blocked');
             })
-            ->where(function ($q) {
-                $q->where('is_visible', true)->orWhereNull('is_visible');
-            })
+            // A null is_visible means the item was just synced and hasn't been
+            // reviewed by the admin yet — keep it hidden from customers until decided.
+            ->where('is_visible', true)
             ->where(function ($q) {
                 $q->where('category_visible', true)->orWhereNull('category_visible');
             })
@@ -189,9 +192,9 @@ class ItemListController extends Controller
             ->where(function ($q) {
                 $q->where('blocked', false)->orWhereNull('blocked');
             })
-            ->where(function ($q) {
-                $q->where('is_visible', true)->orWhereNull('is_visible');
-            })
+            // A null is_visible means the item was just synced and hasn't been
+            // reviewed by the admin yet — keep it hidden from customers until decided.
+            ->where('is_visible', true)
             ->whereNotNull('item_category_code')
             ->where('item_category_code', '!=', '')
             ->selectRaw('item_category_code as code, COUNT(*) as count')
@@ -216,7 +219,7 @@ class ItemListController extends Controller
     {
         $categoryCode = $request->category;
         $user = Auth::user();
-        $companyId = $user->company_id ?? session('selected_company_id');
+        $companyId = session('selected_company_id') ?? $user->company_id;
 
         $items = Item::query()
             ->when($companyId, function ($q) use ($companyId) {
@@ -293,17 +296,19 @@ class ItemListController extends Controller
             'variant_id' => ['nullable', 'integer'],
             'variant_ids' => ['nullable', 'array'],
             'variant_ids.*' => ['integer'],
-            'qty' => ['nullable', 'integer', 'min:1'],
+            'qty' => ['nullable', 'numeric', 'min:0.01'],
         ]);
 
-        $qty = $validated['qty'] ?? 1;
+        $qty = round((float) ($validated['qty'] ?? 1), 2);
         // A product can expose multiple option groups (Size, Beef Type, ...),
         // but a cart line only tracks one variant, so the first selection wins.
         $variantId = $validated['variant_id'] ?? ($validated['variant_ids'][0] ?? null);
+        $companyId = session('selected_company_id') ?? $user->company_id;
 
-        $count = DB::transaction(function () use ($user, $validated, $variantId, $qty) {
+        $count = DB::transaction(function () use ($user, $validated, $variantId, $qty, $companyId) {
             $cart = Cart::firstOrCreate([
                 'user_id' => $user->id,
+                'company_id' => $companyId,
                 'status' => 'active',
             ]);
 
@@ -337,7 +342,7 @@ class ItemListController extends Controller
     public function detail($id)
     {
         $user = Auth::user();
-        $companyId = $user->company_id ?? session('selected_company_id');
+        $companyId = session('selected_company_id') ?? $user->company_id;
 
         $item = Item::query()
             ->where('id', $id)
@@ -347,9 +352,9 @@ class ItemListController extends Controller
             ->where(function ($q) {
                 $q->where('blocked', false)->orWhereNull('blocked');
             })
-            ->where(function ($q) {
-                $q->where('is_visible', true)->orWhereNull('is_visible');
-            })
+            // A null is_visible means the item was just synced and hasn't been
+            // reviewed by the admin yet — keep it hidden from customers until decided.
+            ->where('is_visible', true)
             ->where(function ($q) {
                 $q->where('category_visible', true)->orWhereNull('category_visible');
             })
@@ -364,6 +369,7 @@ class ItemListController extends Controller
 
         if ($user) {
             $activeCart = Cart::where('user_id', $user->id)
+                ->where('company_id', $companyId)
                 ->where('status', 'active')
                 ->first();
 
@@ -405,9 +411,9 @@ class ItemListController extends Controller
             ->where(function ($q) {
                 $q->where('blocked', false)->orWhereNull('blocked');
             })
-            ->where(function ($q) {
-                $q->where('is_visible', true)->orWhereNull('is_visible');
-            })
+            // A null is_visible means the item was just synced and hasn't been
+            // reviewed by the admin yet — keep it hidden from customers until decided.
+            ->where('is_visible', true)
             ->where(function ($q) {
                 $q->where('category_visible', true)->orWhereNull('category_visible');
             })
@@ -518,33 +524,6 @@ class ItemListController extends Controller
         }
 
         return min(100, $discount);
-    }
-
-    /**
-     * Make sure image_url is always a full, browser-loadable URL,
-     * whether it's stored as a full URL, a public disk path, or empty.
-     */
-    private function resolveImageUrl(?string $rawPath): string
-    {
-        if (!$rawPath) {
-            return asset('images/no-image.png');
-        }
-
-        // Already a full URL (http/https)
-        if (str_starts_with($rawPath, 'http://') || str_starts_with($rawPath, 'https://')) {
-            return $rawPath;
-        }
-
-        // Already an absolute app path like /storage/... or /images/...
-        if (str_starts_with($rawPath, '/')) {
-            return asset(ltrim($rawPath, '/'));
-        }
-        if (Storage::disk('public')->exists($rawPath)) {
-            return asset('storage/' . $rawPath);
-        }
-
-        // Fallback: just asset() it directly
-        return asset($rawPath);
     }
 
 }

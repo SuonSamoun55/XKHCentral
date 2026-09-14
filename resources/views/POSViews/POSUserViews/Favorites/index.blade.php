@@ -120,6 +120,12 @@
 
                             <div class="product-info">
                                 <div class="product-title">{{ $item->display_name ?: 'No Name' }}</div>
+                                @if (!empty($item->base_unit_of_measure_code))
+                                    <div class="product-subtitle">Unit: {{ strtoupper($item->base_unit_of_measure_code) }}</div>
+                                @endif
+                                @if (!empty($item->description))
+                                    <div class="product-desc-line">{{ $item->description }}</div>
+                                @endif
 
                                 <div class="price-row {{ $oldPrice > $salePrice ? 'has-discount' : 'no-discount' }}">
                                     <div class="old-price">
@@ -607,10 +613,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                     const data = await response.json();
 
+                    if (!data.success) {
+                        showToast("error", data.message || "Failed to update favorite.");
+                        return;
+                    }
+
                     if (!data.favorited) {
                         button.closest(".product-card")?.remove();
                         ensureEmptyState();
-                        showToast("success", "Removed from favorites.");
+                        showToast("success", data.message || "Removed from favorites.");
                     }
                 } catch (error) {
                     console.error(error);

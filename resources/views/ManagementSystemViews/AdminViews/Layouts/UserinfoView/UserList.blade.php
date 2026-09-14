@@ -1,82 +1,61 @@
 @extends('Layout.Management.app')
 @section('title', 'User Management')
-
 @push('styles')
 <link rel="stylesheet" href="{{ asset('/css/views/Management/userinfo/UserList.css') }}">
 <link rel="stylesheet" href="{{ asset('/css/views/Management/Password/adminchangepassword.css') }}">
 <link rel="stylesheet" href="{{ asset('/css/shared/toast.css') }}">
 @endpush
-
 @section('content')
 <div class="main-wrapper">
-
-
     <div class="content-areas">
         <div class="page-card">
             <div class="page-title">Customers Management</div>
-
             <div class="top-bar">
                 <div class="left-tools">
                     <div class="user-search-box">
                         <i class="bi bi-search"></i>
                         <input type="text" id="userSearch" class="user-search-input" placeholder="Search by name, email, customer no, phone">
                     </div>
-
-                    {{-- Mobile-only: reveals the two <select> filters below
-                         instead of them always taking up their own row. --}}
                     <button type="button" class="filter-toggle-btn" id="filterToggleBtn" aria-label="Show filters" aria-expanded="false" aria-controls="rightToolsInline">
                         <i class="bi bi-sliders"></i>
                     </button>
                 </div>
-
                 <div class="right-tools-inline" id="rightToolsInline">
                     <select id="statusFilter" class="status-select">
                         <option value="">All Connect Status</option>
                         <option value="connected">Connected</option>
                         <option value="not_connected">Not Connected</option>
                     </select>
-
                     <select id="activeFilter" class="status-select">
                         <option value="">All Activity</option>
                         <option value="online">Online</option>
                         <option value="offline">Offline</option>
                     </select>
-
                     <a href="{{ route('users.sync') }}" class="sync-btn">
                         <img src="{{ asset('images/management/sync-bc-icon.png') }}" alt="" class="sync-btn-icon">
                         <span class="sync-btn-divider"></span>
                         <span class="sync-btn-text">Sync BC Customers</span>
                     </a>
-                    <a href="{{ route('staff.index') }}" class="sync-btn">
-                        {{-- <i class="bi "></i> --}}
-                        <img class="bi-person-badge-fill" src="/images/management/staff.png" alt="">
-                        <span class="sync-btn-divider"></span>
-                        <span class="sync-btn-text">Staff Accounts</span>
-                    </a>
-
                     <button type="button" class="delete-selected-btn" id="deleteSelectedBtn">
-                        <i class="bi bi-trash"></i>
-                        Delete Selected
+                        <i class="bi bi-plug"></i>
+                        Disconnect Selected
                     </button>
                 </div>
             </div>
-
             @include('partials.app-toast')
-
             <div class="mobile-list-heading">
                 <span class="mobile-list-title">Active Users ({{ count($customers) }})</span>
                 <span class="mobile-list-view-all">View All</span>
             </div>
-
             <form id="bulkDeleteForm" method="POST" action="{{ route('users.deleteSelected') }}">
                 @csrf
-
                 <div class="table-container">
                     <div class="table-scroll">
                         <table class="table align-middle">
                             <thead>
                                 <tr>
                                     <th><input type="checkbox" id="checkAll"></th>
+                                    <th>No.</th>
                                     <th>Full Name</th>
                                     <th>Email</th>
                                     <th>Customer No</th>
@@ -87,17 +66,12 @@
                                     <th>Phone</th>
                                 </tr>
                             </thead>
-
                             <tbody id="userTableBody">
                                 @forelse($customers as $customer)
                                     @php
                                         $displayBcNo = $customer->bc_customer_no ?? '-';
-                                        $displayName = $customer->local_name ?? $customer->name ?? '-';
+                                        $displayName = ucwords($customer->local_name ?? $customer->name ?? '-');
                                         $rawEmail = trim((string) ($customer->local_email ?? $customer->email ?? ''));
-                                        // Some BC-synced records store a placeholder "." instead of
-                                        // leaving the email blank — render those as empty rather than
-                                        // a stray dot, so the mobile card's email row collapses away
-                                        // (via .table td:empty{display:none}) instead of showing junk.
                                         $displayEmail = in_array($rawEmail, ['', '.', '-'], true) ? '' : $rawEmail;
                                         $displayPhone = $customer->local_phone ?? $customer->phone ?? '-';
                                         $displayRole = $customer->role ?? '-';
@@ -129,6 +103,8 @@
                                         <td>
                                             <input type="checkbox" class="row-check" name="selected_ids[]" value="{{ $customer->id }}">
                                         </td>
+
+                                        <td title="{{ $customer->local_customer_no ?? '-' }}">{{ $customer->local_customer_no ?? '-' }}</td>
 
                                         <td>
                                             <div class="avatar-cell">
@@ -260,13 +236,15 @@
                                                     <img src="{{ asset('images/management/eye.png') }}" alt="View" class="action-icon-img">
                                                 </a>
 
-                                                <button type="button"
-                                                    title="Delete"
-                                                    class="delete-icon open-delete-confirm"
-                                                    data-url="{{ route('users.destroy', $customer->id) }}"
-                                                    data-label="{{ $displayName }}">
-                                                    <img src="{{ asset('images/management/delete.png') }}" alt="Delete" class="action-icon-img">
-                                                </button>
+                                                @if($customer->connect_status === 'connected')
+                                                    <button type="button"
+                                                        title="Disconnect"
+                                                        class="delete-icon open-delete-confirm"
+                                                        data-url="{{ route('users.destroy', $customer->id) }}"
+                                                        data-label="{{ $displayName }}">
+                                                        <img src="{{ asset('images/management/link (5).png') }}" alt="Disconnect" class="action-icon-img">
+                                                    </button>
+                                                @endif
                                             </div>
                                         </td>
 
@@ -274,12 +252,12 @@
                                     </tr>
                                 @empty
                                     <tr id="noDataRow">
-                                        <td colspan="9" class="empty-text">No BC customers found.</td>
+                                        <td colspan="10" class="empty-text">No BC customers found.</td>
                                     </tr>
                                 @endforelse
 
                                 <tr id="noResultRow" style="display:none;">
-                                    <td colspan="9" class="empty-text">No matching users found.</td>
+                                    <td colspan="10" class="empty-text">No matching users found.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -313,15 +291,15 @@
 
 @include('ManagementSystemViews.AdminViews.Layouts.UserinfoView.create')
 
-{{-- ===== Delete confirmation overlay — shared by every delete button (single row, bulk, and rows added by the live AJAX refresh) ===== --}}
+{{-- ===== Disconnect confirmation overlay — shared by every disconnect button (single row, bulk, and rows added by the live AJAX refresh). Disconnecting deactivates the customer's portal login only — their Business Central record stays put and they can be reconnected anytime. ===== --}}
 <div class="pw-confirm-overlay" id="deleteConfirmOverlay">
     <div class="pw-confirm-box">
-        <div class="pw-confirm-icon"><i class="bi bi-trash3-fill"></i></div>
-        <h3 class="pw-confirm-title" id="deleteConfirmTitle">Delete this user?</h3>
-        <p class="pw-confirm-text">This action cannot be undone.</p>
+        <div class="pw-confirm-icon"><i class="bi bi-plug"></i></div>
+        <h3 class="pw-confirm-title" id="deleteConfirmTitle">Disconnect this customer?</h3>
+        <p class="pw-confirm-text">Their portal login is deactivated, but they can be reconnected at any time.</p>
         <div class="pw-confirm-actions">
             <button type="button" class="pw-confirm-btn cancel" id="deleteConfirmCancel">Cancel</button>
-            <button type="button" class="pw-confirm-btn confirm" id="deleteConfirmOk">Yes, Delete</button>
+            <button type="button" class="pw-confirm-btn confirm" id="deleteConfirmOk">Yes, Disconnect</button>
         </div>
     </div>
 </div>
@@ -332,7 +310,6 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const checkAll = document.getElementById('checkAll');
@@ -366,7 +343,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const trigger = e.target.closest('.open-delete-confirm');
             if (!trigger) return;
 
-            openModal('Delete ' + (trigger.dataset.label || 'this user') + '?', function () {
+            openModal('Disconnect ' + (trigger.dataset.label || 'this customer') + '?', function () {
                 form.action = trigger.dataset.url;
                 form.submit();
             });
@@ -382,7 +359,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         window.openBulkDeleteConfirm = function (count, onConfirm) {
-            openModal('Delete ' + count + ' selected user(s)?', onConfirm);
+            openModal('Disconnect ' + count + ' selected customer(s)?', onConfirm);
         };
     })();
     const searchInput = document.getElementById('userSearch');
@@ -439,32 +416,23 @@ document.addEventListener('DOMContentLoaded', function () {
             .filter(Boolean);
 
         const checkedVisible = visibleCheckboxes.filter(cb => cb.checked).length;
-
-        // Mobile: Delete Selected only takes up toolbar space once there's
-        // actually something to delete, rather than sitting there greyed
-        // out (or worse, always-clickable) by default.
         rightToolsInline?.classList.toggle('has-selection', checkedVisible > 0);
-
         checkAll.indeterminate = false;
         checkAll.checked = false;
-
         if (visibleCheckboxes.length === 0) {
             return;
         }
-
         if (checkedVisible === visibleCheckboxes.length) {
             checkAll.checked = true;
         } else if (checkedVisible > 0) {
             checkAll.indeterminate = true;
         }
     }
-
     document.addEventListener('change', function (e) {
         if (e.target.classList.contains('row-check')) {
             updateCheckAllState();
         }
     });
-
     if (checkAll) {
         checkAll.addEventListener('change', function () {
             const visibleRows = getVisibleRows();
@@ -595,6 +563,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const displayName = customer.name || '-';
         const displayEmail = customer.email || '';
         const displayBcNo = customer.bc_customer_no || '-';
+        const displayLocalNo = customer.local_customer_no || '-';
         const displayPhone = customer.phone || '-';
         const displayRole = customer.role || '-';
         const activityStatus = customer.activity_status || 'offline';
@@ -674,17 +643,23 @@ document.addEventListener('DOMContentLoaded', function () {
             <a href="${escapeHtml(customer.show_url)}" title="View">
                 <img src="{{ asset('images/management/eye.png') }}" alt="View" class="action-icon-img">
             </a>
-
-            <button type="button" title="Delete" class="delete-icon open-delete-confirm"
-                data-url="${escapeHtml(customer.destroy_url)}" data-label="${escapeHtml(displayName)}">
-                <img src="{{ asset('images/management/delete.png') }}" alt="Delete" class="action-icon-img">
-            </button>
         `;
+
+        if (customer.connect_status === 'connected') {
+            actionHtml += `
+                <button type="button" title="Disconnect" class="delete-icon open-delete-confirm"
+                    data-url="${escapeHtml(customer.destroy_url)}" data-label="${escapeHtml(displayName)}">
+                    <img src="{{ asset('images/management/link (5).png') }}" alt="Disconnect" class="action-icon-img">
+                </button>
+            `;
+        }
 
         tr.innerHTML = `
             <td>
                 <input type="checkbox" class="row-check" name="selected_ids[]" value="${escapeHtml(customer.id)}">
             </td>
+
+            <td title="${escapeHtml(displayLocalNo)}">${escapeHtml(displayLocalNo)}</td>
 
             <td>
                 <div class="avatar-cell">
@@ -728,11 +703,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function refreshTableBody(customers) {
         const currentScrollTop = tableScroll ? tableScroll.scrollTop : 0;
-
-        // The background refresh rebuilds every row from scratch, which would
-        // otherwise silently uncheck anything the admin had selected for bulk
-        // delete — capture which ids are checked first, then re-check the
-        // matching new rows below so an in-progress selection survives.
         const checkedIds = new Set(
             Array.from(document.querySelectorAll('.row-check:checked')).map(cb => cb.value)
         );
@@ -747,7 +717,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!customers.length) {
             const emptyRow = document.createElement('tr');
             emptyRow.id = 'noDataRow';
-            emptyRow.innerHTML = `<td colspan="9" class="empty-text">No BC customers found.</td>`;
+            emptyRow.innerHTML = `<td colspan="10" class="empty-text">No BC customers found.</td>`;
             tableBody.appendChild(emptyRow);
         } else {
             customers.forEach(customer => {
@@ -763,7 +733,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const noResultTr = document.createElement('tr');
         noResultTr.id = 'noResultRow';
         noResultTr.style.display = 'none';
-        noResultTr.innerHTML = `<td colspan="9" class="empty-text">No matching users found.</td>`;
+        noResultTr.innerHTML = `<td colspan="10" class="empty-text">No matching users found.</td>`;
         tableBody.appendChild(noResultTr);
 
         if (totalCount) {
@@ -778,11 +748,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function loadUsersSilently() {
-        // Skip this cycle entirely while the admin is mid-action — with a
-        // selection in progress, a filter dropdown open, the search box
-        // focused, or the connect/edit modal open — so a periodic refresh
-        // never yanks the page out from under them. It just tries again on
-        // the next tick once things are idle; nothing is lost by waiting.
         const hasSelection = document.querySelector('.row-check:checked') !== null;
         const searchFocused = document.activeElement === searchInput;
         const modalOpen = document.getElementById('userModal')?.classList.contains('show');

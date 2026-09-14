@@ -92,7 +92,9 @@
         min-height: 30px;
         }
 
-        .app-shell.collapsed .settings-menu {
+        .app-shell.collapsed .settings-menu,
+        .app-shell.collapsed .nav-submenu,
+        .app-shell.collapsed .nav-group-chevron {
         display: none;
         }
         .app-shell{
@@ -110,25 +112,9 @@
         color: #666;
         white-space: nowrap;
     }
-    /* .page-wrap{
-        flex:1;
-        overflow-y: auto;
-    } */
-    .layout{
-        display:flex;
-        gap:12px;
-        height:100vh;
-    }
-
     .page-wrap{
         flex:1;
     }
-
-.content-area{
-    width:100%;
-    padding: 0 20px 20px 0;
-}
-
 
     .app-shell.collapsed .sidebar-wrap {
         width: var(--sidebar-close);
@@ -153,7 +139,10 @@
         min-width: 30px;
     }
     .sidebar {
-        height: 100vh;
+        height: 100vh;         /* full screen height, always - won't shrink when content shrinks */
+        max-height: 100vh;
+        position: sticky;      /* stay in place */
+        top: 0;                /* stick to top */
         background: var(--card);
         border-radius: var(--radius);
         border: 1px solid #efebe3;
@@ -162,7 +151,7 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        overflow: hidden;
+        overflow: hidden;      /* prevent sidebar scrolling */
         }
 
         .sidebar-top {
@@ -235,11 +224,6 @@
         overflow: hidden;
         }
 
-        .brand-text {
-        font-size: 14px;
-        font-weight: 800;
-        white-space: nowrap;
-        }
         .nav-list {
         display: flex;
         flex-direction: column;
@@ -382,6 +366,62 @@
         margin-top: 6px;
         }
 
+        /* Sidebar nav-item groups (e.g. "User" -> Customer / Staff / Roles) —
+           same collapse pattern as .settings-box/.settings-menu above, but
+           with no background box and no bullet before each sub-page name. */
+        .nav-btn-group {
+        justify-content: flex-start;
+        }
+
+        .nav-group-chevron {
+        margin-left: auto;
+        font-size: 11px;
+        color: #777;
+        transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        .nav-group.open .nav-group-chevron {
+        transform: rotate(180deg);
+        }
+
+        .nav-group.open .nav-group-chevron,
+        .nav-btn-group.active .nav-group-chevron {
+        color: #0EA8B2;
+        }
+
+        .nav-submenu {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.25s ease;
+        border-radius: 12px;
+        margin-left: 27px;
+        }
+
+        .nav-group.open .nav-submenu {
+        max-height: 220px;
+        margin-top: 6px;
+        }
+
+        .nav-sublink {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        color: #222;
+        font-size: 12.5px;
+        padding: 5px 12px;
+        white-space: nowrap;
+        }
+
+        .nav-sublink:hover {
+        color: #0EA8B2;
+        }
+
+        .nav-sublink.active {
+        color: #0EA8B2;
+        font-weight: 600;
+        }
+
         .settings-link {
         display: block;
         text-decoration: none;
@@ -416,50 +456,24 @@
         text-decoration: none;
     }
 
-    /* ---------- VARIABLES ---------- */
+    /* Design tokens (colors, radius, shadow, sidebar sizing) now live in
+       public/css/views/shared/admin-variables.css, loaded by the layout
+       before this file. */
     html, body {
         height: 100%;
-            background: var(--bg);
+        background: var(--bg);
     }
-    :root {
-        --bg:#F6F6F3;
-        --card: white;
-        --line: #ece8df;
-        --text: #1f1f1f;
-        --muted: #7f7f7f;
-        --primary: #09bfd3;
-        --primary-soft: #cfeef2;
-        --danger: #e33b32;
-        --gold: #9c6c07;
-        --gold-soft: #f7efdf;
-        --shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
-
-        --sidebar-open: 190px;
-        --sidebar-close: 56px;
-        --gap: 12px;
-        --radius: 12px;
-        }
     .app-content{
-        flex:1;
-    }
-    .sidebar{
-        height: 100vh;        /* full screen height, always - won't shrink when content shrinks */
-        max-height: 100vh;
-        position: sticky;     /* stay in place */
-        top: 0;               /* stick to top */
-        overflow: hidden;     /* prevent sidebar scrolling */
+        flex: 1;
+        padding: 20px 20px 0px 20px;
+        background: #fff;
+        border-radius: 12px;
+        height: 100vh;
+        overflow-y: auto;
     }
 
     .danger {
         color:red;
-    }
-    .sidebar-area {
-        width: none !important;
-        flex-shrink: 0;
-        background: #fff;
-        border-right: 1px solid var(--border);
-        height: 100vh;
-        overflow-y: auto;
     }
 
     .app-shell.settings-active .profiles,
@@ -488,13 +502,6 @@
     }
 
 
-}
-@media (max-width: 768px) {
-
-.content-area{
-    width:100%;
-    padding: 0px;
-}
 }
 
 /* Cart count badge for aside */
@@ -733,6 +740,7 @@
     }
      .app-content{
         padding: 0px;
+        height: auto;
     }
     .main-wrapper,
     .app-shell {
@@ -793,7 +801,7 @@
     }
 
     .mobile-topbar-bell {
-        background: #09bfd3;
+        background: var(--primary);
         color: #fff;
         border-radius: 10px;
     }
@@ -807,7 +815,7 @@
         text-align: center;
         font-size: 17px;
         font-weight: 800;
-        color: #09bfd3;
+        color: var(--primary);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -859,6 +867,14 @@
         text-decoration: none;
         color: #8b95a7;
         min-width: 0;
+        /* Group items (User/Company) render as <button> instead of <a> since
+           they open the slide-out menu rather than navigate — reset the
+           browser's default button chrome so they still look like plain
+           nav items instead of showing a visible border/background. */
+        border: none;
+        background: transparent;
+        font: inherit;
+        cursor: pointer;
     }
 
     .mobile-bottom-nav-icon {
@@ -899,7 +915,7 @@
     }
 
     .mobile-bottom-nav-item.active {
-        color: #09bfd3;
+        color: var(--primary);
     }
     .mobile-menu-panel {
         display: none;
@@ -938,7 +954,7 @@
         font-size: 16px;
         width: 20px;
         text-align: center;
-        color: #09bfd3;
+        color: var(--primary);
     }
 
     .mobile-menu-link-icon {
@@ -954,7 +970,7 @@
 
     .mobile-menu-link.active {
         background: #d9f2f2;
-        color: #09bfd3;
+        color: var(--primary);
     }
 
     .mobile-menu-link-danger,

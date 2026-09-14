@@ -7,65 +7,112 @@
 
 @section('content')
 <div class="sm-detail-page">
-    <div class="sm-card">
-        <div class="sm-head">
+    <div class="sm-crumb">
+        <a href="{{ route('store.management.index') }}" class="sm-back">
+            <i class="bi bi-chevron-left"></i>
+        </a>
+        <div>
             <h1 class="sm-title">Product Detail</h1>
-            <a href="{{ route('store.management.index') }}" class="sm-btn sm-btn-alt">Back</a>
+        </div>
+    </div>
+
+    @if ($stockRisk['level'] === 'critical')
+        <div class="sm-stock-alert critical">
+            <i class="bi bi-exclamation-octagon-fill"></i>
+            <div>
+                <strong>Insufficient stock for pending demand.</strong>
+                {{ $stockRisk['pending_qty'] }} units are tied up in pending orders, but only {{ $stockRisk['stock'] }} are in stock.
+                @if ($stockRisk['remaining_if_confirmed'] === 0)
+                    Confirming all pending orders will use up every remaining unit — review pending orders before approving.
+                @else
+                    Confirming all pending orders will oversell this product by {{ abs($stockRisk['remaining_if_confirmed']) }} units — review pending orders before approving.
+                @endif
+            </div>
+        </div>
+    @elseif ($stockRisk['level'] === 'warning')
+        <div class="sm-stock-alert warning">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div>
+                <strong>This product is nearly out of stock.</strong>
+                {{ $stockRisk['pending_qty'] }} of {{ $stockRisk['stock'] }} units in stock are already claimed by pending orders
+                (only {{ $stockRisk['remaining_if_confirmed'] }} would remain if all were confirmed) — worth checking on.
+            </div>
+        </div>
+    @endif
+
+    <div class="sm-grid">
+        <div class="sm-card">
+            <div class="sm-detail-cols">
+                <div>
+                    <img
+                        class="sm-image"
+                        src="{{ $item->resolved_image_url ?: 'https://placehold.co/800x600/e5e7eb/94a3b8?text=No+Photo' }}"
+                        alt="{{ $item->display_name ?? 'Item' }}"
+                        onerror="this.onerror=null;this.src='https://placehold.co/800x600/e5e7eb/94a3b8?text=No+Photo'">
+                </div>
+
+                <div class="sm-info-list">
+                    <div class="sm-row">
+                        <span class="sm-row-label">Product Name</span>
+                        <span class="sm-row-value">{{ $item->display_name ?: 'No Name' }}</span>
+                    </div>
+                    <div class="sm-row">
+                        <span class="sm-row-label">Item Number</span>
+                        <span class="sm-row-value">{{ $item->number ?: '-' }}</span>
+                    </div>
+                    <div class="sm-row">
+                        <span class="sm-row-label">Category</span>
+                        <span class="sm-row-value">{{ $item->item_category_code ?: '-' }}</span>
+                    </div>
+                    <div class="sm-row">
+                        <span class="sm-row-label">Price</span>
+                        <span class="sm-row-value">${{ number_format((float) $item->unit_price, 2) }}</span>
+                    </div>
+                    <div class="sm-row">
+                        <span class="sm-row-label">Tax (VAT)</span>
+                        <span class="sm-row-value">{{ rtrim(rtrim(number_format((float) $item->resolved_vat_percent, 2), '0'), '.') }}%</span>
+                    </div>
+                    <div class="sm-row">
+                        <span class="sm-row-label">Stock</span>
+                        <span class="sm-row-value">{{ is_null($stockAtSellingLocation) ? rtrim(rtrim(number_format((float) $item->inventory, 2), '0'), '.') : rtrim(rtrim(number_format($stockAtSellingLocation, 2), '0'), '.') }}</span>
+                    </div>
+                    <div class="sm-row">
+                        <span class="sm-row-label">Warehouse</span>
+                        <span class="sm-row-value">{{ optional($storeSetting)->selling_location_code ? ($storeSetting->selling_location_name ?: $storeSetting->selling_location_code) : 'No location selected' }}</span>
+                    </div>
+                    <div class="sm-row">
+                        <span class="sm-row-label">Status</span>
+                        <span class="sm-row-value">{{ $item->is_visible ? 'ACTIVE' : 'INACTIVE' }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        @if ($stockRisk['level'] === 'critical')
-            <div class="sm-stock-alert critical">
-                <i class="bi bi-exclamation-octagon-fill"></i>
-                <div>
-                    <strong>Insufficient stock for pending demand.</strong>
-                    {{ $stockRisk['pending_qty'] }} units are tied up in pending orders, but only {{ $stockRisk['stock'] }} are in stock.
-                    @if ($stockRisk['remaining_if_confirmed'] === 0)
-                        Confirming all pending orders will use up every remaining unit — review pending orders before approving.
-                    @else
-                        Confirming all pending orders will oversell this product by {{ abs($stockRisk['remaining_if_confirmed']) }} units — review pending orders before approving.
-                    @endif
+        <div class="sm-location-card">
+            <div class="sm-location-head">Stock by Location</div>
+            <div class="sm-location-scroll">
+                <table class="sm-location-table">
+                    <thead>
+                        <tr>
+                            <th>Location</th>
+                            <th>Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($item->locationInventories as $loc)
+                            <tr>
+                                    <td>{{ $loc->location_name ?: ($loc->location_code ?: 'Unassigned') }}{{ ($loc->location_name && $loc->location_code) ? ' (' . $loc->location_code . ')' : '' }}</td>
+                                    <td class="{{ $loc->inventory < 0 ? 'stock-negative' : ($loc->inventory == 0 ? 'stock-zero' : '') }}">{{ rtrim(rtrim(number_format((float) $loc->inventory, 2), '0'), '.') }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="2" class="sm-muted">No location breakdown yet — sync items to fetch it.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
-        @elseif ($stockRisk['level'] === 'warning')
-            <div class="sm-stock-alert warning">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                <div>
-                    <strong>This product is nearly out of stock.</strong>
-                    {{ $stockRisk['pending_qty'] }} of {{ $stockRisk['stock'] }} units in stock are already claimed by pending orders
-                    (only {{ $stockRisk['remaining_if_confirmed'] }} would remain if all were confirmed) — worth checking on.
-                </div>
-            </div>
-        @endif
-
-        <div class="sm-grid">
-            <div>
-                <img
-                    class="sm-image"
-                    src="{{ $item->image_url ?: 'https://placehold.co/800x600/e5e7eb/94a3b8?text=No+Photo' }}"
-                    alt="{{ $item->display_name ?? 'Item' }}"
-                    onerror="this.src='https://placehold.co/800x600/e5e7eb/94a3b8?text=No+Photo'">
-            </div>
-
-            <div>
-                <div class="sm-label">Product Name</div>
-                <div class="sm-value">{{ $item->display_name ?: 'No Name' }}</div>
-
-                <div class="sm-label">Item Number</div>
-                <div class="sm-value">{{ $item->number ?: '-' }}</div>
-
-                <div class="sm-label">Category</div>
-                <div class="sm-value">{{ $item->item_category_code ?: '-' }}</div>
-
-                <div class="sm-label">Price</div>
-                <div class="sm-value">${{ number_format((float) $item->unit_price, 2) }}</div>
-
-                <div class="sm-label">Stock</div>
-                <div class="sm-value">{{ (int) $item->inventory }}</div>
-
-                <div class="sm-label">Status</div>
-                <div class="sm-value">{{ $item->is_visible ? 'ACTIVE' : 'INACTIVE' }}</div>
-            </div>
-        </div>  
     </div>
 
     <div class="sm-card">

@@ -13,13 +13,7 @@ class AdminProfileController extends Controller
         $user = Auth::user();
         $companyId = session('selected_company_id');
 
-        // Same "approved" definition used on the order detail pages
-        // (order->status / action_type of confirmed|approved).
         $approvedActionTypes = ['confirmed', 'approved'];
-
-        // Scoped to the currently selected company — an order approved while
-        // viewing Company 1 must not still show up on this profile once the
-        // admin switches to Company 2.
         $approvedOrders = Order::with('user')
             ->when($companyId, fn ($q) => $q->where('company_id', $companyId))
             ->whereHas('actions', function ($q) use ($user, $approvedActionTypes) {
@@ -69,7 +63,7 @@ class AdminProfileController extends Controller
 
         if ($request->hasFile('avatar')) {
             $path = $request->file('avatar')->store('avatars', 'public');
-            $data['profile_image'] = $path; // Store just the path, not 'storage/' prefix
+            $data['profile_image'] = $path;
         }
 
         $user->update($data);

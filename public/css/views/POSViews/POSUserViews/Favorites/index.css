@@ -56,7 +56,7 @@
     overflow: visible;
     background-color: white;
     border-radius: 12px;
-    padding: 20px;
+    padding: 15px 20px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -84,14 +84,8 @@
 .image-placeholder-desk img{
     width: 35%;
     height: 60%;
-
-    /* margin: auto; */
     background: white;
     border-radius: 5px;
-    /* padding: 30px; */
-
-    /* ; */
-    /* margin: 0 auto; */
 }
 
 .empty-state h2 {
@@ -245,9 +239,6 @@
     /* margin: 20px 10px; */
 }
 
-/* ==========================================================
-   PRODUCT GRID — copied from item-list, 5 cols desktop
-   ========================================================== */
 .products-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -291,7 +282,10 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: 300px;
+    /* min-height, not height — a fixed height clips a card whose content
+       (title/description) runs longer than the others; the Products page
+       uses min-height for exactly this reason, matching that here. */
+    min-height: 300px;
     align-self: start;
     transition: transform 0.22s ease, box-shadow 0.22s ease;
 }
@@ -375,6 +369,22 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+.product-subtitle {
+    font-size: 10.5px;
+    color: #9ca3af;
+    margin-top: 2px;
+}
+
+.product-desc-line {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .price-row {
@@ -894,8 +904,7 @@
         width: 100%;
         min-width: 0;
         max-width: 100%;
-        min-height: 20px;
-        max-height: 230px;
+        min-height: 230px;
         border-radius: 8px;
         box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
         overflow: hidden;
@@ -944,16 +953,17 @@
     .fav-btn i {
         font-size: 16px;
     }
-
-    /* ── card body: title on its own row, price + add-to-cart share a row ── */
     .product-info {
         background-color: #F4F8FF;
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 34px;
         grid-template-areas:
-            "title  title"
+            "title  button"
+            "desc   button"
             "price  button";
         align-items: center;
+        row-gap: 4px;
+        column-gap: 10px;
         padding: 12px;
         overflow: hidden;
     }
@@ -973,6 +983,11 @@
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
         white-space: normal;
+    }
+
+    .product-desc-line {
+        grid-area: desc;
+        font-size: 11px;
     }
 
     .price-row {
@@ -1035,7 +1050,6 @@
         display: none !important;
     }
 
-    /* "View detail" hidden on the card itself on mobile, still shown inside popup */
     .view-detail-btn {
         display: none !important;
     }
@@ -1043,8 +1057,6 @@
     .empty-box {
         display: none;
     }
-
-    /* wishlist empty-state (unchanged) */
     .wishlist-page {
         margin-top: 80px !important;
         display: block;
@@ -1109,15 +1121,19 @@
     }
 
     .image-placeholder {
-        width: 200px;
-        height: 200px;
+        width: 250px;
+        height: 250px;
         margin: auto;
         background: #f0fdfa;
         border-radius: 20px;
     }
-
+  .image-placeholder img{
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
     .empty-state h2 {
-        margin-top: 80px;
+        margin-top: 20px;
         font-size: 18px;
         font-weight: 700;
     }

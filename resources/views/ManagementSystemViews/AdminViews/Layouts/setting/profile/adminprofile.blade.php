@@ -65,7 +65,7 @@
                 </form>
             </div>
             <div class="ap-header-text">
-                <h1>{{ $user->name }}</h1>
+                <h1>{{ ucwords($user->name) }}</h1>
                 <span class="ap-role-badge">{{ ucfirst($user->role ?? 'admin') }}</span>
                 <div class="ap-email">{{ $user->email }}</div>
             </div>
@@ -114,7 +114,7 @@
                 <a href="{{ route('admin.orders.show', $order->id) }}" class="ap-list-row">
                     <div class="ap-list-row-main">
                         <div class="ap-list-row-title">{{ $order->order_no }}</div>
-                        <div class="ap-list-row-sub">{{ $order->user->name ?? $order->customer_no ?? 'Unknown customer' }}</div>
+                        <div class="ap-list-row-sub">{{ $order->user ? ucwords($order->user->name) : ($order->customer_no ?? 'Unknown customer') }}</div>
                     </div>
                     <div class="ap-list-row-end">
                         <div class="ap-list-row-amount">${{ number_format((float) ($order->total_amount ?? 0), 2) }}</div>

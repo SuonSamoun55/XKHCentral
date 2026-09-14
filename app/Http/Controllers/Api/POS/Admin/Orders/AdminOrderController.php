@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\POS\Item;
 use App\Models\POS\InventoryMovement;
 use App\Models\POS\Order;
+use App\Models\POS\NumberSeries;
 use App\Models\ManagementSystem\OrderAction;
 use App\Models\ManagementSystem\Notification;
+use App\Http\Controllers\Api\POS\Reports\OrderReportController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +32,7 @@ class AdminOrderController extends Controller
         $companyId = session('selected_company_id');
 
         $query = Order::with(['user', 'items', 'actions.actionBy'])
-            ->when($companyId, fn ($q) => $q->where('company_id', $companyId))
+            ->when($companyId, fn($q) => $q->where('company_id', $companyId))
             ->latest();
 
         if ($request->filled('search')) {
@@ -44,7 +46,7 @@ class AdminOrderController extends Controller
                     })
                     ->orWhereHas('items', function ($iq) use ($search) {
                         $iq->where('item_name', 'like', "%{$search}%")
-                           ->orWhere('item_no', 'like', "%{$search}%");
+                            ->orWhere('item_no', 'like', "%{$search}%");
                     });
             });
         }
@@ -55,10 +57,6 @@ class AdminOrderController extends Controller
                     ->orWhereDate('created_at', $date);
             });
         }
-
-        // Used by the admin profile's "Customers Served" list — jump straight
-        // to one customer's orders instead of a name-text search (which could
-        // also match other customers/items with similar names).
         if ($request->filled('customer_id')) {
             $query->where('user_id', $request->get('customer_id'));
         }
@@ -70,7 +68,7 @@ class AdminOrderController extends Controller
             $approvedBy = $request->get('approved_by');
             $query->whereHas('actions', function ($aq) use ($approvedBy) {
                 $aq->where('action_by', $approvedBy)
-                   ->whereIn('action_type', ['confirmed', 'approved']);
+                    ->whereIn('action_type', ['confirmed', 'approved']);
             });
         }
 
@@ -83,9 +81,9 @@ class AdminOrderController extends Controller
         $orders = $query->paginate(10);
         $orders->appends($request->query());
 
-        $newOrdersCount = Order::when($companyId, fn ($q) => $q->where('company_id', $companyId))
+        $newOrdersCount = Order::when($companyId, fn($q) => $q->where('company_id', $companyId))
             ->where('status', 'pending')->count();
-        $approvedOrdersCount = Order::when($companyId, fn ($q) => $q->where('company_id', $companyId))
+        $approvedOrdersCount = Order::when($companyId, fn($q) => $q->where('company_id', $companyId))
             ->where('status', 'confirmed')->count();
 
         // Lets the view show a "showing orders you approved for X" banner
@@ -119,26 +117,10 @@ class AdminOrderController extends Controller
         }
 
         $order = Order::with(['user', 'items.item', 'items.itemVariant'])
-            ->when(session('selected_company_id'), fn ($q) => $q->where('company_id', session('selected_company_id')))
+            ->when(session('selected_company_id'), fn($q) => $q->where('company_id', session('selected_company_id')))
             ->findOrFail($id);
 
         return view('POSViews.POSAdminViews.Orders.show', compact('order'));
-    }
-
-    public function downloadInvoice($id)
-    {
-        /** @var \App\Models\ManagementSystem\User|null $admin */
-        $admin = Auth::user();
-
-        if (!$admin || (!$admin->isAdmin() && !$admin->hasPermission('orders'))) {
-            abort(403, 'You do not have access to this page.');
-        }
-
-        $order = Order::with('items')
-            ->when(session('selected_company_id'), fn ($q) => $q->where('company_id', session('selected_company_id')))
-            ->findOrFail($id);
-
-        return $this->downloadOrderInvoicePdf($order);
     }
 
     public function confirm($id)
@@ -150,13 +132,13 @@ class AdminOrderController extends Controller
             return back()->with('error', 'Unauthorized.');
         }
 
-            $order = Order::with(['user', 'items.item', 'items.itemVariant'])
-                ->when(session('selected_company_id'), fn ($q) => $q->where('company_id', session('selected_company_id')))
-                ->find($id);
+        $order = Order::with(['user', 'items.item', 'items.itemVariant'])
+            ->when(session('selected_company_id'), fn($q) => $q->where('company_id', session('selected_company_id')))
+            ->find($id);
 
-            if (!$order) {
-                return back()->with('error', 'Order not found.');
-            }
+        if (!$order) {
+            return back()->with('error', 'Order not found.');
+        }
 
         if ($order->status !== 'pending') {
             return back()->with('error', 'Only pending orders can be confirmed.');
@@ -189,7 +171,10 @@ class AdminOrderController extends Controller
                 ->withToken($token)
                 ->acceptJson()
                 ->post($this->bcEndpoint('sales_orders_endpoint', 'salesOrders'), [
-                    'sellToCustomerNo' => $order->user->bc_customer_no,
+                    'sellToCustomerNo'   => $order->user->bc_customer_no,
+                    'orderDate'          => now()->toDateString(),
+                    'locationCode'       => $order->location_code ?? '',
+                    'externalDocumentNo' => $order->order_no,
                 ]);
 
             if (!$orderResponse->successful()) {
@@ -203,26 +188,17 @@ class AdminOrderController extends Controller
             if (!$salesOrderId) {
                 throw new \Exception('BC sales order ID not returned.');
             }
-
-            // Process each order line and attempt to create in BC
             foreach ($orderItems as $item) {
                 $discountPercent = $this->resolveDiscountPercent($item->item);
-
-                // Get the actual variant code from the item's variant relation
-                // This will be null if the item doesn't have a variant selected
                 $variantCode = optional($item->itemVariant)->code ?? '';
-
-                // Build payload for line creation with required fields
-                // All seven fields (lineType, lineObjectNumber, quantity, unitPrice, locationCode, discountPercent, variantCode)
-                // must be present or BC will reject with "Expected a parameter with name 'x'\" error
                 $linePayload = [
                     'lineType'         => 'Item',
-                    'lineObjectNumber' => $item->item_no, // item number, required
-                    'quantity'         => (int) $item->qty, // must be > 0
-                    'unitPrice'       => 0, // 0 = let BC resolve from price list, always send
-                    'locationCode'    => '', // '' = use order-level location, always send
-                    'discountPercent' => round($discountPercent, 2), // 0 = no discount, always send
-                    'variantCode'     => $variantCode, // '' = no variant, required field for products with variants, always send
+                    'lineObjectNumber' => $item->item_no,
+                    'quantity'         => (float) $item->qty,
+                    'unitPrice'       => 0,
+                    'locationCode'    => '',
+                    'discountPercent' => round($discountPercent, 2),
+                    'variantCode'     => $variantCode,
                 ];
 
                 $lineResponse = $this->createBusinessCentralSalesOrderLine(
@@ -247,8 +223,8 @@ class AdminOrderController extends Controller
 
             $requestedQtyByItemId = $orderItems
                 ->groupBy('item_id')
-                ->map(fn ($rows) => (int) $rows->sum('qty'))
-                ->filter(fn ($qty) => $qty > 0);
+                ->map(fn($rows) => round((float) $rows->sum('qty'), 2))
+                ->filter(fn($qty) => $qty > 0);
 
             $outOfStockItems = collect();
 
@@ -266,7 +242,7 @@ class AdminOrderController extends Controller
                         throw new \Exception("Item not found for stock update. Item ID: {$itemId}");
                     }
 
-                    $availableQty = (int) ($product->inventory ?? 0);
+                    $availableQty = (float) ($product->inventory ?? 0);
                     if ($availableQty < $requestedQty) {
                         throw new \Exception(
                             "Insufficient stock for item {$product->number}. Requested {$requestedQty}, available {$availableQty}."
@@ -280,7 +256,7 @@ class AdminOrderController extends Controller
                         continue;
                     }
 
-                    $oldInventory = (int) ($product->inventory ?? 0);
+                    $oldInventory = (float) ($product->inventory ?? 0);
                     $newInventory = $oldInventory - $requestedQty;
 
                     if ($newInventory <= 0) {
@@ -319,6 +295,7 @@ class AdminOrderController extends Controller
             $order->update($orderUpdates);
 
             OrderAction::create([
+                'entry_no'    => $this->issueEntryNo($order->company_id),
                 'order_id'    => $order->id,
                 'user_id'     => $order->user_id,
                 'action_by'   => $admin->id,
@@ -343,12 +320,30 @@ class AdminOrderController extends Controller
                 $this->notifyOutOfStock($outOfStockItem);
             }
 
-            return back()->with('success', 'Order confirmed and stored in BC Sales Order successfully.');
+            // Pre-render the order's PDF report now, while an admin is
+            // already waiting on this request's BC round-trips, instead of
+            // making whoever opens the report next pay dompdf's render cost.
+            app(OrderReportController::class)->warmCache($order);
 
+            return back()->with('success', 'Order confirmed and stored in BC Sales Order successfully.');
         } catch (\Throwable $e) {
             DB::rollBack();
 
             return back()->with('error', 'Confirm failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Best-effort entry number for the Approval Entries log — if no "ENTRY"
+     * number series is set up yet for this company, entries are simply
+     * logged without one rather than blocking the order confirm/cancel.
+     */
+    private function issueEntryNo(int $companyId): ?string
+    {
+        try {
+            return DB::transaction(fn() => NumberSeries::issue($companyId, 'ENTRY'));
+        } catch (\Throwable $e) {
+            return null;
         }
     }
 
@@ -368,7 +363,7 @@ class AdminOrderController extends Controller
         ]);
 
         $order = Order::with(['user', 'items'])
-            ->when(session('selected_company_id'), fn ($q) => $q->where('company_id', session('selected_company_id')))
+            ->when(session('selected_company_id'), fn($q) => $q->where('company_id', session('selected_company_id')))
             ->find($id);
 
         if (!$order) {
@@ -390,6 +385,7 @@ class AdminOrderController extends Controller
             ]);
 
             OrderAction::create([
+                'entry_no'    => $this->issueEntryNo($order->company_id),
                 'order_id'    => $order->id,
                 'user_id'     => $order->user_id,
                 'action_by'   => $admin->id,
@@ -413,7 +409,6 @@ class AdminOrderController extends Controller
             return redirect()
                 ->route('admin.orders.index', ['tab' => 'new'])
                 ->with('success', 'Order cancelled successfully.');
-
         } catch (\Throwable $e) {
             DB::rollBack();
 
@@ -432,18 +427,13 @@ class AdminOrderController extends Controller
 
         $actions = OrderAction::with(['order', 'user', 'actionBy'])
             ->when(session('selected_company_id'), function ($q) {
-                $q->whereHas('order', fn ($oq) => $oq->where('company_id', session('selected_company_id')));
+                $q->whereHas('order', fn($oq) => $oq->where('company_id', session('selected_company_id')));
             })
             ->latest()
             ->paginate(20);
 
         return view('POSViews.POSAdminViews.Orders.actions', compact('actions'));
     }
-
-    // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
-
     private function createBusinessCentralSalesOrderLine(
         string $token,
         string $salesOrderId,
@@ -461,7 +451,6 @@ class AdminOrderController extends Controller
             $configuredPayload = array_merge(['documentId' => $salesOrderId], $linePayload);
         }
 
-        // First, try the custom [ServiceEnabled] bound action that supports ALL fields
         $attempts = [
             [
                 // Custom [ServiceEnabled] bound action — all 6 params always required

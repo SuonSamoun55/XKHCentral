@@ -2,18 +2,23 @@
 
 namespace App\Http\Controllers\Api\POS\Admin\StoreManagement;
 
+use App\Http\Controllers\Concerns\ResolvesImageUrl;
 use App\Http\Controllers\Controller;
 use App\Models\POS\Item;
 use App\Models\POS\InventoryMovement;
 use App\Models\POS\OrderItem;
 use App\Models\POS\ItemVariant;
 use App\Models\POS\ItemSetupStatus;
+use App\Models\POS\ItemLocationInventory;
+use App\Models\POS\StoreSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class StoreManagementController extends Controller
 {
+    use ResolvesImageUrl;
+
     public function index(Request $request)
     {
         $companyId = session('selected_company_id');
@@ -32,17 +37,22 @@ class StoreManagementController extends Controller
             ->count('item_category_code');
 
         $products = Item::query()
+            ->with('locationInventories')
             ->where('company_id', $companyId)
             ->orderBy('display_name')
             ->get();
 
-        // Pull setup status for all items at once and attach to each product
-        $statuses = ItemSetupStatus::all()->keyBy('item_id');
+        // Pull setup status for this company's items only (not the whole
+        // table across every company) and attach to each product.
+        $statuses = ItemSetupStatus::whereIn('item_id', $products->pluck('id'))
+            ->get()
+            ->keyBy('item_id');
 
         foreach ($products as $item) {
             $status = $statuses[$item->id] ?? null;
             $item->main_image_done = $status->main_image_done ?? false;
             $item->variants_done = $status->variants_done ?? false;
+            $item->resolved_image_url = $this->resolveImageUrl($item->custom_image_url ?: $item->image_url);
         }
 
         $categories = Item::query()
@@ -57,6 +67,16 @@ class StoreManagementController extends Controller
             ->groupBy('item_category_code')
             ->orderBy('item_category_code')
             ->get();
+
+        $sellingLocations = ItemLocationInventory::query()
+            ->where('company_id', $companyId)
+            ->select('location_code', 'location_name')
+            ->distinct()
+            ->orderBy('location_code')
+            ->get();
+
+        $storeSetting = StoreSetting::forCompany($companyId);
+
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -64,7 +84,9 @@ class StoreManagementController extends Controller
                     'products',
                     'categories',
                     'productCount',
-                    'categoryCount'
+                    'categoryCount',
+                    'sellingLocations',
+                    'storeSetting'
                 ))->render()
             ])
                 ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -76,11 +98,46 @@ class StoreManagementController extends Controller
             'products',
             'categories',
             'productCount',
-            'categoryCount'
+            'categoryCount',
+            'sellingLocations',
+            'storeSetting'
         )))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
+    }
+
+    public function updateSellingLocation(Request $request)
+    {
+        $companyId = session('selected_company_id');
+
+        if (!$companyId) {
+            return response()->json(['success' => false, 'message' => 'No company selected.'], 422);
+        }
+
+        $validated = $request->validate([
+            'location_code' => 'nullable|string',
+        ]);
+
+        $locationCode = $validated['location_code'] ?? null;
+        $locationName = null;
+
+        if ($locationCode) {
+            $locationName = ItemLocationInventory::where('company_id', $companyId)
+                ->where('location_code', $locationCode)
+                ->value('location_name');
+        }
+
+        $setting = StoreSetting::forCompany($companyId);
+        $setting->selling_location_code = $locationCode ?: null;
+        $setting->selling_location_name = $locationCode ? $locationName : null;
+        $setting->save();
+
+        return response()->json([
+            'success' => true,
+            'selling_location_code' => $setting->selling_location_code,
+            'selling_location_name' => $setting->selling_location_name,
+        ]);
     }
 
     public function toggleProduct(Request $request, $id)
@@ -290,6 +347,7 @@ class StoreManagementController extends Controller
         $companyId = session('selected_company_id');
 
         $item = Item::query()
+            ->with('locationInventories')
             ->where('company_id', $companyId)
             ->findOrFail($id);
 
@@ -300,9 +358,6 @@ class StoreManagementController extends Controller
             'top10' => 10,
             default => null,
         };
-
-        // "Sold" only counts orders the admin has actually confirmed (and
-        // posted to BC) — pending and cancelled orders are not real sales.
         $soldStatuses = ['confirmed', 'on-the-way', 'delivered', 'delivery'];
 
         $buyersQuery = $this->orderItemsForItem($companyId, $item->id)
@@ -355,9 +410,6 @@ class StoreManagementController extends Controller
             'cancelled'  => (int) (($statusCounts['cancelled'] ?? 0) + ($statusCounts['canceled'] ?? 0)),
         ];
 
-        // Who's waiting on this item right now, broken out per status tab —
-        // customer, qty, amount — so admin doesn't have to go hunting through
-        // the full order list to see what a status count is made of.
         $statusGroups = [
             'pending'    => ['pending'],
             'confirmed'  => ['confirmed'],
@@ -388,12 +440,8 @@ class StoreManagementController extends Controller
 
         $pendingRows = $statusRows['pending'];
 
-        // Stock is only decremented when an order is confirmed, so a pile of
-        // *pending* qty against current stock is invisible unless we surface
-        // it here — warn once pending demand reaches 80% of what's on hand,
-        // and escalate to critical once it would oversell the item outright.
-        $pendingQtyTotal = (int) $pendingRows->sum('qty');
-        $currentStock = (int) $item->inventory;
+        $pendingQtyTotal = (float) $pendingRows->sum('qty');
+        $currentStock = (float) $item->sellable_inventory;
         $stockRiskLevel = null;
 
         if ($pendingQtyTotal > 0) {
@@ -411,8 +459,22 @@ class StoreManagementController extends Controller
             'remaining_if_confirmed' => $currentStock - $pendingQtyTotal,
         ];
 
+        $item->resolved_image_url = $this->resolveImageUrl($item->custom_image_url ?: $item->image_url);
+        $storeSetting = StoreSetting::forCompany($companyId);
+
+        // The "Stock" figure on this page should reflect the warehouse this
+        // store actually sells from, not the item's total across every
+        // warehouse — that total (used elsewhere, e.g. sellable_inventory)
+        // can look fine while the selling location itself is empty.
+        $stockAtSellingLocation = optional($storeSetting)->selling_location_code
+            ? (float) (optional(
+                $item->locationInventories->firstWhere('location_code', $storeSetting->selling_location_code)
+            )->inventory ?? 0)
+            : null;
+
         return view('POSViews.POSAdminViews.StoreManagement.product-detail', [
             'item' => $item,
+            'stockAtSellingLocation' => $stockAtSellingLocation,
             'buyerRows' => $buyerRows,
             'buyerStats' => $buyerStats,
             'buyerSearch' => $buyerSearch,
@@ -421,6 +483,25 @@ class StoreManagementController extends Controller
             'pendingRows' => $pendingRows,
             'statusRows' => $statusRows,
             'stockRisk' => $stockRisk,
+            'storeSetting' => $storeSetting,
+        ]);
+    }
+    public function updateDescription(Request $request, int $id)
+    {
+        $companyId = session('selected_company_id');
+
+        $item = Item::where('company_id', $companyId)->findOrFail($id);
+
+        $validated = $request->validate([
+            'description' => ['nullable', 'string', 'max:5000'],
+        ]);
+
+        $item->description = $validated['description'] ?? null;
+        $item->save();
+
+        return response()->json([
+            'success' => true,
+            'description' => $item->description,
         ]);
     }
 
@@ -490,14 +571,6 @@ class StoreManagementController extends Controller
             'is_updated' => $newState,
         ]);
     }
-
-    /**
-     * Base query for "order_items belonging to this item, for this company"
-     * — every stat on the Product Detail page (buyer list, totals, status
-     * counts, per-status order rows) starts from exactly this same join, so
-     * it lives in one place instead of six near-identical copies. Callers
-     * add their own whereIn('o.status', ...), select, group, etc. on top.
-     */
     private function orderItemsForItem(int $companyId, int $itemId)
     {
         return OrderItem::query()

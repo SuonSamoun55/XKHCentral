@@ -1,7 +1,7 @@
 @extends('Layout.Management.app')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('/css/views/Management/role_list.css') }}">
+    <link rel="stylesheet" href="{{ asset('/css/views/Management/Role/role_list.css') }}">
 @endpush
 
 @section('title', 'Role List')
@@ -44,7 +44,12 @@
                     <tr>
                         <td class="id-cell" data-label="No.">{{ $loop->iteration }}</td>
                         <td class="key-cell" data-label="Name"><code>{{ $role->name }}</code></td>
-                        <td class="label-cell" data-label="Display Name">{{ $role->display_name }}</td>
+                        <td class="label-cell" data-label="Display Name">
+                            {{ $role->display_name }}
+                            @if ($role->is_cross_company)
+                                <span class="page-chip" style="background:#eef2ff;color:#4338ca;">Cross-Company</span>
+                            @endif
+                        </td>
                         <td class="pages-cell" data-label="Pages Accessible">
                             @if ($role->permissions->isNotEmpty())
                                 <div class="chip-list">

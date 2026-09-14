@@ -1,10 +1,10 @@
 @extends('Layout.POSAdmin.app')
-<link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSAdminViews/Chat/admin_chat_view.css') }}">
+
 @section('title', 'Admin Chat')
 @section('hideMobileNav', '1')
 
 @push('styles')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSAdminViews/Chat/admin_chat_view.css') }}">
 @endpush
 
 @section('content')
@@ -451,10 +451,6 @@
             let lightboxImages = [];
             let lightboxIndex = 0;
             let lastRenderedDate = @json(optional($messages->last()?->created_at)->format('Y-m-d'));
-            // Hydrated from the server-rendered contact list on first load, so
-            // renderContacts(contactsState) — called after sending a message,
-            // before any AJAX conversation switch has populated this — doesn't
-            // wipe the sidebar with an empty "No chats yet." state.
             let contactsState = @json($initialContacts ?? []);
 
             const renderedIds = new Set(@json($messages->pluck('id')->map(fn($id) => (int) $id)->values()));
@@ -764,23 +760,23 @@
             const badge = Number(contact.unread_count || 0) > 0 ? `<div class="contact-badge">${Number(contact.unread_count)}</div>` : '';
             const active = Number(contact.id) === Number(activeContactId) ? ' active' : '';
             return `<a class="contact-item${active}"
-                        data-name="${escapeHtml(String(contact.name || '').toLowerCase())}"
-                        data-last="${escapeHtml(String(contact.last_message || '').toLowerCase())}"
-                        data-user-id="${Number(contact.id)}"
-                        href="${chatIndexUrl}?user_id=${Number(contact.id)}">
-                        <div class="contact-avatar-wrap">
-                            <img src="${escapeHtml(contact.chat_avatar || '')}" class="contact-avatar" alt="${escapeHtml(contact.name || '')}">
-                            <span class="contact-presence-dot ${isOnline ? 'is-online' : 'is-offline'}"></span>
-                            ${badge}
-                        </div>
-                        <div class="contact-text">
-                            <div class="contact-name-row">
-                                <div class="contact-name">${escapeHtml(contact.name || '')}</div>
-                                <div class="contact-time">${escapeHtml(contact.last_message_time || '')}</div>
+                            data-name="${escapeHtml(String(contact.name || '').toLowerCase())}"
+                            data-last="${escapeHtml(String(contact.last_message || '').toLowerCase())}"
+                            data-user-id="${Number(contact.id)}"
+                            href="${chatIndexUrl}?user_id=${Number(contact.id)}">
+                            <div class="contact-avatar-wrap">
+                                <img src="${escapeHtml(contact.chat_avatar || '')}" class="contact-avatar" alt="${escapeHtml(contact.name || '')}">
+                                <span class="contact-presence-dot ${isOnline ? 'is-online' : 'is-offline'}"></span>
+                                ${badge}
                             </div>
-                            <div class="contact-last">${escapeHtml(contact.last_message || 'No message yet')}</div>
-                        </div>
-                    </a>`;
+                            <div class="contact-text">
+                                <div class="contact-name-row">
+                                    <div class="contact-name">${escapeHtml(contact.name || '')}</div>
+                                    <div class="contact-time">${escapeHtml(contact.last_message_time || '')}</div>
+                                </div>
+                                <div class="contact-last">${escapeHtml(contact.last_message || 'No message yet')}</div>
+                            </div>
+                        </a>`;
         }).join('')}`;
                 applyContactSearchFilter();
             }
@@ -788,8 +784,6 @@
             function renderHeader(contact) {
                 chatPage?.classList.toggle('has-active-chat', Boolean(contact));
                 chatPage?.classList.toggle('no-active-chat', !contact);
-                // Once JS is driving the view (any real navigation), the initial
-                // "auto-selected on mobile" CSS override no longer applies.
                 chatPage?.classList.remove('auto-selected');
 
                 if (mobileHeaderAvatar) mobileHeaderAvatar.src = escapeHtml(contact?.chat_avatar || myAvatar);
@@ -878,8 +872,8 @@
                 <h5>Shared media</h5>
                 <div class="media-grid-scroll">
                     ${sharedMedia.map(media => `<button type="button" class="media-thumb-link js-lightbox-trigger" data-full-src="${escapeHtml(media.url || '')}" title="${escapeHtml(media.title || '')}">
-                                <img class="media-thumb" src="${escapeHtml(media.url || '')}" alt="Shared image">
-                            </button>`).join('')}
+                                    <img class="media-thumb" src="${escapeHtml(media.url || '')}" alt="Shared image">
+                                </button>`).join('')}
                 </div>
             </div>` :
                     '';
@@ -945,7 +939,8 @@
                         audio: true
                     });
                     const preferred = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus',
-                    'audio/mp4'];
+                        'audio/mp4'
+                    ];
                     let recOpts;
                     for (const mt of preferred) {
                         if (window.MediaRecorder.isTypeSupported?.(mt)) {

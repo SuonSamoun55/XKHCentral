@@ -101,7 +101,7 @@
                         Back
                     </a>
                     <button type="submit" class="btn-main">
-                        <i class="bi bi-check2-circle"></i>
+                        <i class=""></i>
                         Update Discount
                     </button>
                 </div>

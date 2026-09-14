@@ -18,7 +18,9 @@ return new class extends Migration
             $table->decimal('unit_price', 18, 2)->default(0);
             $table->integer('inventory')->default(0);
             $table->boolean('blocked')->default(false);
-            $table->boolean('is_visible')->default(true);
+            // Null = not set up yet (new sync, undecided). true/false = admin explicitly
+            // chose to show/block it on the user-facing store.
+            $table->boolean('is_visible')->nullable()->default(null);
             $table->boolean('category_visible')->default(true);
             $table->string('item_category_code')->nullable();
             $table->string('base_unit_of_measure_code')->nullable();

@@ -1,0 +1,454 @@
+/* ==========================================================================
+   Role List — design tokens
+   ========================================================================== */
+.role-list-page {
+    --border: #DDE4E1;
+    --border-soft: #EBF0EE;
+    --ink: #1C2622;
+    --ink-soft: #6B7570;
+    --ink-faint: #9AA39D;
+    --teal: #12958E;
+    --teal-dark: #0D7A74;
+    --teal-tint: #E7F5F4;
+    --amber: #C9860C;
+    --amber-tint: #FCF3E1;
+    --amber-border: #F2D08F;
+    --red: #D6473C;
+    --red-tint: #FCEAE9;
+    --radius: 12px;
+
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--ink);
+}
+
+.role-list-page * {
+    box-sizing: border-box;
+}
+
+.role-list-page code,
+.role-list-page .mono {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.role-list-page .page-head h1 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 18px;
+    color:#3BACB4;
+}
+
+.role-list-page .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 38px;
+    padding: 0 16px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: background .12s ease, border-color .12s ease, transform .06s ease;
+    font-family: inherit;
+}
+
+.role-list-page .btn:active {
+    transform: translateY(1px);
+}
+
+.role-list-page .btn-primary {
+    background: var(--teal);
+    color: #fff;
+}
+
+.role-list-page .btn-primary:hover {
+    background: var(--teal-dark);
+    color: #fff;
+}
+
+/* ---------- table ---------- */
+.role-list-page .table-card {
+    margin-top: 22px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 2px rgba(20, 30, 25, .04);
+}
+
+.role-list-page .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius);
+}
+
+.role-list-page table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 860px;
+}
+
+.role-list-page thead th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 12px 18px;
+    background: #FAFCFB;
+    border-bottom: 1px solid var(--border);
+}
+
+.role-list-page thead th:last-child {
+    text-align: right;
+}
+
+.role-list-page tbody td {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13.5px;
+    vertical-align: top;
+}
+
+.role-list-page tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.role-list-page tbody tr {
+    transition: background .12s ease;
+}
+
+.role-list-page tbody tr:hover {
+    background: #FAFCFB;
+}
+
+.role-list-page .id-cell {
+    color: var(--ink-faint);
+    font-weight: 600;
+    padding-top: 17px;
+}
+
+.role-list-page .key-cell code {
+    background: #F4F7F6;
+    border: 1px solid var(--border-soft);
+    color: var(--ink-soft);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.role-list-page .label-cell {
+    font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap;
+}
+
+.role-list-page .chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-width: 560px;
+}
+
+.role-list-page .page-chip {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--teal-dark);
+    background: var(--teal-tint);
+    border: 1px solid #CDEAE7;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.role-list-page .no-pages {
+    color: var(--ink-faint);
+    font-size: 12.5px;
+    font-style: italic;
+}
+
+.role-list-page .actions-cell {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.role-list-page .action-group {
+    display: inline-flex;
+    gap: 6px;
+}
+
+.role-list-page .action-group form {
+    margin: 0;
+    display: inline-flex;
+}
+
+.role-list-page .pill-btn {
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 7px;
+    font-size: 12.5px;
+    font-weight: 700;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: background .12s ease, border-color .12s ease, color .12s ease;
+    font-family: inherit;
+}
+
+.role-list-page .pill-btn.edit {
+    background: var(--amber-tint);
+    border-color: var(--amber-border);
+    color: var(--amber);
+}
+
+.role-list-page .pill-btn.edit:hover {
+    background: var(--amber);
+    border-color: var(--amber);
+    color: #fff;
+}
+
+.role-list-page .pill-btn.delete {
+    background: var(--red-tint);
+    border-color: #F1C6C2;
+    color: var(--red);
+}
+
+.role-list-page .pill-btn.delete:hover {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+}
+
+.role-list-page .empty-row td {
+    text-align: center;
+    color: var(--ink-faint);
+    padding: 28px 18px;
+}
+
+/* ---------- floating alerts (same pattern as Companies / Page List) ---------- */
+.role-list-page .alert-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.role-list-page .custom-alert {
+    background: #ffffff !important;
+    color: var(--ink-soft) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 16px 22px !important;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12) !important;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 280px;
+    max-width: 400px;
+    width: fit-content;
+    font-size: 14px;
+    animation: roleListSlideIn 0.3s ease-out forwards;
+}
+
+.role-list-page .custom-alert.alert-success {
+    border-left: 4px solid var(--teal) !important;
+}
+
+.role-list-page .custom-alert.alert-success i {
+    color: var(--teal);
+}
+
+@keyframes roleListSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes roleListFadeOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+/* ---------- tablet ---------- */
+@media (max-width: 960px) {
+    .role-list-page {
+        padding: 0;
+    }
+}
+
+/* ---------- phone: table becomes stacked cards ---------- */
+@media (max-width: 640px) {
+    .role-list-page .page-head h1 {
+        font-size: 19px;
+        margin-bottom: 14px;
+        display: none;
+    }
+
+    .role-list-page .btn-primary {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .role-list-page .table-card {
+        border: none;
+        box-shadow: none;
+        margin-top: 16px;
+    }
+
+    .role-list-page .table-scroll {
+        overflow: visible;
+    }
+
+    .role-list-page table {
+        min-width: 0;
+        display: block;
+    }
+
+    .role-list-page thead {
+        display: none;
+    }
+
+    .role-list-page tbody {
+        display: block;
+        counter-reset: roleIdx;
+    }
+
+    .role-list-page tbody tr {
+        counter-increment: roleIdx;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        column-gap: 10px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        margin-bottom: 12px;
+        padding: 14px;
+        box-shadow: 0 1px 2px rgba(20, 30, 25, .04);
+    }
+
+    .role-list-page tbody td {
+        display: block;
+        padding: 0;
+        border-bottom: none;
+    }
+    .app-content{
+        padding: 10px;
+    }
+
+    .role-list-page .id-cell {
+        order: 1;
+        flex: 0 0 auto;
+        font-size: 0;
+        padding-top: 0;
+    }
+
+    .role-list-page .id-cell::before {
+        content: "#" counter(roleIdx);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 26px;
+        height: 26px;
+        padding: 0 7px;
+        border-radius: 20px;
+        background: var(--teal-tint);
+        color: var(--teal-dark);
+        font-size: 12px;
+        font-weight: 700;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .role-list-page .label-cell {
+        order: 2;
+        flex: 1 1 auto;
+        font-size: 14.5px;
+        font-weight: 700;
+        color: var(--ink);
+        white-space: normal;
+    }
+
+    .role-list-page .key-cell {
+        order: 3;
+        flex: 1 0 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 9px 0;
+        border-top: 1px solid var(--border-soft);
+        margin-top: 10px;
+    }
+
+    .role-list-page .key-cell::before {
+        content: "Name";
+        flex: 0 0 auto;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+    }
+
+    .role-list-page .pages-cell {
+        order: 4;
+        flex: 1 0 100%;
+        padding: 9px 0 0;
+        border-top: 1px solid var(--border-soft);
+        margin-top: 10px;
+    }
+
+    .role-list-page .pages-cell::before {
+        content: "Pages Accessible";
+        display: block;
+        margin-bottom: 8px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+    }
+
+    .role-list-page .chip-list {
+        max-width: none;
+    }
+
+    .role-list-page .actions-cell {
+        order: 5;
+        flex: 1 0 100%;
+        text-align: left;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border-soft);
+    }
+
+    .role-list-page .pill-btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .role-list-page .action-group {
+        width: 100%;
+    }
+}

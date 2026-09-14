@@ -2,17 +2,22 @@
 
 namespace App\Http\Controllers\Api\POS\Admin\Items;
 
+use App\Http\Controllers\Concerns\ResolvesImageUrl;
 use App\Http\Controllers\Controller;
 use App\Models\POS\Item;
 use App\Models\POS\ItemVariant;
+use App\Models\POS\ItemLocationInventory;
 use App\Models\POS\InventoryMovement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
 class ItemPosController extends Controller
 {
+    use ResolvesImageUrl;
+
     public function index()
     {
         $companyId = session('selected_company_id');
@@ -22,251 +27,57 @@ class ItemPosController extends Controller
                 'error' => 'Select a company first (Companies list) before selling.',
             ], 422);
         }
-
-        $token = $this->getToken();
-        $url = $this->bcEndpoint('items_endpoint', 'items');
-
-        if (!$token) {
-            return response()->json([
-                'error' => 'Business Central authentication failed',
-            ], 401);
-        }
-
-        if (!$url) {
-            return response()->json([
-                'error' => 'Business Central URL could not be built',
-            ], 422);
-        }
-
-        $response = Http::withoutVerifying()
-            ->withToken($token)
-            ->get($url);
-
-        if (!$response->successful()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch items from API',
-                'details' => $response->body()
-            ], 500);
-        }
-
-        $items = $response->json()['value'] ?? [];
-
-        $localItems = Item::select(
-            'company_id',
-            'bc_id',
-            'default_location_code',
-            'base_unit_of_measure_code',
-            'tax_group_code',
-            'tax_amount',
-            'discount_amount',
-            'discount_start_date',
-            'discount_end_date',
-            'is_visible',
-            'custom_image_url'
-        )
-            ->where('company_id', $companyId)
+        $items = Item::where('company_id', $companyId)
+            ->where(function ($q) {
+                $q->where('blocked', false)->orWhereNull('blocked');
+            })
+            ->where(function ($q) {
+                $q->where('is_visible', true)->orWhereNull('is_visible');
+            })
+            ->orderBy('display_name')
             ->get()
-            ->keyBy('bc_id');
-
-        foreach ($items as $index => &$item) {
-            $item['id'] = $item['id'] ?? $item['systemId'] ?? $item['SystemId'] ?? null;
-
-            if (empty($item['id'])) {
-                unset($items[$index]);
-                continue;
-            }
-
-            $localItem = $localItems[$item['id']] ?? null;
-            $blocked = filter_var(
-                $item['blocked'] ?? $item['Blocked'] ?? $item['isBlocked'] ?? false,
-                FILTER_VALIDATE_BOOLEAN
-            );
-
-            if ($blocked) {
-                unset($items[$index]);
-                continue;
-            }
-
-            // Hide products marked inactive from Store Management.
-            if ($localItem && !$localItem->is_visible) {
-                unset($items[$index]);
-                continue;
-            }
-
-            $item['number'] = $item['number']
-                ?? $item['no']
-                ?? $item['No']
-                ?? $item['itemNo']
-                ?? $item['itemNumber']
-                ?? null;
-
-            $item['displayName'] = $item['displayName']
-                ?? $item['display_name']
-                ?? $item['description']
-                ?? $item['Description']
-                ?? $item['name']
-                ?? null;
-
-            $item['unitPrice'] = $item['unitPrice']
-                ?? $item['unit_price']
-                ?? $item['price']
-                ?? $item['UnitPrice']
-                ?? 0;
-
-            $item['inventory'] = $item['inventory']
-                ?? $item['Inventory']
-                ?? $item['quantityOnHand']
-                ?? $item['qtyOnHand']
-                ?? 0;
-
-            $item['blocked'] = $blocked;
-
-            $item['defaultLocationCode'] = $item['defaultLocationCode']
-                ?? $item['locationCode']
-                ?? ($localItem->default_location_code ?? null);
-
-            $item['baseUnitOfMeasureCode'] = $item['baseUnitOfMeasureCode']
-                ?? ($localItem->base_unit_of_measure_code ?? null)
-                ?? 'PCS';
-            $item['taxGroupCode'] = $item['taxGroupCode']
-                ?? $item['taxgroupcode']
-                ?? $item['vatProdPostingGroup']
-                ?? $item['vatprodpostinggroup']
-                ?? ($localItem->tax_group_code ?? null);
-
-            $item['vatPercent'] = optional($localItem)->resolved_vat_percent ?? 0;
-
-            $item['taxAmount'] = $item['taxAmount']
-                ?? $item['tax_amount']
-                ?? $item['taxamount']
-                ?? ($localItem->tax_amount ?? 0);
-
-            $item['discountAmount'] = $item['discountAmount']
-                ?? $item['discount_amount']
-                ?? $item['discountamount']
-                ?? ($localItem->discount_amount ?? 0);
-
-            $item['discountStartDate'] =
-                $item['discountStartDate']
-                ?? $item['discount_start_date']
-                ?? $item['discountstartdate']
-                ?? ($localItem?->discount_start_date?->format('Y-m-d H:i:s'));
-
-            $item['discountEndDate'] =
-                $item['discountEndDate']
-                ?? $item['discount_end_date']
-                ?? $item['discountenddate']
-                ?? ($localItem?->discount_end_date?->format('Y-m-d H:i:s'));
-
-            // Custom uploaded photo, if any (protected from BC sync overwrites)
-            $item['customImageUrl'] = $localItem->custom_image_url ?? null;
-        }
-
-        $items = array_values($items);
+            ->map(fn(Item $item) => $this->toDisplayItem($item))
+            ->values()
+            ->all();
 
         return view('POSViews.POSAdminViews.Items.index', compact('items'));
     }
 
+    protected function toDisplayItem(Item $item): array
+    {
+        return [
+            'id' => $item->bc_id,
+            'number' => $item->number,
+            'displayName' => $item->display_name,
+            'unitPrice' => (float) $item->unit_price,
+            'inventory' => (float) $item->inventory,
+            'blocked' => (bool) $item->blocked,
+            'defaultLocationCode' => $item->default_location_code,
+            'baseUnitOfMeasureCode' => $item->base_unit_of_measure_code ?? 'PCS',
+            'itemCategoryCode' => $item->item_category_code,
+            'taxGroupCode' => $item->tax_group_code,
+            'vatPercent' => $item->resolved_vat_percent ?? 0,
+            'taxAmount' => (float) $item->tax_amount,
+            'discountAmount' => (float) $item->discount_amount,
+            'discountStartDate' => optional($item->discount_start_date)->format('Y-m-d H:i:s'),
+            'discountEndDate' => optional($item->discount_end_date)->format('Y-m-d H:i:s'),
+            'localItemId' => $item->id,
+            'customImageUrl' => $item->custom_image_url,
+            'imageUrl' => $this->resolveImageUrl($item->custom_image_url ?: $item->image_url),
+        ];
+    }
+
     public function showItem(string $id)
     {
-        $token = $this->getToken();
-
-        if (!$token) {
-            return response()->json(['error' => 'Auth failed'], 401);
-        }
-
-        $response = Http::withoutVerifying()
-            ->withToken($token)
-            ->get($this->bcUrl("items({$id})"));
-
-        if (!$response->successful()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch item',
-                'details' => $response->body()
-            ], 500);
-        }
-
-        $item = $response->json();
-
         $localItem = Item::where('bc_id', $id)
             ->where('company_id', session('selected_company_id'))
             ->first();
 
-        $item['defaultLocationCode'] = $item['defaultLocationCode']
-            ?? $item['locationCode']
-            ?? ($localItem->default_location_code ?? null);
-
-        $item['baseUnitOfMeasureCode'] = $item['baseUnitOfMeasureCode']
-            ?? ($localItem->base_unit_of_measure_code ?? null)
-            ?? 'PCS';
-
-        $item['taxGroupCode'] = $item['taxGroupCode']
-            ?? $item['taxgroupcode']
-            ?? $item['vatProdPostingGroup']
-            ?? $item['vatprodpostinggroup']
-            ?? ($localItem->tax_group_code ?? null);
-
-        $item['vatPercent'] = optional($localItem)->resolved_vat_percent ?? 0;
-
-        $item['taxAmount'] = $item['taxAmount']
-            ?? $item['tax_amount']
-            ?? $item['taxamount']
-            ?? ($localItem->tax_amount ?? 0);
-
-        $item['discountAmount'] = $item['discountAmount']
-            ?? $item['discount_amount']
-            ?? $item['discountamount']
-            ?? ($localItem->discount_amount ?? 0);
-
-        $item['discountStartDate'] = $item['discountStartDate']
-            ?? $item['discount_start_date']
-            ?? $item['discountstartdate']
-            ?? optional(optional($localItem)->discount_start_date)->format('Y-m-d H:i:s');
-
-        $item['discountEndDate'] = $item['discountEndDate']
-            ?? $item['discount_end_date']
-            ?? $item['discountenddate']
-            ?? optional(optional($localItem)->discount_end_date)->format('Y-m-d H:i:s');
-
-        // Custom uploaded photo, if any (protected from BC sync overwrites)
-        $item['customImageUrl'] = $localItem->custom_image_url ?? null;
-
-        return response()->json($item);
-    }
-
-    public function getItemImage(string $itemId)
-    {
-        $token = $this->getToken();
-
-        if (!$token) {
-            return response()->json(['error' => 'Auth failed'], 401);
+        if (!$localItem) {
+            return response()->json(['error' => 'Item not found. Sync it from BC first.'], 404);
         }
 
-        $contentUrl = $this->bcUrl("items({$itemId})/picture/pictureContent");
-
-        $imageResponse = Http::withoutVerifying()
-            ->withToken($token)
-            ->withHeaders([
-                'Accept' => 'image/jpeg, image/png, image/*'
-            ])
-            ->get($contentUrl);
-
-        if (!$imageResponse->successful()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch image',
-                'details' => $imageResponse->body()
-            ], 500);
-        }
-
-        $contentType = $imageResponse->header('Content-Type') ?: 'image/jpeg';
-        $contentType = explode(';', $contentType)[0];
-
-        return response($imageResponse->body())
-            ->header('Content-Type', $contentType)
-            ->header('Cache-Control', 'public, max-age=86400');
+        return response()->json($this->toDisplayItem($localItem));
     }
 
     public function syncFromAl(Request $request)
@@ -281,64 +92,93 @@ class ItemPosController extends Controller
             ], 422);
         }
 
-        $validated = $request->validate([
-            'items' => ['required', 'array'],
-            'items.*.id' => ['required', 'string'],
-            'items.*.number' => ['required', 'string'],
-            'items.*.displayName' => ['nullable', 'string'],
-            'items.*.unitPrice' => ['nullable', 'numeric'],
+        $token = $this->getToken();
 
-            'items.*.taxGroupCode' => ['nullable', 'string'],
-            'items.*.taxAmount' => ['nullable', 'numeric'],
-            'items.*.discountAmount' => ['nullable', 'numeric'],
-            'items.*.discountStartDate' => ['nullable', 'date'],
-            'items.*.discountEndDate' => ['nullable', 'date'],
+        if (!$token) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Business Central authentication failed.',
+            ], 401);
+        }
 
-            'items.*.inventory' => ['nullable', 'numeric'],
-            'items.*.blocked' => ['nullable'],
-            'items.*.itemCategoryCode' => ['nullable', 'string'],
-            'items.*.baseUnitOfMeasureCode' => ['nullable', 'string'],
-            'items.*.priceIncludesTax' => ['nullable'],
-            'items.*.imageUrl' => ['nullable', 'string'],
-            'items.*.defaultLocationCode' => ['nullable', 'string'],
-        ]);
+        $url = $this->bcEndpoint('items_endpoint', 'items');
+
+        if (!$url) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Business Central URL could not be built.',
+            ], 422);
+        }
+
+        $response = Http::withoutVerifying()->withToken($token)->get($url);
+
+        if (!$response->successful()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch items from Business Central.',
+                'details' => $response->body(),
+            ], 500);
+        }
+
+        $rawItems = $response->json()['value'] ?? [];
 
         DB::beginTransaction();
 
         try {
-            foreach ($validated['items'] as $item) {
-                $incomingInventory = (int) ($item['inventory'] ?? 0);
+            $syncedCount = 0;
+            foreach ($rawItems as $item) {
+                $bcId = $this->valueFrom($item, ['id', 'systemId', 'SystemId']);
+
+                if (!$bcId) {
+                    continue;
+                }
+
+                if (!$this->toBool($item['itemButtonAllowApi'] ?? null, true)) {
+                    continue;
+                }
+
+                $syncedCount++;
+
+                $fields = $this->extractBcItemFields($item, $bcId);
+                $incomingInventory = $fields['inventory'];
 
                 $existing = Item::where('company_id', $companyId)
-                    ->where('bc_id', $item['id'])
+                    ->where('bc_id', $fields['bc_id'])
                     ->first();
+                $imagePath = $token
+                    ? $this->downloadItemImage($fields['bc_id'], $token)
+                    : null;
 
-                $oldInventory = (int) ($existing->inventory ?? 0);
+                $oldInventory = (float) ($existing->inventory ?? 0);
                 $saved = Item::updateOrCreate(
                     [
                         'company_id' => $companyId,
-                        'bc_id' => $item['id'],
+                        'bc_id' => $fields['bc_id'],
                     ],
                     [
-                        'number' => $item['number'],
-                        'display_name' => $item['displayName'] ?? null,
-                        'unit_price' => $item['unitPrice'] ?? 0,
+                        'number' => $fields['number'],
+                        'display_name' => $fields['display_name'],
+                        'unit_price' => $fields['unit_price'],
 
-                        'tax_group_code' => $item['taxGroupCode'] ?? null,
-                        'tax_amount' => $item['taxAmount'] ?? 0,
-                        'discount_amount' => $item['discountAmount'] ?? 0,
-                        'discount_start_date' => $item['discountStartDate'] ?? null,
-                        'discount_end_date' => $item['discountEndDate'] ?? null,
+                        'tax_group_code' => $fields['tax_group_code'],
+                        'tax_amount' => $fields['tax_amount'],
+                        'discount_amount' => $fields['discount_amount'],
+                        'discount_start_date' => $fields['discount_start_date'],
+                        'discount_end_date' => $fields['discount_end_date'],
 
                         'inventory' => $incomingInventory,
-                        'blocked' => filter_var($item['blocked'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                        'item_category_code' => $item['itemCategoryCode'] ?? null,
-                        'base_unit_of_measure_code' => $item['baseUnitOfMeasureCode'] ?? null,
-                        'price_includes_tax' => filter_var($item['priceIncludesTax'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                        'image_url' => $item['imageUrl'] ?? null,
-                        'default_location_code' => $item['defaultLocationCode'] ?? null,
+                        'blocked' => $fields['blocked'],
+                        'item_category_code' => $fields['item_category_code'],
+                        'base_unit_of_measure_code' => $fields['base_unit_of_measure_code'],
+                        'price_includes_tax' => $fields['price_includes_tax'],
+                        'image_url' => $imagePath ?? $existing->image_url ?? null,
+                        'default_location_code' => $fields['default_location_code'],
                     ]
                 );
+
+                if ($token) {
+                    $this->syncItemLocationInventory($saved, $fields['bc_id'], $token, $companyId);
+                }
 
                 $change = $incomingInventory - $oldInventory;
                 if ($change !== 0 || !$existing) {
@@ -392,6 +232,7 @@ class ItemPosController extends Controller
                 'message' => 'Sync failed: ' . $e->getMessage(),
             ], 500);
         }
+
         try {
             $variantResult = $this->syncVariantsFromBc($companyId);
         } catch (\Throwable $e) {
@@ -406,12 +247,119 @@ class ItemPosController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Items and variants synced successfully.',
-            'count' => count($validated['items']),
+            'count' => $syncedCount,
             'variantsSaved' => $variantResult['saved'],
             'variantsSkipped' => $variantResult['skipped'],
             'variantsError' => $variantResult['error'] ?? null,
         ]);
     }
+
+    protected function extractBcItemFields(array $item, string $bcId): array
+    {
+        return [
+            'bc_id' => $bcId,
+            'number' => $this->valueFrom($item, ['number', 'no', 'No', 'itemNo', 'itemNumber']),
+            'display_name' => $this->valueFrom($item, ['displayName', 'display_name', 'description', 'Description', 'name']),
+            'unit_price' => $this->valueFrom($item, ['unitPrice', 'unit_price', 'price', 'UnitPrice'], 0),
+
+            'tax_group_code' => $this->valueFrom($item, ['taxGroupCode', 'taxgroupcode', 'vatProdPostingGroup', 'vatprodpostinggroup']),
+            'tax_amount' => $this->valueFrom($item, ['taxAmount', 'tax_amount', 'taxamount'], 0),
+            'discount_amount' => $this->valueFrom($item, ['discountAmount', 'discount_amount', 'discountamount'], 0),
+            'discount_start_date' => $this->valueFrom($item, ['discountStartDate', 'discount_start_date', 'discountstartdate']),
+            'discount_end_date' => $this->valueFrom($item, ['discountEndDate', 'discount_end_date', 'discountenddate']),
+
+            'inventory' => (float) $this->valueFrom($item, ['inventory', 'Inventory', 'quantityOnHand', 'qtyOnHand'], 0),
+            'blocked' => $this->toBool($this->valueFrom($item, ['blocked', 'Blocked', 'isBlocked'])),
+            'item_category_code' => $this->valueFrom($item, ['itemCategoryCode', 'item_category_code', 'categoryCode', 'CategoryCode']),
+            'base_unit_of_measure_code' => $this->valueFrom($item, ['baseUnitOfMeasure', 'baseUnitOfMeasureCode', 'base_unit_of_measure_code', 'unitOfMeasureCode']),
+            'price_includes_tax' => $this->toBool($this->valueFrom($item, ['priceIncludesTax', 'price_includes_tax'])),
+            'default_location_code' => $this->valueFrom($item, ['defaultLocationCode', 'locationCode']),
+        ];
+    }
+
+    /**
+     * Pulls the per-location breakdown from BC's custom getInventoryByLocation
+     * bound action, so stock can be shown per warehouse instead of only the
+     * single flat total the items list endpoint returns. Rows for locations
+     * BC no longer reports for this item are removed (stock moved/zeroed
+     * out there), everything else is upserted.
+     */
+    protected function syncItemLocationInventory(Item $savedItem, string $bcId, string $token, int $companyId): void
+    {
+        $response = Http::withoutVerifying()
+            ->withToken($token)
+            ->acceptJson()
+            ->post($this->bcUrl("items({$bcId})/Microsoft.NAV.getInventoryByLocation"), (object) []);
+
+        if (!$response->successful()) {
+            return;
+        }
+
+        // The bound action returns Edm.String — its "value" is a JSON string
+        // that itself needs decoding, e.g. {"itemNo":"1000","locations":[...]}
+        // — not a plain array, despite the endpoint's name.
+        $payload = $response->json('value') ?? $response->json();
+
+        if (is_string($payload)) {
+            $payload = json_decode($payload, true);
+        }
+
+        $rows = $payload['locations'] ?? (is_array($payload) ? $payload : []);
+
+        if (!is_array($rows)) {
+            return;
+        }
+
+        $seenCodes = [];
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $locationCode = (string) $this->valueFrom($row, ['locationCode', 'location_code'], '');
+            $seenCodes[] = $locationCode;
+
+            ItemLocationInventory::updateOrCreate(
+                [
+                    'item_id' => $savedItem->id,
+                    'location_code' => $locationCode,
+                ],
+                [
+                    'company_id' => $companyId,
+                    'location_name' => $this->valueFrom($row, ['locationName', 'location_name']),
+                    'inventory' => (float) $this->valueFrom($row, ['inventory', 'Inventory'], 0),
+                ]
+            );
+        }
+
+        ItemLocationInventory::where('item_id', $savedItem->id)
+            ->whereNotIn('location_code', $seenCodes)
+            ->delete();
+    }
+
+    protected function downloadItemImage(string $bcId, string $token): ?string
+    {
+        $path = "items/{$bcId}.jpg";
+
+        if (Storage::disk('public')->exists($path)) {
+            return $path;
+        }
+
+        $imageResponse = Http::withoutVerifying()
+            ->withToken($token)
+            ->withHeaders(['Accept' => 'image/jpeg, image/png, image/*'])
+            ->get($this->bcUrl("items({$bcId})/picture/pictureContent"));
+
+        if (!$imageResponse->successful() || $imageResponse->body() === '') {
+            return null;
+        }
+
+        Storage::disk('public')->put($path, $imageResponse->body());
+
+        return $path;
+    }
+
     private function syncVariantsFromBc($companyId)
     {
         $token = $this->getToken();
@@ -515,65 +463,15 @@ class ItemPosController extends Controller
 
     public function detail(string $id)
     {
-        $token = $this->getToken();
-
-        if (!$token) {
-            return redirect()->back()->with('error', 'Business Central authentication failed.');
-        }
-
-        $response = Http::withoutVerifying()
-            ->withToken($token)
-            ->get($this->bcUrl("items({$id})"));
-
-        if (!$response->successful()) {
-            return redirect()->back()->with('error', 'Failed to fetch item detail.');
-        }
-
-        $item = $response->json();
-
         $localItem = Item::where('bc_id', $id)
             ->where('company_id', session('selected_company_id'))
             ->first();
 
-        $item['defaultLocationCode'] = $item['defaultLocationCode']
-            ?? $item['locationCode']
-            ?? ($localItem->default_location_code ?? null);
+        if (!$localItem) {
+            return redirect()->back()->with('error', 'Item not found. Sync it from BC first.');
+        }
 
-        $item['baseUnitOfMeasureCode'] = $item['baseUnitOfMeasureCode']
-            ?? ($localItem->base_unit_of_measure_code ?? null)
-            ?? 'PCS';
-
-        $item['taxGroupCode'] = $item['taxGroupCode']
-            ?? $item['taxgroupcode']
-            ?? $item['vatProdPostingGroup']
-            ?? $item['vatprodpostinggroup']
-            ?? ($localItem->tax_group_code ?? null);
-
-        $item['vatPercent'] = optional($localItem)->resolved_vat_percent ?? 0;
-
-        $item['taxAmount'] = $item['taxAmount']
-            ?? $item['tax_amount']
-            ?? $item['taxamount']
-            ?? ($localItem->tax_amount ?? 0);
-
-        $item['discountAmount'] = $item['discountAmount']
-            ?? $item['discount_amount']
-            ?? $item['discountamount']
-            ?? ($localItem->discount_amount ?? 0);
-
-        $item['discountStartDate'] = $item['discountStartDate']
-            ?? $item['discount_start_date']
-            ?? $item['discountstartdate']
-            ?? optional($localItem->discount_start_date)->format('Y-m-d H:i:s');
-
-        $item['discountEndDate'] = $item['discountEndDate']
-            ?? $item['discount_end_date']
-            ?? $item['discountenddate']
-            ?? optional($localItem->discount_end_date)->format('Y-m-d H:i:s');
-        $item['customImageUrl'] = $localItem->custom_image_url ?? null;
-
-
-        $item['localItemId'] = $localItem->id ?? null;
+        $item = $this->toDisplayItem($localItem);
 
         return view('POSViews.POSAdminViews.Items.show', compact('item'));
     }

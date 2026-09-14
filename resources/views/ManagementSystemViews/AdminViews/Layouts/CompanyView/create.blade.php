@@ -1,5 +1,5 @@
 @extends('Layout.Management.app')
-<link rel="stylesheet" href="{{ asset('/css/views/Management/company.css') }}">
+<link rel="stylesheet" href="{{ asset('/css/views/Management/Company/create_company.css') }}">
 @section('title', 'Create Company')
 
 @section('content')

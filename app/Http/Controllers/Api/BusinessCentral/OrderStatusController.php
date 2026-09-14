@@ -9,14 +9,14 @@ use Illuminate\Support\Facades\Http;
 
 class OrderStatusController extends Controller
 {
-    public function show(string $order): JsonResponse
+    public function show(string $orderKey): JsonResponse
     {
         $user = auth()->user();
 
         $order = Order::query()
-            ->where('id', $order)
-            ->orWhere('order_no', $order)
-            ->orWhere('bc_document_no', $order)
+            ->where('id', $orderKey)
+            ->orWhere('order_no', $orderKey)
+            ->orWhere('bc_document_no', $orderKey)
             ->first();
 
         if (!$order) {
@@ -218,7 +218,7 @@ class OrderStatusController extends Controller
         return data_get($response->json(), 'value.0');
     }
 
-    private function ok($message, $data, $code = 200): array
+    private function ok(string $message, array $data, int $code = 200): array
     {
         return [
             'success' => true,
@@ -228,7 +228,7 @@ class OrderStatusController extends Controller
         ];
     }
 
-    private function fail($message, $code = 400, $data = []): array
+    private function fail(string $message, int $code = 400, array $data = []): array
     {
         return [
             'success' => false,

@@ -9,8 +9,8 @@ use App\Models\POS\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
- use App\Models\ManagementSystem\Company;
- use Illuminate\Support\Facades\Storage;
+use App\Models\ManagementSystem\Company;
+use Illuminate\Support\Facades\Storage;
 
 class HistoryController extends Controller
 {
@@ -21,54 +21,22 @@ class HistoryController extends Controller
 
     public function history(Request $request)
     {
-        // items.item is needed for the row/card product-image thumbnails
         $orders = $this->filteredOrders($request, ['items.item']);
         $companyImage = $this->companyImage();
-
         return view(
             'POSViews.POSUserViews.Orders.history',
             compact('orders', 'companyImage')
         );
     }
 
-    public function historyMobile(Request $request)
+    public function show($id)
     {
-        $orders = $this->filteredOrders($request, ['items.item']);
+        $order = $this->orders()
+            ->with(['items.item', 'items.itemVariant', 'actions.actionBy'])
+            ->findOrFail($id);
 
-        $counts = $this->orders()
-            ->selectRaw('status, COUNT(*) AS total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
-
-        $allCount       = $counts->sum();
-        $pendingCount   = $counts['pending'] ?? 0;
-        $deliveredCount = $counts['delivered'] ?? 0;
-        $cancelledCount = $counts['cancelled'] ?? 0;
-        $onTheWayCount  = $counts['on-the-way'] ?? 0;
-        $companyImage   = $this->companyImage();
-
-        return view(
-            'POSViews.POSUserViews.mobile.POSHistoryMobileView',
-            compact(
-                'orders',
-                'allCount',
-                'pendingCount',
-                'deliveredCount',
-                'cancelledCount',
-                'onTheWayCount',
-                'companyImage'
-            )
-        );
+        return view('POSViews.POSUserViews.Orders.show', compact('order'));
     }
-
-public function show($id)
-{
-    $order = $this->orders()
-        ->with(['items.item', 'items.itemVariant', 'actions.actionBy'])
-        ->findOrFail($id);
-
-    return view('POSViews.POSUserViews.Orders.show', compact('order'));
-}
 
     public function cancel(Request $request, $id)
     {
@@ -126,13 +94,6 @@ public function show($id)
         }
     }
 
-    public function downloadInvoice($id)
-    {
-        $order = $this->orders()->with('items')->findOrFail($id);
-
-        return $this->downloadOrderInvoicePdf($order);
-    }
-
     public function deleteMultiple(Request $request)
     {
         $ids = array_filter(
@@ -152,7 +113,10 @@ public function show($id)
 
     private function orders()
     {
-        return Order::where('user_id', auth()->id());
+        $companyId = session('selected_company_id') ?? auth()->user()->company_id;
+
+        return Order::where('user_id', auth()->id())
+            ->when($companyId, fn ($query) => $query->where('company_id', $companyId));
     }
 
     private function filteredOrders(

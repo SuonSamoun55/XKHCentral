@@ -13,6 +13,11 @@ class Role extends Model
         'company_id',
         'name',
         'display_name',
+        'is_cross_company',
+    ];
+
+    protected $casts = [
+        'is_cross_company' => 'boolean',
     ];
 
     public function permissions()

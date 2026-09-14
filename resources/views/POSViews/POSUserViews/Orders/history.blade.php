@@ -64,20 +64,23 @@
                 <img src="{{ asset('images/pos/UserOrderHistory.png') }}" alt="No orders" class="order-empty-state-img">
             </div>
         @else
+            @php
+                // Shared by both the mobile card list and the desktop table
+                // below — one closure instead of two identical copies.
+                $resolveThumb = fn ($path) => $path
+                    ? (str_starts_with($path, 'http') ? $path : asset($path))
+                    : null;
+            @endphp
             <div class="mobile-order-list">
                 @foreach ($orders as $order)
                     <div id="order-item-{{ $order->id }}" class="order-card-mobile" data-order-no="{{ $order->order_no }}" data-detail-url="{{ route('user.pos.order.show', $order->id) }}">
                         <div class="order-card-img item-thumb-stack">
                             @foreach ($order->items->take(3) as $index => $oi)
                                 @php
-                                    $resolveThumb = fn ($path) => $path
-                                        ? (str_starts_with($path, 'http') ? $path : asset($path))
-                                        : null;
-
                                     $thumb = $resolveThumb(optional($oi->itemVariant)->image_url)
-                                        ?? $resolveThumb($oi->item->custom_image_url ?? null)
-                                        ?? $resolveThumb($oi->item->image_url ?? null)
-                                        ?? $resolveThumb($oi->item->image ?? null);
+                                        ?? $resolveThumb(optional($oi->item)->custom_image_url)
+                                        ?? $resolveThumb(optional($oi->item)->image_url)
+                                        ?? $resolveThumb(optional($oi->item)->image);
                                 @endphp
                                 <div class="item-thumb" style="z-index: {{ 10 - $index }};">
                                     <img
@@ -105,11 +108,11 @@
                                 {{ ucfirst($order->status) }}
                             </span>
 
-                            <a href="{{ route('user.pos.order.download', $order->id) }}"
+                            <a href="{{ route('orders.report.preview', $order->id) }}"
                                 class="mobile-download-btn"
                                 onclick="event.stopPropagation();"
-                                title="Download invoice">
-                                <i class="bi bi-download"></i>
+                                title="View report">
+                                <i class="bi bi-file-earmark-pdf"></i>
                             </a>
                         </div>
                     </div>
@@ -126,7 +129,7 @@
                             <th>Date</th>
                             <th>Price</th>
                             <th>Status</th>
-                            <th>Invoice</th>
+                            <th>Report</th>
                             <th class="text-center">Items</th>
                         </tr>
                     </thead>
@@ -163,24 +166,19 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="{{ route('user.pos.order.download', $order->id) }}"
+                                    <a href="{{ route('orders.report.preview', $order->id) }}"
                                         class="btn-download text-decoration-none">
-                                        Download <i class="bi bi-download"></i>
+                                        View <i class="bi bi-file-earmark-pdf"></i>
                                     </a>
                                 </td>
                                 <td class="text-center">
                                     <div class="item-thumb-stack">
                                         @foreach ($orderItems as $index => $oi)
                                             @php
-                                            
-                                                $tblResolveThumb = fn ($path) => $path
-                                                    ? (str_starts_with($path, 'http') ? $path : asset($path))
-                                                    : null;
-
-                                                $thumb = $tblResolveThumb(optional($oi->itemVariant)->image_url)
-                                                    ?? $tblResolveThumb($oi->item->custom_image_url ?? null)
-                                                    ?? $tblResolveThumb($oi->item->image_url ?? null)
-                                                    ?? $tblResolveThumb($oi->item->image ?? null);
+                                                $thumb = $resolveThumb(optional($oi->itemVariant)->image_url)
+                                                    ?? $resolveThumb($oi->item->custom_image_url ?? null)
+                                                    ?? $resolveThumb($oi->item->image_url ?? null)
+                                                    ?? $resolveThumb($oi->item->image ?? null);
                                             @endphp
                                             <div class="item-thumb" style="z-index: {{ 10 - $index }};">
                                                 <img
@@ -255,9 +253,8 @@
                     savedAt: Date.now(),
                 };
                 localStorage.setItem(SCROLL_STORAGE_KEY, JSON.stringify(payload));
-                console.log('[pos-scroll] saved', payload);
             } catch (e) {
-                console.log('[pos-scroll] SAVE FAILED', e);
+                // localStorage unavailable — nothing to do.
             }
         }
 
@@ -276,20 +273,17 @@
 
         function restoreScrollPosition() {
             if (hasRestoredScroll) {
-                console.log('[pos-scroll] restore skipped, already ran');
                 return;
             }
 
             try {
                 const raw = localStorage.getItem(SCROLL_STORAGE_KEY);
-                console.log('[pos-scroll] restore check, raw value:', raw);
                 if (!raw) return;
 
                 const { table, page, orderNo, savedAt } = JSON.parse(raw);
 
                 // Ignore stale entries from a much earlier visit (>1 hour)
                 if (savedAt && Date.now() - savedAt > 60 * 60 * 1000) {
-                    console.log('[pos-scroll] entry too old, discarding');
                     localStorage.removeItem(SCROLL_STORAGE_KEY);
                     return;
                 }
@@ -299,13 +293,11 @@
                         const target = document.querySelector(
                             `[data-order-no="${CSS.escape(orderNo)}"]`
                         );
-                        console.log('[pos-scroll] looking for orderNo', orderNo, '-> found:', !!target);
 
                         if (target) {
                             target.scrollIntoView({ block: 'center' });
                             highlightReturnedItem(target);
                             hasRestoredScroll = true;
-                            console.log('[pos-scroll] scrolled to item', orderNo);
                             return;
                         }
                     }
@@ -317,7 +309,6 @@
                         window.scrollTo(0, page);
                     }
                     hasRestoredScroll = true;
-                    console.log('[pos-scroll] fell back to raw offsets', { table, page });
                 };
                 if (document.readyState === 'complete') {
                     applyRestore();
@@ -325,21 +316,12 @@
                     window.setTimeout(applyRestore, 50);
                 }
             } catch (e) {
-                console.log('[pos-scroll] RESTORE FAILED', e);
+                // localStorage unavailable or corrupted entry — nothing to restore.
             }
         }
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('[pos-scroll] DOMContentLoaded fired');
-            restoreScrollPosition();
-        });
-        window.addEventListener('load', () => {
-            console.log('[pos-scroll] load fired');
-            restoreScrollPosition();
-        });
-        window.addEventListener('pageshow', (e) => {
-            console.log('[pos-scroll] pageshow fired, persisted:', e.persisted);
-            restoreScrollPosition();
-        });
+        document.addEventListener('DOMContentLoaded', restoreScrollPosition);
+        window.addEventListener('load', restoreScrollPosition);
+        window.addEventListener('pageshow', restoreScrollPosition);
         window.addEventListener('pagehide', () => saveScrollPosition());
     </script>
     <script>
@@ -521,6 +503,16 @@
                 });
             });
 
+            // Live order-status polling. If the Business Central endpoint
+            // starts failing (down, slow, misconfigured), this backs off for
+            // a cooldown period instead of continuing to hit it every 10s
+            // forever — the same "don't hammer a broken remote call"
+            // principle already applied to the BC image proxy elsewhere.
+            const TRACK_FAILURE_LIMIT = 3;
+            const TRACK_BACKOFF_MS = 2 * 60 * 1000;
+            let trackFailureStreak = 0;
+            let trackBackoffUntil = 0;
+
             async function trackRow(row) {
                 const badge = row?.querySelector('.status-badge');
                 const trackUrl = row?.dataset.trackUrl;
@@ -541,26 +533,34 @@
                     });
                     const result = await response.json();
 
-                    if (!response.ok || !result.success) return;
+                    if (!response.ok || !result.success) {
+                        registerTrackFailure();
+                        return;
+                    }
+
+                    trackFailureStreak = 0;
 
                     const nextStatus = result.data?.tracking_status || result.data?.local_status || row.dataset.status;
                     row.dataset.status = nextStatus;
                     badge.className = 'status-badge ' + statusClass(nextStatus);
                     badge.textContent = displayStatus(nextStatus);
-
-                    if (['confirmed', 'on-the-way'].includes(String(nextStatus || '').toLowerCase())) {
-                        window.setTimeout(() => trackRow(row), 5000);
-                        window.setTimeout(() => trackRow(row), 15000);
-                    }
                 } catch (error) {
-                    return;
+                    registerTrackFailure();
                 } finally {
                     row.dataset.tracking = '0';
                 }
             }
 
+            function registerTrackFailure() {
+                trackFailureStreak += 1;
+                if (trackFailureStreak >= TRACK_FAILURE_LIMIT) {
+                    trackBackoffUntil = Date.now() + TRACK_BACKOFF_MS;
+                    trackFailureStreak = 0;
+                }
+            }
+
             function refreshVisibleRows() {
-                if (document.hidden) return;
+                if (document.hidden || Date.now() < trackBackoffUntil) return;
                 Array.from(orderRows)
                     .filter(row => row.style.display !== 'none' && !isFinalStatus(row.dataset.status))
                     .slice(0, 5)

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\ManagementSystem;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -12,21 +13,30 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use App\Models\BcCustomer;
 use App\Models\ManagementSystem\User;
+use App\Models\POS\NumberSeries;
 use App\Models\Role;
 use Carbon\Carbon;
 
 class WebUserController extends Controller
 {
+    protected function assertCustomerInScope(BcCustomer $customer): void
+    {
+        $companyId = session('selected_company_id');
+
+        if ($companyId && (int) $customer->company_id !== (int) $companyId) {
+            abort(403, 'You do not have access to this customer.');
+        }
+    }
+
     public function index()
     {
         $companyId = session('selected_company_id');
 
         $customers = $this->buildCustomerCollection($companyId);
 
-        $roles = Role::when($companyId, fn ($q) => $q->where('company_id', $companyId))
+        $roles = Role::when($companyId, fn($q) => $q->where('company_id', $companyId))
             ->orderBy('name')
             ->get();
-
         return view(
             'ManagementSystemViews.AdminViews.Layouts.UserinfoView.UserList',
             compact('customers', 'roles')
@@ -58,6 +68,7 @@ class WebUserController extends Controller
             return [
                 'id' => $customer->id,
                 'bc_customer_no' => $displayBcNo,
+                'local_customer_no' => $customer->local_customer_no ?? '-',
                 'name' => $displayName,
                 'email' => $displayEmail,
                 'phone' => $displayPhone,
@@ -81,14 +92,7 @@ class WebUserController extends Controller
         ]);
     }
 
-    protected function assertCustomerInScope(BcCustomer $customer): void
-    {
-        $companyId = session('selected_company_id');
-
-        if ($companyId && (int) $customer->company_id !== (int) $companyId) {
-            abort(403, 'You do not have access to this customer.');
-        }
-    }
+ 
 
     protected function getCustomerImageDisplay($customer, $linkedUser = null)
     {
@@ -110,10 +114,21 @@ class WebUserController extends Controller
     }
     protected function buildCustomerCollection($companyId)
     {
-        $customers = BcCustomer::when($companyId, fn($q) => $q->where('company_id', $companyId))
+        // Only the columns this method (and its callers, index()/getUsers())
+        // actually read — trims what's pulled off disk and hydrated into
+        // models, since this runs on every page load and every 15s poll.
+        $customers = BcCustomer::select([
+                'id', 'company_id', 'bc_customer_no', 'bc_id', 'display_name',
+                'name', 'email', 'phone_number', 'profile_image_url', 'local_customer_no',
+            ])
+            ->when($companyId, fn($q) => $q->where('company_id', $companyId))
             ->orderBy('id', 'desc')
             ->get();
-        $userMap = User::when($companyId, fn($q) => $q->where('company_id', $companyId))
+        $userMap = User::select([
+                'id', 'company_id', 'bc_customer_no', 'status', 'role', 'name',
+                'email', 'phone', 'profile_image', 'profile_image_url', 'last_seen_at',
+            ])
+            ->when($companyId, fn($q) => $q->where('company_id', $companyId))
             ->get()
             ->keyBy(fn($u) => $u->company_id . '|' . $u->bc_customer_no);
 
@@ -212,8 +227,13 @@ class WebUserController extends Controller
             }
             $data = $response->json('value', []);
             foreach ($data as $row) {
+                
+                
                 $fields = $this->extractBcCustomerFields($row);
 
+                if (!$this->toBool($fields['allow_api'], true)) {
+                    continue;
+                }
                 if (!$fields['customer_no']) {
                     continue;
                 }
@@ -223,7 +243,7 @@ class WebUserController extends Controller
                     $bcImageUrl = route('users.bc-image', ['bcId' => $fields['bc_id']]);
                 }
 
-                BcCustomer::updateOrCreate(
+                $customer = BcCustomer::updateOrCreate(
                     [
                         'company_id' => $companyId,
                         'bc_customer_no' => $fields['customer_no'],
@@ -237,6 +257,8 @@ class WebUserController extends Controller
                         ]
                     ))
                 );
+
+                $this->assignLocalCustomerNo($customer, $companyId);
 
                 User::where('company_id', $companyId)
                     ->where('bc_customer_no', $fields['customer_no'])
@@ -260,16 +282,6 @@ class WebUserController extends Controller
         }
     }
 
-    protected function valueFrom(array $row, array $keys, mixed $default = null): mixed
-    {
-        foreach ($keys as $key) {
-            if (array_key_exists($key, $row)) {
-                return $row[$key];
-            }
-        }
-
-        return $default;
-    }
     protected function extractBcCustomerFields(array $row): array
     {
         $displayName = trim((string) $this->valueFrom($row, [
@@ -296,6 +308,7 @@ class WebUserController extends Controller
             'address' => $this->valueFrom($row, ['address', 'Address']),
             'city' => $this->valueFrom($row, ['city', 'City']),
             'payment_terms_code' => $this->valueFrom($row, ['paymentTermsCode', 'payment_terms_code']),
+            'allow_api' => $this->valueFrom($row, ['CustomerButtonAllowAPI', 'customerButtonAllowApi']),
             'customer_price_group' => $this->valueFrom($row, ['customerPriceGroup', 'customer_price_group']),
             'location_code' => $this->valueFrom($row, ['locationCode', 'location_code']),
             'ship_to_code' => $this->valueFrom($row, ['shipToCode', 'ship_to_code']),
@@ -384,6 +397,8 @@ class WebUserController extends Controller
             )));
             $customer->save();
 
+            $this->assignLocalCustomerNo($customer, $customer->company_id);
+
             return response()->json([
                 'success' => true,
                 'balance' => number_format((float) $customer->balance, 2),
@@ -401,6 +416,31 @@ class WebUserController extends Controller
                 'success' => false,
                 'message' => 'Error syncing this customer: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Gives a synced BC customer its own Laravel-generated number (from the
+     * "CUSTOMER" number series, Management > Number Series) the first time
+     * it's seen — leaves it alone on every later re-sync. If no CUSTOMER
+     * series is configured yet, the customer is simply left without one
+     * rather than blocking the sync.
+     */
+    protected function assignLocalCustomerNo(BcCustomer $customer, ?int $companyId): void
+    {
+        if (!$companyId || !empty($customer->local_customer_no)) {
+            return;
+        }
+
+        try {
+            $customer->local_customer_no = DB::transaction(fn () => NumberSeries::issue($companyId, 'CUSTOMER'));
+            $customer->save();
+        } catch (\Throwable $e) {
+            Log::warning('Could not assign local customer number', [
+                'company_id' => $companyId,
+                'bc_customer_no' => $customer->bc_customer_no,
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -428,6 +468,16 @@ class WebUserController extends Controller
             }
         }
 
+        // A customer/product with no BC picture (or one BC is timing out on)
+        // was re-triggering a full remote HTTP round-trip on every single
+        // dashboard load — this negative cache short-circuits that for 10
+        // minutes instead, which is what the repeated slow/red "failed"
+        // requests in the network waterfall were.
+        $failureCacheKey = "bc-image-failed:{$bcId}";
+        if (\Illuminate\Support\Facades\Cache::has($failureCacheKey)) {
+            return response()->file(public_path('images/default-user.png'));
+        }
+
         $token = $this->getToken();
 
         if (!$token) {
@@ -451,10 +501,14 @@ class WebUserController extends Controller
                 'message' => $e->getMessage(),
             ]);
 
+            \Illuminate\Support\Facades\Cache::put($failureCacheKey, true, now()->addMinutes(10));
+
             return response()->file(public_path('images/default-user.png'));
         }
 
         if (!$imageResponse->successful()) {
+            \Illuminate\Support\Facades\Cache::put($failureCacheKey, true, now()->addMinutes(10));
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch customer image',
@@ -619,6 +673,44 @@ class WebUserController extends Controller
             ->with('success', 'User updated successfully.');
     }
 
+    /**
+     * Edits the local bc_customers snapshot only (Contact + Fulfillment &
+     * Payment cards on the customer detail page). Business Central is the
+     * source of truth — the next sync overwrites these fields, so this is a
+     * stopgap for correcting a value between syncs, not a permanent override.
+     */
+    public function updateContactDetails(Request $request, $id)
+    {
+        $customer = BcCustomer::findOrFail($id);
+        $this->assertCustomerInScope($customer);
+
+        $validated = $request->validate([
+            'phone' => 'nullable|string|max:50',
+            'mobile_phone_no' => 'nullable|string|max:50',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:100',
+            'location_code' => 'nullable|string|max:50',
+            'ship_to_code' => 'nullable|string|max:50',
+            'payment_terms_code' => 'nullable|string|max:50',
+            'customer_price_group' => 'nullable|string|max:50',
+        ]);
+
+        $customer->update($validated);
+
+        return redirect()->route('users.show', $customer->id)
+            ->with('success', 'Customer details updated successfully.');
+    }
+
+    /**
+     * Disconnects the customer's portal login (deactivates the linked User
+     * — randomizes their password and flips status off) without touching
+     * the BcCustomer record itself. Previously this deleted the BcCustomer
+     * row outright, which just made a real Business Central customer
+     * vanish from the list instead of cleanly showing as "Not Connect" —
+     * the row now stays, connect_status recomputes to not_connected, and
+     * they can be reconnected via the same "Connect" flow at any time.
+     */
     public function destroy($id)
     {
         $customer = BcCustomer::findOrFail($id);
@@ -628,17 +720,14 @@ class WebUserController extends Controller
             ->first();
 
         if ($user) {
-
             $user->update([
                 'password' => Hash::make(Str::random(40)),
                 'status' => false,
             ]);
         }
 
-        $customer->delete();
-
         return redirect()->route('users.index')
-            ->with('success', 'User deleted successfully.');
+            ->with('success', 'Customer disconnected successfully.');
     }
 
     public function deleteSelected(Request $request)
@@ -667,11 +756,9 @@ class WebUserController extends Controller
                     'status' => false,
                 ]);
             }
-
-            $customer->delete();
         }
 
         return redirect()->route('users.index')
-            ->with('success', 'Selected users deleted successfully.');
+            ->with('success', 'Selected customers disconnected successfully.');
     }
 }

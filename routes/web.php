@@ -19,7 +19,11 @@ use App\Http\Controllers\Api\POS\User\Orders\HistoryController;
 use App\Http\Controllers\Api\ManagementSystem\CompanyController;
 use App\Http\Controllers\Api\POS\Admin\StoreManagement\StoreManagementController;
 use App\Http\Controllers\Api\POS\Admin\Discounts\DiscountController;
-use App\Http\Controllers\Api\POS\Admin\TaxGroups\TaxGroupController;
+use App\Http\Controllers\Api\POS\Admin\NumberSeries\NumberSeriesController;
+use App\Http\Controllers\Api\POS\Admin\Tax\VatPostingSetupController;
+use App\Http\Controllers\Api\POS\Reports\OrderReportController;
+use App\Http\Controllers\Api\POS\Reports\ReportSettingsController;
+use App\Http\Controllers\Api\POS\Admin\ApprovalEntries\ApprovalEntriesController;
 use App\Http\Controllers\Api\POS\Admin\Profile\AdminProfileController;
 use App\Http\Controllers\Api\POS\User\Legal\PolicyController;
 use App\Http\Controllers\Api\BusinessCentral\OrderStatusController;
@@ -56,23 +60,23 @@ Route::middleware(['auth'])->post('/heartbeat', function () {
 // ================= AUTHENTICATED ROUTES =================
 Route::middleware(['auth', 'last.seen'])->group(function () {
 Route::middleware('permission:store_management')->group(function () {
-Route::get('/store-management/data', [StoreManagementController::class, 'getData'])->name('store.management.data');
 Route::get('/store-management', [StoreManagementController::class, 'index'])->name('store.management.index');
 Route::get('/store-management/tracking', [StoreManagementController::class, 'tracking'])->name('store.management.tracking');
 Route::get('/store-management/products/{id}/detail', [StoreManagementController::class, 'productDetail'])->name('store.management.products.detail');
-// Route::get('/store-management/data', [StoreManagementController::class, 'getData'])->name('store.management.data');
 Route::post('/store-management/products/{id}/toggle', [StoreManagementController::class, 'toggleProduct'])->name('store.management.products.toggle');
 Route::post('/store-management/categories/{code}/toggle', [StoreManagementController::class, 'toggleCategory'])->name('store.management.categories.toggle');
 Route::post('/store-management/products/bulk-update', [StoreManagementController::class, 'bulkUpdateProducts'])->name('store.management.products.bulkUpdate');
 Route::post('/store-management/categories/bulk-update', [StoreManagementController::class, 'bulkUpdateCategories'])->name('store.management.categories.bulkUpdate');
+Route::post('/store-management/selling-location', [StoreManagementController::class, 'updateSellingLocation'])->name('store.management.sellingLocation.update');
 Route::get('/store/management/products/{id}/images', [StoreManagementController::class, 'editImages'])
     ->name('store.management.product.images');
 Route::post('/store/management/products/{id}/image', [StoreManagementController::class, 'uploadMainImage'])
     ->name('store.management.product.image.upload');
 Route::post('/store/management/products/{id}/mark-updated', [StoreManagementController::class, 'markUpdated'])
     ->name('store.management.product.markUpdated');
+Route::put('/store/management/products/{id}/description', [StoreManagementController::class, 'updateDescription'])
+    ->name('store.management.product.description.update');
 });
-
     // ---------- Dashboard ----------
     Route::middleware('permission:dashboard')->group(function () {
         Route::get('/admin', [DashboardController::class, 'index'])->name('pos.index');
@@ -84,15 +88,10 @@ Route::post('/store/management/products/{id}/mark-updated', [StoreManagementCont
         Route::get('/', [DashboardUserController::class, 'index'])->name('user.index');
     });
 
-    // ---------- Users ----------
-
     // ---------- Admin Notification ----------
     Route::middleware('permission:notifications')->group(function () {
         Route::get('/admin/notification', [AdminNotificationController::class, 'index'])->name('admin.notification');
     });
-
-
-    Route::get('/item-image/{id}', [ItemPosController::class, 'getItemImage'])->name('item.image');
 
     // ---------- POS Admin ----------
     Route::middleware('permission:pos')->group(function () {
@@ -109,15 +108,9 @@ Route::post('/store/management/products/{id}/mark-updated', [StoreManagementCont
         Route::post('/admin/orders/{id}/cancel', [AdminOrderController::class, 'cancel'])->name('admin.orders.cancel');
         Route::get('/admin/order-actions', [AdminOrderController::class, 'actionHistory'])->name('admin.orders.actions');
         Route::get('/admin/orders/{id}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
-        Route::get('/admin/orders/{id}/invoice', [AdminOrderController::class, 'downloadInvoice'])->name('admin.orders.invoice');
     });
 
-
-
     // ---------- POS User ----------
-    // Every "User Side" page now actually enforces its Page List permission
-    // (previously reference-only) — a role/user gets nothing here until it's
-    // explicitly checked under Roles, same rule as every admin page.
     Route::middleware('permission:storefront')->group(function () {
         Route::get('/pos-system', [ItemListController::class, 'getItems'])->name('user.posinterface');
         Route::get('/pos-system/product/{id}', [ItemListController::class, 'showProduct'])->name('user.pos.product.detail');
@@ -163,7 +156,6 @@ Route::post('/store/management/products/{id}/mark-updated', [StoreManagementCont
     });
 
     Route::middleware('permission:order_history')->group(function () {
-        Route::get('/pos-system/order/download/{id}', [HistoryController::class, 'downloadInvoice'])->name('user.pos.order.download');
         Route::get('/pos-system/order/{order}/bc-status', [OrderStatusController::class, 'show'])->name('user.pos.order.bc-status');
         Route::get('/pos-system/order/{id}', [HistoryController::class, 'show'])->name('user.pos.order.show');
         Route::post('/pos-system/order/{id}/cancel', [HistoryController::class, 'cancel'])->name('user.pos.order.cancel');
@@ -186,8 +178,6 @@ Route::post('/store/management/products/{id}/mark-updated', [StoreManagementCont
         Route::post('/pos-system/checkout', [OrderController::class, 'checkout'])->name('user.pos.checkout.store');
         Route::get('/pos-system/order-success', [OrderController::class, 'success'])->name('user.pos.checkout.success');
     });
-
-
 
     // ---------- Admin Notifications (Canonical) ----------
     Route::middleware('permission:notifications')->prefix('admin/notifications')->name('admin.notifications.')->group(function () {
@@ -253,20 +243,19 @@ Route::post('/store/management/products/{id}/mark-updated', [StoreManagementCont
     });
 
     Route::middleware('permission:page_management')->group(function () {
+        // Read-only — these "pages" are really the app's own permission
+        // directory (App\Models\Permission), tightly coupled to
+        // Database\Seeders\RoleAndPermissionSeeder::$pages and the
+        // permission:* route middleware. Letting admins create/edit/delete
+        // them freely risked drifting a permission's name/urls away from
+        // what's actually seeded and checked, or deleting one a live route
+        // still depends on. They already exist from the seeder, so this is
+        // just a directory to look at, not something to manage here.
         Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
-        Route::get('/permissions/create', [PermissionController::class, 'create'])->name('permissions.create');
-        Route::post('/permissions', [PermissionController::class, 'store'])->name('permissions.store');
-        Route::get('/permissions/{id}/edit', [PermissionController::class, 'edit'])->name('permissions.edit');
-        Route::put('/permissions/{id}', [PermissionController::class, 'update'])->name('permissions.update');
-        Route::delete('/permissions/{id}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
     });
 
 });
 Route::middleware(['auth', 'last.seen'])->prefix('users')->name('users.')->group(function () {
-        // Not gated by 'permission:users' — bc-image is an avatar proxy hit from
-        // customer-facing pages too, and syncOne is self-service (the controller
-        // already checks $isOwner-or-$isAdmin), so neither belongs to the admin
-        // "Users" page specifically.
         Route::get('/bc-image/{bcId}', [WebUserController::class, 'getBCImage'])->name('bc-image');
         Route::post('/{id}/sync-bc', [WebUserController::class, 'syncSingleCustomer'])->name('syncOne');
 
@@ -278,6 +267,7 @@ Route::middleware(['auth', 'last.seen'])->prefix('users')->name('users.')->group
             Route::get('/show/{id}', [WebUserController::class, 'show'])->name('show');
             Route::get('/edit/{id}', [WebUserController::class, 'edit'])->name('edit');
             Route::put('/update/{id}', [WebUserController::class, 'update'])->name('update');
+            Route::put('/{id}/contact-details', [WebUserController::class, 'updateContactDetails'])->name('contactDetails.update');
             Route::delete('/destroy/{id}', [WebUserController::class, 'destroy'])->name('destroy');
             Route::post('/delete-selected', [WebUserController::class, 'deleteSelected'])->name('deleteSelected');
             Route::get('/data', [WebUserController::class, 'getUsers'])->name('data');
@@ -299,11 +289,34 @@ Route::middleware(['auth', 'last.seen', 'permission:discounts'])->group(function
     Route::put('/discounts/{id}', [DiscountController::class, 'update'])->name('discounts.update');
     Route::delete('/discounts/{id}', [DiscountController::class, 'destroy'])->name('discounts.destroy');
 });
-Route::middleware(['auth', 'last.seen', 'permission:tax_groups'])->group(function () {
-    Route::get('/tax-groups', [TaxGroupController::class, 'index'])->name('tax-groups.index');
-    Route::get('/tax-groups/create', [TaxGroupController::class, 'create'])->name('tax-groups.create');
-    Route::post('/tax-groups', [TaxGroupController::class, 'store'])->name('tax-groups.store');
-    Route::get('/tax-groups/{id}/edit', [TaxGroupController::class, 'edit'])->name('tax-groups.edit');
-    Route::put('/tax-groups/{id}', [TaxGroupController::class, 'update'])->name('tax-groups.update');
-    Route::delete('/tax-groups/{id}', [TaxGroupController::class, 'destroy'])->name('tax-groups.destroy');
+Route::middleware(['auth', 'last.seen', 'permission:number_series'])->group(function () {
+    Route::get('/number-series', [NumberSeriesController::class, 'index'])->name('number-series.index');
+    Route::get('/number-series/create', [NumberSeriesController::class, 'create'])->name('number-series.create');
+    Route::post('/number-series', [NumberSeriesController::class, 'store'])->name('number-series.store');
+    Route::get('/number-series/{id}/edit', [NumberSeriesController::class, 'edit'])->name('number-series.edit');
+    Route::put('/number-series/{id}', [NumberSeriesController::class, 'update'])->name('number-series.update');
+    Route::delete('/number-series/{id}', [NumberSeriesController::class, 'destroy'])->name('number-series.destroy');
+});
+Route::middleware(['auth', 'last.seen', 'permission:vat_posting_setup'])->group(function () {
+    Route::get('/vat-posting-setup', [VatPostingSetupController::class, 'index'])->name('vat-posting-setup.index');
+    Route::post('/vat-posting-setup/sync', [VatPostingSetupController::class, 'syncFromBc'])->name('vat-posting-setup.sync');
+});
+Route::middleware(['auth', 'last.seen', 'permission:approval_entries'])->group(function () {
+    Route::get('/approval-entries', [ApprovalEntriesController::class, 'index'])->name('approval-entries.index');
+});
+
+// Order report (Laravel-native PDF — no Business Central report/PDF API
+// involved). Access is checked inside the controller (order owner or an
+// admin/staff with the 'orders' permission), since this is used from both
+// the admin and customer sides.
+Route::middleware(['auth', 'last.seen'])->group(function () {
+    Route::get('/orders/{id}/report', [OrderReportController::class, 'preview'])->name('orders.report.preview');
+    Route::get('/orders/{id}/report/raw', [OrderReportController::class, 'raw'])->name('orders.report.raw');
+    Route::get('/orders/{id}/report/stream', [OrderReportController::class, 'stream'])->name('orders.report.stream');
+    Route::get('/orders/{id}/report/download', [OrderReportController::class, 'download'])->name('orders.report.download');
+});
+
+Route::middleware(['auth', 'last.seen', 'permission:report_settings'])->group(function () {
+    Route::get('/report-settings', [ReportSettingsController::class, 'index'])->name('report-settings.index');
+    Route::put('/report-settings', [ReportSettingsController::class, 'update'])->name('report-settings.update');
 });

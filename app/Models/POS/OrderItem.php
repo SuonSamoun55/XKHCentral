@@ -19,6 +19,9 @@ class OrderItem extends Model
         'line_total',
         'location_code',
     ];
+    protected $casts = [
+        'qty' => 'decimal:2',
+    ];
     public function order()
     {
         return $this->belongsTo(Order::class, 'order_id');

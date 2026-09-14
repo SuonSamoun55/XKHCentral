@@ -3,7 +3,6 @@
 
 @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSUserViews/Notifications/notification.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSUserViews/Notifications/notification.css')) }}" />
     <style>
         .tab-icon-active {
@@ -592,19 +591,6 @@
         function deleteNotificationById(id) {
             deleteNotifications([String(id)]);
         }
-
-        // FIX: this was previously commented out, which is why every row's
-        // onclick="goToNotification(...)" threw "goToNotification is not
-        // defined". Route URL is built with a placeholder id and swapped
-        // in at click time, so it stays in sync with the named route
-        // instead of a hardcoded path.
-        //
-        // isDirectAdminChat + senderId: a one-to-one Admin Message (not a
-        // broadcast Global Message) skips the detail page entirely and
-        // opens the chat thread with that admin instead, per the user's
-        // request. The notification is still marked read first (fire and
-        // forget) so its unread badge clears even though its own detail
-        // page is never visited.
         function goToNotification(id, isDirectAdminChat, senderId) {
             if (isDirectAdminChat) {
                 const readUrlTemplate = "{{ route('user.notifications.read', ['id' => '__ID__']) }}";
@@ -629,7 +615,6 @@
     </script>
 
     <script>
-        // Date filter (desktop input; mobile input mirrors into this one and dispatches 'change')
         const dateInput = document.getElementById('dateInput');
 
         if (dateInput) {
@@ -646,10 +631,6 @@
                 window.location.href = currentUrl.toString();
             });
         }
-
-        // Mobile "unread" switch: no longer marks as read or filters via URL.
-        // It only toggles visibility of the date filter, and remembers the
-        // toggle state in localStorage across page loads.
         const MOBILE_UNREAD_TOGGLE_KEY = 'mobileUnreadFilterToggle';
 
         function filterUnreadMobile() {
@@ -665,7 +646,6 @@
             try {
                 localStorage.setItem(MOBILE_UNREAD_TOGGLE_KEY, checkbox.checked ? '1' : '0');
             } catch (e) {
-                // localStorage may be unavailable (e.g. private mode) - ignore.
             }
         }
 

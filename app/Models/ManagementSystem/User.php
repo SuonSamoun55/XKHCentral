@@ -26,7 +26,9 @@ class User extends Authenticatable
         'role',
         'role_id',
         'bc_customer_no',
+        'staff_no',
         'company_id',
+        'last_company_id',
         'status',
         'linked_at',
         'last_seen_at',
@@ -94,6 +96,15 @@ class User extends Authenticatable
         return $this->roleRelation
             ? $this->roleRelation->permissions->contains('name', $permission)
             : false;
+    }
+
+    /**
+     * True when this user's role is flagged to manage/assign staff roles
+     * across every company, not just the one they're scoped to.
+     */
+    public function canManageStaffAcrossCompanies(): bool
+    {
+        return $this->isAdmin() || (bool) $this->roleRelation?->is_cross_company;
     }
 
     /*

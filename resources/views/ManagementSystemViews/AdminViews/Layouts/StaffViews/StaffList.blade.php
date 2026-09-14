@@ -25,12 +25,6 @@
                     </div>
 
                     <div class="right-tools-inline">
-                        <a href="{{ route('users.index') }}" class="sync-btn">
-                            <i class="bi bi-arrow-left"></i>
-                            <span class="sync-btn-divider"></span>
-                            <span class="sync-btn-text">Back to Customers</span>
-                        </a>
-
                         <button type="button" class="sync-btn" data-bs-toggle="modal" data-bs-target="#staffCreateModal">
                             <img class="bi-person-badge-fill" src="/images/management/staff.png" alt="">
                             <span class="sync-btn-divider"></span>
@@ -46,6 +40,7 @@
                         <table class="table align-middle">
                             <thead>
                                 <tr>
+                                    <th>No.</th>
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Role</th>
@@ -59,13 +54,16 @@
                             <tbody id="staffTableBody">
                                 @forelse($staff as $member)
                                     @php
-                                        $firstLetter = strtoupper(mb_substr(trim($member->name), 0, 1)) ?: 'S';
+                                        $memberName = ucwords($member->name);
+                                        $memberCompanyName = ucwords($member->company->display_name ?? ($member->company->name ?? '—'));
+                                        $firstLetter = strtoupper(mb_substr(trim($memberName), 0, 1)) ?: 'S';
                                         $lastSeenText = $member->last_seen_at
                                             ? \Carbon\Carbon::parse($member->last_seen_at)->format('Y-m-d h:i A')
                                             : '-';
                                     @endphp
                                     <tr class="staff-row" data-name="{{ strtolower($member->name) }}"
                                         data-email="{{ strtolower($member->email ?? '') }}">
+                                        <td title="{{ $member->staff_no ?? '-' }}">{{ $member->staff_no ?? '-' }}</td>
                                         <td>
                                             <div class="avatar-cell">
                                                 <div class="avatar-wrap">
@@ -80,7 +78,7 @@
                                                     @endif
                                                 </div>
                                                 <div class="name-block">
-                                                    <span class="name-text">{{ $member->name }}</span>
+                                                    <span class="name-text">{{ $memberName }}</span>
                                                     @if (!$member->company_id)
                                                         <span class="sub-text">Cross-tenant</span>
                                                     @endif
@@ -89,7 +87,7 @@
                                         </td>
                                         <td>{{ $member->email }}</td>
                                         <td><span class="badge bg-info text-dark">{{ ucfirst($member->role) }}</span></td>
-                                        <td>{{ $member->company->display_name ?? ($member->company->name ?? '—') }}</td>
+                                        <td>{{ $memberCompanyName }}</td>
                                         <td>
                                             @if ($member->status)
                                                 <span class="badge bg-success">Active</span>
@@ -125,13 +123,13 @@
                                     </tr>
                                 @empty
                                     <tr id="noStaffRow">
-                                        <td colspan="7" class="empty-text">No staff accounts yet. Create one to get
+                                        <td colspan="8" class="empty-text">No staff accounts yet. Create one to get
                                             started.</td>
                                     </tr>
                                 @endforelse
 
                                 <tr id="noStaffResultRow" style="display:none;">
-                                    <td colspan="7" class="empty-text">No matching staff found.</td>
+                                    <td colspan="8" class="empty-text">No matching staff found.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -184,7 +182,7 @@
                             </select>
                         </div>
 
-                        @if (!auth()->user()->company_id)
+                        @if (!auth()->user()->company_id || $crossCompany)
                             <div class="mb-3">
                                 <label class="form-label custom-label">Company:</label>
                                 <select name="company_id" class="form-select custom-input">
@@ -264,7 +262,7 @@
                             </select>
                         </div>
 
-                        @if (!auth()->user()->company_id)
+                        @if (!auth()->user()->company_id || $crossCompany)
                             <div class="mb-3">
                                 <label class="form-label custom-label">Company:</label>
                                 <select name="company_id" id="staffEditCompany" class="form-select custom-input">
@@ -378,7 +376,6 @@
 @endsection
 
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Populate the edit modal from the clicked row's data-* attributes.

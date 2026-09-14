@@ -140,7 +140,7 @@
                                             @endif
                                             VAT {{ rtrim(rtrim(number_format($orderItem->display_vat_percent, 2), '0'), '.') }}%: ${{ number_format($orderItem->display_vat_amount, 2) }}
                                             @if ($orderItem->display_discount_percent > 0)
-                                                <br>Discount : {{ rtrim(rtrim(number_format($orderItem->display_discount_percent, 2), '0'), '.') }}% (-${{ number_format($orderItem->display_vat_amount, 2) }})
+                                                <br>Discount : {{ rtrim(rtrim(number_format($orderItem->display_discount_percent, 2), '0'), '.') }}% (-${{ number_format($orderItem->display_discount_amount, 2) }})
                                             @endif
                                         </div>
                                     </div>

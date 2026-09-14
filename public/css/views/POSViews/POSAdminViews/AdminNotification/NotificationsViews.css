@@ -1371,8 +1371,11 @@
         margin-bottom: 12px;
     }
 
+    .main-wrapper{
+        height: 100%;
+    }
     .content-wrapper {
-        padding: 0px;
+        padding: 10px;
     }
 
     .order-detail-title {
@@ -1430,10 +1433,12 @@
     .notification-detail-page .bottom-actions .back-btn,
     .notification-detail-page .bottom-actions .js-detail-delete-form {
         flex: 1;
+         border-radius: 5px;
     }
 
     .notification-detail-page .bottom-actions .delete-btn {
         width: 100%;
+         border-radius: 5px;
     }
 
     .notification-detail-page .image-viewer {
@@ -1457,15 +1462,9 @@
 
     .notification-detail-page .stock-view-order-btn {
         justify-content: center;
-    }
+         border-radius: 5px;
 
-    /* Out-of-stock cards stack full-width already (via the shared
-       .order-detail-grid{grid-template-columns:1fr} rule above), but the
-       desktop's height:40%/60% split on the side cards only means
-       anything against a stretched two-column row — on a single mobile
-       column it's a relic with no real parent height to resolve
-       against, so pin both back to their natural content height and
-       tighten the spacing for a phone-width card. */
+    }
     .notification-detail-page .affected-product-card,
     .notification-detail-page .stock-summary-card,
     .notification-detail-page .stock-alert-card {
@@ -1711,7 +1710,7 @@
         margin-top: 20px;
         height: 48px;
         border: none;
-        border-radius: 12px;
+        border-radius: 5px;
         background: #ef4444;
         color: #fff;
         font-size: 15px;
