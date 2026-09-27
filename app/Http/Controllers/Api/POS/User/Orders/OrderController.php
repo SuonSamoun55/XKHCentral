@@ -42,16 +42,9 @@ class OrderController extends Controller
     }
     private function generateOrderNo(int $companyId): string
     {
-        try {
-            return NumberSeries::issue($companyId, 'ORDER');
-        } catch (\Throwable $e) {
-            Log::warning('Order number series unavailable, using fallback format', [
-                'company_id' => $companyId,
-                'message' => $e->getMessage(),
-            ]);
-
-            return 'ORD-' . now()->format('YmdHis') . Str::upper(Str::random(4));
-        }
+        // No fallback format: checkout() has already verified the ORDER
+        // series is set up, so a failure here should roll the order back.
+        return NumberSeries::issue($companyId, 'ORDER');
     }
 
     public function checkout(Request $r)
@@ -71,6 +64,10 @@ class OrderController extends Controller
 
         if (!$cart || $cart->items->isEmpty()) {
             return $this->fail('Cart is empty');
+        }
+
+        if (!NumberSeries::isConfigured($companyId, 'ORDER')) {
+            return $this->fail('Ordering is not available yet: the Order number series has not been set up. Please contact the store admin.');
         }
 
         DB::beginTransaction();
@@ -109,6 +106,7 @@ class OrderController extends Controller
                 'success' => true,
                 'order_id' => $order->id,
                 'order_no' => $order->order_no,
+                'total' => $order->amount_paid,
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -256,25 +254,6 @@ class OrderController extends Controller
         ]);
     }
 
-    public function detail($id)
-    {
-        $order = Order::with('items.item', 'items.itemVariant')
-            ->where('id', $id)
-            ->where('user_id', auth()->id())
-            ->firstOrFail();
-
-        $cart = Cart::with('items.item')
-            ->where('user_id', auth()->id())
-            ->where('company_id', auth()->user()->company_id)
-            ->where('status', 'active')
-            ->first();
-
-        return view('POSViews.POSUserViews.Cart.index', [
-            'cart' => $cart,
-            'orderDetail' => $order,
-            'showOrderDetail' => true,
-        ]);
-    }
     private function calculateLinePricing($item, float $qty): array
     {
         $unitPrice = (float) ($item->unit_price ?? 0);

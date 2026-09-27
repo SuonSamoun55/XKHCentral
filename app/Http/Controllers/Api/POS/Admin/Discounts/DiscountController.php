@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\POS\Admin\Discounts;
 
+use App\Http\Controllers\Concerns\ResolvesImageUrl;
 use App\Http\Controllers\Controller;
 use App\Models\POS\Item;
 use Illuminate\Http\Request;
@@ -9,6 +10,8 @@ use Carbon\Carbon;
 
 class DiscountController extends Controller
 {
+    use ResolvesImageUrl;
+
     public function index(Request $request)
     {
         $companyId = session('selected_company_id');
@@ -47,6 +50,11 @@ class DiscountController extends Controller
             }
 
             $item->discount_status = $status;
+            // image_url is a bare storage path (e.g. "items/xyz.jpg") — needs
+            // resolveImageUrl() to become an actual URL the <img> tag can
+            // load; custom_image_url (an admin upload) takes priority, same
+            // as every other page that shows this item's picture.
+            $item->resolved_image_url = $this->resolveImageUrl($item->custom_image_url ?: $item->image_url);
             return $item;
         });
 
@@ -78,7 +86,7 @@ class DiscountController extends Controller
                 'name' => $item->display_name ?? '',
                 'number' => $item->number ?? '',
                 'category' => $item->item_category_code ?? '',
-                'image' => $item->image_url ?? '',
+                'image' => $this->resolveImageUrl($item->custom_image_url ?: $item->image_url),
             ];
         })
         ->values()
@@ -146,8 +154,16 @@ public function store(Request $request)
         $companyId = session('selected_company_id');
         $item = Item::where('company_id', $companyId)->findOrFail($id);
         $scheduleType = ($item->discount_start_date || $item->discount_end_date) ? 'scheduled' : 'forever';
+        // image_url on its own is a bare storage path ("items/xyz.jpg"), not
+        // a URL <img src> can load — resolve it the same way every other
+        // page showing this item's picture does. Null (not a placeholder)
+        // when there's genuinely no image, so the view's own icon fallback
+        // still shows instead of a placeholder graphic.
+        $resolvedImageUrl = ($item->custom_image_url || $item->image_url)
+            ? $this->resolveImageUrl($item->custom_image_url ?: $item->image_url)
+            : null;
 
-        return view('POSViews.POSAdminViews.Discounts.edit', compact('item', 'scheduleType'));
+        return view('POSViews.POSAdminViews.Discounts.edit', compact('item', 'scheduleType', 'resolvedImageUrl'));
     }
 
     public function update(Request $request, $id)

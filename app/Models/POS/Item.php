@@ -30,8 +30,11 @@ class Item extends Model
         'base_unit_of_measure_code',
         'price_includes_tax',
         'image_url',
+        'custom_image_url',
         'default_location_code',
         'type',
+        'number_series_id',
+        'series_number',
     ];
 
     protected $casts = [
@@ -66,6 +69,14 @@ class Item extends Model
     public function locationInventories()
     {
         return $this->hasMany(ItemLocationInventory::class, 'item_id');
+    }
+
+    // Which company-wide "Item" number series this item is tagged under.
+    // The issued number lives in series_number, separate from `number`
+    // (Business Central's own item number, overwritten on every sync).
+    public function numberSeries()
+    {
+        return $this->belongsTo(NumberSeries::class, 'number_series_id');
     }
 
     // BC-synced names are inconsistently cased (e.g. "PARIS Guest Chair,

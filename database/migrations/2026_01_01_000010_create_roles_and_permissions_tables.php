@@ -10,15 +10,22 @@ return new class extends Migration
     {
         Schema::create('roles', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->nullOnDelete();
+            $table->string('name');
             $table->string('display_name')->nullable();
+            // When on, staff carrying this role can manage/assign staff
+            // roles in ANY company, not just the one they're scoped to.
+            $table->boolean('is_cross_company')->default(false);
             $table->timestamps();
+            $table->unique(['company_id', 'name']);
         });
 
         Schema::create('permissions', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
             $table->string('display_name')->nullable();
+            $table->string('group')->default('admin');
+            $table->string('urls')->nullable();
             $table->timestamps();
         });
 

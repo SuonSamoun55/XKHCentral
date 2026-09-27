@@ -23,20 +23,57 @@
             @include('Layout.POSUser.footer')
                 {{-- ===== MOBILE FILTERS (phone only) ===== --}}
                 <div class="pl-mobile-product-filters" id="mobileProductFilters">
-                    <div class="pl-mobile-search-box">
-                        <i class="bi bi-search"></i>
-                        <input type="text" id="mobileSearchInput" placeholder="Search products ...">
-                    </div>
-                    <div class="pl-mobile-category-row" aria-label="Product categories">
-                        <button type="button" class="pl-category-filter-btn active" data-category="">
-                            All categories
+                    <div class="pl-mobile-filter-row">
+                        <div class="pl-mobile-search-box">
+                            <i class="bi bi-search"></i>
+                            <input type="text" id="mobileSearchInput" placeholder="Search products ...">
+                        </div>
+
+                        <button type="button" class="pl-mobile-filter-btn" id="mobileFilterBtn"
+                            aria-haspopup="dialog" aria-expanded="false" aria-controls="mobileFilterSheet">
+                            <img src="{{ asset('images/AdminPOS/filter (1).png') }}" alt="Filter" class="pl-mobile-filter-icon">
+                            <span class="pl-mobile-filter-count" id="mobileFilterCount" hidden>0</span>
                         </button>
-                        @foreach ($categoryOptions as $category)
-                            <button type="button" class="pl-category-filter-btn"
-                                data-category="{{ strtolower($category) }}">
-                                {{ ucwords(str_replace(['_', '-'], ' ', $category)) }}
+                    </div>
+                </div>
+
+                {{-- Category filter — bottom sheet with checkboxes (phone only) --}}
+                <div class="pl-filter-sheet-overlay" id="mobileFilterOverlay">
+                    <div class="pl-filter-sheet" id="mobileFilterSheet" role="dialog" aria-modal="true"
+                        aria-labelledby="mobileFilterTitle">
+                        <div class="pl-filter-sheet-handle"></div>
+                        <div class="pl-filter-sheet-header">
+                            <h3 id="mobileFilterTitle">Filter by category</h3>
+                            <button type="button" class="pl-filter-sheet-close" id="mobileFilterClose"
+                                aria-label="Close filter">
+                                <i class="bi bi-x-lg"></i>
                             </button>
-                        @endforeach
+                        </div>
+                        @if ($categoryOptions->isNotEmpty())
+                            <div class="pl-filter-sheet-search">
+                                <i class="bi bi-search"></i>
+                                <input type="text" id="mobileFilterSearchInput" placeholder="Search category ...">
+                            </div>
+                        @endif
+                        <div class="pl-filter-sheet-body" id="mobileFilterBody">
+                            @forelse ($categoryOptions as $category)
+                                <label class="pl-filter-checkbox-row">
+                                    <input type="checkbox" class="pl-filter-checkbox"
+                                        value="{{ strtolower($category) }}">
+                                    <span class="pl-filter-checkbox-box"><i class="bi bi-check"></i></span>
+                                    <span class="pl-filter-checkbox-label">
+                                        {{ ucwords(str_replace(['_', '-'], ' ', $category)) }}
+                                    </span>
+                                </label>
+                            @empty
+                                <div class="pl-filter-empty">No categories available.</div>
+                            @endforelse
+                            <div class="pl-filter-empty" id="mobileFilterNoMatch" hidden>No matching categories.</div>
+                        </div>
+                        <div class="pl-filter-sheet-footer">
+                            <button type="button" class="pl-filter-clear-btn" id="mobileFilterClear">Clear all</button>
+                            <button type="button" class="pl-filter-apply-btn" id="mobileFilterApply">Apply</button>
+                        </div>
                     </div>
                 </div>
                 <div class="pl-header">
@@ -57,7 +94,7 @@
                             {{-- Teal filter toggle button --}}
                             <button type="button" class="pl-desktop-filter-btn" id="desktopFilterBtn"
                                 title="Filter by category">
-                                <i class="bi bi-sliders2"></i>
+                                <img src="{{ asset('images/AdminPOS/filter (1).png') }}" alt="Filter" class="pl-desktop-filter-icon">
                             </button>
 
                             {{-- Pill search with teal send button --}}
@@ -187,9 +224,6 @@
                                             @endif
                                         </div>
                                     @endif
-                                    @if (!empty($descText))
-                                        <div class="pl-product-desc-line">{{ $descText }}</div>
-                                    @endif
 
                                     <div class="pl-price-row {{ $oldPrice > $salePrice ? 'has-discount' : 'no-discount' }}">
                                         <div class="pl-old-price">
@@ -313,7 +347,17 @@
 
             mobileProductFilters:  document.getElementById("mobileProductFilters"),
             mobileSearchInput:     document.getElementById("mobileSearchInput"),
-            mobileCategoryRow:     document.querySelector(".pl-mobile-category-row"),
+
+            mobileFilterBtn:       document.getElementById("mobileFilterBtn"),
+            mobileFilterCount:     document.getElementById("mobileFilterCount"),
+            mobileFilterOverlay:   document.getElementById("mobileFilterOverlay"),
+            mobileFilterClose:     document.getElementById("mobileFilterClose"),
+            mobileFilterApply:     document.getElementById("mobileFilterApply"),
+            mobileFilterClear:     document.getElementById("mobileFilterClear"),
+            mobileFilterSearchInput: document.getElementById("mobileFilterSearchInput"),
+            mobileFilterBody:      document.getElementById("mobileFilterBody"),
+            mobileFilterNoMatch:   document.getElementById("mobileFilterNoMatch"),
+            filterCheckboxes:      [...document.querySelectorAll(".pl-filter-checkbox")],
 
             desktopFilterBtn:      document.getElementById("desktopFilterBtn"),
             desktopCategoryRow:    document.getElementById("desktopCategoryRow"),
@@ -343,8 +387,11 @@
             variantModalNext:      document.getElementById("variantModalNext")
         };
 
-        let selectedCategory = "";
-        let lastScrollY = window.scrollY;
+        // Desktop's single-select pill row and the mobile checkbox sheet both
+        // read/write this same set — desktop clicks always collapse it to one
+        // entry (or clear it for "All"), the mobile sheet lets several be
+        // checked at once. Empty set = no category filter applied.
+        let activeCategories = new Set();
 
         let recentSearches = JSON.parse(localStorage.getItem("pos_recent_searches")) || [
             "premium beef", "beef steak", "meat"
@@ -412,10 +459,10 @@
             if (els.mobileSearchInput && els.mobileSearchInput.value !== value) els.mobileSearchInput.value = value;
         }
 
-        function matchCard(card, keyword, category = selectedCategory) {
+        function matchCard(card, keyword) {
             const text = keyword.trim().toLowerCase();
             const data = getCardData(card);
-            if (category && data.category !== category) return false;
+            if (activeCategories.size > 0 && !activeCategories.has(data.category)) return false;
             if (!text) return true;
             return [data.name, data.displayName.toLowerCase(), data.desc, data.category, data.uom]
                 .some(v => v.includes(text));
@@ -866,7 +913,8 @@
                 button.addEventListener("click", async function () {
                     const itemId = this.dataset.itemId;
                     const icon   = this.querySelector("i");
-                    if (!itemId) return;
+                    if (!itemId || this.disabled) return;
+                    this.disabled = true;
                     try {
                         const response = await fetch("{{ route('user.pos.favorite.toggle') }}", {
                             method: "POST",
@@ -878,19 +926,27 @@
                             body: JSON.stringify({ item_id: itemId })
                         });
                         const data = await response.json();
+
+                        if (!response.ok || !data.success) {
+                            showToast("error", data.message || "Favorite update failed.");
+                            return;
+                        }
+
                         if (!icon) return;
                         if (data.favorited) {
                             icon.classList.remove("bi-heart");
                             icon.classList.add("bi-heart-fill", "text-danger");
-                            showToast("success", "Added to favorites.");
+                            showToast("success", data.message || "Added to favorites.");
                         } else {
                             icon.classList.remove("bi-heart-fill", "text-danger");
                             icon.classList.add("bi-heart");
-                            showToast("success", "Removed from favorites.");
+                            showToast("success", data.message || "Removed from favorites.");
                         }
                     } catch (error) {
                         console.error(error);
                         showToast("error", "Favorite update failed.");
+                    } finally {
+                        this.disabled = false;
                     }
                 });
             });
@@ -929,30 +985,103 @@
             });
         }
 
+        // Reflects activeCategories onto every filter control that shows it:
+        // the desktop pill row's "active" class, the mobile sheet's checkboxes,
+        // and the filter button's count badge. Called after ANY control changes
+        // the set, so the desktop pills and mobile sheet never drift out of sync.
+        function syncFilterUI() {
+            els.categoryButtons.forEach(btn => {
+                const btnCategory = normalizeCategory(btn.dataset.category || "");
+                const isAllBtn = btnCategory === "";
+                btn.classList.toggle("active", isAllBtn ? activeCategories.size === 0 : activeCategories.has(btnCategory));
+            });
+
+            els.filterCheckboxes.forEach(cb => {
+                cb.checked = activeCategories.has(cb.value);
+            });
+
+            const count = activeCategories.size;
+            if (els.mobileFilterCount) {
+                els.mobileFilterCount.textContent = count;
+                els.mobileFilterCount.hidden = count === 0;
+            }
+            els.mobileFilterBtn?.classList.toggle("active", count > 0);
+        }
+
         function bindCategoryFilters() {
             els.categoryButtons.forEach(button => {
                 button.addEventListener("click", () => {
-                    selectedCategory = normalizeCategory(button.dataset.category || "");
-                    const parent = button.closest(".pl-desktop-category-row, .pl-mobile-category-row");
-                    if (parent) parent.querySelectorAll(".pl-category-filter-btn").forEach(b => b.classList.remove("active"));
-                    button.classList.add("active");
+                    const category = normalizeCategory(button.dataset.category || "");
+                    if (category) {
+                        activeCategories = new Set([category]);
+                    } else {
+                        activeCategories.clear();
+                    }
+                    syncFilterUI();
                     filterProducts();
                     closeSearchDropdown();
                 });
             });
         }
 
-        function bindMobileFilterScroll() {
-            if (!els.mobileCategoryRow) return;
-            const isMobile = () => window.matchMedia("(max-width: 767px)").matches;
-            const updateCategoryVisibility = (currentY) => {
-                if (!isMobile()) { els.mobileCategoryRow.classList.remove("is-hidden"); return; }
-                const scrollingDown = currentY > lastScrollY;
-                els.mobileCategoryRow.classList.toggle("is-hidden", scrollingDown && currentY > 24);
-                lastScrollY = Math.max(currentY, 0);
-            };
-            window.addEventListener("scroll",  () => updateCategoryVisibility(window.scrollY), { passive: true });
-            els.productsGrid?.addEventListener("scroll", () => updateCategoryVisibility(els.productsGrid.scrollTop), { passive: true });
+        function bindMobileFilterSheet() {
+            if (!els.mobileFilterBtn || !els.mobileFilterOverlay) return;
+
+            function openSheet() {
+                els.mobileFilterOverlay.classList.add("show");
+                els.mobileFilterBtn.setAttribute("aria-expanded", "true");
+                document.body.classList.add("filter-sheet-open");
+            }
+            function closeSheet() {
+                els.mobileFilterOverlay.classList.remove("show");
+                els.mobileFilterBtn.setAttribute("aria-expanded", "false");
+                document.body.classList.remove("filter-sheet-open");
+
+                // Reset the "search categories" box so re-opening the sheet
+                // always starts showing the full list again.
+                if (els.mobileFilterSearchInput) els.mobileFilterSearchInput.value = "";
+                els.mobileFilterBody?.querySelectorAll(".pl-filter-checkbox-row").forEach(row => {
+                    row.hidden = false;
+                });
+                if (els.mobileFilterNoMatch) els.mobileFilterNoMatch.hidden = true;
+            }
+
+            els.mobileFilterBtn.addEventListener("click", openSheet);
+            els.mobileFilterClose?.addEventListener("click", closeSheet);
+            els.mobileFilterApply?.addEventListener("click", closeSheet);
+            els.mobileFilterOverlay.addEventListener("click", (e) => {
+                if (e.target === els.mobileFilterOverlay) closeSheet();
+            });
+
+            els.filterCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener("change", () => {
+                    if (checkbox.checked) activeCategories.add(checkbox.value);
+                    else activeCategories.delete(checkbox.value);
+                    syncFilterUI();
+                    filterProducts();
+                });
+            });
+
+            els.mobileFilterClear?.addEventListener("click", () => {
+                activeCategories.clear();
+                syncFilterUI();
+                filterProducts();
+            });
+
+            // Searches the checkbox list itself (category names), separate
+            // from the product search box — lets you find a category quickly
+            // when there are a lot of them, without touching the product grid.
+            els.mobileFilterSearchInput?.addEventListener("input", () => {
+                const text = els.mobileFilterSearchInput.value.trim().toLowerCase();
+                let visibleCount = 0;
+                els.mobileFilterBody?.querySelectorAll(".pl-filter-checkbox-row").forEach(row => {
+                    const label = row.querySelector(".pl-filter-checkbox-label")?.textContent?.trim().toLowerCase() || "";
+                    const matched = !text || label.includes(text);
+                    row.hidden = !matched;
+                    if (matched) visibleCount++;
+                });
+                if (els.mobileFilterNoMatch) els.mobileFilterNoMatch.hidden = visibleCount > 0;
+            });
         }
 
         function bindProductDetailNavigation() {
@@ -975,7 +1104,7 @@
         bindFavoriteButtons();
         bindSearch();
         bindCategoryFilters();
-        bindMobileFilterScroll();
+        bindMobileFilterSheet();
         bindProductDetailNavigation();
     });
     </script>

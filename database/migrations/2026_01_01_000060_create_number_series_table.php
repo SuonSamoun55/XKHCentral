@@ -18,6 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('start_no');
             $table->unsignedBigInteger('end_no');
             $table->unsignedBigInteger('last_no')->nullable();
+            $table->timestamp('last_used_at')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 

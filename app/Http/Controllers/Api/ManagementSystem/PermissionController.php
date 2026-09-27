@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\ManagementSystem;
 
 use App\Http\Controllers\Controller;
 use App\Models\Permission;
+use Database\Seeders\RoleAndPermissionSeeder;
 
 class PermissionController extends Controller
 {
@@ -18,5 +19,18 @@ class PermissionController extends Controller
         $permissions = Permission::orderBy('display_name')->get()->groupBy('group');
 
         return view('ManagementSystemViews.AdminViews.Layouts.PermissionsViews.PermissionView', compact('permissions'));
+    }
+
+    /**
+     * Re-runs RoleAndPermissionSeeder so any page added to its $pages array
+     * (in code) but never seeded on this environment gets created/updated
+     * here without needing a fresh deploy or manual `artisan db:seed`.
+     */
+    public function sync()
+    {
+        (new RoleAndPermissionSeeder())->run();
+
+        return redirect()->route('permissions.index')
+            ->with('success', 'Pages synced — ' . count(RoleAndPermissionSeeder::$pages) . ' page(s) up to date.');
     }
 }

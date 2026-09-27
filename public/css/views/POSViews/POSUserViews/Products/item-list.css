@@ -105,32 +105,37 @@
         margin-bottom: 5px;
     }
 
-    /* ── filter button ───────────────────────────────────────── */
+    /* ── filter button (same icon image + colors as the mobile filter button) ── */
     .pl-desktop-filter-btn {
         flex-shrink: 0;
         width: 35px;
         height: 35px;
-        border: none;
+        border: 1px solid #cfdcf1;
         border-radius: 5px;
-        background: var(--pl-primary);
-        color: #fff;
+        background: #ffffff;
+        color: #27c4c8;
         font-size: 15px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-        box-shadow: 0 3px 10px rgba(39, 196, 200, 0.35);
+        transition: background 0.2s, border-color 0.2s, transform 0.15s;
     }
 
     .pl-desktop-filter-btn:hover {
-        background: var(--pl-primary-hover);
+        border-color: #27c4c8;
         transform: translateY(-1px);
-        box-shadow: 0 5px 14px rgba(39, 196, 200, 0.4);
     }
 
     .pl-desktop-filter-btn.active {
-        background: #0fa3a7;
+        background: rgba(39, 196, 200, 0.12);
+        border-color: #27c4c8;
+    }
+
+    .pl-desktop-filter-icon {
+        width: 16px;
+        height: 16px;
+        object-fit: contain;
     }
 
     /* ── search area ─────────────────────────────────────────── */
@@ -154,13 +159,13 @@
         min-height: 35px;
         padding: 6px 12px;
         border-radius: 5px;
-        border: 1.5px solid var(--pl-primary);
+        border: 1px solid #cfdcf1;
         box-shadow: none;
     }
 
     .pl-search-box>i {
         font-size: 14px;
-        color: var(--pl-primary);
+        color: #6b7280;
         flex-shrink: 0;
     }
 
@@ -224,14 +229,14 @@
     }
 
     .pl-desktop-category-row .pl-category-filter-btn:hover {
-        border-color: var(--pl-primary);
-        color: var(--pl-primary);
+        border-color: #27c4c8;
+        color: #27c4c8;
         background: rgba(39, 196, 200, 0.06);
     }
 
     .pl-desktop-category-row .pl-category-filter-btn.active {
-        background: var(--pl-primary);
-        border-color: var(--pl-primary);
+        background: #27c4c8;
+        border-color: #27c4c8;
         color: #fff;
     }
 
@@ -379,10 +384,19 @@
 
     .mobile {
         display: none;
+        padding: 0px;
     }
 
     .pl-mobile-product-filters {
         display: none;
+    }
+
+    .pl-filter-sheet-overlay {
+        display: none;
+    }
+
+    body.filter-sheet-open {
+        overflow: hidden;
     }
 
     .pl-header {
@@ -590,7 +604,8 @@
         display: flex;
         flex-direction: column;
         width: 100%;
-        min-height: 300px;
+        min-height: 280px;
+        max-height: 280px;
         align-self: start;
         transition: transform 0.22s ease, box-shadow 0.22s ease;
     }
@@ -695,16 +710,6 @@
         margin-top: -2px;
     }
 
-    .pl-product-desc-line {
-        font-size: 11.5px;
-        color: #8a8f98;
-        margin-top: 2px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 100%;
-    }
-
     .pl-price-row {
         display: flex;
         justify-content: space-between;
@@ -772,6 +777,12 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        justify-self:end;
+        /* Pushes the quantity row (and the Add to cart / View detail
+           buttons after it) to the bottom of the card, so cards without
+           a description line don't leave their buttons sitting higher
+           than cards that have one. */
+        margin-top: auto;
     }
 
     .pl-qty-label {
@@ -845,7 +856,6 @@
         font-weight: 700;
         cursor: pointer;
         transition: 0.2s;
-        margin-top: auto;
     }
 
     .pl-add-cart-btn:hover {
@@ -1250,10 +1260,16 @@
         }
 
         .pl-page-wrap {
-            height: 100dvh;
+            height: 100vh;
             min-height: 0;
-            padding: 0 12px 82px;
+            padding: 0 0px 82px;
             overflow: hidden;
+        }
+        .pl-content-area{
+            padding: 0px 10px;
+        }
+        .cart-boxM{
+            padding:5px 0px ;
         }
 
         .pl-topbar {
@@ -1275,7 +1291,7 @@
         .pl-content-area {
             background: transparent;
             box-shadow: none;
-            padding: 0;
+            /* padding: 0; */
             height: 100%;
             min-height: 0;
             display: flex;
@@ -1300,22 +1316,29 @@
             pointer-events: none;
         }
 
+        .pl-mobile-filter-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .pl-mobile-search-box {
             display: flex;
             align-items: center;
-            gap: 12px;
-            width: 100%;
-            min-height: 56px;
-            padding: 0 14px;
-            margin: 0 0 16px;
-            background: #ffffff;
-            border: 1px solid #cfdcf1;
-            border-radius: 12px;
+            gap: 8px;
+            flex: 1 1 auto;
+            min-width: 0;
+            height: 35px;
+            padding: 0 12px;
+            margin: 0;
+            background: #f8fafc;
+            border: 1px solid #dce5ec;
+            border-radius: 6px;
         }
 
         .pl-mobile-search-box i {
-            color: #081936;
-            font-size: 20px;
+            color: #94a3b8;
+            font-size: 13px;
             flex-shrink: 0;
         }
 
@@ -1325,54 +1348,265 @@
             border: 0;
             outline: 0;
             background: transparent;
-            color: #081936;
+            color: #334155;
             font-size: 13px;
         }
 
         .pl-mobile-search-box input::placeholder {
-            color: #8797b3;
-        }
-
-        .pl-mobile-category-row {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding: 0 0 2px;
-            max-height: 46px;
+            color: #94a3b8;
+            font-size: 13px;
+            font-family: inherit;
             opacity: 1;
-            transition: max-height 0.24s ease, opacity 0.2s ease, margin 0.24s ease;
-            scrollbar-width: none;
-            -webkit-overflow-scrolling: touch;
         }
 
-        .pl-mobile-category-row.is-hidden {
-            max-height: 0;
-            margin-top: 0;
-            padding-top: 0;
-            padding-bottom: 0;
-            opacity: 0;
-            pointer-events: none;
-            overflow: hidden;
-        }
-
-        .pl-mobile-category-row::-webkit-scrollbar {
-            display: none;
-        }
-
-        .pl-category-filter-btn {
+        /* ── mobile filter button (opens the category checkbox sheet) ── */
+        .pl-mobile-filter-btn {
+            position: relative;
             flex: 0 0 auto;
-            border: 0;
-            border-radius: 999px;
-            padding: 11px 16px;
-            background: #f2f6fc;
+            width: 35px;
+            height: 35px;
+            border: 1px solid #dce5ec;
+            border-radius: 6px;
+            background: #f8fafc;
             color: #081936;
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
         }
 
-        .pl-category-filter-btn.active {
+        /* Icon image is already the primary teal color, so "active" is shown
+           as a soft tint + colored border instead of a solid fill — a solid
+           teal background would make the teal icon disappear into it. */
+        .pl-mobile-filter-btn.active {
+            background: rgba(39, 196, 200, 0.12);
+            border-color: #27c4c8;
+        }
+
+        .pl-mobile-filter-icon {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+        }
+
+        .pl-mobile-filter-count {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 16px;
+            height: 16px;
+            padding: 0 4px;
+            border-radius: 999px;
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 16px;
+            text-align: center;
+        }
+
+        /* ── category filter bottom sheet ── */
+        .pl-filter-sheet-overlay.show {
+            display: flex;
+            align-items: flex-end;
+            position: fixed;
+            inset: 0;
+            background: rgba(8, 25, 54, 0.45);
+            z-index: 1500;
+        }
+
+        .pl-filter-sheet {
+            width: 100%;
+            /* Capped at ~half the screen so a long category list doesn't take
+               over the whole viewport — the list itself scrolls within that. */
+            height: 50vh;
+            max-height: 50vh;
+            background: #ffffff;
+            border-top-left-radius: 18px;
+            border-top-right-radius: 18px;
+            padding: 8px 18px calc(16px + env(safe-area-inset-bottom));
+            display: flex;
+            flex-direction: column;
+            animation: plFilterSheetUp 0.22s ease;
+        }
+
+        @keyframes plFilterSheetUp {
+            from { transform: translateY(16px); opacity: 0.6; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+
+        .pl-filter-sheet-handle {
+            width: 36px;
+            height: 4px;
+            border-radius: 999px;
+            background: #e1e8f5;
+            margin: 6px auto 10px;
+            flex-shrink: 0;
+        }
+
+        .pl-filter-sheet-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+
+        .pl-filter-sheet-header h3 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 700;
+            color: #081936;
+        }
+
+        .pl-filter-sheet-close {
+            border: 0;
+            background: #f2f6fc;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            color: #081936;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pl-filter-sheet-search {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 38px;
+            padding: 0 12px;
+            margin-bottom: 8px;
+            background: #f2f6fc;
+            border: 1px solid #e4ebf7;
+            border-radius: 5px;
+            flex-shrink: 0;
+        }
+
+        .pl-filter-sheet-search i {
+            color: #6b7280;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .pl-filter-sheet-search input {
+            width: 100%;
+            min-width: 0;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: #081936;
+            font-size: 13px;
+        }
+
+        .pl-filter-sheet-search input::placeholder {
+            color: #8797b3;
+        }
+
+        .pl-filter-sheet-body {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .pl-filter-empty {
+            padding: 16px 4px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .pl-filter-checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 4px;
+            border-bottom: 1px solid #f0f3fa;
+            cursor: pointer;
+        }
+
+        /* the class rule above (display: flex) has higher specificity than
+           the browser's default [hidden] rule, so it silently wins and the
+           row.hidden = true the search box sets in JS had no visual effect
+           without this override. */
+        .pl-filter-checkbox-row[hidden] {
+            display: none;
+        }
+
+        .pl-filter-checkbox-row:last-child {
+            border-bottom: 0;
+        }
+
+        .pl-filter-checkbox {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .pl-filter-checkbox-box {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 1.5px solid #cfdcf1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: transparent;
+            font-size: 14px;
+            transition: background 0.15s ease, border-color 0.15s ease;
+        }
+
+        .pl-filter-checkbox:checked + .pl-filter-checkbox-box {
+            background: #27c4c8;
+            border-color: #27c4c8;
+            color: #ffffff;
+        }
+
+        .pl-filter-checkbox:focus-visible + .pl-filter-checkbox-box {
+            outline: 2px solid #27c4c8;
+            outline-offset: 2px;
+        }
+
+        .pl-filter-checkbox-label {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #081936;
+        }
+
+        .pl-filter-sheet-footer {
+            display: flex;
+            gap: 10px;
+            padding-top: 12px;
+            flex-shrink: 0;
+        }
+
+        .pl-filter-clear-btn,
+        .pl-filter-apply-btn {
+            flex: 1 1 0;
+            height: 42px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .pl-filter-clear-btn {
+            border: 1px solid #cfdcf1;
+            background: #ffffff;
+            color: #081936;
+        }
+
+        .pl-filter-apply-btn {
+            border: 0;
             background: #27c4c8;
             color: #ffffff;
         }
@@ -1487,6 +1721,7 @@
             overflow-x: hidden;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
+            padding-bottom: 70px;
         }
 
         /* card height/spacing tightened now that the qty stepper is hidden */

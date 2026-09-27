@@ -7,11 +7,77 @@
 @endpush
 
 @section('content')
+    @php
+        $categoryOptions = $favorites
+            ->pluck('item_category_code')
+            ->filter(fn ($category) => filled($category))
+            ->unique()
+            ->sort()
+            ->values();
+    @endphp
 
     <div class="page-wrap">
         <main class="content-area">
             @include('Layout.POSUser.header_mobile')
             @include('Layout.POSUser.footer')
+
+            @if ($favorites->isNotEmpty())
+                {{-- ===== MOBILE FILTERS (phone only) ===== --}}
+                <div class="mobile-product-filters" id="mobileProductFilters">
+                    <div class="mobile-filter-row">
+                        <div class="mobile-search-box">
+                            <i class="bi bi-search"></i>
+                            <input type="text" id="mobileSearchInput" placeholder="Search wishlist ...">
+                        </div>
+
+                        <button type="button" class="mobile-filter-btn" id="mobileFilterBtn"
+                            aria-haspopup="dialog" aria-expanded="false" aria-controls="mobileFilterSheet">
+                            <img src="{{ asset('images/AdminPOS/filter (1).png') }}" alt="Filter" class="mobile-filter-icon">
+                            <span class="mobile-filter-count" id="mobileFilterCount" hidden>0</span>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Category filter — bottom sheet with checkboxes (phone only) --}}
+                <div class="filter-sheet-overlay" id="mobileFilterOverlay">
+                    <div class="filter-sheet" id="mobileFilterSheet" role="dialog" aria-modal="true"
+                        aria-labelledby="mobileFilterTitle">
+                        <div class="filter-sheet-handle"></div>
+                        <div class="filter-sheet-header">
+                            <h3 id="mobileFilterTitle">Filter by category</h3>
+                            <button type="button" class="filter-sheet-close" id="mobileFilterClose"
+                                aria-label="Close filter">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        @if ($categoryOptions->isNotEmpty())
+                            <div class="filter-sheet-search">
+                                <i class="bi bi-search"></i>
+                                <input type="text" id="mobileFilterSearchInput" placeholder="Search category ...">
+                            </div>
+                        @endif
+                        <div class="filter-sheet-body" id="mobileFilterBody">
+                            @forelse ($categoryOptions as $category)
+                                <label class="filter-checkbox-row">
+                                    <input type="checkbox" class="filter-checkbox"
+                                        value="{{ strtolower($category) }}">
+                                    <span class="filter-checkbox-box"><i class="bi bi-check"></i></span>
+                                    <span class="filter-checkbox-label">
+                                        {{ ucwords(str_replace(['_', '-'], ' ', $category)) }}
+                                    </span>
+                                </label>
+                            @empty
+                                <div class="filter-empty">No categories available.</div>
+                            @endforelse
+                            <div class="filter-empty" id="mobileFilterNoMatch" hidden>No matching categories.</div>
+                        </div>
+                        <div class="filter-sheet-footer">
+                            <button type="button" class="filter-clear-btn" id="mobileFilterClear">Clear all</button>
+                            <button type="button" class="filter-apply-btn" id="mobileFilterApply">Apply</button>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             <div class="header">
                 <div class="topbar">
@@ -22,6 +88,38 @@
                             <span class="cart-count" id="desktopCartCount">{{ (int) ($cartCount ?? 0) }}</span>
                         </a>
                     </div>
+
+                    @if ($favorites->isNotEmpty())
+                        {{-- Search row: filter btn + pill search --}}
+                        <div class="desktop-search-row">
+                            <button type="button" class="desktop-filter-btn" id="desktopFilterBtn"
+                                title="Filter by category">
+                                <img src="{{ asset('images/AdminPOS/filter (1).png') }}" alt="Filter" class="desktop-filter-icon">
+                            </button>
+
+                            <div class="search-area">
+                                <div class="search-wrapper">
+                                    <div class="search-box-desktop">
+                                        <i class="bi bi-search"></i>
+                                        <input type="text" id="searchInput" placeholder="Search your wishlist...">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Desktop category pills (toggled by filter btn) --}}
+                        <div class="desktop-category-row" id="desktopCategoryRow">
+                            <button type="button" class="category-filter-btn active" data-category="">
+                                All
+                            </button>
+                            @foreach ($categoryOptions as $category)
+                                <button type="button" class="category-filter-btn"
+                                    data-category="{{ strtolower($category) }}">
+                                    {{ ucwords(str_replace(['_', '-'], ' ', $category)) }}
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -95,7 +193,9 @@
                         <div class="product-card product-item"
                             data-id="{{ $item->id }}"
                             data-detail-url="{{ route('user.pos.product.detail', $item->id) }}"
+                            data-name="{{ strtolower($item->display_name ?? '') }}"
                             data-display-name="{{ $item->display_name ?? '' }}"
+                            data-category="{{ strtolower($item->item_category_code ?? '') }}"
                             data-uom="{{ strtolower($item->base_unit_of_measure_code ?? '') }}"
                             data-price="{{ number_format($salePrice, 2, '.', '') }}"
                             data-old-price="{{ $oldPrice > $salePrice ? number_format($oldPrice, 2, '.', '') : '' }}"
@@ -123,10 +223,6 @@
                                 @if (!empty($item->base_unit_of_measure_code))
                                     <div class="product-subtitle">Unit: {{ strtoupper($item->base_unit_of_measure_code) }}</div>
                                 @endif
-                                @if (!empty($item->description))
-                                    <div class="product-desc-line">{{ $item->description }}</div>
-                                @endif
-
                                 <div class="price-row {{ $oldPrice > $salePrice ? 'has-discount' : 'no-discount' }}">
                                     <div class="old-price">
                                         @if ($oldPrice > $salePrice)
@@ -156,11 +252,13 @@
                         </div>
                     @endforeach
                 </div>
+
+                <div id="noSearchResult" class="empty-box" style="display:none;">
+                    No matching products found.
+                </div>
             @endif
         </main>
     </div>
-
-    {{-- ===== VARIANT SELECTION POPUP (copied from item-list) ===== --}}
     <div class="variant-modal-overlay" id="variantModalOverlay">
         <div class="variant-modal" role="dialog" aria-modal="true" aria-labelledby="variantModalTitle">
             <button type="button" class="variant-modal-close" id="variantModalClose" title="Close">
@@ -229,6 +327,25 @@ document.addEventListener("DOMContentLoaded", () => {
         productsGrid:       document.getElementById("productsGrid"),
         productCards:       [...document.querySelectorAll(".product-card")],
         favButtons:         [...document.querySelectorAll(".fav-btn")],
+        noSearchResult:     document.getElementById("noSearchResult"),
+
+        searchInput:        document.getElementById("searchInput"),
+        mobileSearchInput:  document.getElementById("mobileSearchInput"),
+
+        desktopFilterBtn:   document.getElementById("desktopFilterBtn"),
+        desktopCategoryRow: document.getElementById("desktopCategoryRow"),
+        categoryButtons:    [...document.querySelectorAll(".category-filter-btn")],
+
+        mobileFilterBtn:       document.getElementById("mobileFilterBtn"),
+        mobileFilterCount:     document.getElementById("mobileFilterCount"),
+        mobileFilterOverlay:   document.getElementById("mobileFilterOverlay"),
+        mobileFilterClose:     document.getElementById("mobileFilterClose"),
+        mobileFilterApply:     document.getElementById("mobileFilterApply"),
+        mobileFilterClear:     document.getElementById("mobileFilterClear"),
+        mobileFilterSearchInput: document.getElementById("mobileFilterSearchInput"),
+        mobileFilterBody:      document.getElementById("mobileFilterBody"),
+        mobileFilterNoMatch:   document.getElementById("mobileFilterNoMatch"),
+        filterCheckboxes:      [...document.querySelectorAll(".filter-checkbox")],
 
         variantModalOverlay:    document.getElementById("variantModalOverlay"),
         variantModalClose:      document.getElementById("variantModalClose"),
@@ -274,12 +391,17 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!els.productsGrid) return;
         if (els.productsGrid.querySelectorAll(".product-card").length > 0) return;
         els.productsGrid.remove();
-        if (document.querySelector(".wishlist-page") || document.querySelector(".empty-box")) return;
+        // NOT ".empty-box" — #noSearchResult ("No matching products found")
+        // also carries that class and stays in the DOM (just hidden) even
+        // when the wishlist isn't empty, so that check was always true and
+        // this function silently did nothing after the very first removal.
+        if (document.getElementById("jsEmptyWishlist")) return;
 
         // Same markup the server renders on a fresh page load (mobile
         // .wishlist-page + desktop .empty-box) — keeps the real "empty
         // wishlist" image/illustration instead of a bare text placeholder.
         const emptyHtml = `
+            <div id="jsEmptyWishlist">
             <div class="wishlist-page">
                 <div class="search-box">
                     <i class="bi bi-search"></i>
@@ -318,9 +440,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     </a>
                 </div>
             </div>
+            </div>
         `;
 
         els.messageBox?.insertAdjacentHTML("afterend", emptyHtml);
+
+        // A fresh page load only renders the search/filter bar when there
+        // are favorites to search — match that once the last one is gone.
+        document.getElementById("mobileProductFilters")?.remove();
+        document.querySelector(".desktop-search-row")?.remove();
+        document.querySelector(".desktop-category-row")?.remove();
     }
 
     /* ── shared add-to-cart call ── */
@@ -645,10 +774,152 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    /* ── search + category filter (same pattern as the Products page) ── */
+    let activeCategories = new Set();
+
+    function normalizeCategory(value = "") { return value.trim().toLowerCase(); }
+
+    function currentSearchValue() {
+        return (els.mobileSearchInput?.value || els.searchInput?.value || "").trim();
+    }
+
+    function syncSearchInputs(value) {
+        if (els.searchInput && els.searchInput.value !== value) els.searchInput.value = value;
+        if (els.mobileSearchInput && els.mobileSearchInput.value !== value) els.mobileSearchInput.value = value;
+    }
+
+    function matchCard(card, keyword) {
+        const text = keyword.trim().toLowerCase();
+        const name = card.dataset.name || "";
+        const category = (card.dataset.category || "").toLowerCase();
+        if (activeCategories.size > 0 && !activeCategories.has(category)) return false;
+        if (!text) return true;
+        return name.includes(text);
+    }
+
+    function filterProducts(keyword = currentSearchValue()) {
+        let visibleCount = 0;
+        const value = keyword.trim();
+        syncSearchInputs(value);
+        els.productCards.forEach(card => {
+            const matched = matchCard(card, value);
+            card.style.display = matched ? "" : "none";
+            if (matched) visibleCount++;
+        });
+        if (els.noSearchResult) els.noSearchResult.style.display = visibleCount ? "none" : "block";
+        updateNavState();
+    }
+
+    function bindSearch() {
+        els.searchInput?.addEventListener("input", e => filterProducts(e.target.value));
+        els.mobileSearchInput?.addEventListener("input", e => filterProducts(e.target.value));
+    }
+
+    function bindDesktopFilterBtn() {
+        if (!els.desktopFilterBtn || !els.desktopCategoryRow) return;
+        els.desktopFilterBtn.addEventListener("click", () => {
+            const open = els.desktopCategoryRow.classList.toggle("open");
+            els.desktopFilterBtn.classList.toggle("active", open);
+        });
+    }
+
+    function syncFilterUI() {
+        els.categoryButtons.forEach(btn => {
+            const btnCategory = normalizeCategory(btn.dataset.category || "");
+            const isAllBtn = btnCategory === "";
+            btn.classList.toggle("active", isAllBtn ? activeCategories.size === 0 : activeCategories.has(btnCategory));
+        });
+
+        els.filterCheckboxes.forEach(cb => {
+            cb.checked = activeCategories.has(cb.value);
+        });
+
+        const count = activeCategories.size;
+        if (els.mobileFilterCount) {
+            els.mobileFilterCount.textContent = count;
+            els.mobileFilterCount.hidden = count === 0;
+        }
+        els.mobileFilterBtn?.classList.toggle("active", count > 0);
+    }
+
+    function bindCategoryFilters() {
+        els.categoryButtons.forEach(button => {
+            button.addEventListener("click", () => {
+                const category = normalizeCategory(button.dataset.category || "");
+                if (category) {
+                    activeCategories = new Set([category]);
+                } else {
+                    activeCategories.clear();
+                }
+                syncFilterUI();
+                filterProducts();
+            });
+        });
+    }
+
+    function bindMobileFilterSheet() {
+        if (!els.mobileFilterBtn || !els.mobileFilterOverlay) return;
+
+        function openSheet() {
+            els.mobileFilterOverlay.classList.add("show");
+            els.mobileFilterBtn.setAttribute("aria-expanded", "true");
+            document.body.classList.add("filter-sheet-open");
+        }
+        function closeSheet() {
+            els.mobileFilterOverlay.classList.remove("show");
+            els.mobileFilterBtn.setAttribute("aria-expanded", "false");
+            document.body.classList.remove("filter-sheet-open");
+
+            if (els.mobileFilterSearchInput) els.mobileFilterSearchInput.value = "";
+            els.mobileFilterBody?.querySelectorAll(".filter-checkbox-row").forEach(row => {
+                row.hidden = false;
+            });
+            if (els.mobileFilterNoMatch) els.mobileFilterNoMatch.hidden = true;
+        }
+
+        els.mobileFilterBtn.addEventListener("click", openSheet);
+        els.mobileFilterClose?.addEventListener("click", closeSheet);
+        els.mobileFilterApply?.addEventListener("click", closeSheet);
+        els.mobileFilterOverlay.addEventListener("click", (e) => {
+            if (e.target === els.mobileFilterOverlay) closeSheet();
+        });
+
+        els.filterCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener("change", () => {
+                if (checkbox.checked) activeCategories.add(checkbox.value);
+                else activeCategories.delete(checkbox.value);
+                syncFilterUI();
+                filterProducts();
+            });
+        });
+
+        els.mobileFilterClear?.addEventListener("click", () => {
+            activeCategories.clear();
+            syncFilterUI();
+            filterProducts();
+        });
+
+        els.mobileFilterSearchInput?.addEventListener("input", () => {
+            const text = els.mobileFilterSearchInput.value.trim().toLowerCase();
+            let visibleCount = 0;
+            els.mobileFilterBody?.querySelectorAll(".filter-checkbox-row").forEach(row => {
+                const label = row.querySelector(".filter-checkbox-label")?.textContent?.trim().toLowerCase() || "";
+                const matched = !text || label.includes(text);
+                row.hidden = !matched;
+                if (matched) visibleCount++;
+            });
+            if (els.mobileFilterNoMatch) els.mobileFilterNoMatch.hidden = visibleCount > 0;
+        });
+    }
+
     bindQuantityButtons();
     bindAddToCart();
     bindVariantModal();
     bindFavoriteButtons();
+    bindSearch();
+    bindDesktopFilterBtn();
+    bindCategoryFilters();
+    bindMobileFilterSheet();
     bindProductDetailNavigation();
 });
 </script>

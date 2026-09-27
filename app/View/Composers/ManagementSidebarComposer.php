@@ -70,7 +70,7 @@ class ManagementSidebarComposer
             'activeNavIcon' => $activeNavItem['icon_active'] ?? ($activeNavItem['icon'] ?? null),
             'backUrl' => trim((string) $factory->yieldContent('backUrl', '')),
             'hideMobileChrome' => trim((string) $factory->yieldContent('hideMobileNav', '')) !== '',
-            'companyName' => $company ? $company->name : null,
+            'companyName' => $company ? ($company->display_name ?? $company->name) : null,
         ]);
     }
 
@@ -175,7 +175,7 @@ class ManagementSidebarComposer
                 'permission' => 'dashboard',
             ],
             [
-                'name' => 'Pos System',
+                'name' => 'B2B Orders',
                 'url' => '/pos/interface',
                 'match' => ['pos/interface', 'pos/*'],
                 'icon' => '/images/management/managemetn_POS.png',
@@ -183,13 +183,13 @@ class ManagementSidebarComposer
                 'permission' => 'pos',
             ],
             [
-                'name' => 'User',
+                'name' => 'Users & Access',
                 'match' => ['users', 'users/*', 'staff', 'staff/*', 'roles', 'roles/*'],
                 'icon' => '/images/management/management_user.png',
                 'icon_active' => '/images/management/management_user_active.png',
                 'children' => [
                     [
-                        'name' => 'Customer',
+                        'name' => 'Customers',
                         'url' => '/users',
                         'match' => ['users', 'users/*'],
                         'icon' => '/images/management/management_user.png',
@@ -215,7 +215,7 @@ class ManagementSidebarComposer
                 ],
             ],
             [
-                'name' => 'Company',
+                'name' => 'Management',
                 'match' => ['companies', 'companies/*', 'permissions', 'permissions/*', 'number-series', 'number-series/*'],
                 'icon' => 'images/management/management_company.png',
                 'icon_active' => 'images/management/management_company_active.png',

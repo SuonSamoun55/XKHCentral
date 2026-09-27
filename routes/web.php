@@ -163,7 +163,6 @@ Route::put('/store/management/products/{id}/description', [StoreManagementContro
         Route::post('/pos-system/order/{id}/cancel', [HistoryController::class, 'cancel'])->name('user.pos.order.cancel');
         Route::get('/pos-system/order-history', [HistoryController::class, 'history'])->name('user.pos.order.history');
         Route::delete('/orders/delete-multiple', [HistoryController::class, 'deleteMultiple'])->name('user.pos.order.deleteMultiple');
-        Route::get('/pos-system/order-detail/{id}', [OrderController::class, 'detail'])->name('user.pos.order.detail');
     });
 
     Route::middleware('permission:cart')->group(function () {
@@ -254,6 +253,7 @@ Route::put('/store/management/products/{id}/description', [StoreManagementContro
         // still depends on. They already exist from the seeder, so this is
         // just a directory to look at, not something to manage here.
         Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
+        Route::post('/permissions/sync', [PermissionController::class, 'sync'])->name('permissions.sync');
     });
 
 });
@@ -305,6 +305,7 @@ Route::middleware(['auth', 'last.seen', 'permission:vat_posting_setup'])->group(
 });
 Route::middleware(['auth', 'last.seen', 'permission:approval_entries'])->group(function () {
     Route::get('/approval-entries', [ApprovalEntriesController::class, 'index'])->name('approval-entries.index');
+    Route::get('/approval-entries/export', [ApprovalEntriesController::class, 'export'])->name('approval-entries.export');
 });
 
 // Order report (Laravel-native PDF — no Business Central report/PDF API

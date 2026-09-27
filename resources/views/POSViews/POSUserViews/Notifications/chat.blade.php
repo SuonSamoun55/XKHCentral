@@ -624,6 +624,7 @@
             }
 
             let isSending = false;
+            let isPolling = false;
             let lastId = Number(@json((int) ($messages->max('id') ?? 0)));
             const renderedMessageIds = new Set(@json($messages->pluck('id')->map(fn($id) => (int) $id)->values()));
             let selectedImageFile = null;
@@ -792,6 +793,10 @@
             }
 
             async function pollMessages() {
+                if (isPolling || !activeContactId) {
+                    return;
+                }
+                isPolling = true;
                 try {
                     const url = `${messagesUrl}?admin_id=${activeContactId}&after_id=${lastId}`;
                     const response = await fetch(url, {
@@ -811,6 +816,8 @@
                     }
                 } catch (error) {
                     console.error('User chat poll failed', error);
+                } finally {
+                    isPolling = false;
                 }
             }
 
@@ -1193,7 +1200,7 @@
             orderDetailBack?.addEventListener('click', closeOrderDetail);
 
             scrollToBottom();
-            setInterval(pollMessages, 2500);
+            setInterval(pollMessages, 1000);
         })();
     </script>
 @endpush

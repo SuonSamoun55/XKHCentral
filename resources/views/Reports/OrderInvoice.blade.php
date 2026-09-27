@@ -5,12 +5,8 @@
     <meta charset="utf-8">
     <title>Order {{ $order->order_no }}</title>
     @php
-        $spacingMap = [
-            'compact' => ['page' => '18px 24px', 'row' => '4px 8px', 'section' => '10px'],
-            'normal' => ['page' => '28px 34px', 'row' => '7px 8px', 'section' => '16px'],
-            'spacious' => ['page' => '40px 48px', 'row' => '11px 10px', 'section' => '24px'],
-        ];
-        $sp = $spacingMap[$settings->spacing ?? 'normal'] ?? $spacingMap['normal'];
+        // Spacing is no longer an admin-configurable option — always normal.
+        $sp = ['page' => '28px 34px', 'row' => '7px 8px', 'section' => '16px'];
         $signatureLabels = $settings->show_signature
             ? ($settings->signature_labels ?: ['Customer Signature', 'Authorized By'])
             : [];
@@ -300,7 +296,7 @@
             display: table;
             width: 100%;
             table-layout: fixed;
-            margin-top: {{ $sp['section'] }};
+            margin-top: calc({{ $sp['section'] }} + 20px);
             page-break-inside: avoid;
         }
 
@@ -310,7 +306,10 @@
 
         .signature-line {
             border-top: 1px solid #9ca3af;
-            margin-top: 10px;
+            /* Blank space ABOVE the underline — this is where the shop owner
+               actually signs, so it needs real room for a pen signature, not
+               just a label gap. */
+            margin-top: 50px;
             padding-top: 4px;
             font-size: 10px;
             width: 60%;

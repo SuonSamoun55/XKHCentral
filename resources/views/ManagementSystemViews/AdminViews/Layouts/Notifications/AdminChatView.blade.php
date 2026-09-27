@@ -1240,8 +1240,10 @@
                 }
             }
 
+            let isPolling = false;
             async function pollMessages() {
-                if (!activeContactId || isLoadingConversation) return;
+                if (!activeContactId || isLoadingConversation || isPolling) return;
+                isPolling = true;
                 try {
                     const res = await fetch(`${messagesUrl}?user_id=${activeContactId}&after_id=${lastId}`, {
                         headers: {
@@ -1270,6 +1272,8 @@
                     }
                 } catch (err) {
                     console.error('Chat poll failed', err);
+                } finally {
+                    isPolling = false;
                 }
             }
 
@@ -1369,7 +1373,7 @@
             initVoicePlayers(chatBody);
             applyContactSearchFilter();
             scrollBottom();
-            setInterval(pollMessages, 2500);
+            setInterval(pollMessages, 1000);
 
         })();
     </script>

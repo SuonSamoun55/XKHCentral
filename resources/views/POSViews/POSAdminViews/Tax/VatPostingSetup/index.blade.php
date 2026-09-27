@@ -15,7 +15,7 @@
         <h1>VAT Posting Setup</h1>
         <div class="page-head">
             <button id="syncBtn" type="button" class="btn btn-primary" onclick="syncVatPostingSetup()">
-                Sync from BC
+                Sync VAT
                 <i class="bi bi-arrow-repeat"></i>
             </button>
         </div>

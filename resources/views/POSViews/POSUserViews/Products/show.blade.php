@@ -185,17 +185,36 @@
                         <input type="hidden" name="variant_id" id="pdSelectedVariantId"
                             value="{{ optional($variants->first())->id }}">
 
-                        <div class="quantity-wrapper">
-                            <div class="qty-box">
-                                <button type="button" class="qty-btn" onclick="pdChangeQty(-1)">−</button>
-                                <input type="number" name="qty" id="pdQtyInput" class="qty-input" value="1" min="0.01" step="0.01" inputmode="decimal">
-                                <button type="button" class="qty-btn" onclick="pdChangeQty(1)">+</button>
+                        {{-- Phone only: collapses this whole bar down to just the
+                             round FAB below, via #pdBarToggle / #pdBarFab in the
+                             script at the bottom of this file. --}}
+                        <div class="pd-bar-content" id="pdBarContent">
+                            <button type="button" class="pd-bar-toggle" id="pdBarToggle" aria-label="Collapse cart bar">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="7 5 15 12 7 19"></polyline>
+                                    <polyline points="13 5 21 12 13 19"></polyline>
+                                </svg>
+                            </button>
+
+                            <div class="quantity-wrapper">
+                                <div class="qty-box">
+                                    <button type="button" class="qty-btn" onclick="pdChangeQty(-1)">−</button>
+                                    <input type="number" name="qty" id="pdQtyInput" class="qty-input" value="1" min="0.01" step="0.01" inputmode="decimal">
+                                    <button type="button" class="qty-btn" onclick="pdChangeQty(1)">+</button>
+                                </div>
                             </div>
+
+                            <button type="button" class="add-to-cart-btn" id="pdAddToCartBtn" onclick="pdAddToCart(this)">
+                                <i class="bi bi-cart3"></i>
+                                <span class="add-to-cart-text">Add to Cart</span>
+                            </button>
                         </div>
 
-                        <button type="button" class="add-to-cart-btn" id="pdAddToCartBtn" onclick="pdAddToCart(this)">
-                            <i class="bi bi-cart3"></i>
-                            <span class="add-to-cart-text">Add to Cart</span>
+                        <button type="button" class="pd-bar-fab" id="pdBarFab" aria-label="Expand cart bar">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -552,6 +571,34 @@
             input.value = next;
         }
 
+        // Phone-only collapse/expand for the sticky Add to Cart bar — tap the
+        // chevrons to shrink it down to the round FAB, tap the FAB to bring
+        // the qty stepper + Add to Cart button back. It also starts fully
+        // expanded on page load so it's noticeable, then auto-collapses to
+        // the FAB on its own after a couple seconds (cancelled if the user
+        // has already interacted with it by then).
+        function pdBindActionBarCollapse() {
+            const bar = document.getElementById('pdAddToCartForm');
+            const toggleBtn = document.getElementById('pdBarToggle');
+            const fabBtn = document.getElementById('pdBarFab');
+            if (!bar || !toggleBtn || !fabBtn) return;
+
+            let userInteracted = false;
+
+            toggleBtn.addEventListener('click', () => {
+                userInteracted = true;
+                bar.classList.add('collapsed');
+            });
+            fabBtn.addEventListener('click', () => {
+                userInteracted = true;
+                bar.classList.remove('collapsed');
+            });
+
+            setTimeout(() => {
+                if (!userInteracted) bar.classList.add('collapsed');
+            }, 1500);
+        }
+
         // Click-and-drag to scroll the thumbnail row horizontally (mouse) —
         // touch/trackpad swipe already works natively via overflow-x: auto.
         function pdBindThumbDragScroll() {
@@ -886,6 +933,7 @@
             pdBindRelatedFavoriteButtons();
             pdBindVariantModal();
             pdBindThumbDragScroll();
+            pdBindActionBarCollapse();
         });
     </script>
 @endsection

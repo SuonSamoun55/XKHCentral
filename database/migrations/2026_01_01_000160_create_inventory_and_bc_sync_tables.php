@@ -16,9 +16,9 @@ return new class extends Migration
             $table->foreignId('actor_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('buyer_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('source', 20);
-            $table->integer('quantity_change');
-            $table->integer('old_inventory')->default(0);
-            $table->integer('new_inventory')->default(0);
+            $table->decimal('quantity_change', 10, 2);
+            $table->decimal('old_inventory', 10, 2)->default(0);
+            $table->decimal('new_inventory', 10, 2)->default(0);
             $table->timestamp('happened_at')->nullable()->index();
             $table->string('reference_no')->nullable();
             $table->text('note')->nullable();

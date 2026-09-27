@@ -1,11 +1,11 @@
  <div class="mobile-bottom-nav">
 
-     {{-- HOME --}}
+     {{-- DASHBOARD --}}
      @php $isActive = request()->routeIs('user.index'); @endphp
      <a href="{{ route('user.index') }}" class="{{ $isActive ? 'active' : '' }}">
-         <img src="{{ asset($isActive ? 'images/aside/HomeActive.png' : 'images/aside/Home.png') }}" alt=""
+         <img src="{{ asset($isActive ? 'images/aside/UserDaskboardActive.png' : 'images/aside/SidbarDaskboards.png') }}" alt=""
              class="nav-icon-img">
-         <span>home</span>
+         <span>Dashboard</span>
      </a>
 
      {{-- PRODUCTS (categories + category products) --}}
@@ -13,7 +13,7 @@
      <a href="{{ route('user.posinterface') }}" class="{{ $isActive ? 'active' : '' }}">
          <img src="{{ asset($isActive ? 'images/aside/ProductActive.png' : 'images/aside/Product.png') }}" alt=""
              class="nav-icon-img">
-         <span>products</span>
+         <span>Products</span>
      </a>
      {{-- WISHLIST --}}
      @php $isActive = request()->routeIs('user.pos.favorites'); @endphp

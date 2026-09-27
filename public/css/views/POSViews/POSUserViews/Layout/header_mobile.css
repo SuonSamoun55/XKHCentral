@@ -20,6 +20,7 @@
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    padding: 5px 5px;
 
 }
 .mobile-menu-icon{
@@ -28,8 +29,8 @@
     height: 20px;
 }
 .menu-btn {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     border: 1px solid #e9e9e9;
     background: #fff;
@@ -45,12 +46,12 @@
     background: #f2f2f2;
 }
 .logo-wrap {
-    padding: 8px;
+    padding: 5px;
 }
 
 .logo {
-    height: 50px;
-    width: 50px;
+    height: 45px;
+    width: 45px;
     display: block;
     object-fit: contain;
     border:solid 1px #ddd;
@@ -58,8 +59,8 @@
 }
 .cart{
     position: relative;
-    width: 46px;
-    height: 46px;
+    width: 40px;
+    height: 40px;
 
 }
 .cart-count{
@@ -84,8 +85,8 @@ line-height: 1;
 
 /* Cart icon */
 .cart-icon {
-    width: 46px;
-    height: 46px;
+    width: 38px;
+    height: 38px;
 }
 
 .mobile-menu-panel {
@@ -98,7 +99,7 @@ line-height: 1;
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-    padding: 8px;
+    padding: 0px 15px;
     z-index: 2000;
 }
 

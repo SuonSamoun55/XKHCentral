@@ -479,6 +479,7 @@
     .companies-page .page-head {
         align-items: flex-start;
         margin-bottom: 16px;
+        gap: 0px;
     }
 
     .companies-page .page-head h1 {
@@ -501,6 +502,28 @@
 
     .companies-page .search {
         max-width: none;
+    }
+
+    .companies-page .search input {
+        height: 35px;
+        border-radius: 6px;
+        border: 1px solid #dce5ec;
+        background: #f8fafc;
+        font-size: 13px;
+        color: #334155;
+    }
+
+    .companies-page .search input::placeholder {
+        color: #94a3b8;
+        font-size: 13px;
+        font-family: inherit;
+        opacity: 1;
+    }
+
+    .companies-page .search svg {
+        color: #94a3b8;
+        width: 13px;
+        height: 13px;
     }
 
     .companies-page .count-pill {

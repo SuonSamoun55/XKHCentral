@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('item_id')->constrained('items')->cascadeOnDelete();
             $table->string('location_code')->nullable();
             $table->string('location_name')->nullable();
-            $table->integer('inventory')->default(0);
+            $table->decimal('inventory', 10, 2)->default(0);
             $table->timestamps();
 
             $table->unique(['item_id', 'location_code']);

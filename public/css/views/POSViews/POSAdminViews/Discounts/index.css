@@ -978,9 +978,6 @@
             padding:0;
             height: 100%;
         }
-        .mobile-topbar-title{
-            display:none;
-        }
         .page-info {
             display: none;
         }
@@ -996,20 +993,12 @@
             display:none;
         }
 
-        .mobile-page-header{
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap:10px;
-            margin-bottom:14px;
-        }
-
-        .mobile-page-title{
-            margin:0;
-            font-size:22px;
-            font-weight:800;
-            color:#1f2937;
-        }
+        /* .mobile-page-header/.mobile-page-title stay hidden (see the base
+           rule near the top of this file) — the page name now shows in the
+           shared sticky top bar instead (.mobile-topbar-title, in Layout's
+           aside.blade.php), same primary color and position as every other
+           admin page, instead of a second plain-black title repeating it
+           here. */
 
         .mobile-add-btn{
             display:inline-flex;
@@ -1068,13 +1057,47 @@
             width:auto;
         }
 
+        /* Same search-box look as every other admin list page (B2B Order,
+           Store Management, Approval Entries) at this width: 35px tall,
+           6px corners, same border/background/icon/text/placeholder —
+           this page's desktop style (thicker teal border/icon) only
+           applied here before, so it stood out on phones. */
+        .search-box i{
+            left:12px;
+            color:#94a3b8;
+            font-size:13px;
+        }
+
+        .search-box input{
+            height:35px;
+            border-radius:6px;
+            border:1px solid #dce5ec;
+            background:#f8fafc;
+            padding-left:34px;
+            font-size:13px;
+            font-family:inherit;
+            color:#334155;
+        }
+
+        .search-box input:focus{
+            border-color:#25b8c8;
+            box-shadow:0 0 0 3px rgba(37, 184, 200, 0.10);
+        }
+
+        .search-box input::placeholder{
+            color:#94a3b8;
+            font-size:13px;
+            font-family:inherit;
+            opacity:1;
+        }
+
         .mobile-filter-toggle-btn,
         .mobile-date-toggle-btn{
             display:inline-flex;
             align-items:center;
             justify-content:center;
-            width:36px;
-            height:36px;
+            width:35px;
+            height:35px;
             flex-shrink:0;
             border:1.5px solid var(--primary);
             border-radius:5px;

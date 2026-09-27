@@ -194,6 +194,11 @@ class WebUserController extends Controller
                 ->with('error', 'Select a company first (Companies list) before syncing BC customers.');
         }
 
+        if (!NumberSeries::isConfigured($companyId, 'CUSTOMER')) {
+            return redirect()->route('users.index')
+                ->with('error', NumberSeries::missingMessage('CUSTOMER'));
+        }
+
         $token = $this->getToken();
 
         if (!$token) {
@@ -356,6 +361,14 @@ class WebUserController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'This customer has no Business Central ID to sync from.',
+            ], 422);
+        }
+
+        // Only customers still waiting for a local number need the series.
+        if (empty($customer->local_customer_no) && !NumberSeries::isConfigured($customer->company_id, 'CUSTOMER')) {
+            return response()->json([
+                'success' => false,
+                'message' => NumberSeries::missingMessage('CUSTOMER'),
             ], 422);
         }
 

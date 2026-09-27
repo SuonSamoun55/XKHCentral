@@ -1,15 +1,9 @@
-/* The shared admin layout's .content-wrapper is height:100vh + overflow:hidden
-   by default, which clips this page's content instead of letting it scroll
-   once the form is taller than the viewport. This only affects pages that
-   load this stylesheet — so it's safe to override just for this page. */
+
 .content-wrapper {
     height: 100vh !important;
     overflow-y: auto !important;
 }
 
-/* No color override here — .pagelist-page h1 already gets the shared
-   teal (#3BACB4) from TaxList.css, matching every other admin page's
-   heading instead of this page having its own one-off black title. */
 .pagelist-page h1 {
     margin: 0 0 20px;
 }
@@ -284,9 +278,9 @@
         padding: 14px 16px;
         border-radius: 12px;
     }
-
-    /* Both are explanatory copy that just eats vertical space on a small
-       screen without changing what the controls below them do. */
+    .main-wrapper, .app-shell{
+                padding: 0px 0px 60px 0px;
+    }
     .rs-card-subtitle,
     .rs-logo-upload .field-help {
         display: none;

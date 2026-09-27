@@ -12,7 +12,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('role_id')->nullable()->constrained('roles')->nullOnDelete();
             $table->foreignId('company_id')->nullable()->constrained('companies')->nullOnDelete();
+            // Persists a cross-company admin's last-selected company so
+            // login doesn't re-prompt the company picker every time —
+            // separate from company_id, which pins a company-scoped user
+            // to one company and must never be touched by this.
+            $table->foreignId('last_company_id')->nullable()->constrained('companies')->nullOnDelete();
             $table->string('bc_customer_no');
+            $table->string('staff_no')->nullable();
             $table->string('name');
             $table->string('email')->nullable();
             $table->string('phone')->nullable();

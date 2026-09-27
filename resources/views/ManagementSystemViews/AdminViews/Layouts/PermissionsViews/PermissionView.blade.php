@@ -22,6 +22,13 @@
             <div>
                 <h1>Permission Page</h1>
             </div>
+            <form action="{{ route('permissions.sync') }}" method="POST">
+                @csrf
+                <button type="submit" class="sync-btn">
+                    <i class="bi bi-arrow-repeat"></i>
+                    <span>Sync Pages</span>
+                </button>
+            </form>
         </div>
 
         <div class="tab-row">

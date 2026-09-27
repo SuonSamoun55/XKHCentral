@@ -6,6 +6,9 @@
                 background-color:white;
                 border-radius: 12px
             }
+            .company-ticket-wrap {
+                display: none;
+            }
         .report-preview-page {
             display: flex;
             flex-direction: column;
@@ -35,6 +38,7 @@
         }
         .report-preview-actions {
             display: flex;
+            justify-content: space-between;
             align-items: center;
             gap: 8px;
         }
@@ -81,6 +85,7 @@
             border: 1px solid #e5e7eb;
             border-radius: 8px;
             overflow: hidden;
+           max-width: 40%;
         }
         .fit-toggle button {
             border-radius: 0;
@@ -135,6 +140,9 @@
             .report-preview-page {
                 padding: 0px;
             }
+            /* .main-wrapper, .app-shell{
+                padding: 0px 0px 60px 0px; */
+            }
            
             .page-wrap{
                 border-radius: 0px;
@@ -160,7 +168,7 @@
             }
             .report-preview-actions {
                 flex: 1 1 100%;
-                justify-content: stretch;
+                /* justify-content: stretch; */
             }
             .fit-toggle {
                 flex: 1;
@@ -249,7 +257,7 @@
             function renderPage(pageNumber) {
                 return pdfDoc.getPage(pageNumber).then(function (page) {
                     var unscaledViewport = page.getViewport({ scale: 1 });
-                    var wrapWidth = container.clientWidth - 32; // minus container's own padding/scrollbar slack
+                    var wrapWidth = container.clientWidth - 32; 
                     var wrapHeight = container.clientHeight - 32;
 
                     var scale = mode === 'page'

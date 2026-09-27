@@ -3,7 +3,7 @@
 @section('title', 'Order History')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSUserViews/Orders/history.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSUserViews/Orders/history.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSUserViews/Orders/history.css')) }}">
 @endpush
 
 @section('content')
@@ -70,6 +70,19 @@
                 $resolveThumb = fn ($path) => $path
                     ? (str_starts_with($path, 'http') ? $path : asset($path))
                     : null;
+
+                $statusIcons = [
+                    'pending' => 'pendding.png',
+                    'confirmed' => 'confirm-delivery.png',
+                    'shipping' => 'on the way.png',
+                    'on-the-way' => 'on the way.png',
+                    'delivery' => 'delivered.png',
+                    'delivered' => 'delivered.png',
+                    'cancelled' => 'cancle.png',
+                    'canceled' => 'cancle.png',
+                    'cancel' => 'cancle.png',
+                    'failed' => 'cancle.png',
+                ];
             @endphp
             <div class="mobile-order-list">
                 @foreach ($orders as $order)
@@ -128,7 +141,7 @@
                             <th>Order</th>
                             <th>Date</th>
                             <th>Price</th>
-                            <th>Status</th>
+                            <th class="text-center">Status</th>
                             <th>Report</th>
                             <th class="text-center">Items</th>
                         </tr>
@@ -160,9 +173,14 @@
                                 <td class="total-text">
                                     $ {{ number_format($order->total_amount, 2) }}
                                 </td>
-                                <td>
-                                    <span class="status-badge {{ strtolower(str_replace(' ', '-', $order->status)) }}">
-                                        {{ $order->status === 'on-the-way' ? 'On the way' : ucfirst($order->status) }}
+                                <td class="text-center">
+                                    @php
+                                        $statusKey = strtolower(str_replace(' ', '-', $order->status));
+                                        $statusIconFile = $statusIcons[$statusKey] ?? 'pendding.png';
+                                    @endphp
+                                    <span class="status-badge {{ $statusKey }}">
+                                        <img src="{{ asset('images/pos/' . $statusIconFile) }}" alt="" class="status-icon">
+                                        <span class="status-text">{{ $order->status === 'on-the-way' ? 'On the way' : ucfirst($order->status) }}</span>
                                     </span>
                                 </td>
                                 <td>
@@ -513,6 +531,20 @@
             let trackFailureStreak = 0;
             let trackBackoffUntil = 0;
 
+            const STATUS_ICON_BASE = "{{ asset('images/pos') }}";
+            const STATUS_ICONS = {
+                'pending': 'pendding.png',
+                'confirmed': 'confirm-delivery.png',
+                'shipping': 'on the way.png',
+                'on-the-way': 'on the way.png',
+                'delivery': 'delivered.png',
+                'delivered': 'delivered.png',
+                'cancelled': 'cancle.png',
+                'canceled': 'cancle.png',
+                'cancel': 'cancle.png',
+                'failed': 'cancle.png',
+            };
+
             async function trackRow(row) {
                 const badge = row?.querySelector('.status-badge');
                 const trackUrl = row?.dataset.trackUrl;
@@ -542,8 +574,13 @@
 
                     const nextStatus = result.data?.tracking_status || result.data?.local_status || row.dataset.status;
                     row.dataset.status = nextStatus;
-                    badge.className = 'status-badge ' + statusClass(nextStatus);
-                    badge.textContent = displayStatus(nextStatus);
+                    const cls = statusClass(nextStatus);
+                    badge.className = 'status-badge ' + cls;
+
+                    const icon = badge.querySelector('.status-icon');
+                    const text = badge.querySelector('.status-text');
+                    if (icon) icon.src = `${STATUS_ICON_BASE}/${STATUS_ICONS[cls] || 'pendding.png'}`;
+                    if (text) text.textContent = displayStatus(nextStatus);
                 } catch (error) {
                     registerTrackFailure();
                 } finally {

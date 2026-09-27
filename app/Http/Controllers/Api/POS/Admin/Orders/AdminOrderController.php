@@ -152,6 +152,10 @@ class AdminOrderController extends Controller
             return back()->with('error', 'Customer BC number not found.');
         }
 
+        if (!NumberSeries::isConfigured($order->company_id, 'ENTRY')) {
+            return back()->with('error', NumberSeries::missingMessage('ENTRY'));
+        }
+
         if (!$order->items()->exists()) {
             return back()->with('error', 'Order has no items.');
         }
@@ -215,14 +219,25 @@ class AdminOrderController extends Controller
                 throw new \Exception('Failed to get Business Central access token.');
             }
 
+            // b2bSalesOrders (not the generic salesOrders) — this is the page
+            // that actually sets "B2B Order" := true on insert, which is what
+            // the "B2B Sales Order List" page filters on. Anything created via
+            // plain salesOrders never had that flag set and could never show
+            // up there, regardless of any other field.
             $orderResponse = Http::withoutVerifying()
                 ->withToken($token)
                 ->acceptJson()
-                ->post($this->bcEndpoint('sales_orders_endpoint', 'salesOrders'), [
-                    'sellToCustomerNo'   => $order->user->bc_customer_no,
-                    'orderDate'          => now()->toDateString(),
-                    'locationCode'       => $order->location_code ?? '',
-                    'externalDocumentNo' => $order->order_no,
+                ->post($this->bcEndpoint('b2b_sales_orders_endpoint', 'b2bSalesOrders'), [
+                    'sellToCustomerNo'  => $order->user->bc_customer_no,
+                    'orderDate'         => now()->toDateString(),
+                    'locationCode'      => $order->location_code ?? '',
+                    // AL page 50562 binds laravelReference to
+                    // Rec."External Document No." — the Laravel order id,
+                    // shown as-is on the order's General tab.
+                    'laravelReference'  => $order->order_no,
+                    // Binds to Rec."Your Reference" — shown as "Referent" on
+                    // the B2B Sales Order List — the admin who confirmed it.
+                    'confirmedBy'       => $admin->name,
                 ]);
 
             if (!$orderResponse->successful()) {
@@ -386,6 +401,10 @@ class AdminOrderController extends Controller
 
         if (!$order) {
             return back()->with('error', 'Order not found.');
+        }
+
+        if (!NumberSeries::isConfigured($order->company_id, 'ENTRY')) {
+            return back()->with('error', NumberSeries::missingMessage('ENTRY'));
         }
 
         if ($order->status !== 'pending') {

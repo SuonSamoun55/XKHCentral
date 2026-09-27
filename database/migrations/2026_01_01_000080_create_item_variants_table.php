@@ -26,8 +26,12 @@ return new class extends Migration
             $table->string('image_url')->nullable();
             $table->timestamps();
 
-            $table->unique('bc_id');
+            // Scoped to (item_id, bc_id) rather than a bare unique on bc_id:
+            // two companies pointing at the same BC company (or any bc_id
+            // collision) would otherwise get the same variant id from BC,
+            // and the second company's sync could never insert its copy.
             $table->unique(['item_id', 'code']);
+            $table->unique(['item_id', 'bc_id']);
         });
     }
 

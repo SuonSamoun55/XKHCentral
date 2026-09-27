@@ -260,10 +260,22 @@ body {
 }
 
 .hero-card-info {
+    position: relative;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
 
+}
+
+.hero-chevron {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: var(--fs-header);
+    font-weight: 700;
+    color: var(--muted);
 }
 
 .hero-card-label {
@@ -895,7 +907,7 @@ body {
 
     .dashboard {
         padding: 12px;
-        padding-bottom: 90px;
+        padding-bottom: calc(90px + env(safe-area-inset-bottom));
         grid-template-columns: 1fr;
         grid-template-rows: none;
         min-height: auto;
@@ -903,7 +915,6 @@ body {
 
         grid-template-areas:
             "actions"
-            "productsSummary"
             "report"
             "recent"
             "notif"
@@ -925,14 +936,73 @@ body {
         flex-direction: row;
     }
 
+    /* Admin Confirmed / Pending / Cancel summary is not shown on mobile —
+       the three hero cards below replace it (same as the admin dashboard). */
     .area-products-summary {
-        display: flex;
-        flex-direction: column;
-        max-height: 100%;
+        display: none;
     }
 
     .area-hero {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        padding: 12px 12px 0;
+    }
+
+    .hero-card {
+        position: relative;
+        border-radius: var(--radius-sm);
+        box-shadow: rgba(0, 0, 0, 0.06) 0px 0px 6px 0px;
+    }
+
+    .hero-card-image {
+        align-items: stretch;
+        justify-content: flex-start;
+        padding: 8px;
+        gap: 6px;
+    }
+
+    .hero-card-image img {
+        width: 90%;
+        height: auto;
+        padding: 0;
+        border-radius: 5px;
+    }
+
+    .hero-card-info {
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1;
+        gap: 4px;
+    }
+
+    .hero-colon,
+    .hero-chevron {
         display: none;
+    }
+
+    .hero-card::after {
+        content: "\203A";
+        position: absolute;
+        top: 10px;
+        right: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--muted);
+        line-height: 1;
+    }
+
+    .hero-card-label {
+        font-size: 10px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+    .hero-card-value {
+        font-size: 15px;
+        font-weight: 800;
     }
 
     .recent-card {

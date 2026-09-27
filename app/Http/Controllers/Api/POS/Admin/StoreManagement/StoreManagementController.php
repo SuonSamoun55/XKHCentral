@@ -11,6 +11,7 @@ use App\Models\POS\ItemVariant;
 use App\Models\POS\ItemSetupStatus;
 use App\Models\POS\ItemLocationInventory;
 use App\Models\POS\StoreSetting;
+use App\Models\POS\NumberSeries;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -35,6 +36,18 @@ class StoreManagementController extends Controller
             ->where('item_category_code', '!=', '')
             ->distinct('item_category_code')
             ->count('item_category_code');
+
+        // One "Item" number series per company at most (same one-per-purpose
+        // rule as Customer/Order/Staff/Entry). Every item without a number
+        // yet gets one issued automatically, right here — no manual action.
+        $itemNumberSeries = NumberSeries::where('company_id', $companyId)
+            ->where('code', 'ITEM')
+            ->where('is_active', true)
+            ->first();
+
+        if ($itemNumberSeries) {
+            $this->autoAssignSeriesNumbers($companyId);
+        }
 
         $products = Item::query()
             ->with('locationInventories')
@@ -86,7 +99,8 @@ class StoreManagementController extends Controller
                     'productCount',
                     'categoryCount',
                     'sellingLocations',
-                    'storeSetting'
+                    'storeSetting',
+                    'itemNumberSeries'
                 ))->render()
             ])
                 ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -100,7 +114,8 @@ class StoreManagementController extends Controller
             'productCount',
             'categoryCount',
             'sellingLocations',
-            'storeSetting'
+            'storeSetting',
+            'itemNumberSeries'
         )))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache')
@@ -145,7 +160,11 @@ class StoreManagementController extends Controller
         $companyId = session('selected_company_id');
 
         $item = Item::where('company_id', $companyId)->findOrFail($id);
-        $item->allow_oversell = !$item->allow_oversell;
+        // Same as toggleProduct(): explicit value from the Oversell dropdown,
+        // otherwise flip.
+        $item->allow_oversell = $request->has('allow_oversell')
+            ? $request->boolean('allow_oversell')
+            : !$item->allow_oversell;
         $item->save();
 
         return response()->json([
@@ -192,20 +211,62 @@ class StoreManagementController extends Controller
         ]);
     }
 
+    /**
+     * Issues the next number from the company's active "Item" number series
+     * to every item that doesn't have one yet — stored in series_number,
+     * separate from `number` (Business Central's own item number, which
+     * gets overwritten on every sync, so this survives re-syncing
+     * untouched). Runs automatically on every Store Management page load;
+     * no manual action needed. Idempotent — already-numbered items are
+     * skipped, so re-running this never reissues or changes anything.
+     */
+    private function autoAssignSeriesNumbers(int $companyId): void
+    {
+        $unassignedIds = Item::where('company_id', $companyId)
+            ->whereNull('number_series_id')
+            ->orderBy('id')
+            ->pluck('id');
+
+        if ($unassignedIds->isEmpty()) {
+            return;
+        }
+
+        foreach ($unassignedIds as $itemId) {
+            DB::transaction(function () use ($companyId, $itemId) {
+                $issuedNumber = NumberSeries::issue($companyId, 'ITEM');
+                $series = NumberSeries::where('company_id', $companyId)->where('code', 'ITEM')->first();
+
+                Item::where('id', $itemId)->update([
+                    'number_series_id' => $series->id,
+                    'series_number' => $issuedNumber,
+                ]);
+            });
+        }
+    }
+
     public function toggleProduct(Request $request, $id)
     {
         $companyId = session('selected_company_id');
 
         $item = Item::where('company_id', $companyId)->findOrFail($id);
-        $item->is_visible = !$item->is_visible;
+        // The Visible dropdown sends the exact state it picked; the phone
+        // switch (and older callers) send nothing and just flip it.
+        // An explicit null puts the product back to "Not reviewed" (grey).
+        if ($request->has('is_visible')) {
+            $item->is_visible = $request->input('is_visible') === null
+                ? null
+                : $request->boolean('is_visible');
+        } else {
+            $item->is_visible = !$item->is_visible;
+        }
         $item->save();
 
         return response()->json([
             'success' => true,
             'message' => 'Product updated successfully.',
             'id' => $item->id,
-            'is_visible' => (bool) $item->is_visible,
-            'label' => $item->is_visible ? 'ACTIVE' : 'INACTIVE',
+            'is_visible' => is_null($item->is_visible) ? null : (bool) $item->is_visible,
+            'label' => is_null($item->is_visible) ? 'NOT REVIEWED' : ($item->is_visible ? 'ACTIVE' : 'INACTIVE'),
         ]);
     }
 

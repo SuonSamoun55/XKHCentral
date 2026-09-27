@@ -303,7 +303,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .order-link {
     color: var(--oh-primary);
-    font-weight: 500;
+    font-weight: 700;
     text-decoration: none;
     font-size: 11px;
 }
@@ -328,50 +328,51 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .status-badge {
     display: inline-flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 4px;
     min-width: 88px;
-    height: 26px;
-    padding: 0 10px;
+    padding: 6px 10px;
     border-radius: 5px;
-    border: 1px solid transparent;
+    border: none;
     font-size: 11px;
     font-weight: 500;
     background: transparent;
 }
 
-.status-badge.pending {
-    background: #fef9ec;
-    border-color: #f3d99b;
+.status-badge .status-icon {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+}
+
+.status-badge .status-text {
+    white-space: nowrap;
+}
+
+.status-badge.pending .status-text {
     color: #b8860b;
 }
 
-.status-badge.confirmed {
-    background: #f3effc;
-    border-color: #d5c5f5;
-    color: #6d28d9;
+.status-badge.confirmed .status-text {
+    color: var(--oh-primary);
 }
 
-.status-badge.shipping,
-.status-badge.on-the-way {
-    background: #eaf5fd;
-    border-color: #bfe1f7;
+.status-badge.shipping .status-text,
+.status-badge.on-the-way .status-text {
     color: #0284c7;
 }
 
-.status-badge.delivery,
-.status-badge.delivered {
-    background: #00a81f42;
-    border-color: #027D18;
+.status-badge.delivery .status-text,
+.status-badge.delivered .status-text {
     color: #00A81F;
 }
 
-.status-badge.cancelled,
-.status-badge.canceled,
-.status-badge.cancel,
-.status-badge.failed {
-    background: #fdecec;
-    border-color: #f5c2c2;
+.status-badge.cancelled .status-text,
+.status-badge.canceled .status-text,
+.status-badge.cancel .status-text,
+.status-badge.failed .status-text {
     color: #dc2626;
 }
 
@@ -522,10 +523,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     font-weight: 600;
     cursor: pointer;
 }
-
-/* =====================================================
-   PAGINATION BAR
-===================================================== */
 .pagination-container {
     display: flex;
     justify-content: space-between;
@@ -809,6 +806,12 @@ screen and (max-width: 926px) and (orientation: landscape) {
         overflow: auto;
         height: 100%;
         padding-bottom: 75px;
+    }
+    .mobile{
+        padding: 0px;
+    }
+    .cart-boxM{
+        padding: 0px;
     }
 
     .order-card-mobile {

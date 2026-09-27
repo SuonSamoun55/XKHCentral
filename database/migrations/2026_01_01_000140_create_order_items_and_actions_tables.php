@@ -13,10 +13,15 @@ return new class extends Migration
             $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
             $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->foreignId('item_id')->constrained('items')->cascadeOnDelete();
+            $table->foreignId('item_variant_id')->nullable()->constrained('item_variants')->nullOnDelete();
             $table->string('item_no');
             $table->string('item_name')->nullable();
-            $table->integer('qty')->default(1);
+            $table->string('variant_description')->nullable();
+            $table->decimal('qty', 10, 2)->default(1);
             $table->decimal('unit_price', 18, 2)->default(0);
+            $table->decimal('discount_percent', 5, 2)->default(0);
+            $table->decimal('discount_amount', 10, 2)->default(0);
+            $table->decimal('tax_amount', 10, 2)->default(0);
             $table->decimal('line_total', 18, 2)->default(0);
             $table->string('location_code')->nullable();
             $table->timestamps();
@@ -25,6 +30,7 @@ return new class extends Migration
         Schema::create('order_actions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
+            $table->string('entry_no')->nullable();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('action_by')->nullable()->constrained('users')->nullOnDelete();
             $table->string('action_type', 50);

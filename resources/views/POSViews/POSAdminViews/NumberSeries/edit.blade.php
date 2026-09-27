@@ -79,7 +79,7 @@
                 <div class="field">
                     <label for="padding">Minimum Digits <span class="required">*</span></label>
                     <select name="padding" id="padding" class="select-control" {{ $locked ? 'disabled' : 'required' }}>
-                        @foreach ([3, 4, 5] as $digits)
+                        @foreach (range(1, $maxDigitCount) as $digits)
                             <option value="{{ $digits }}"
                                 {{ (int) old('padding', $series->padding) === $digits ? 'selected' : '' }}>
                                 {{ $digits }} digits (e.g. {{ str_pad('1', $digits, '0', STR_PAD_LEFT) }})</option>
@@ -92,8 +92,8 @@
 
                 <div class="field">
                     <label for="start_no">Starting No. <span class="required">*</span></label>
-                    <input type="number" name="start_no" id="start_no" class="text-control"
-                        value="{{ old('start_no', $series->start_no) }}" min="1"
+                    <input type="number" name="start_no" id="start_no" class="text-control js-series-number-input"
+                        value="{{ old('start_no', $series->start_no) }}" min="1" max="{{ $maxSeriesNumber }}"
                         {{ $locked ? 'disabled' : 'required' }}>
                     @if ($locked)
                         <input type="hidden" name="start_no" value="{{ $series->start_no }}">
@@ -102,10 +102,10 @@
 
                 <div class="field">
                     <label for="end_no">Ending No. <span class="required">*</span></label>
-                    <input type="number" name="end_no" id="end_no" class="text-control"
-                        value="{{ old('end_no', $series->end_no) }}" min="1" required>
-                    <p class="hint">Current range: {{ $series->start_formatted }} &rarr; {{ $series->end_formatted }}
-                    </p>
+                    <input type="number" name="end_no" id="end_no" class="text-control js-series-number-input"
+                        value="{{ old('end_no', $series->end_no) }}" min="1" max="{{ $maxSeriesNumber }}" required>
+                    <p class="hint">Current range: {{ $series->start_formatted }} &rarr; {{ $series->end_formatted }}.
+                        Up to {{ number_format($maxSeriesNumber) }}.</p>
                 </div>
 
                 <div class="field">
@@ -124,4 +124,17 @@
         </section>
 
     </div>
+
+    <script>
+        // See create.blade.php's copy of this for why: `max` alone only
+        // complains at submit time, this stops it being typed at all.
+        document.querySelectorAll('.js-series-number-input').forEach(function(input) {
+            const cap = {{ $maxSeriesNumber }};
+            input.addEventListener('input', function() {
+                if (this.value !== '' && Number(this.value) > cap) {
+                    this.value = String(cap);
+                }
+            });
+        });
+    </script>
 @endsection

@@ -18,11 +18,11 @@
         <div class="form-card-body">
             <div class="item-preview">
                 <div class="item-preview-thumb">
-                    @if($item->custom_image_url || $item->image_url)
-                        <img src="{{ $item->custom_image_url ?? $item->image_url }}" alt="{{ $item->display_name }}"
+                    @if($resolvedImageUrl)
+                        <img src="{{ $resolvedImageUrl }}" alt="{{ $item->display_name }}"
                              onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';">
                     @endif
-                    <div class="item-preview-fallback" style="{{ ($item->custom_image_url || $item->image_url) ? 'display:none;' : '' }}">
+                    <div class="item-preview-fallback" style="{{ $resolvedImageUrl ? 'display:none;' : '' }}">
                         <i class="bi bi-image"></i>
                     </div>
                 </div>

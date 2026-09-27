@@ -30,7 +30,9 @@ class FavoriteController extends Controller
             ], 401);
         }
 
-        if (!Item::where('id', $validated['item_id'])->where('company_id', $user->company_id)->exists()) {
+        $companyId = session('selected_company_id') ?? $user->company_id;
+
+        if (!Item::where('id', $validated['item_id'])->where('company_id', $companyId)->exists()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Item not found.',
@@ -68,13 +70,14 @@ class FavoriteController extends Controller
     public function getFavorites()
     {
         $user = Auth::user();
+        $companyId = session('selected_company_id') ?? $user->company_id;
 
         $favorites = Item::whereIn('id', function ($query) use ($user) {
             $query->select('item_id')
                 ->from('favorites')
                 ->where('user_id', $user->id);
         })
-            ->where('company_id', $user->company_id)
+            ->where('company_id', $companyId)
             ->where('is_visible', true)
             ->get()
             ->filter(fn (Item $item) => $item->isPurchasable())
@@ -96,7 +99,6 @@ class FavoriteController extends Controller
 
         $cartCount = 0;
         if ($user) {
-            $companyId = session('selected_company_id') ?? $user->company_id;
             $activeCart = Cart::where('user_id', $user->id)
                 ->where('company_id', $companyId)
                 ->where('status', 'active')

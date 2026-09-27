@@ -42,7 +42,11 @@
                         ? \Carbon\Carbon::parse($item->discount_end_date)->format('d M Y')
                         : 'Forever',
                     'discount_status' => $status,
-                    'image_url' => $item->image_url ?? '',
+                    // Already resolved (custom_image_url preferred, then
+                    // image_url, then a placeholder) by DiscountController@index
+                    // — image_url on its own is a bare storage path ("items/xyz.jpg"),
+                    // not a URL an <img> tag can load directly.
+                    'image_url' => $item->resolved_image_url,
                     'edit_url' => route('discounts.edit', $item->id),
                     'delete_url' => route('discounts.destroy', $item->id),
                 ];
@@ -56,7 +60,9 @@
 
         {{-- Phone-only header: replaces the stat cards with a compact title. The
          Add Discount button lives in .bulk-row below instead (see there). --}}
-
+        <div class="mobile-page-header">
+            <h1 class="mobile-page-title">Discount Management</h1>
+        </div>
 
         {{-- ---- Stats bar ---- --}}
         <div class="dm-stats-bar">

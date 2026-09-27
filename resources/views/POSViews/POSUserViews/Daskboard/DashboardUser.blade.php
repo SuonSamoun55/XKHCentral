@@ -17,8 +17,9 @@
                     <div class="hero-card-image">
                         <img src="{{ asset('/images/pos/product icons.png') }}" alt="Products" width="355" height="179">
                         <div class="hero-card-info">
-                            <span class="hero-card-label">Products: </span>
+                            <span class="hero-card-label">Products:</span><span class="hero-colon"> </span>
                             <span class="hero-card-value">{{ number_format((int) ($totalProducts ?? 0)) }}</span>
+                            <span class="hero-chevron">&rsaquo;</span>
                         </div>
                     </div>
                 </a>
@@ -28,8 +29,9 @@
                     <div class="hero-card-image">
                         <img src="{{ asset('/images/pos/orders icon.png') }}" alt="Orders" width="355" height="179">
                         <div class="hero-card-info">
-                            <span class="hero-card-label">Order: </span>
+                            <span class="hero-card-label">Order:</span><span class="hero-colon"></span>
                             <span class="hero-card-value">{{ number_format((int) ($totalOrders ?? 0)) }}</span>
+                            <span class="hero-chevron">&rsaquo;</span>
                         </div>
                     </div>
                 </a>
@@ -40,8 +42,9 @@
                         <img src="{{ asset('/images/pos/pending order.png') }}" alt="Pending" width="355"
                             height="179">
                         <div class="hero-card-info">
-                            <span class="hero-card-label">Pending: </span>
+                            <span class="hero-card-label">Pending:</span><span class="hero-colon"></span>
                             <span class="hero-card-value">{{ number_format((int) ($pendingOrders ?? 0)) }}</span>
+                            <span class="hero-chevron">&rsaquo;</span>
                         </div>
                     </div>
                 </a>

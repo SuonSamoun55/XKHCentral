@@ -116,19 +116,6 @@
             </div>
 
             <div class="rs-card">
-                <div class="rs-card-title"><i class="bi bi-arrows-angle-expand"></i> Spacing</div>
-                <p class="rs-card-subtitle">How tightly the report's rows and sections are packed together.</p>
-                <div class="rs-segmented">
-                    <input type="radio" name="spacing" id="spacingCompact" value="compact" {{ $settings->spacing === 'compact' ? 'checked' : '' }}>
-                    <label for="spacingCompact">Compact</label>
-                    <input type="radio" name="spacing" id="spacingNormal" value="normal" {{ $settings->spacing === 'normal' ? 'checked' : '' }}>
-                    <label for="spacingNormal">Normal</label>
-                    <input type="radio" name="spacing" id="spacingSpacious" value="spacious" {{ $settings->spacing === 'spacious' ? 'checked' : '' }}>
-                    <label for="spacingSpacious">Spacious</label>
-                </div>
-            </div>
-
-            <div class="rs-card">
                 <div class="rs-card-title"><i class="bi bi-pen"></i> Signature Area</div>
                 <label class="rs-toggle">
                     <span class="rs-toggle-label"><i class="bi bi-vector-pen"></i> Show signature lines at the bottom of the report</span>

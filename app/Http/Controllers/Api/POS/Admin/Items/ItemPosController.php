@@ -8,6 +8,7 @@ use App\Models\POS\Item;
 use App\Models\POS\ItemVariant;
 use App\Models\POS\ItemLocationInventory;
 use App\Models\POS\InventoryMovement;
+use App\Models\POS\NumberSeries;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -74,7 +75,7 @@ class ItemPosController extends Controller
             ->first();
 
         if (!$localItem) {
-            return response()->json(['error' => 'Item not found. Sync it from BC first.'], 404);
+            return response()->json(['error' => 'Item not found. Sync products first.'], 404);
         }
 
         return response()->json($this->toDisplayItem($localItem));
@@ -92,12 +93,19 @@ class ItemPosController extends Controller
             ], 422);
         }
 
+        if (!NumberSeries::isConfigured($companyId, 'ITEM')) {
+            return response()->json([
+                'success' => false,
+                'message' => NumberSeries::missingMessage('ITEM'),
+            ], 422);
+        }
+
         $token = $this->getToken();
 
         if (!$token) {
             return response()->json([
                 'success' => false,
-                'message' => 'Business Central authentication failed.',
+                'message' => 'Authentication failed. Please check the API setup and try again.',
             ], 401);
         }
 
@@ -106,7 +114,7 @@ class ItemPosController extends Controller
         if (!$url) {
             return response()->json([
                 'success' => false,
-                'message' => 'Business Central URL could not be built.',
+                'message' => 'The sync URL could not be built. Please check the API setup.',
             ], 422);
         }
 
@@ -115,12 +123,22 @@ class ItemPosController extends Controller
         if (!$response->successful()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch items from Business Central.',
+                'message' => 'Failed to fetch products.',
                 'details' => $response->body(),
             ], 500);
         }
 
         $rawItems = $response->json()['value'] ?? [];
+
+        // Per-item opt-in from the checkboxes on the Items page: only items
+        // whose BC id is in this list get their picture re-pulled from BC.
+        // Every other item keeps the image it already has (new items always
+        // fetch one, since they have nothing saved yet).
+        $request->validate([
+            'replace_image_ids' => ['nullable', 'array'],
+            'replace_image_ids.*' => ['string'],
+        ]);
+        $replaceImageIds = array_flip($request->input('replace_image_ids', []));
 
         DB::beginTransaction();
 
@@ -146,10 +164,18 @@ class ItemPosController extends Controller
                     ->where('bc_id', $fields['bc_id'])
                     ->first();
                 $imagePath = $token
-                    ? $this->downloadItemImage($fields['bc_id'], $token)
+                    ? $this->downloadItemImage($fields['bc_id'], $token, isset($replaceImageIds[$fields['bc_id']]))
                     : null;
 
                 $oldInventory = (float) ($existing->inventory ?? 0);
+                // Display everywhere prefers custom_image_url (Store
+                // Management's manual upload) over image_url (the BC photo),
+                // so it survives ordinary syncs. But "replace image" is an
+                // explicit opt-in to pull the BC photo for THIS item, so when
+                // it's checked and BC actually gave us a new photo, clear the
+                // custom upload too — otherwise it keeps masking the fresh
+                // BC image and the checkbox visibly does nothing.
+                $replacing = isset($replaceImageIds[$fields['bc_id']]) && $imagePath;
                 $saved = Item::updateOrCreate(
                     [
                         'company_id' => $companyId,
@@ -172,6 +198,7 @@ class ItemPosController extends Controller
                         'base_unit_of_measure_code' => $fields['base_unit_of_measure_code'],
                         'price_includes_tax' => $fields['price_includes_tax'],
                         'image_url' => $imagePath ?? $existing->image_url ?? null,
+                        'custom_image_url' => $replacing ? null : ($existing->custom_image_url ?? null),
                         'default_location_code' => $fields['default_location_code'],
                     ]
                 );
@@ -338,11 +365,18 @@ class ItemPosController extends Controller
             ->delete();
     }
 
-    protected function downloadItemImage(string $bcId, string $token): ?string
+    /**
+     * $replace = false (default): an image already saved for this item is
+     * kept and never re-downloaded. $replace = true: pull the picture from
+     * Business Central again and overwrite the saved file; if BC has no
+     * picture (or the call fails) the existing file is left untouched.
+     */
+    protected function downloadItemImage(string $bcId, string $token, bool $replace = false): ?string
     {
         $path = "items/{$bcId}.jpg";
+        $alreadySaved = Storage::disk('public')->exists($path);
 
-        if (Storage::disk('public')->exists($path)) {
+        if ($alreadySaved && !$replace) {
             return $path;
         }
 
@@ -352,7 +386,7 @@ class ItemPosController extends Controller
             ->get($this->bcUrl("items({$bcId})/picture/pictureContent"));
 
         if (!$imageResponse->successful() || $imageResponse->body() === '') {
-            return null;
+            return $alreadySaved ? $path : null;
         }
 
         Storage::disk('public')->put($path, $imageResponse->body());
@@ -369,7 +403,7 @@ class ItemPosController extends Controller
                 'company_id' => $companyId,
             ]);
 
-            return ['saved' => 0, 'skipped' => 0, 'error' => 'Business Central authentication failed.'];
+            return ['saved' => 0, 'skipped' => 0, 'error' => 'Authentication failed. Please check the API setup and try again.'];
         }
 
         $url = $this->bcEndpoint('item_variants_endpoint', 'itemVariants');
@@ -379,7 +413,7 @@ class ItemPosController extends Controller
                 'company_id' => $companyId,
             ]);
 
-            return ['saved' => 0, 'skipped' => 0, 'error' => 'Business Central URL could not be built.'];
+            return ['saved' => 0, 'skipped' => 0, 'error' => 'The sync URL could not be built. Please check the API setup.'];
         }
 
         $response = Http::withoutVerifying()->withToken($token)->get($url);
@@ -395,7 +429,7 @@ class ItemPosController extends Controller
             return [
                 'saved' => 0,
                 'skipped' => 0,
-                'error' => 'Business Central rejected the item variants request (HTTP ' . $response->status() . '). Check storage/logs/laravel.log for details, or verify the Item Variants endpoint under Companies > API Setup.',
+                'error' => 'The item variants request was rejected (HTTP ' . $response->status() . '). Check storage/logs/laravel.log for details, or verify the Item Variants endpoint under Companies > API Setup.',
             ];
         }
 
@@ -468,7 +502,7 @@ class ItemPosController extends Controller
             ->first();
 
         if (!$localItem) {
-            return redirect()->back()->with('error', 'Item not found. Sync it from BC first.');
+            return redirect()->back()->with('error', 'Item not found. Sync products first.');
         }
 
         $item = $this->toDisplayItem($localItem);

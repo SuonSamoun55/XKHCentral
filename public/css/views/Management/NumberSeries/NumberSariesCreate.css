@@ -51,12 +51,13 @@
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 16px;
-    max-height: 100%;
+    /* max-height: 100%; */
     max-width: 100%;
 }
 
 .tax-group-page .form-card {
     padding: 15px;
+    height: fit-content;
 }
 
 .tax-group-page .empty-card {
@@ -288,14 +289,17 @@
 
 @media (max-width: 640px) {
     .tax-group-page .form-card {
-        padding:15px;
+        /* padding:15px; */
     }
-    .app-content{
+    /* .app-content{
         padding: 10px;
-    }
-    .content-wrapper{
+    } */
+    /* .content-wrapper{
         padding: 0px 10px;
-    }
+    } */
+     .tax-group-page .card{
+        border: none;
+     }
  .section-head{
         display: none;
     }

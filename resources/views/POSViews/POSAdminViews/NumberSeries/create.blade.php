@@ -74,7 +74,7 @@
                         <select name="padding" id="padding" class="select-control" required>
                             <option value="" {{ old('padding') ? '' : 'selected' }} disabled hidden>Select digit
                                 count</option>
-                            @foreach ([3, 4, 5] as $digits)
+                            @foreach (range(1, $maxDigitCount) as $digits)
                                 <option value="{{ $digits }}"
                                     {{ (string) old('padding') === (string) $digits ? 'selected' : '' }}>
                                     {{ $digits }} digits (e.g. {{ str_pad('1', $digits, '0', STR_PAD_LEFT) }})
@@ -87,16 +87,19 @@
 
                     <div class="field">
                         <label for="start_no">Starting No. <span class="required">*</span></label>
-                        <input type="number" name="start_no" id="start_no" class="text-control" placeholder="1"
-                            value="{{ old('start_no', 1) }}" min="1" required>
+                        <input type="number" name="start_no" id="start_no" class="text-control js-series-number-input"
+                            placeholder="1" value="{{ old('start_no', 1) }}" min="1" max="{{ $maxSeriesNumber }}"
+                            required>
+                        <p class="hint">Up to {{ number_format($maxSeriesNumber) }}.</p>
                     </div>
 
                     <div class="field">
                         <label for="end_no">Ending No. <span class="required">*</span></label>
-                        <input type="number" name="end_no" id="end_no" class="text-control" placeholder="1000000"
-                            value="{{ old('end_no') }}" min="1" required>
+                        <input type="number" name="end_no" id="end_no" class="text-control js-series-number-input"
+                            placeholder="1000000" value="{{ old('end_no') }}" min="1" max="{{ $maxSeriesNumber }}"
+                            required>
                         <p class="hint">Once numbers reach this value, this series stops issuing new ones until you extend
-                            it here.</p>
+                            it here. Up to {{ number_format($maxSeriesNumber) }}.</p>
                     </div>
 
                     <div class="field">
@@ -123,4 +126,19 @@
         @endif
 
     </div>
+
+    <script>
+        // `max` on a number input only complains at submit time — it doesn't
+        // stop someone from typing a much longer number first. This trims
+        // the value back to {{ $maxSeriesNumber }} as they type, so it's
+        // never possible to type "too much" in the first place.
+        document.querySelectorAll('.js-series-number-input').forEach(function(input) {
+            const cap = {{ $maxSeriesNumber }};
+            input.addEventListener('input', function() {
+                if (this.value !== '' && Number(this.value) > cap) {
+                    this.value = String(cap);
+                }
+            });
+        });
+    </script>
 @endsection

@@ -91,6 +91,36 @@
     color: #fff;
 }
 
+.pagelist-page .sync-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 38px;
+    padding: 0 16px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    font-family: inherit;
+    background: #1BC5D5;
+    color: #fff;
+    transition: background .12s ease, transform .06s ease;
+}
+
+.pagelist-page .sync-btn:hover {
+    background: #139DAB;
+}
+
+.pagelist-page .sync-btn:active {
+    transform: translateY(1px);
+}
+
+.pagelist-page .sync-btn i {
+    font-size: 15px;
+}
+
 .pagelist-page .tab-row {
     display: flex;
     gap: 6px;
@@ -538,7 +568,17 @@
         padding: 10px;
     }
     .pagelist-page .page-head{
+        display: flex;
+    }
+    .pagelist-page .page-head h1{
         display: none;
+    }
+    .pagelist-page .page-head form{
+        width: 100%;
+    }
+    .pagelist-page .sync-btn{
+        width: 100%;
+        justify-content: center;
     }
 }
 

@@ -13,7 +13,9 @@
     --radius-md: 14px;
     --radius-sm: 5px;
 }
-
+.company-ticket-wrap{
+    display: none;
+}
 #pos-product-detail-scope,
 #pos-product-detail-scope * {
     box-sizing: border-box;
@@ -21,7 +23,6 @@
 
 #pos-product-detail-scope {
     background-color: var(--bg-card);
-    padding: 10px 20px;
     font-family: 'Poppins', sans-serif;
     width: 100%;
     height: 100%;
@@ -31,6 +32,7 @@
 
 #pos-product-detail-scope .detail-wrap {
     width: 100%;
+    padding: 10px 20px;
     margin: 0 auto;
     height: 100%;
     overflow: scroll;
@@ -54,7 +56,7 @@
 }
 
 #pos-product-detail-scope .pd-page-title {
-    font-size: 26px;
+    font-size: 20px;
     font-weight: 700;
     color: var(--primary);
     margin: 0;
@@ -74,7 +76,7 @@
     border-radius: 10px;
     box-shadow: var(--shadow-sm);
     padding: 15px;
-  
+
 }
 
 #pos-product-detail-scope .top-nav-actions {
@@ -176,6 +178,19 @@
 
 #pos-product-detail-scope #pdAddToCartForm .add-to-cart-btn {
     flex: 1;
+}
+
+/* The collapse/expand bar is a phone-only pattern (see the mobile media
+   query below) — on desktop, .pd-bar-content is made invisible to layout
+   so the qty box + Add to Cart button sit directly in the #pdAddToCartForm
+   flex row exactly as before, and the toggle/FAB buttons are hidden. */
+#pos-product-detail-scope .pd-bar-content {
+    display: contents;
+}
+
+#pos-product-detail-scope .pd-bar-toggle,
+#pos-product-detail-scope .pd-bar-fab {
+    display: none;
 }
 
 #pos-product-detail-scope .gallery-col {
@@ -307,7 +322,7 @@
 
 /* ── info column ─────────────────────────────────────────── */
 #pos-product-detail-scope .product-title {
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 700;
     color: #1f2937;
     line-height: 1.2;
@@ -322,14 +337,14 @@
 }
 
 #pos-product-detail-scope .price-old {
-    font-size: 16px;
+    font-size: 13px;
     color: var(--text-muted);
     text-decoration: line-through;
     font-weight: 500;
 }
 
 #pos-product-detail-scope .price-new {
-    font-size: 16px;
+    font-size: 15px;
     color: #059669;
     font-weight: 800;
 }
@@ -382,9 +397,9 @@
 
 #pos-product-detail-scope .product-desc {
     color: var(--text-muted);
-    font-size: 13.5px;
-    line-height: 1.65;
-    margin-bottom: 18px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    margin-bottom: 14px;
 }
 
 /* ── variant selector ────────────────────────────────────── */
@@ -553,8 +568,8 @@
     background: var(--primary);
     color: white;
     border: none;
-    padding: 14px 40px;
-    font-size: 13px;
+    padding: 11px 20px;
+    font-size: 12.5px;
     font-weight: 700;
     border-radius: var(--radius-sm);
     cursor: pointer;
@@ -964,11 +979,12 @@
     #pos-product-detail-scope .pd-card {
         padding: 0px;
         border:none;
-        
+
     }
 
     #pos-product-detail-scope .detail-wrap {
         width: 100%;
+        padding: 0px 10px;
         height: 100vh;
         padding-top: 62px;
         overflow: scroll;
@@ -990,7 +1006,7 @@
     }
 
     #pos-product-detail-scope .top-nav {
-        padding: 10px 10px 0px 10px ;
+        padding: 10px 10px 10px 10px ;
     }
 
     #pos-product-detail-scope .pd-page-title {
@@ -1043,17 +1059,22 @@
 
 
     #pos-product-detail-scope .product-title {
-        font-size: 20px;
-        margin-bottom: 8px;
+        font-size: 16px;
+        margin-bottom: 6px;
+    }
+
+    #pos-product-detail-scope .product-desc {
+        font-size: 12px;
+        margin-bottom: 10px;
     }
 
     #pos-product-detail-scope .price-new {
-        font-size: 22px;
-        margin-bottom: 16px;
+        font-size: 17px;
+        margin-bottom: 10px;
     }
 
     #pos-product-detail-scope .price-old {
-        font-size: 13px;
+        font-size: 12px;
     }
 
     #pos-product-detail-scope .variant-options {
@@ -1091,6 +1112,82 @@
         background: #fff;
         box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08);
         z-index: 500;
+        transition: box-shadow 0.18s ease-out, background 0.18s ease-out;
+    }
+
+    /* Collapsed: the white bar itself fades away, leaving only the round
+       teal FAB floating bottom-right — tap it to bring the bar back. */
+    #pos-product-detail-scope #pdAddToCartForm.collapsed {
+        justify-content: flex-end;
+        background: transparent;
+        box-shadow: none;
+        pointer-events: none;
+    }
+
+    #pos-product-detail-scope #pdAddToCartForm.collapsed .pd-bar-fab {
+        pointer-events: auto;
+    }
+
+    #pos-product-detail-scope .pd-bar-content {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        transition: opacity 0.18s ease-out, transform 0.18s cubic-bezier(.22, 1, .36, 1), max-width 0.18s ease-out;
+        max-width: 1000px;
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    #pos-product-detail-scope #pdAddToCartForm.collapsed .pd-bar-content {
+        opacity: 0;
+        transform: translateX(14px);
+        max-width: 0;
+        pointer-events: none;
+    }
+
+    #pos-product-detail-scope .pd-bar-toggle {
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        color: var(--text-main);
+        padding: 0;
+        cursor: pointer;
+    }
+
+    #pos-product-detail-scope .pd-bar-fab {
+        flex-shrink: 0;
+        width: 0;
+        height: 48px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        position: relative;
+        opacity: 0;
+        transform: scale(0.5);
+        transition: all 0.18s cubic-bezier(.22, 1, .36, 1);
+        overflow: hidden;
+        display: flex;
+    }
+
+    #pos-product-detail-scope #pdAddToCartForm.collapsed .pd-bar-fab {
+        width: 48px;
+        opacity: 1;
+        transform: scale(1);
     }
 
     #pos-product-detail-scope .qty-box {
@@ -1098,8 +1195,8 @@
     }
     #pos-product-detail-scope .add-to-cart-btn {
         max-width: 100%;
-        padding: 15px;
-        font-size: 15px;
+        padding: 11px 16px;
+        font-size: 13px;
     }
     .sidebar-wrap{
         display: none;

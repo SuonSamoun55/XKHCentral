@@ -91,6 +91,37 @@ class NumberSeries extends Model
     }
 
     /**
+     * True when the company has an active series for this purpose that still
+     * has numbers left. Every flow that issues numbers (syncs, staff/order
+     * creation, approval entries) checks this first so nothing is created
+     * or synced before Number Series is set up.
+     */
+    public static function isConfigured(?int $companyId, string $code): bool
+    {
+        if (!$companyId) {
+            return false;
+        }
+
+        $series = static::where('company_id', $companyId)
+            ->where('code', $code)
+            ->where('is_active', true)
+            ->first();
+
+        return $series !== null && !$series->is_exhausted;
+    }
+
+    /**
+     * Message shown when a flow is blocked by a missing/exhausted series.
+     */
+    public static function missingMessage(string $code): string
+    {
+        $label = \App\Http\Controllers\Api\POS\Admin\NumberSeries\NumberSeriesController::$purposes[$code] ?? $code;
+
+        return "The {$label} number series is not set up (or has run out of numbers). "
+            . 'Set it up in Management > Number Series first, then try again.';
+    }
+
+    /**
      * Look up an active series by code for the given company, lock it for
      * update, and issue the next number. Call this from inside an existing
      * DB::transaction() so the lock actually holds — e.g.:

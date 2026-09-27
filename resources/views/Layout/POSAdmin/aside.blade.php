@@ -83,7 +83,7 @@
 
     $navItems = [
         [
-            'name' => 'Item',
+            'name' => 'Management',
             'match' => [
                 'pos/interface', 'pos/*',
                 'store-management', 'store-management/*', 'store/management/*',
@@ -95,14 +95,14 @@
             'icon_active' => '/images/management/management_POS_active.png',
             'children' => [
                 [
-                    'name' => 'Pos System',
+                    'name' => 'B2B Orders',
                     'url' => '/pos/interface',
                     'match' => ['pos/interface', 'pos/*'],
                     'icon' => '/images/management/managemetn_POS.png',
                     'icon_active' => '/images/management/management_POS_active.png',
                 ],
                 [
-                    'name' => 'Store',
+                    'name' => 'Stores',
                     'url' => '/store-management',
                     'match' => ['store-management', 'store-management/*', 'store/management/*'],
                     'icon' => '/images/AdminPOS/admin_store_management.png',
@@ -166,7 +166,7 @@
     ];
 
     // Mobile header/footer have no dropdown interaction, so grouped desktop
-    // items (e.g. "Item" -> Pos System/Store/Discount/Tax Groups) are shown
+    // items (e.g. "Item" -> B2B Orders/Store/Discount/Tax Groups) are shown
     // flattened back into their individual icons there, same as before
     // grouping existed on desktop.
     $flattenForMobile = function (array $items) {
@@ -184,10 +184,24 @@
     };
 
     $mobileMenuItems = $flattenForMobile($navItems);
+    // "Notification" is dropped from the mobile footer since the bell
+    // already sits in the mobile topbar (see .mobile-topbar-bell above) —
+    // "Report Settings" takes its old last slot instead, shortened to
+    // "Report" to fit the footer label width.
     $bottomNavItems = array_values(array_filter(
         $flattenForMobile($navItems),
-        fn($item) => !in_array($item['name'], ['Discount', 'Tax Groups', 'Report Settings', 'Approval Entry'])
+        fn($item) => !in_array($item['name'], ['Discount', 'Tax Groups', 'Approval Entry', 'Notification'])
     ));
+    foreach ($bottomNavItems as $idx => $item) {
+        if ($item['name'] === 'Report Settings') {
+            $reportItem = $bottomNavItems[$idx];
+            $reportItem['name'] = 'Report';
+            unset($bottomNavItems[$idx]);
+            $bottomNavItems = array_values($bottomNavItems);
+            $bottomNavItems[] = $reportItem;
+            break;
+        }
+    }
     $activeNavItem = null;
     foreach ($navItems as $item) {
         foreach ($item['match'] as $pattern) {
@@ -508,12 +522,16 @@
         }
     }
 
-    // Restore each group's open/closed state from the last page before this
-    // one navigated away — full page loads otherwise reset every group shut.
+    // Restore the open group from the last page before this one navigated
+    // away — full page loads otherwise reset every group shut. Only the
+    // first match is restored (accordion: at most one group open), in
+    // case an older stored value still lists more than one key.
     const openGroups = new Set(getOpenGroups());
+    let restoredOne = false;
     document.querySelectorAll('.nav-group[data-nav-group-key]').forEach(function (group) {
-        if (openGroups.has(group.dataset.navGroupKey)) {
+        if (!restoredOne && openGroups.has(group.dataset.navGroupKey)) {
             group.classList.add('open');
+            restoredOne = true;
         }
     });
 
@@ -521,8 +539,20 @@
         btn.addEventListener('click', function () {
             const group = btn.closest('.nav-group');
             if (!group) return;
-            group.classList.toggle('open');
-            setGroupOpen(group.dataset.navGroupKey, group.classList.contains('open'));
+
+            const willOpen = !group.classList.contains('open');
+
+            // Accordion behavior: only one submenu open at a time, so the
+            // sidebar's total height never grows enough to push/overlap
+            // the profile and settings area pinned at the bottom.
+            document.querySelectorAll('.nav-group[data-nav-group-key].open').forEach(function (openGroup) {
+                if (openGroup === group) return;
+                openGroup.classList.remove('open');
+                setGroupOpen(openGroup.dataset.navGroupKey, false);
+            });
+
+            group.classList.toggle('open', willOpen);
+            setGroupOpen(group.dataset.navGroupKey, willOpen);
         });
     });
 })();

@@ -8,7 +8,9 @@
     gap: 12px;
     height:100%;
 }
-
+.company-ticket-wrap{
+    display: none;
+}
 /* ── Layout ──────────────────────────────────────────────── */
 .chat-page {
     display: flex;

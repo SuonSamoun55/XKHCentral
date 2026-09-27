@@ -20,7 +20,7 @@
         overflow:hidden;
         border-radius:20px;
 
-        padding:28px 28px 20px;
+        padding:20px;
         display:flex;
         flex-direction:column;
     }
@@ -98,6 +98,22 @@
         cursor:pointer;
     }
 
+    .filter-btn.active{
+        background:rgba(59, 172, 180, .12);
+        border-color:#3BACB4;
+        color:#1f7f8b;
+    }
+
+    /* Same filter icon image as the Products page, instead of the bi-sliders2
+       font icon — it's a fixed-color image so the active state above tints
+       the background rather than trying to invert the icon to white. */
+    .filter-btn-icon{
+        width:16px;
+        height:16px;
+        object-fit:contain;
+        flex-shrink:0;
+    }
+
     .filter-panel{
         position:absolute;
         top:36px;
@@ -116,6 +132,66 @@
 
     .filter-panel.show{
         display:block;
+    }
+
+    .filter-panel-handle{
+        display:none;
+    }
+
+    .filter-panel-head{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+    }
+
+    .filter-panel-close{
+        display:none;
+    }
+
+    .filter-panel-body{
+        display:contents;
+    }
+
+    .filter-backdrop{
+        display:none;
+    }
+
+    .category-search-box{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        height:30px;
+        padding:0 10px;
+        margin-bottom:8px;
+        background:#f8fafc;
+        border:1px solid var(--border);
+        border-radius:5px;
+    }
+
+    .category-search-box i{
+        font-size:12px;
+        color:#9ca3af;
+        flex-shrink:0;
+    }
+
+    .category-search-box input{
+        width:100%;
+        min-width:0;
+        border:0;
+        outline:0;
+        background:transparent;
+        font-size:11px;
+        color:#374151;
+    }
+
+    .check-list-empty{
+        font-size:10px;
+        color:#9ca3af;
+        padding:6px 2px;
+    }
+
+    .check-item[hidden]{
+        display:none;
     }
 
     .filter-title{
@@ -306,20 +382,17 @@
         background:var(--primary);
         color:#fff;
     }
-
     .toolbar-right{
-        display:flex;
-        flex-direction:column;
-        align-items:flex-end;
+        display:grid;
+        grid-template-columns:max-content max-content;
+        justify-content:end;
+        align-items:center;
         gap:8px;
     }
 
-    .toolbar-secondary-row{
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:8px;
-        width:100%;
+    .toolbar-secondary-row,
+    .sync-actions-row{
+        display:contents;
     }
 
     .sync-btn{
@@ -341,6 +414,166 @@
         transition: filter .18s ease;
     }
 
+    /* ===== Sync confirmation popup (primary colour) ===== */
+    .sync-confirm-backdrop{
+        position:fixed;
+        inset:0;
+        z-index:1300;
+        background:rgba(15, 23, 42, .45);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:16px;
+    }
+
+    .sync-confirm-backdrop[hidden]{
+        display:none;
+    }
+
+    .sync-confirm{
+        width:100%;
+        max-width:400px;
+        background:#fff;
+        border-radius:14px;
+        padding:24px 22px 20px;
+        text-align:center;
+        box-shadow:0 20px 50px rgba(15, 23, 42, .25);
+        animation:toastSlideIn .2s ease;
+    }
+
+    .sync-confirm-icon{
+        width:52px;
+        height:52px;
+        margin:0 auto 12px;
+        border-radius:50%;
+        background:#e6f6f7;
+        color:#3BACB4;
+        font-size:26px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+    }
+
+    .sync-confirm-title{
+        font-size:16px;
+        font-weight:700;
+        color:#1f7f8b;
+        margin-bottom:6px;
+    }
+
+    .sync-confirm-text{
+        font-size:12px;
+        color:#4b5563;
+        margin-bottom:12px;
+    }
+
+    .sync-confirm-note{
+        font-size:11px;
+        line-height:1.5;
+        text-align:left;
+        color:#4b5563;
+        background:#f8fafc;
+        border:1px solid #e5e7eb;
+        border-radius:8px;
+        padding:9px 11px;
+        margin-bottom:16px;
+    }
+
+    .sync-confirm-note.replace{
+        background:#e6f6f7;
+        border-color:#b7e2e6;
+        color:#1f7f8b;
+    }
+
+    .sync-confirm-note i{
+        margin-right:4px;
+    }
+
+    .sync-confirm-actions{
+        display:flex;
+        gap:10px;
+    }
+
+    .sync-confirm-cancel,
+    .sync-confirm-ok{
+        flex:1;
+        height:34px;
+        border-radius:6px;
+        font-size:12px;
+        font-weight:700;
+        cursor:pointer;
+    }
+
+    .sync-confirm-cancel{
+        background:#fff;
+        color:#4b5563;
+        border:1px solid #d7dce2;
+    }
+
+    .sync-confirm-cancel:hover{
+        background:#f3f4f6;
+    }
+
+    .sync-confirm-ok{
+        background:#3BACB4;
+        color:#fff;
+        border:none;
+    }
+
+    .sync-confirm-ok:hover{
+        filter:brightness(.92);
+    }
+
+    /* Fills the left grid column, i.e. exactly Grid + List wide. */
+    #pickAllBtn{
+        width:100%;
+        min-width:0;
+        padding:0 8px;
+        white-space:nowrap;
+    }
+
+    /* Turns solid primary once anything is selected. */
+    .sync-btn.sync-btn-alt.active{
+        background:#3BACB4;
+        color:#fff;
+        border-color:#3BACB4;
+    }
+
+    .pick-check{
+        accent-color:#3BACB4;
+        cursor:pointer;
+    }
+
+    /* Per-item "replace image on next sync" tick. The span handles the
+       click (so it never follows the card link); the input is display only. */
+    .pick-box{
+        position:absolute;
+        top:8px;
+        right:8px;
+        z-index:2;
+        width:22px;
+        height:22px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        background:rgba(255,255,255,.92);
+        border:1px solid #cfe7ea;
+        border-radius:5px;
+        cursor:pointer;
+    }
+
+    .pick-box .pick-check{
+        pointer-events:none;
+        width:14px;
+        height:14px;
+        margin:0;
+    }
+
+    .list-card > .pick-box{
+        position:static;
+        flex-shrink:0;
+    }
+
     .sync-btn:hover{
         filter: brightness(0.92);
     }
@@ -350,6 +583,30 @@
         color:#1f7f8b;
         border:1px solid #cfe7ea;
         text-decoration:none;
+        transition: background .18s ease, color .18s ease, border-color .18s ease;
+    }
+
+    /* "Sync Products" gets a faint breathing glow (much subtler than the
+       LIVE-badge ring — a scaling border looked stretched/broken on a wide
+       rectangular button) so it reads as the button to click without being
+       distracting. */
+    #syncBtn{
+        animation:syncBtnLivePulse 2.4s ease-in-out infinite;
+    }
+
+    @keyframes syncBtnLivePulse{
+        0%, 100% { box-shadow:0 0 0 0 rgba(59, 172, 180, 0.592); }
+        50%      { box-shadow:0 0 0 1px rgba(59, 172, 180, 0.782); }
+    }
+
+    /* Outline "Sync Products" / "Select all" buttons: hover turns solid
+       primary instead of the plain brightness dim used by solid buttons,
+       since dimming a white background is barely visible. */
+    .sync-btn.sync-btn-alt:hover{
+        filter:none;
+        background:#3BACB4;
+        color:#fff;
+        border-color:#3BACB4;
     }
 
     .view-switch{
@@ -358,7 +615,7 @@
     }
 
     .view-btn{
-        min-width:64px;
+        min-width:84px;
         height:32px;
         border:none;
         border-radius:4px;
@@ -370,6 +627,22 @@
         justify-content:center;
         gap:7px;
         cursor:pointer;
+    }
+
+    /* The browser's default focus outline sits outside the box and made the
+       just-clicked button (Select all) look bigger than Grid/List. Draw the
+       focus ring inside the button instead so all three stay the same size. */
+    .view-btn{
+        -webkit-tap-highlight-color:transparent;
+    }
+
+    .view-btn:focus,
+    .view-btn:focus-visible{
+        outline:none;
+    }
+
+    .view-btn:focus-visible{
+        box-shadow:inset 0 0 0 2px #3BACB4;
     }
 
     .view-btn.active{
@@ -414,17 +687,17 @@
         background:#fff;
         border:1px solid #eceff3;
         border-radius:8px;
-        overflow:hidden;
         display:flex;
         flex-direction:column;
         min-height:200px;
     }
-
     .product-image{
         width:100%;
         height:160px;
         background:#eef2f7;
         position:relative;
+        overflow:hidden;
+        border-radius:8px 8px 0 0;
     }
 
     .product-image img{
@@ -711,16 +984,18 @@
     @media (max-width: 768px){
         .main-wrapper, .app-shell{
             height: 100%;
-            overflow: none;
+            padding: 0 0px 70px 0px;
+
+            overflow: visible;
         }
         .item-grid{
             grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
             gap:12px;
-            overflow: scroll;
-            height: 100vh;
-            padding-bottom: 16  0px;
+            overflow: visible;
+            min-height: 100vh;
+            padding-bottom: 160px;
         }
-       
+
         .product-card{
             min-height:auto;
         }
@@ -747,13 +1022,39 @@
             margin-bottom:0;
         }
 
+        /* Same search-box look on every admin list page (B2B Order, Store
+           Management, Approval Entries) at this width: 35px tall, 6px
+           corners, same border/background/icon/text/placeholder. */
+        .search-box i{
+            color:#94a3b8;
+            font-size:13px;
+        }
+
+        .search-box input{
+            height:35px;
+            border-radius:6px;
+            border:1px solid #dce5ec;
+            background:#f8fafc;
+            padding-left:34px;
+            font-size:13px;
+            font-family:inherit;
+            color:#334155;
+        }
+
+        .search-box input::placeholder{
+            color:#94a3b8;
+            font-size:13px;
+            font-family:inherit;
+            opacity:1;
+        }
+
         .filter-wrap{
             flex-shrink:0;
         }
 
         .filter-btn{
-            width:32px;
-            height:32px;
+            width:35px;
+            height:35px;
             padding:0;
             justify-content:center;
         }
@@ -762,16 +1063,160 @@
             display:none;
         }
 
-        .filter-panel{
-            left:auto;
-            right:0;
-            width:260px;
-            max-width:calc(100vw - 36px);
+        .filter-btn-icon{
+            width:18px;
+            height:18px;
         }
 
+        .view-btn{
+            width:44px;
+            min-width:44px;
+            height:32px;
+            padding:0;
+            justify-content:center;
+        }
+
+        /* "Select all" spans Grid + List (44 + 8 + 44 = 96px): text only so
+           the label and the (N) count always fit. */
+        #pickAllIcon{
+            display:none;
+        }
+
+        .view-btn-text{
+            display:none;
+        }
+
+        /* Same bottom-sheet treatment as the customer-facing product page —
+           capped at ~half the screen, category list scrolls inside it,
+           Reset/Apply stay pinned at the bottom. */
+        .filter-panel{
+            position:fixed;
+            left:0;
+            right:0;
+            top:auto;
+            bottom:0;
+            width:100%;
+            max-width:100%;
+            height:50vh;
+            max-height:50vh;
+            border-radius:0;
+            border-top-left-radius:18px;
+            border-top-right-radius:18px;
+            border:0;
+            box-shadow:0 -10px 30px rgba(15, 23, 42, 0.18);
+            padding:8px 16px calc(14px + env(safe-area-inset-bottom));
+            z-index:1500;
+            display:none;
+            flex-direction:column;
+        }
+
+        .filter-panel.show{
+            display:flex;
+        }
+
+        .filter-panel-handle{
+            display:block;
+            width:36px;
+            height:4px;
+            border-radius:999px;
+            background:#e1e8f5;
+            margin:6px auto 10px;
+            flex-shrink:0;
+        }
+
+        .filter-panel-close{
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            width:28px;
+            height:28px;
+            border:0;
+            border-radius:50%;
+            background:#f3f4f6;
+            color:#374151;
+            font-size:12px;
+        }
+
+        .filter-panel-body{
+            display:flex;
+            flex-direction:column;
+            flex:1 1 auto;
+            min-height:0;
+            overflow-y:auto;
+            -webkit-overflow-scrolling:touch;
+        }
+        .check-list{
+            max-height:none;
+            overflow-y:visible;
+        }
+        .filter-backdrop.show{
+            display:block;
+            position:fixed;
+            inset:0;
+            background:rgba(8, 25, 54, 0.45);
+            z-index:1400;
+        }
         .toolbar-right{
             width:100%;
+            /* Buttons keep their natural size instead of stretching across
+               the screen: Grid/List pair on the left, Sync + Manage Store
+               (same width as each other) pushed to the right edge. */
+            grid-template-columns:max-content max-content;
+            justify-content:space-between;
         }
+
+        .toolbar-right .sync-btn{
+            min-width:0;
+            padding:0 14px;
+        }
+        .item-list{
+            gap:10px;
+            padding-bottom: 150px;
+        }
+
+        .list-card{
+            gap:14px;
+            padding:12px;
+            border-radius:12px;
+            min-height:88px;
+        }
+
+        .list-image{
+            width:76px;
+            height:76px;
+            border-radius:10px;
+        }
+
+        .list-title{
+            font-size:15px;
+            line-height:1.3;
+            margin-bottom:4px;
+        }
+
+        .list-sub{
+            font-size:12px;
+            margin-bottom:6px;
+        }
+
+        .list-stock{
+            font-size:12.5px;
+        }
+
+        .list-price{
+            min-width:auto;
+        }
+
+        .list-price .now{
+            font-size:16px;
+        }
+
+        .list-price .old{
+            font-size:12px;
+        }
+    }
+
+    body.filter-panel-open{
+        overflow:hidden;
     }
 
     @media (max-width: 768px){
@@ -779,3 +1224,4 @@
             display:none;
         }
     }
+

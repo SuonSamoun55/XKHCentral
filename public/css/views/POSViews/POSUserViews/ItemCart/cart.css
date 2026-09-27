@@ -47,7 +47,9 @@
     position: relative !important;
     display: flex !important;
 }
-
+.company-ticket-wrap{
+    display:none;
+}
 .page-wrap {
     background: white;
     overflow-y: auto;
@@ -506,18 +508,30 @@
 .empty-state {
     text-align: center;
     padding: 5% 0;
+    font-family: 'Poppins', sans-serif;
 }
 
 .empty-state-image {
-    width: 100%;
-    margin-bottom: 2%;
-    max-width: 10rem;
+    width: 200px;
+    height: 200px;
+    object-fit: contain;
+    /* background: #f0fdfa;
+    border-radius: 20px; */
+    margin: 0 auto ;
+    display: block;
+}
+
+.empty-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #6b7280;
+    margin: 0;
 }
 
 .empty-state-link {
     color: white;
     text-decoration: none;
-    font-weight: bold;
+    font-weight: 600;
 }
 
 .success-card {
@@ -598,22 +612,25 @@
 }
 
 .empty-description {
-    color: var(--text-gray);
-    font-size: var(--fs-body);
+    color: #6b7280;
+    font-size: 16px;
     line-height: 1.6;
     margin-bottom: 25px;
-    margin-top: 10px;
+    margin-top: 6px;
 }
 
 .shopingBtn {
-    padding: 12px;
-    border-radius: 5px;
-    background: var(--primary-teal);
+    padding: 12px 24px;
+    border-radius: 14px;
+    background: #10b8c3;
     color: #ffffff;
-    font-weight: var(--fw-semibold);
-    font-size: var(--fs-header);
+    font-weight: 600;
+    font-size: 14px;
     border: none;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     transition: background 0.15s ease;
 }
 
@@ -1100,6 +1117,7 @@
         flex-direction: column;
         min-height: auto;
         background: #fff;
+        font-family: 'Poppins', sans-serif;
     }
 
     .empty-cart-content {
@@ -1118,23 +1136,29 @@
 
     /* Illustration */
     .empty-cart-illustration {
-        width: 240px;
+        width: 200px;
+        height: 200px;
         max-width: 80%;
-        margin: 0 auto 24px;
+        object-fit: contain;
+        /* background: #f0fdfa;
+        border-radius: 20px;*/
+        margin: 0 auto;
         display: block;
     }
 
     /* Title */
     .empty-title {
-        font-size: var(--fs-h1);
-        font-weight: 600;
-        margin-bottom: 6px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #222;
+        margin: 20px 0 0;
     }
 
     /* Description */
     .empty-desc {
-        font-size: var(--fs-body);
-        color: var(--text-muted-2);
+        font-size: 13px;
+        color: #6b7280;
+        margin-top: 6px;
         margin-bottom: 20px;
         line-height: 1.4;
     }
@@ -1144,11 +1168,12 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: var(--primary-teal);
+        background: #10b8c3;
         color: #ffffff;
-        padding: 12px 18px;
-        border-radius: var(--radius-md);
+        padding: 12px 24px;
+        border-radius: 14px;
         text-decoration: none;
+        font-size: 14px;
         font-weight: 600;
         margin-bottom: 28px;
         transition: background 0.15s ease;
@@ -1285,6 +1310,7 @@
     .success-illustration img {
         width: 220px;
         max-width: 80%;
+        margin:0 auto;
     }
 
     /* Text */

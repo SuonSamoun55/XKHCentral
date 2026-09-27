@@ -81,6 +81,10 @@ class StaffController extends Controller
 
         $staffCompanyId = $this->resolveCompanyId($request);
 
+        if (!NumberSeries::isConfigured($staffCompanyId, 'STAFF')) {
+            return back()->withInput()->with('error', NumberSeries::missingMessage('STAFF'));
+        }
+
         User::create([
             'name' => $request->name,
             'email' => $request->email,

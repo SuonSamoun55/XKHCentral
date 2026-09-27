@@ -56,8 +56,8 @@ class AppServiceProvider extends ServiceProvider
             $view->with('activeFaviconUrl', $this->resolveActiveFaviconUrl());
         });
 
-        View::composer('Layout.POSUser.aside', POSUserSidebarComposer::class);
-        View::composer('Layout.Management.aside', ManagementSidebarComposer::class);
+        View::composer(['Layout.POSUser.aside', 'Layout.POSUser.app'], POSUserSidebarComposer::class);
+        View::composer(['Layout.Management.aside', 'Layout.Management.app'], ManagementSidebarComposer::class);
     }
 
 

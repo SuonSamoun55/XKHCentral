@@ -1,12 +1,10 @@
 @extends('Layout.POSUser.app')
 
 @section('title', 'POS Cart')
-
 @push('styles')
     <link rel="stylesheet"
         href="{{ asset('css/views/POSViews/POSUserViews/ItemCart/cart.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSUserViews/ItemCart/cart.css')) }}">
 @endpush
-
 @section('content')
     <div class="page-wrap">
         <div class="cart-container">
@@ -25,8 +23,8 @@
                     @if (!$cart || $cart->items->isEmpty())
                         <div class="empty-state desktop-only">
                             <img src="{{ asset('images/pos/Empty.png') }}" class="empty-state-image">
-                            <h3 style="color: #ccc;">Your cart is Empty</h3>
-                            <p class="empty-description">Looks like you haven't <br> added anything to your cart yet</p>
+                            <h3 class="empty-title">Your cart is Empty</h3>
+                            <p class="empty-description">Looks like you haven't added anything <br> to your cart yet</p>
                             <button class="shopingBtn">
                                 <a href="/pos-system" class="empty-state-link">Continue Shopping</a>
                             </button>
@@ -37,7 +35,7 @@
                             <div class="empty-cart-content">
                                 <div class="item-count">0 items</div>
 
-                                <img src="{{ asset('images/pos/image_16.png') }}" alt="Empty cart"
+                                <img src="{{ asset('images/pos/Empty.png') }}" alt="Empty cart"
                                     class="empty-cart-illustration">
 
                                 <h3 class="empty-title">Your cart is empty</h3>
@@ -148,12 +146,12 @@
                                         <!-- Column: amount breakdown -->
                                         <div class="cart-col cart-col-total">
                                             <div class="amount-row">
-                                                <span class="cart-col-label">Before discount</span>
+                                                {{-- <span class="cart-col-label ">Before discount</span> --}}
                                                 <span
                                                     class="price-original">${{ number_format($originalLineTotal, 2) }}</span>
                                             </div>
                                             <div class="amount-row">
-                                                <span class="cart-col-label">After discount</span>
+                                                {{-- <span class="cart-col-label">After discount</span> --}}
                                                 <span class="price-final">${{ number_format($lineTotal, 2) }}</span>
                                             </div>
                                         </div>
@@ -281,102 +279,6 @@
             </div>
 
             <!-- =========================
-                                            SCREEN 5: ORDER DETAIL (MOBILE)
-                                        ========================== -->
-            <div id="orderDetailPage" class="order-detail-page hidden-order-detail mobile-only">
-                <div class="cart-nav_mobile">
-                    <a href="{{ url()->previous() }}" class="icon-btn_mobile">
-                        <i class="bi bi-arrow-left"></i>
-                    </a>
-                    <span class="nav-title"><b> Order Detail</b></span>
-                </div>
-
-                <div class="status-card">
-                    <div class="status-icon">📦</div>
-                    <div>
-                        <strong>Processing order</strong>
-                        <p>Orders will be received
-                            {{ optional($orderDetail ?? null)->checked_out_at ? optional($orderDetail ?? null)->checked_out_at->format('d F Y') : '-' }}
-                        </p>
-                    </div>
-                </div>
-
-                <div class="order-meta">
-                    <div>
-                        <span>Invoice number</span>
-                        <strong>#{{ optional($orderDetail ?? null)->order_no ?? 'N/A' }}</strong>
-                    </div>
-                    <div>
-                        <span>Order date</span>
-                        <strong>{{ optional($orderDetail ?? null)->created_at ? optional($orderDetail ?? null)->created_at->format('d F Y') : '-' }}</strong>
-                    </div>
-                </div>
-
-                @if (optional($orderDetail ?? null)->items)
-                    <h5 class="section-title">Purchased Item</h5>
-                    @foreach (optional($orderDetail ?? null)->items as $item)
-                        @php
-                            $odUnitPrice = $item->unit_price ?? ($item->qty > 0 ? $item->line_total / $item->qty : 0);
-                            $odVatPercent = !empty(optional($item->item)->price_includes_tax)
-                                ? 0
-                                : max(0, (float) (optional($item->item)->resolved_vat_percent ?? 0));
-                            $odLineVat = round(($item->line_total ?? 0) * ($odVatPercent / 100), 2);
-                            $odResolveImg = fn($path) => $path
-                                ? (str_starts_with($path, 'http')
-                                    ? $path
-                                    : asset($path))
-                                : null;
-
-                            $odImage =
-                                $odResolveImg(optional($item->itemVariant)->image_url) ??
-                                ($odResolveImg(optional($item->item)->custom_image_url) ??
-                                    ($odResolveImg(optional($item->item)->image_url) ??
-                                        asset('images/pos/product-placeholder.png')));
-                        @endphp
-                        <div class="item-card">
-                            <img src="{{ $odImage }}" alt="{{ $item->item_name }}"
-                                onerror="this.onerror=null;this.src='{{ asset('images/pos/product-placeholder.png') }}';">
-                            <div class="item-info">
-                                <strong>{{ $item->item_name }}</strong>
-                                <p>Variant: {{ $item->variant ?? 'Default' }}</p>
-                                <span>x{{ $item->qty }}</span>
-                                <div class="item-meta-row">
-                                    <span class="cart-vat-chip">VAT {{ $odVatPercent }}%:
-                                        ${{ number_format($odLineVat, 2) }}</span>
-                                </div>
-                            </div>
-                            <strong>${{ number_format($item->line_total, 0) }}</strong>
-                        </div>
-                    @endforeach
-                @endif
-
-                <h5 class="section-title">Payment</h5>
-                <div class="payment-row">
-                    <span>Subtotal</span>
-                    <span>${{ number_format(optional($orderDetail ?? null)->subtotal ?? 0, 2) }}</span>
-                </div>
-                <div class="payment-row">
-                    <span>Discount</span>
-                    <span>-$0</span>
-                </div>
-                <div class="payment-row">
-                    <span>Delivery Fee</span>
-                    <span>$0</span>
-                </div>
-                <div class="payment-row">
-                    <span>Estimated Tax</span>
-                    <span>${{ number_format(optional($orderDetail ?? null)->tax_amount ?? 0, 2) }}</span>
-                </div>
-
-                <div class="divider"></div>
-                <div class="payment-row total">
-                    <span>Total in USD</span>
-                    <span>${{ number_format(optional($orderDetail ?? null)->amount_paid ?? 0, 2) }}</span>
-                </div>
-            </div>
-
-
-            <!-- =========================
                                             SCREEN 6: PROCESSING OVERLAY MOBILE
                                         ========================== -->
             <div id="processingScreen" class="process-screen hidden">
@@ -412,11 +314,9 @@
         const cartMainContent = document.getElementById('cartMainContent');
         const cartItemsArea = document.getElementById('cartItemsArea');
         const successContent = document.getElementById('successContent');
-        const orderDetailPage = document.getElementById('orderDetailPage');
         const pendingQtyByItem = new Map();
         const syncingItems = new Set();
         const debounceTimerByItem = new Map();
-        const showOrderDetail = {{ isset($showOrderDetail) && $showOrderDetail ? 'true' : 'false' }};
 
         // ===== Styled confirm modal (replaces window.confirm) =====
         const orderConfirmModal = document.getElementById('orderConfirmModal');
@@ -448,11 +348,8 @@
             const isSuccessOpen =
                 successContent &&
                 !successContent.classList.contains('hidden-success');
-            const isOrderDetailOpen =
-                orderDetailPage &&
-                !orderDetailPage.classList.contains('hidden-order-detail');
 
-            if (isSuccessOpen || isOrderDetailOpen) {
+            if (isSuccessOpen) {
                 window.location.href = "{{ route('user.pos.cart') }}";
             }
         };
@@ -506,22 +403,12 @@
             totalUsdEl.textContent = formatUsd(summary.total);
         };
 
-        if (showOrderDetail && orderDetailPage) {
-            if (window.innerWidth >= 768) {
-                window.location.href = "{{ route('user.pos.cart') }}";
-            } else {
-                cartMainContent.style.display = 'none';
-                orderDetailPage.classList.remove('hidden-order-detail');
-                orderDetailPage.style.display = 'block';
-            }
-        }
-
         const renderEmptyState = () => {
             cartItemsArea.innerHTML = `
             <div class="empty-state desktop-only">
                 <img src="{{ asset('images/pos/Empty.png') }}" class="empty-state-image">
-                <h3 style="color: #ccc;">Your cart is Empty</h3>
-                <p class="empty-description">Looks like you haven't <br> added anything to your cart yet</p>
+                <h3 class="empty-title">Your cart is Empty</h3>
+                <p class="empty-description">Looks like you haven't added anything <br> to your cart yet</p>
                 <button class="shopingBtn">
                     <a href="/pos-system" class="empty-state-link">Continue Shopping</a>
                 </button>
@@ -529,7 +416,7 @@
             <div class="empty-cart-mobile mobile-only">
                 <div class="empty-cart-content">
                     <div class="item-count">0 items</div>
-                    <img src="{{ asset('images/pos/image_16.png') }}" alt="Empty cart" class="empty-cart-illustration">
+                    <img src="{{ asset('images/pos/Empty.png') }}" alt="Empty cart" class="empty-cart-illustration">
                     <h3 class="empty-title">Your cart is empty</h3>
                     <p class="empty-desc">
                         Looks like you haven't added anything<br>
@@ -775,9 +662,10 @@
                             successContent.style.display = 'block';
                         }
                         document.getElementById('orderNumber').innerText = `#${data.order_no}`;
-                        document.getElementById('amountPaid').innerText = `$${data.total}`;
+                        document.getElementById('amountPaid').innerText =
+                            `$${Number(data.total ?? 0).toFixed(2)}`;
                         document.getElementById('orderDetailBtn').href =
-                            `/pos-system/order-detail/${data.order_id}`;
+                            `/pos-system/order/${data.order_id}`;
                     }, 1200);
                 } catch (error) {
                     alert('Order failed. Please try again.');
@@ -791,14 +679,5 @@
             };
         }
 
-        const orderDetailBtn = document.getElementById('orderDetailBtn');
-        if (orderDetailBtn) {
-            orderDetailBtn.addEventListener('click', function(event) {
-                if (window.innerWidth >= 768) {
-                    event.preventDefault();
-                    window.location.href = "{{ route('user.pos.cart') }}";
-                }
-            });
-        }
     </script>
 @endpush

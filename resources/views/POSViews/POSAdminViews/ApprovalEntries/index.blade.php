@@ -23,12 +23,27 @@
             </div>
         @endif
     </div>
-    <h1>Approval Entries</h1>
+    <div class="page-head-row">
+        <h1>Approval Entries</h1>
+        <div class="head-actions">
+            <form class="search-box" method="GET" action="{{ route('approval-entries.index') }}">
+                <i class="bi bi-search"></i>
+                <input type="text" name="q" value="{{ request('q') }}" placeholder="Search">
+                @if (request('status'))
+                    <input type="hidden" name="status" value="{{ request('status') }}">
+                @endif
+            </form>
+
+            <button type="button" class="export-btn" id="exportEntriesBtn" data-bs-toggle="modal" data-bs-target="#exportEntriesModal">
+                <i class="bi bi-download"></i> Download as Excel
+            </button>
+        </div>
+    </div>
 
     <div class="tab-row">
-        <a href="{{ route('approval-entries.index') }}" class="tab-btn {{ !request('status') || request('status') === 'all' ? 'active' : '' }}">All</a>
-        <a href="{{ route('approval-entries.index', ['status' => 'confirmed']) }}" class="tab-btn {{ request('status') === 'confirmed' ? 'active' : '' }}">Approved</a>
-        <a href="{{ route('approval-entries.index', ['status' => 'cancelled']) }}" class="tab-btn {{ request('status') === 'cancelled' ? 'active' : '' }}">Rejected</a>
+        <a href="{{ route('approval-entries.index', array_filter(['q' => request('q')])) }}" class="tab-btn {{ !request('status') || request('status') === 'all' ? 'active' : '' }}">All</a>
+        <a href="{{ route('approval-entries.index', array_filter(['status' => 'confirmed', 'q' => request('q')])) }}" class="tab-btn {{ request('status') === 'confirmed' ? 'active' : '' }}">Approved</a>
+        <a href="{{ route('approval-entries.index', array_filter(['status' => 'cancelled', 'q' => request('q')])) }}" class="tab-btn {{ request('status') === 'cancelled' ? 'active' : '' }}">Rejected</a>
     </div>
 
     <div class="table-card">
@@ -89,7 +104,78 @@
     @endif
 
 </div>
+
+<div class="modal fade export-columns-modal" id="exportEntriesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content export-columns-content">
+            <div class="modal-body">
+                <h5 class="export-columns-title">Choose columns to export</h5>
+                <p class="export-columns-sub">Downloads the entries currently matching the "{{ !request('status') || request('status') === 'all' ? 'All' : (request('status') === 'confirmed' ? 'Approved' : 'Rejected') }}" tab.</p>
+
+                <label class="export-column-row export-column-all">
+                    <input type="checkbox" id="exportEntriesSelectAll" checked>
+                    <span>Select all</span>
+                </label>
+
+                <div class="export-column-list" id="exportEntriesColumnList">
+                    @foreach (\App\Http\Controllers\Api\POS\Admin\ApprovalEntries\ApprovalEntriesController::EXPORT_COLUMNS as $key => $label)
+                        <label class="export-column-row">
+                            <input type="checkbox" class="export-column-checkbox" value="{{ $key }}" checked>
+                            <span>{{ $label }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+            <div class="modal-footer export-columns-footer">
+                <button type="button" class="export-cancel-btn" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="export-confirm-btn" id="exportEntriesConfirmBtn">
+                    <i class="bi bi-download"></i> Download
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectAll = document.getElementById('exportEntriesSelectAll');
+            const checkboxes = Array.from(document.querySelectorAll('#exportEntriesColumnList .export-column-checkbox'));
+
+            selectAll?.addEventListener('change', function () {
+                checkboxes.forEach(cb => cb.checked = this.checked);
+            });
+
+            checkboxes.forEach(cb => cb.addEventListener('change', function () {
+                selectAll.checked = checkboxes.every(c => c.checked);
+                selectAll.indeterminate = !selectAll.checked && checkboxes.some(c => c.checked);
+            }));
+
+            document.getElementById('exportEntriesConfirmBtn')?.addEventListener('click', function () {
+                const selected = checkboxes.filter(cb => cb.checked).map(cb => cb.value);
+                if (!selected.length) {
+                    alert('Please select at least one column to export.');
+                    return;
+                }
+
+                const params = new URLSearchParams();
+                @if (request('status'))
+                    params.set('status', @json(request('status')));
+                @endif
+                @if (request('q'))
+                    params.set('q', @json(request('q')));
+                @endif
+                selected.forEach(col => params.append('columns[]', col));
+
+                window.location.href = @json(route('approval-entries.export')) + '?' + params.toString();
+
+                const modalEl = document.getElementById('exportEntriesModal');
+                bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+            });
+        });
+    </script>
+@endpush
 
 @push('scripts')
     <script>

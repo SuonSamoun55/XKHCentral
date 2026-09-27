@@ -9,11 +9,22 @@ use Illuminate\Validation\Rule;
 
 class NumberSeriesController extends Controller
 {
+    // Minimum Digits offers 1..10 (was hard-locked to 3/4/5 — too narrow for
+    // e.g. a 2-digit internal code or an 8-digit invoice number). 12-digit
+    // cap on Starting/Ending No. keeps the field from accepting an
+    // arbitrarily long number while staying well above any padding choice,
+    // matching the "grows naturally past the padding" behavior in the hint
+    // text. Both are shared with the create/edit views so the HTML `max`/
+    // dropdown range and this validation never drift apart.
+    public const MAX_DIGIT_COUNT = 10;
+    public const MAX_SERIES_NUMBER = 999999999999;
+
     public static array $purposes = [
         'CUSTOMER' => 'Customer',
         'ORDER' => 'Order',
         'ENTRY' => 'Entry',
         'STAFF' => 'Staff',
+        'ITEM' => 'Item',
     ];
 
     public function index()
@@ -45,7 +56,9 @@ class NumberSeriesController extends Controller
                 ->with('error', 'Select a company first to manage its number series.');
         }
         $availablePurposes = $this->availablePurposes($companyId);
-        return view('POSViews.POSAdminViews.NumberSeries.create', compact('availablePurposes'));
+        $maxDigitCount = self::MAX_DIGIT_COUNT;
+        $maxSeriesNumber = self::MAX_SERIES_NUMBER;
+        return view('POSViews.POSAdminViews.NumberSeries.create', compact('availablePurposes', 'maxDigitCount', 'maxSeriesNumber'));
     }
 
     public function store(Request $request)
@@ -67,9 +80,9 @@ class NumberSeriesController extends Controller
             ],
             'name' => ['required', 'string', 'max:255'],
             'prefix' => ['required', 'string', 'max:10'],
-            'padding' => ['required', 'integer', 'in:3,4,5'],
-            'start_no' => ['required', 'integer', 'min:1'],
-            'end_no' => ['required', 'integer', 'gt:start_no'],
+            'padding' => ['required', 'integer', 'between:1,' . self::MAX_DIGIT_COUNT],
+            'start_no' => ['required', 'integer', 'min:1', 'max:' . self::MAX_SERIES_NUMBER],
+            'end_no' => ['required', 'integer', 'gt:start_no', 'max:' . self::MAX_SERIES_NUMBER],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
@@ -92,7 +105,9 @@ class NumberSeriesController extends Controller
         $series = NumberSeries::where('company_id', $companyId)->findOrFail($id);
         $availablePurposes = $this->availablePurposes($companyId, $series->id);
         $availablePurposes[$series->code] = self::$purposes[$series->code] ?? $series->code;
-        return view('POSViews.POSAdminViews.NumberSeries.edit', compact('series', 'availablePurposes'));
+        $maxDigitCount = self::MAX_DIGIT_COUNT;
+        $maxSeriesNumber = self::MAX_SERIES_NUMBER;
+        return view('POSViews.POSAdminViews.NumberSeries.edit', compact('series', 'availablePurposes', 'maxDigitCount', 'maxSeriesNumber'));
     }
     public function update(Request $request, $id)
     {
@@ -105,6 +120,7 @@ class NumberSeriesController extends Controller
                 'required',
                 'integer',
                 'gt:start_no',
+                'max:' . self::MAX_SERIES_NUMBER,
                 function ($attribute, $value, $fail) use ($series) {
                     if ($series->last_no !== null && $value < $series->last_no) {
                         $fail("End No. cannot be less than the last issued number ({$series->last_no}).");
@@ -122,8 +138,8 @@ class NumberSeriesController extends Controller
                 Rule::unique('number_series')->where(fn($q) => $q->where('company_id', $companyId))->ignore($series->id),
             ];
             $rules['prefix'] = ['required', 'string', 'max:10'];
-            $rules['padding'] = ['required', 'integer', 'in:3,4,5'];
-            $rules['start_no'] = ['required', 'integer', 'min:1'];
+            $rules['padding'] = ['required', 'integer', 'between:1,' . self::MAX_DIGIT_COUNT];
+            $rules['start_no'] = ['required', 'integer', 'min:1', 'max:' . self::MAX_SERIES_NUMBER];
         }
         $validated = $request->validate($rules);
 
