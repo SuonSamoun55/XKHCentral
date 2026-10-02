@@ -27,6 +27,7 @@ class POSUserSidebarComposer
             'authUser' => $authUser,
             'companyLogoUrl' => $this->resolveCompanyLogoUrl($company),
             'companyName' => $company ? ($company->display_name ?? $company->name) : null,
+            'companyIsTest' => (bool) $company?->is_test,
             'userAvatar' => $authUser->profile_image_display ?? asset('images/default-user.png'),
             // Mirrors the 'permission:dashboard' gate on the /admin route itself, so this
             // link only appears for roles that can actually get in.

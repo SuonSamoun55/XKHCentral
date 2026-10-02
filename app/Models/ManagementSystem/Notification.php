@@ -101,6 +101,39 @@ class Notification extends Model
     }
 
     /**
+     * Keeps a message's basic formatting (bold, lists, paragraphs, links)
+     * but removes everything else, so it is safe to print with {!! !!}.
+     * Chat messages typed by customers also end up in notifications, so
+     * the message can never be trusted as HTML.
+     *
+     * Every attribute is dropped (onclick, style, ...) except a link's
+     * href, and only http(s)/mailto links are kept.
+     */
+    public static function safeHtml(?string $html): string
+    {
+        $html = strip_tags((string) $html, '<a><b><strong><i><em><u><ul><ol><li><br><p><div>');
+
+        return preg_replace_callback('/<(\/?)(\w+)([^>]*)>/', function ($tag) {
+            [, $closing, $name, $attributes] = $tag;
+            $name = strtolower($name);
+
+            if ($name !== 'a' || $closing) {
+                return "<{$closing}{$name}>";
+            }
+
+            $href = preg_match('/href\s*=\s*(["\'])(.*?)\1/i', $attributes, $m)
+                ? trim(html_entity_decode($m[2], ENT_QUOTES, 'UTF-8'))
+                : '';
+
+            if (!preg_match('#^(https?://|mailto:)#i', $href)) {
+                return '<a>';
+            }
+
+            return '<a href="' . e($href) . '" target="_blank" rel="noopener noreferrer">';
+        }, $html) ?? '';
+    }
+
+    /**
      * Turns a raw notification message into safe display HTML.
      *
      * Messages can arrive in a few shapes: plain text, sanitized rich-text

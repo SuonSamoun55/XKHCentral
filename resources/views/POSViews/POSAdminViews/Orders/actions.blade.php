@@ -1,5 +1,5 @@
 @extends('Layout.POSAdmin.app')
-@section('title', 'Store Management')
+@section('title', 'Product Management')
 
 @section('content')
 

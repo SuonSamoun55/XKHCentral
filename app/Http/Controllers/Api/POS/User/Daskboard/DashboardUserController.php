@@ -83,7 +83,7 @@ class DashboardUserController extends Controller
             ->selectRaw('DISTINCT YEAR(created_at) as yr')
             ->orderByDesc('yr')
             ->pluck('yr')
-            ->map(fn($yr) => (int) $yr)
+            ->map(fn ($yr) => (int) $yr)
             ->values();
 
         if ($availableYears->isEmpty()) {
@@ -100,7 +100,7 @@ class DashboardUserController extends Controller
             ? (int) $requestedMonth
             : null;
 
-        $monthOptions = collect(range(1, 12))->map(fn($m) => [
+        $monthOptions = collect(range(1, 12))->map(fn ($m) => [
             'value' => $m,
             'label' => Carbon::create($selectedYear, $m, 1)->format('F'),
         ]);
@@ -120,7 +120,7 @@ class DashboardUserController extends Controller
             ->latest()
             ->take(4)
             ->get()
-            ->map(fn($notification) => $this->decorateNotificationIcon($notification));
+            ->map(fn ($notification) => $this->decorateNotificationIcon($notification));
 
         $unreadNotificationCount = (int) Notification::query()
             ->where('user_id', $user->id)

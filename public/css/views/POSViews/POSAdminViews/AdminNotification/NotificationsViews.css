@@ -1320,7 +1320,7 @@
     display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
     .notification-detail-page .global-meta-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -1365,7 +1365,7 @@
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
     .notification-detail-page .detail-header {
         justify-content: flex-end;
         margin-bottom: 12px;

@@ -36,11 +36,8 @@
             ? (str_starts_with($path, 'http') ? $path : asset($path))
             : null;
 
-        $lineImage = fn ($line) =>
-            $resolveLineImg(optional($line->itemVariant)->image_url)
-                ?? $resolveLineImg(optional($line->item)->custom_image_url)
-                ?? $resolveLineImg(optional($line->item)->image_url)
-                ?? asset('images/no-image.png');
+        // The picture saved when the order was placed (see OrderItem::snapshotImage).
+        $lineImage = fn ($line) => $resolveLineImg($line->image_path) ?? asset('images/no-image.png');
     @endphp
 
     <div id="order-detail-page">

@@ -48,7 +48,7 @@
         @endforeach
 
         @if($items->every(fn($item) => $item->variantList->count() === 0))
-            <p>No items with variants found. Sync items first (click "Sync BC Product" on the main Items page).</p>
+            <p>No items with variants found. Sync items first (click "Sync Products" on the Web Shop page).</p>
         @endif
     </div>
 </main>
@@ -65,7 +65,7 @@
         const formData = new FormData();
         formData.append('image', fileInput.files[0]);
 
-        fetch('/items/variants/' + variantId + '/image', {
+        fetch(@json(route('store.management.variants.image', '__ID__')).replace('__ID__', variantId), {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'

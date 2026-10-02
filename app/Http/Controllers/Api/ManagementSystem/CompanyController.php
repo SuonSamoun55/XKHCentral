@@ -4,16 +4,19 @@ namespace App\Http\Controllers\Api\ManagementSystem;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use App\Models\ManagementSystem\Company;
 use App\Models\ManagementSystem\CompanyConnection;
 use App\Models\ManagementSystem\User;
+use App\Services\CompanyCloneService;
+
 class CompanyController extends Controller
 {
     public function index()
     {
-        $companies = Company::with('companyConnection')
+        $companies = Company::with(['companyConnection', 'clonedFrom'])
             ->withCount(['users as users_count' => function ($query) {
                 $query->where('bc_customer_no', 'not like', 'STAFF-%')
                     ->where('status', true);
@@ -337,9 +340,39 @@ class CompanyController extends Controller
             ->with('success', 'Company API setup updated successfully.');
     }
 
+    public function cloneAsTest(Request $request, $id, CompanyCloneService $cloner)
+    {
+        $source = Company::findOrFail($id);
+
+        if (!Schema::hasColumn('companies', 'is_test')) {
+            return redirect()->route('companies.index')
+                ->with('error', 'Run "php artisan migrate" first to enable test companies.');
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        try {
+            $clone = $cloner->clone($source, ['name' => $validated['name']]);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return redirect()->route('companies.index')
+                ->with('error', 'Could not create the test company: ' . $e->getMessage());
+        }
+
+        return redirect()->route('companies.index')
+            ->with('success', 'Test company "' . $clone->name . '" created with its setup, roles and items.');
+    }
+
     public function destroy($id)
     {
         $company = Company::with('companyConnection')->findOrFail($id);
+
+        if ($company->is_test) {
+            $this->deleteTestCompanyData($company);
+        }
 
         if (!empty($company->logo) && Storage::disk('public')->exists($company->logo)) {
             Storage::disk('public')->delete($company->logo);
@@ -361,6 +394,39 @@ class CompanyController extends Controller
 
         return redirect()->route('companies.index')
             ->with('success', 'Company deleted successfully.');
+    }
+
+    /**
+     * Rows a test company owns that the companies FK doesn't cascade-delete
+     * (users/customers/roles are nullOnDelete, the rest have no FK). Without
+     * this, a deleted test company would leave its copied users behind with
+     * company_id = NULL — i.e. unscoped to any company.
+     */
+    private function deleteTestCompanyData(Company $company): void
+    {
+        $disk = Storage::disk('public');
+
+        DB::transaction(function () use ($company, $disk) {
+            $users = User::where('company_id', $company->id);
+            foreach ((clone $users)->whereNotNull('profile_image')->pluck('profile_image') as $path) {
+                $disk->delete($path);
+            }
+
+            $reportLogo = DB::table('report_settings')->where('company_id', $company->id)->value('logo');
+            if (!empty($reportLogo)) {
+                $disk->delete($reportLogo);
+            }
+
+            // These FKs are nullOnDelete, so they'd be left behind as orphans.
+            DB::table('notifications')->whereIn('user_id', (clone $users)->select('id'))->delete();
+            DB::table('bc_sync_logs')->whereIn('order_id', DB::table('orders')->where('company_id', $company->id)->select('id'))->delete();
+
+            $users->delete();
+
+            foreach (['carts', 'bc_customers', 'roles', 'number_series', 'tax_groups', 'store_settings'] as $table) {
+                DB::table($table)->where('company_id', $company->id)->delete();
+            }
+        });
     }
 
     private function filterConnectionDataByExistingColumns(array $data): array

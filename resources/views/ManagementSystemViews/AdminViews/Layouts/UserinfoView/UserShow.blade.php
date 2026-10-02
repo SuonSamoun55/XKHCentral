@@ -53,10 +53,14 @@
                         @if($isBlocked)
                             <span class="detail-badge is-blocked">Blocked</span>
                         @endif
-                        @if($user)
-                            <span class="detail-badge is-connected">Connected &middot; {{ $user->role ?? 'user' }}</span>
+                        {{-- Portal login status (Ready / Not Ready / Login Blocked) — separate from the
+                             Business Central "Blocked" flag shown just above. --}}
+                        @if($user && $user->status)
+                            <span class="detail-badge is-connected">Ready &middot; {{ ucfirst($user->role ?? 'user') }}</span>
+                        @elseif($user)
+                            <span class="detail-badge is-blocked">Login Blocked</span>
                         @else
-                            <span class="detail-badge is-offline">Not Connected</span>
+                            <span class="detail-badge is-offline">Not Ready</span>
                         @endif
                     </div>
                     <div class="cust-no">Customer No. <span>{{ $customer->bc_customer_no ?? '-' }}</span></div>
@@ -76,9 +80,9 @@
             <!-- BC card -->
             <div class="source-card">
                 <div class="source-head">
-                    <div class="source-tag bc"><span class="source-icon"><img src="{{ asset('images/management/sync-bc-icon.png') }}" class="icon-img" alt=""></span>Business Central</div>
-                    <button type="button" class="source-action" id="syncBcBtn" {{ empty($customer->bc_id) ? 'disabled title="No Business Central ID on file"' : '' }}>
-                        <img src="{{ asset('images/Profile/box-loading.png') }}" class="icon-img" alt=""> Sync now
+                    <div class="source-tag bc"><span class="source-icon"><img src="{{ asset('images/management/wallet.png') }}" class="icon-img" alt=""></span>Account Balance</div>
+                    <button type="button" class="source-action" id="syncBcBtn" {{ empty($customer->bc_id) ? 'disabled title="This customer cannot be synced yet"' : '' }}>
+                        <img src="{{ asset('images/management/sync.png') }}" class="icon-img" alt=""> Sync Now
                     </button>
                 </div>
 
@@ -96,24 +100,24 @@
                     </div>
                 </div>
 
-                <div class="source-foot" id="bcSyncNote">Synced {{ $syncedAt }}</div>
+                <div class="source-foot" id="bcSyncNote">Synced {{ ucfirst($syncedAt) }}</div>
             </div>
 
             <!-- Laravel POS card -->
             <div class="source-card">
                 <div class="source-head">
-                    <div class="source-tag lv"><span class="source-icon"><img src="{{ asset('images/management/management_POS_active.png') }}" class="icon-img" alt=""></span>Laravel POS</div>
+                    <div class="source-tag lv"><span class="source-icon"><img src="{{ asset('images/management/marketplace.png') }}" class="icon-img" alt=""></span>Web Shop Orders</div>
                     @if($user)
                         <a class="source-action" href="{{ route('admin.orders.index', ['search' => $user->name]) }}">
-                            <i class="bi bi-box-arrow-up-right"></i> View orders
+                            <i class="bi bi-box-arrow-up-right"></i> View Orders
                         </a>
                     @else
-                        <button type="button" class="source-action" disabled title="No connected account, no orders">View orders</button>
+                        <button type="button" class="source-action" disabled title="No login set up yet, no orders">View Orders</button>
                     @endif
                 </div>
 
                 <div class="primary-figure">{{ $money($orderStats['confirmed_amount']) }}</div>
-                <div class="primary-figure-label">Confirmed amount</div>
+                <div class="primary-figure-label">Confirmed Amount</div>
 
                 <div class="order-counters">
                     <div class="counter pending">
@@ -133,14 +137,14 @@
                     </div>
                 </div>
 
-                <div class="source-foot">Last order {{ $lastOrderText }}</div>
+                <div class="source-foot">Last Order {{ ucfirst($lastOrderText) }}</div>
             </div>
 
         </div>
 
         @unless($user)
             <div class="alert-no-connection">
-                This customer is not connected to any user account yet — order stats will show once they are.
+                This customer is Not Ready (no login set up yet) — order stats will show once they have one.
             </div>
         @endunless
 
@@ -170,7 +174,7 @@
                 </div>
                 <dl class="field-list">
                     <dt><img src="{{ asset('images/Profile/gps.png') }}" class="icon-img" alt=""> Location</dt><dd class="{{ $field($customer->location_code) ? '' : 'empty' }}">{{ $field($customer->location_code) ?? '—' }}</dd>
-                    <dt><img src="{{ asset('images/Profile/delivery-truck.png') }}" class="icon-img" alt=""> Ship-to Code</dt><dd class="{{ $field($customer->ship_to_code) ? '' : 'empty' }}">{{ $field($customer->ship_to_code) ?? '—' }}</dd>
+                    <dt><img src="{{ asset('images/Profile/delivery-truck.png') }}" class="icon-img" alt=""> Ship-To Code</dt><dd class="{{ $field($customer->ship_to_code) ? '' : 'empty' }}">{{ $field($customer->ship_to_code) ?? '—' }}</dd>
                     <dt><img src="{{ asset('images/Profile/clock-three.png') }}" class="icon-img" alt=""> Payment Terms</dt><dd class="{{ $field($customer->payment_terms_code) ? '' : 'empty' }}">{{ $field($customer->payment_terms_code) ?? '—' }}</dd>
                     <dt><img src="{{ asset('images/Profile/tags.png') }}" class="icon-img" alt=""> Price Group</dt><dd class="{{ $field($customer->customer_price_group) ? '' : 'empty' }}">{{ $field($customer->customer_price_group) ?? '—' }}</dd>
                 </dl>
@@ -192,7 +196,7 @@
 
                         <div class="modal-body">
                             <p class="text-muted small">
-                                This edits the local copy only — Business Central stays the source of
+                                This edits the details here only — the main system stays the source of
                                 truth, so the next sync can overwrite these fields again.
                             </p>
 
@@ -243,7 +247,7 @@
             </div>
         </div>
 
-        <div class="footer-note">Last full sync {{ $syncedAt }}</div>
+        <div class="footer-note">Last Full Sync {{ ucfirst($syncedAt) }}</div>
 
     </div>
 </div>
@@ -261,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var customerId = wrapper.dataset.customerId;
         var token = wrapper.dataset.csrf;
-        var originalText = syncBtn.textContent;
+        var originalHtml = syncBtn.innerHTML; // keeps the sync icon after syncing
 
         syncBtn.classList.add('is-syncing');
         syncBtn.textContent = 'Syncing…';
@@ -289,7 +293,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .finally(function () {
                 syncBtn.classList.remove('is-syncing');
-                syncBtn.textContent = originalText;
+                syncBtn.innerHTML = originalHtml;
             });
     });
 });

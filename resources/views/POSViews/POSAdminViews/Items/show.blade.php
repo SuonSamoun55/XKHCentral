@@ -74,7 +74,7 @@
             return;
         }
 
-        fetch('/items/' + LOCAL_ITEM_ID + '/variants')
+        fetch(@json(route('store.management.item.variants', '__ID__')).replace('__ID__', LOCAL_ITEM_ID))
             .then(function (response) {
                 return response.json();
             })

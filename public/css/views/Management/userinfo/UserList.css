@@ -177,6 +177,12 @@ body {
     color: #fff;
 }
 
+/* Hidden until a row checkbox is ticked (JS toggles .has-selection),
+   on desktop as well as mobile. */
+.right-tools-inline:not(.has-selection) .delete-selected-btn {
+    display: none;
+}
+
 .filter-toggle-btn {
     display: none;
 }
@@ -569,7 +575,9 @@ body {
     cursor: pointer;
 }
 
-@media (max-width: 768px) {
+/* Card view: phones and narrow tablets (a 9-column table can't fit next
+   to the sidebar below ~900px) */
+@media (max-width: 900px) {
     .main-wrapper {
         flex-direction: column;
     }
@@ -989,3 +997,102 @@ body {
         background: transparent;
     }
 }
+
+/* ---------- Customer login status: Ready / Not Ready / Blocked ---------- */
+.account-status {
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.account-status-ready {
+    color: #0EA8B2;
+}
+
+.account-status-not_ready {
+    color: #6B7280;
+    font-weight: 500;
+}
+
+.account-status-blocked {
+    color: #B42318;
+}
+
+/* View / Edit / Block icons */
+.action-icons .action-icon-img {
+    width: 15px;
+    height: 15px;
+}
+
+.action-icons a:hover,
+.action-icons button:not(:disabled):hover {
+    background: #F1F5F9;
+}
+
+/* Block isn't available (no login yet, or already blocked) */
+.action-icons .action-disabled {
+    cursor: not-allowed;
+    opacity: .3;
+}
+
+.delete-selected-btn .action-icon-img {
+    width: 16px;
+    height: 16px;
+}
+
+/* Wider tablets (901px – 1024px) and upright big tablets up to 1366px
+   (e.g. iPad Pro 13" at 1032px): the desktop column widths add up to
+   ~940px, wider than the space beside the sidebar, so the page ran off
+   the right edge. Tighter columns, and "Last Seen" is hidden because each
+   name already shows "Online / 3 days ago" under it. Landscape desktops
+   are not affected. Scoped to .customers-table: Staff loads this file
+   too, and its 8th column is Actions, not Last Seen. */
+@media (min-width: 901px) and (max-width: 1024px),
+       (min-width: 1025px) and (max-width: 1366px) and (orientation: portrait) {
+    .customers-table th:nth-child(2),
+    .customers-table td:nth-child(2) {
+        width: 52px;
+    }
+
+    .customers-table th:nth-child(3),
+    .customers-table td:nth-child(3) {
+        width: 150px;
+    }
+
+    /* Email takes whatever is left */
+    .customers-table th:nth-child(4),
+    .customers-table td:nth-child(4) {
+        width: auto;
+    }
+
+    .customers-table th:nth-child(5),
+    .customers-table td:nth-child(5) {
+        width: 82px;
+    }
+
+    .customers-table th:nth-child(6),
+    .customers-table td:nth-child(6) {
+        width: 96px;
+    }
+
+    .customers-table th:nth-child(7),
+    .customers-table td:nth-child(7) {
+        width: 76px;
+    }
+
+    .customers-table th:nth-child(8),
+    .customers-table td:nth-child(8) {
+        display: none;
+    }
+
+    .customers-table th:nth-child(9),
+    .customers-table td:nth-child(9) {
+        width: 96px;
+    }
+
+    /* Filters / Sync wrap under the search instead of running off */
+    .right-tools-inline {
+        flex-wrap: wrap;
+    }
+}
+

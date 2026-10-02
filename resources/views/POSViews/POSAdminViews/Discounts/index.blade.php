@@ -1,7 +1,7 @@
 @extends('Layout.POSAdmin.app')
 @section('title', 'Discount Management')
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSAdminViews/Discounts/index.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSAdminViews/Discounts/index.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSAdminViews/Discounts/index.css')) }}">
 @endpush
 @section('content')
     @php
@@ -633,6 +633,11 @@
             });
             categoryFilter.addEventListener('change', filterItems);
             dateFilter.addEventListener('change', filterItems);
+            // Phones hide the date box, so mark the calendar button instead
+            const syncDateToggle = () => document.getElementById('mobileDateToggleBtn')
+                ?.classList.toggle('has-date', Boolean(dateFilter.value));
+            dateFilter.addEventListener('change', syncDateToggle);
+            dateFilter.addEventListener('input', syncDateToggle);
             perPageFilter.addEventListener('change', function() {
                 currentPage = 1;
                 renderTable();

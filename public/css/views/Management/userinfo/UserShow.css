@@ -558,3 +558,150 @@ body {
     vertical-align: -3px;
     margin-right: 2px;
 }
+
+/* ===== Typography only (layout untouched) =====
+   Title Case instead of ALL CAPS, and lighter weights, so the page reads
+   like the design mock: only the big figures and the name stay bold. */
+.source-tag,
+.detail-card h2 {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 13.5px;
+    font-weight: 600;
+}
+
+.detail-card h2 {
+    color: var(--ink);
+}
+
+.mini-stat-label {
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.source-action,
+.profile-status-pill {
+    font-weight: 500;
+}
+
+.mini-stat-value,
+.counter-amount {
+    font-weight: 600;
+}
+
+.counter-value {
+    font-weight: 700;
+}
+
+.field-list dt {
+    font-size: 12px;
+}
+
+.field-list dd {
+    font-weight: 400;
+}
+
+
+/* ===== Colors matched to the design mock (no layout changes) ===== */
+.user-detail-wrapper {
+    --ink: #111827;
+    --muted: #6b7280;
+    --faint: #9ca3af;
+    --teal: #0e9fb3;
+}
+
+/* Card titles: dark text instead of blue / brown */
+.source-tag.bc,
+.source-tag.lv,
+.detail-card h2 {
+    color: var(--ink);
+}
+
+.primary-figure {
+    color: var(--ink);
+}
+
+.primary-figure-label {
+    color: var(--faint);
+}
+
+.mini-stat-label {
+    color: var(--muted);
+}
+
+/* Balance Due in teal, Credit Limit in dark */
+.mini-stat-value {
+    color: var(--ink);
+}
+
+.mini-stat:first-child .mini-stat-value {
+    color: var(--teal);
+}
+
+.source-foot,
+.footer-note {
+    color: var(--muted);
+}
+
+/* Order counters: amber / green / red numbers on matching tints */
+.counter.pending {
+    background: #fffbeb;
+    box-shadow: inset 0 0 0 1px #fde68a;
+}
+
+.counter.confirmed {
+    background: #ecfdf5;
+    box-shadow: inset 0 0 0 1px #a7f3d0;
+}
+
+.counter.cancelled {
+    background: #fef2f2;
+    box-shadow: inset 0 0 0 1px #fecaca;
+}
+
+.counter.pending .counter-value {
+    color: #f59e0b;
+}
+
+.counter.confirmed .counter-value {
+    color: #10b981;
+}
+
+.counter.cancelled .counter-value {
+    color: #ef4444;
+}
+
+.counter-label,
+.counter.pending .counter-amount,
+.counter.confirmed .counter-amount,
+.counter.cancelled .counter-amount {
+    color: #4b5563;
+}
+
+/* Contact / Fulfillment fields */
+.field-list dt {
+    color: var(--muted);
+}
+
+.field-list dd {
+    color: var(--ink);
+}
+
+.field-list dd.empty {
+    color: var(--faint);
+}
+
+/* Buttons: teal outline, and a solid teal "View Orders" link */
+.source-action {
+    color: var(--teal);
+    border-color: var(--teal);
+}
+
+a.source-action {
+    background: var(--teal);
+    color: #fff;
+}
+
+a.source-action:hover {
+    background: #0b8799;
+}

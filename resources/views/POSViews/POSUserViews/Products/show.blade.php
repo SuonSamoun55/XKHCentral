@@ -32,7 +32,26 @@
         $inStock = (int) ($item->sellable_inventory ?? 0) > 0;
 
         $vatPercent = max(0, (float) ($item->resolved_vat_percent ?? 0));
-        $vatAmount = round($finalPrice * ($vatPercent / 100), 2);
+
+        // Price per selection: '' = no variant (product price), otherwise each
+        // variant's own price when it has one. The script below swaps the price
+        // row to the selected entry; the first variant starts selected.
+        $priceOptions = collect(['' => null])->union($variants->keyBy('id'))
+            ->map(function ($v) use ($item, $discountPercent, $vatPercent) {
+                $regular = $item->unitPriceFor($v);
+                $sale = round(max(0, $regular * (1 - ($discountPercent / 100))), 2);
+
+                return [
+                    'regular' => round($regular, 2),
+                    'sale' => $sale,
+                    'save' => round($regular - $sale, 2),
+                    'vat' => round($sale * ($vatPercent / 100), 2),
+                ];
+            });
+        $selectedPrice = $priceOptions[(string) optional($variants->first())->id] ?? $priceOptions[''];
+        $unitPrice = $selectedPrice['regular'];
+        $finalPrice = $selectedPrice['sale'];
+        $vatAmount = $selectedPrice['vat'];
 
         // $favoriteIds is passed in from the controller (same array used on the
         // item-list index page) — array of item IDs the current user has favorited.
@@ -131,13 +150,13 @@
                     <div class="info-col-bordered">
                     <h1 class="product-title">{{ $item->display_name ?? 'Unnamed Product' }}</h1>
 
-                    <div class="pd-price-row">
+                    <div class="pd-price-row" id="pdPriceRow" data-prices="{{ $priceOptions->toJson() }}">
                         @if ($discountPercent > 0)
-                            <span class="price-old">${{ number_format($unitPrice, 2) }}</span>
+                            <span class="price-old" id="pdPriceOld">${{ number_format($unitPrice, 2) }}</span>
                         @endif
-                        <span class="price-new">${{ number_format($finalPrice, 2) }}</span>
+                        <span class="price-new" id="pdPriceNew">${{ number_format($finalPrice, 2) }}</span>
                         @if ($discountPercent > 0)
-                            <span class="save-badge">Save ${{ number_format($saveAmount, 2) }} ({{ round($discountPercent) }}%)</span>
+                            <span class="save-badge">Save $<span id="pdPriceSave">{{ number_format($saveAmount, 2) }}</span> ({{ round($discountPercent) }}%)</span>
                         @endif
                     </div>
 
@@ -152,14 +171,17 @@
                             <span><strong>Unit:</strong> {{ $item->base_unit_of_measure_code }}</span>
                         @endif
                         @if ($vatPercent > 0)
-                            <span><strong>VAT:</strong> {{ rtrim(rtrim(number_format($vatPercent, 2), '0'), '.') }}% (${{ number_format($vatAmount, 2) }}, excl. VAT)</span>
+                            <span><strong>VAT:</strong> {{ rtrim(rtrim(number_format($vatPercent, 2), '0'), '.') }}% ($<span id="pdVatAmount">{{ number_format($vatAmount, 2) }}</span>, excl. VAT)</span>
                         @endif
                     </div>
 
-                    <div class="stock-badge {{ $inStock ? 'in-stock' : 'out-of-stock' }}">
-                        <i class="bi {{ $inStock ? 'bi-check-circle-fill' : 'bi-x-circle-fill' }}"></i>
-                        {{ $inStock ? 'In stock' : 'Out of stock' }} ({{ $stockQty }} {{ $item->base_unit_of_measure_code ?: 'units' }} available)
-                    </div>
+                    {{-- Oversell on = no stock limit, so the stock count isn't shown --}}
+                    @unless ($item->allow_oversell)
+                        <div class="stock-badge {{ $inStock ? 'in-stock' : 'out-of-stock' }}">
+                            <i class="bi {{ $inStock ? 'bi-check-circle-fill' : 'bi-x-circle-fill' }}"></i>
+                            {{ $inStock ? 'In stock' : 'Out of stock' }} ({{ $stockQty }} {{ $item->base_unit_of_measure_code ?: 'units' }} available)
+                        </div>
+                    @endunless
 
                     @if ($variants->isNotEmpty())
                         <div class="variant-section">
@@ -237,13 +259,21 @@
                                 // 'group' decides which option-row a variant renders under
                                 // (e.g. "Size" vs "Beef Type"). Adjust $v->variant_group to
                                 // whatever column on ItemVariant actually stores that grouping.
-                                $relatedVariants = collect($related->variants ?? [])->map(fn ($v) => [
-                                    'id'      => $v->id,
-                                    'group'   => $v->variant_group ?? 'Options', // <-- adjust field name
-                                    'label'   => $v->description ?? $v->code,
-                                    'image'   => $v->image_url ?: ($related->image_url ?: asset('images/no-image.png')),
-                                    'blocked' => (bool) ($v->sales_blocked ?? false),
-                                ])->values();
+                                $relatedVariants = collect($related->variants ?? [])->map(function ($v) use ($related) {
+                                    // Each variant's own price (with the product's discount applied)
+                                    $regular = $related->unitPriceFor($v);
+                                    $sale = round(max(0, $regular * (1 - ($related->effective_discount_percent / 100))), 2);
+
+                                    return [
+                                        'id'        => $v->id,
+                                        'group'     => $v->variant_group ?? 'Options', // <-- adjust field name
+                                        'label'     => $v->description ?? $v->code,
+                                        'image'     => $v->image_url ?: ($related->image_url ?: asset('images/no-image.png')),
+                                        'blocked'   => (bool) ($v->sales_blocked ?? false),
+                                        'price'     => number_format($sale, 2, '.', ''),
+                                        'old_price' => $regular > $sale ? number_format($regular, 2, '.', '') : '',
+                                    ];
+                                })->values();
                             @endphp
 
                             {{--
@@ -554,6 +584,24 @@
             document.querySelectorAll('#pos-product-detail-scope .variant-btn').forEach(b => {
                 b.classList.toggle('active', b.dataset.variantId === String(variantId ?? ''));
             });
+
+            pdShowPrice(variantId);
+        }
+
+        // Swap the price row (and VAT) to the selected variant's own price.
+        function pdShowPrice(variantId) {
+            const row = document.getElementById('pdPriceRow');
+            let prices = {};
+            try { prices = JSON.parse(row?.dataset.prices || '{}'); } catch (e) {}
+            const p = prices[String(variantId ?? '')] || prices[''];
+            if (!p) return;
+
+            const fmt = n => Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+            set('pdPriceNew', '$' + fmt(p.sale));
+            set('pdPriceOld', '$' + fmt(p.regular));
+            set('pdPriceSave', fmt(p.save));
+            set('pdVatAmount', fmt(p.vat));
         }
 
         function pdSelectThumb(btn) {
@@ -673,6 +721,18 @@
         let pdActiveVariantSelections = {}; // { "Size": variantId, "Beef Type": variantId, ... }
         let pdActiveVariantQty = 1;
 
+        // Show a price (and struck-through old price) in the popup — the
+        // picked variant's own price, or the product's when none is given.
+        function pdSetVariantModalPrice(price, oldPrice) {
+            pdVariantEls.price.textContent = `$${price}`;
+            if (oldPrice && parseFloat(oldPrice) > parseFloat(price)) {
+                pdVariantEls.oldPrice.textContent = `$${oldPrice}`;
+                pdVariantEls.oldPrice.style.display = "";
+            } else {
+                pdVariantEls.oldPrice.style.display = "none";
+            }
+        }
+
         function pdRenderVariantModal(card) {
             const data = getRelatedCardData(card);
             pdActiveVariantQty = 1;
@@ -681,15 +741,8 @@
             pdVariantEls.image.src = data.image;
             pdVariantEls.image.alt = data.displayName;
             pdVariantEls.title.textContent = data.displayName;
-            pdVariantEls.price.textContent = `$${data.price}`;
             pdVariantEls.qty.textContent = "1";
-
-            if (data.oldPrice && parseFloat(data.oldPrice) > parseFloat(data.price)) {
-                pdVariantEls.oldPrice.textContent = `$${data.oldPrice}`;
-                pdVariantEls.oldPrice.style.display = "";
-            } else {
-                pdVariantEls.oldPrice.style.display = "none";
-            }
+            pdSetVariantModalPrice(data.price, data.oldPrice);
 
             pdVariantEls.options.innerHTML = "";
 
@@ -701,6 +754,7 @@
                 const firstAvailable = groupList.find(v => !v.blocked) || groupList[0];
                 pdActiveVariantSelections[groupName] = firstAvailable.id;
                 if (!firstGroupImage && firstAvailable.image) firstGroupImage = firstAvailable.image;
+                if (firstAvailable.price) pdSetVariantModalPrice(firstAvailable.price, firstAvailable.old_price);
 
                 const label = document.createElement("div");
                 label.className = "variant-label";
@@ -724,6 +778,7 @@
                         if (btn.disabled) return;
                         pdActiveVariantSelections[groupName] = v.id;
                         if (v.image) pdVariantEls.image.src = v.image;
+                        if (v.price) pdSetVariantModalPrice(v.price, v.old_price);
                         optionsRow.querySelectorAll(".variant-btn").forEach(b => b.classList.remove("active"));
                         btn.classList.add("active");
                     });

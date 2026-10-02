@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ asset('/css/views/shared/admin-variables.css') }}">
-    <link rel="stylesheet" href="{{ asset('/css/views/Management/Layout/admin-sidebar.css') }}">
+    <link rel="stylesheet" href="{{ asset('/css/views/Management/Layout/admin-sidebar.css') }}?v={{ filemtime(public_path('css/views/Management/Layout/admin-sidebar.css')) }}">
 
     <style>
         .company-ticket-wrap {
@@ -83,11 +83,17 @@
             animation: companyLivePulse 1.6s ease-out infinite;
         }
 
+        /* Test company (cloned from a live one) */
+        .company-ticket-wrap.is-test .company-ticket-body { background: #E3F6F7; }
+        .company-ticket-wrap.is-test .company-ticket-text { color: #0EA8B2; }
+        .company-ticket-wrap.is-test .company-ticket-tab,
+        .company-ticket-wrap.is-test .company-live-badge { background: #0EA8B2; }
+
         @keyframes companyLivePulse {
             0%   { transform: scale(1); opacity: 0.8; }
             100% { transform: scale(1.5); opacity: 0; }
         }
-            @media (max-width: 768px) {
+            @media (max-width: 640px) {
             .company-ticket-wrap {
                 bottom: calc(100px + env(safe-area-inset-bottom));
             }
@@ -101,14 +107,14 @@
 <body>
 
     @if ($companyName ?? null)
-        <div class="company-ticket-wrap" id="companyTicketWrap">
+        <div class="company-ticket-wrap {{ ($companyIsTest ?? false) ? 'is-test' : '' }}" id="companyTicketWrap">
             <div class="company-ticket-body" id="companyTicketBody">
                 <span class="company-ticket-text">{{ $companyName }}</span>
             </div>
             <div class="company-ticket-tab">
                 <div class="company-live-badge" id="companyLiveBadge">
                     <span class="company-live-ring"></span>
-                    <span class="company-live-text">LIVE</span>
+                    <span class="company-live-text">{{ ($companyIsTest ?? false) ? 'TEST' : 'LIVE' }}</span>
                 </div>
             </div>
         </div>

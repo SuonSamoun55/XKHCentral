@@ -16,9 +16,13 @@ class NotificationController extends Controller
 {
     private const PER_PAGE_DEFAULT = 10;
 
+    // Message notifications (not orders): they belong in the Admin Message
+    // tab and their detail page has no order section. 'user_contact' is a
+    // chat from another account that holds the chat_support permission.
     private const ADMIN_TYPES = [
         'admin_message',
         'global_message',
+        'user_contact',
     ];
 
     private const DEFAULT_IMAGE = 'images/pos/Rectangle 2.png';
@@ -226,6 +230,8 @@ class NotificationController extends Controller
     {
         if ($notification->type === 'global_message') {
             $notification->display_status = 'Global Message';
+        } elseif ($notification->type === 'user_contact') {
+            $notification->display_status = 'Chat Message';
         } else {
             $notification->display_status = 'Admin Message';
         }
@@ -260,9 +266,8 @@ class NotificationController extends Controller
     }
     private function resolveOrderItemImage($orderItem): ?string
     {
-        return $this->resolveImagePath($orderItem->itemVariant?->image_url ?? null)
-            ?? $this->resolveImagePath($orderItem->item?->custom_image_url ?? null)
-            ?? $this->resolveImagePath($orderItem->item?->image_url ?? null);
+        // The picture saved when the order was placed (see OrderItem::snapshotImage).
+        return $this->resolveImagePath($orderItem->image_path);
     }
     private function classifyOrderStatus(Notification $notification): array
     {
@@ -280,7 +285,7 @@ class NotificationController extends Controller
 
     private function resolveOrderAction(Notification $notification): ?OrderAction
     {
-        $isOrderNotification = $notification->type !== 'admin_message' && $notification->type !== 'global_message';
+        $isOrderNotification = !in_array($notification->type, self::ADMIN_TYPES, true);
 
         if (!$isOrderNotification || !$notification->order_id) {
             return null;
@@ -294,14 +299,14 @@ class NotificationController extends Controller
 
         $query = OrderAction::with('actionBy')
             ->where('order_id', $notification->order_id);
-    
+
         $query->where('action_type', $isCancelled ? 'cancelled' : 'confirmed');
 
         return $query->latest('id')->first();
     }
     private function buildNotificationDetail(Notification $notification, ?OrderAction $orderAction): array
     {
-        $isOrderNotification = $notification->type !== 'admin_message' && $notification->type !== 'global_message';
+        $isOrderNotification = !in_array($notification->type, self::ADMIN_TYPES, true);
 
         if ($isOrderNotification) {
             $orderItems = $notification->relatedOrderItems;
@@ -343,7 +348,7 @@ class NotificationController extends Controller
             $senderContact = 'Sent to you';
         }
 
-        $isAdminMessage = $notification->type === 'admin_message' || $notification->type === 'global_message';
+        $isAdminMessage = !$isOrderNotification;
 
         if ($isAdminMessage) {
             $statusKey = 'message';
@@ -381,7 +386,7 @@ class NotificationController extends Controller
                 $netUnitPrice = $unitPrice;
             }
 
-            $orderItem->display_image = $this->resolveOrderItemImage($orderItem);
+            $orderItem->image_path = $this->resolveOrderItemImage($orderItem);
             $orderItem->display_discount_percent = $discountPercent;
             $orderItem->display_discount_amount = $discountAmount;
             $orderItem->display_vat_percent = $vatPercent;

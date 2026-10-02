@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\ManagementSystem;
 
 use App\Http\Controllers\Controller;
+use App\Models\ManagementSystem\LoginSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,7 +18,7 @@ class AuthController extends Controller
             return $this->redirectUser($user);
         }
 
-        return response(view('AUTH.Login'))
+        return response(view('AUTH.Login', ['loginSetting' => LoginSetting::current()]))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');

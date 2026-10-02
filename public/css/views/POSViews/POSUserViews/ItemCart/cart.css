@@ -1505,3 +1505,87 @@
         margin: 12px 0;
     }
 }
+
+/* =======================================================================
+   TABLETS (768px – 1024px) with the sidebar beside the cart: the desktop
+   row was too wide, so the qty buttons ran over the Unit / Discount column.
+   Smaller picture and text, and every column is allowed to shrink
+   (minmax(0, …)) while the qty stepper keeps its own width (auto).
+======================================================================= */
+@media (min-width: 768px) and (max-width: 1024px) {
+    :root {
+        --col-image: 56px;
+        --item-gap: 10px;
+        --grid-cart-cols: var(--col-image) minmax(0, 1.5fr) minmax(0, 1fr) auto minmax(0, 0.9fr);
+    }
+
+    .item-card {
+        padding: 10px 6px;
+    }
+
+    .cart-name {
+        font-size: 13px;
+        overflow-wrap: anywhere;
+    }
+
+    .cart-col-label,
+    .qty-uom {
+        font-size: 10px;
+    }
+
+    .cart-vat-chip,
+    .cart-discount-chip {
+        font-size: 10.5px;
+        padding: 1px 6px;
+    }
+
+    .cart-col-unit .amount-row {
+        gap: 4px;
+    }
+
+    .qty-controls {
+        gap: 4px;
+    }
+
+    .qty-btn {
+        width: 22px;
+        height: 22px;
+    }
+
+    .qty-val {
+        width: 30px;
+        font-size: 12px;
+    }
+
+    .remove-item {
+        font-size: 11px;
+    }
+
+    .price-final {
+        font-size: 12px;
+    }
+
+    .price-original {
+        font-size: 11px;
+    }
+}
+
+/* Small tablets (641px – 767px) use the phone cart design, but the sidebar
+   is shown now — start the pinned summary and CHECK OUT bar after it
+   instead of covering it. */
+@media (min-width: 641px) and (max-width: 767px) {
+    .summary-box,
+    .place-order-btn {
+        left: calc(var(--sidebar-open, 190px) + 12px);
+        width: auto;
+    }
+
+    .app-shell.collapsed .summary-box,
+    .app-shell.collapsed .place-order-btn {
+        left: calc(var(--sidebar-close, 72px) + 12px);
+    }
+
+    .place-order-btn {
+        padding: 18px;
+    }
+}

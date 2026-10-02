@@ -1,7 +1,7 @@
 @extends('Layout.Management.app')
 @section('title', 'User Management')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('/css/views/Management/userinfo/UserList.css') }}">
+<link rel="stylesheet" href="{{ asset('/css/views/Management/userinfo/UserList.css') }}?v={{ filemtime(public_path('css/views/Management/userinfo/UserList.css')) }}">
 <link rel="stylesheet" href="{{ asset('/css/views/Management/Password/adminchangepassword.css') }}">
 <link rel="stylesheet" href="{{ asset('/css/shared/toast.css') }}">
 @endpush
@@ -22,9 +22,10 @@
                 </div>
                 <div class="right-tools-inline" id="rightToolsInline">
                     <select id="statusFilter" class="status-select">
-                        <option value="">All Connect Status</option>
-                        <option value="connected">Connected</option>
-                        <option value="not_connected">Not Connected</option>
+                        <option value="">All Status</option>
+                        <option value="ready">Ready</option>
+                        <option value="not_ready">Not Ready</option>
+                        <option value="blocked">Blocked</option>
                     </select>
                     <select id="activeFilter" class="status-select">
                         <option value="">All Activity</option>
@@ -32,13 +33,13 @@
                         <option value="offline">Offline</option>
                     </select>
                     <a href="{{ route('users.sync') }}" class="sync-btn">
-                        <img src="{{ asset('images/management/sync-bc-icon.png') }}" alt="" class="sync-btn-icon">
+                        <img src="{{ asset('images/management/sync_data.png') }}" alt="" class="sync-btn-icon">
                         <span class="sync-btn-divider"></span>
-                        <span class="sync-btn-text">Sync BC Customers</span>
+                        <span class="sync-btn-text">Sync Customers</span>
                     </a>
                     <button type="button" class="delete-selected-btn" id="deleteSelectedBtn">
-                        <i class="bi bi-plug"></i>
-                        Disconnect Selected
+                        <img src="{{ asset('images/management/block.png') }}" alt="" class="action-icon-img">
+                        Block Selected
                     </button>
                 </div>
             </div>
@@ -51,7 +52,7 @@
                 @csrf
                 <div class="table-container">
                     <div class="table-scroll">
-                        <table class="table align-middle">
+                        <table class="table align-middle customers-table">
                             <thead>
                                 <tr>
                                     <th><input type="checkbox" id="checkAll"></th>
@@ -59,7 +60,7 @@
                                     <th>Full Name</th>
                                     <th>Email</th>
                                     <th>Customer No</th>
-                                    <th>Connect</th>
+                                    <th>Status</th>
                                     <th>Role</th>
                                     <th>Last Seen</th>
                                     <th>Actions</th>
@@ -88,6 +89,10 @@
                                         $imageToShow = $customer->profile_image_display ?? null;
                                         $imageUrl = $customer->profile_image_display ?? '';
                                         $firstLetter = strtoupper(mb_substr(trim($displayName), 0, 1)) ?: 'U';
+
+                                        $accountStatus = $customer->account_status ?? 'not_ready';
+                                        $statusLabel = ['ready' => 'Ready', 'not_ready' => 'Not Ready', 'blocked' => 'Blocked'][$accountStatus];
+                                        $isReady = $accountStatus === 'ready';
                                     @endphp
 
                                     <tr
@@ -97,7 +102,7 @@
                                         data-email="{{ strtolower($displayEmail) }}"
                                         data-id="{{ strtolower($displayBcNo) }}"
                                         data-phone="{{ strtolower($displayPhone) }}"
-                                        data-status="{{ $customer->connect_status ?? 'not_connected' }}"
+                                        data-status="{{ $accountStatus }}"
                                         data-active="{{ $activityStatus }}"
                                     >
                                         <td>
@@ -142,51 +147,7 @@
                                         <td title="{{ $displayBcNo }}">{{ $displayBcNo }}</td>
 
                                         <td>
-                                            @if($customer->connect_status === 'connected')
-                                                <button
-                                                    type="button"
-                                                    class="status-pill status-pill-connected open-user-modal"
-                                                    title="Edit"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#userModal"
-                                                    data-mode="edit"
-                                                    data-id="{{ $customer->id }}"
-                                                    data-bcno="{{ $displayBcNo }}"
-                                                    data-name="{{ $displayName }}"
-                                                    data-email="{{ $displayEmail }}"
-                                                    data-phone="{{ $displayPhone }}"
-                                                    data-role="{{ $displayRole }}"
-                                                    data-image-url="{{ $imageUrl }}"
-                                                >
-                                                    <span class="status-pill-main">
-                                                        <span class="status-pill-icon"><img src="{{ asset('images/management/connect (2).png') }}" alt=""></span>
-                                                        <span class="status-pill-text">Connect</span>
-                                                    </span>
-                                                    <img src="{{ asset('images/management/chevron.png') }}" alt="" class="status-pill-chevron">
-                                                </button>
-                                            @else
-                                                <button
-                                                    type="button"
-                                                    class="status-pill status-pill-disconnected open-user-modal"
-                                                    title="Connect"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#userModal"
-                                                    data-mode="connect"
-                                                    data-id="{{ $customer->id }}"
-                                                    data-bcno="{{ $displayBcNo }}"
-                                                    data-name="{{ $displayName }}"
-                                                    data-email="{{ $displayEmail }}"
-                                                    data-phone="{{ $displayPhone }}"
-                                                    data-role=""
-                                                    data-image-url="{{ $imageUrl }}"
-                                                >
-                                                    <span class="status-pill-main">
-                                                        <span class="status-pill-icon"><img src="{{ asset('images/management/connect (2).png') }}" alt=""></span>
-                                                        <span class="status-pill-text">Not Connect</span>
-                                                    </span>
-                                                    <img src="{{ asset('images/management/chevron.png') }}" alt="" class="status-pill-chevron">
-                                                </button>
-                                            @endif
+                                            <span class="account-status account-status-{{ $accountStatus }}">{{ $statusLabel }}</span>
                                         </td>
 
                                         <td class="role-text">{{ $displayRole }}</td>
@@ -194,55 +155,41 @@
 
                                         <td>
                                             <div class="action-icons">
-                                                @if($customer->connect_status !== 'connected')
-                                                    <button
-                                                        type="button"
-                                                        class="open-user-modal"
-                                                        title="Connect"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#userModal"
-                                                        data-mode="connect"
-                                                        data-id="{{ $customer->id }}"
-                                                        data-bcno="{{ $displayBcNo }}"
-                                                        data-name="{{ $displayName }}"
-                                                        data-email="{{ $displayEmail }}"
-                                                        data-phone="{{ $displayPhone }}"
-                                                        data-role=""
-                                                        data-image-url="{{ $imageUrl }}"
-                                                    >
-                                                        <img src="{{ asset('images/management/link (5).png') }}" alt="Connect" class="action-icon-img">
-                                                    </button>
-                                                @else
-                                                    <button
-                                                        type="button"
-                                                        class="open-user-modal"
-                                                        title="Edit"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#userModal"
-                                                        data-mode="edit"
-                                                        data-id="{{ $customer->id }}"
-                                                        data-bcno="{{ $displayBcNo }}"
-                                                        data-name="{{ $displayName }}"
-                                                        data-email="{{ $displayEmail }}"
-                                                        data-phone="{{ $displayPhone }}"
-                                                        data-role="{{ $displayRole }}"
-                                                        data-image-url="{{ $imageUrl }}"
-                                                    >
-                                                        <i class="bi bi-pencil text-warning"></i>
-                                                    </button>
-                                                @endif
-
                                                 <a href="{{ route('users.show', $customer->id) }}" title="View">
-                                                    <img src="{{ asset('images/management/eye.png') }}" alt="View" class="action-icon-img">
+                                                    <img src="{{ asset('images/management/view.png') }}" alt="View" class="action-icon-img">
                                                 </a>
 
-                                                @if($customer->connect_status === 'connected')
+                                                {{-- Ready: edit details. Not Ready / Blocked: set up a password (makes them Ready). --}}
+                                                <button
+                                                    type="button"
+                                                    class="open-user-modal"
+                                                    title="{{ $isReady ? 'Edit' : 'Set up login' }}"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#userModal"
+                                                    data-mode="{{ $isReady ? 'edit' : 'connect' }}"
+                                                    data-id="{{ $customer->id }}"
+                                                    data-bcno="{{ $displayBcNo }}"
+                                                    data-name="{{ $displayName }}"
+                                                    data-email="{{ $displayEmail }}"
+                                                    data-phone="{{ $displayPhone }}"
+                                                    data-role="{{ $isReady ? $displayRole : '' }}"
+                                                    data-image-url="{{ $imageUrl }}"
+                                                >
+                                                    <img src="{{ asset('images/management/edit.png') }}" alt="Edit" class="action-icon-img">
+                                                </button>
+
+                                                @if($isReady)
                                                     <button type="button"
-                                                        title="Disconnect"
-                                                        class="delete-icon open-delete-confirm"
+                                                        title="Block"
+                                                        class="open-delete-confirm"
                                                         data-url="{{ route('users.destroy', $customer->id) }}"
                                                         data-label="{{ $displayName }}">
-                                                        <img src="{{ asset('images/management/link (5).png') }}" alt="Disconnect" class="action-icon-img">
+                                                        <img src="{{ asset('images/management/block.png') }}" alt="Block" class="action-icon-img">
+                                                    </button>
+                                                @else
+                                                    <button type="button" class="action-disabled" disabled
+                                                        title="{{ $accountStatus === 'blocked' ? 'Already blocked' : 'No login to block yet' }}">
+                                                        <img src="{{ asset('images/management/block.png') }}" alt="" class="action-icon-img">
                                                     </button>
                                                 @endif
                                             </div>
@@ -252,7 +199,7 @@
                                     </tr>
                                 @empty
                                     <tr id="noDataRow">
-                                        <td colspan="10" class="empty-text">No BC customers found.</td>
+                                        <td colspan="10" class="empty-text">No customers found.</td>
                                     </tr>
                                 @endforelse
 
@@ -291,15 +238,15 @@
 
 @include('ManagementSystemViews.AdminViews.Layouts.UserinfoView.create')
 
-{{-- ===== Disconnect confirmation overlay — shared by every disconnect button (single row, bulk, and rows added by the live AJAX refresh). Disconnecting deactivates the customer's portal login only — their Business Central record stays put and they can be reconnected anytime. ===== --}}
+{{-- ===== Block confirmation overlay — shared by every block button (single row, bulk, and rows added by the live AJAX refresh). Blocking only stops the customer's portal login — their Business Central record stays put, and setting up a new password (Edit) makes them Ready again. ===== --}}
 <div class="pw-confirm-overlay" id="deleteConfirmOverlay">
     <div class="pw-confirm-box">
-        <div class="pw-confirm-icon"><i class="bi bi-plug"></i></div>
-        <h3 class="pw-confirm-title" id="deleteConfirmTitle">Disconnect this customer?</h3>
-        <p class="pw-confirm-text">Their portal login is deactivated, but they can be reconnected at any time.</p>
+        <div class="pw-confirm-icon"><i class="bi bi-slash-circle"></i></div>
+        <h3 class="pw-confirm-title" id="deleteConfirmTitle">Block this customer?</h3>
+        <p class="pw-confirm-text">They can't log in until you set up a new password for them (Edit).</p>
         <div class="pw-confirm-actions">
             <button type="button" class="pw-confirm-btn cancel" id="deleteConfirmCancel">Cancel</button>
-            <button type="button" class="pw-confirm-btn confirm" id="deleteConfirmOk">Yes, Disconnect</button>
+            <button type="button" class="pw-confirm-btn confirm" id="deleteConfirmOk">Yes, Block</button>
         </div>
     </div>
 </div>
@@ -343,7 +290,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const trigger = e.target.closest('.open-delete-confirm');
             if (!trigger) return;
 
-            openModal('Disconnect ' + (trigger.dataset.label || 'this customer') + '?', function () {
+            openModal('Block ' + (trigger.dataset.label || 'this customer') + '?', function () {
                 form.action = trigger.dataset.url;
                 form.submit();
             });
@@ -359,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         window.openBulkDeleteConfirm = function (count, onConfirm) {
-            openModal('Disconnect ' + count + ' selected customer(s)?', onConfirm);
+            openModal('Block ' + count + ' selected customer(s)?', onConfirm);
         };
     })();
     const searchInput = document.getElementById('userSearch');
@@ -578,7 +525,11 @@ document.addEventListener('DOMContentLoaded', function () {
         tr.setAttribute('data-email', displayEmail.toLowerCase());
         tr.setAttribute('data-id', displayBcNo.toLowerCase());
         tr.setAttribute('data-phone', displayPhone.toLowerCase());
-        tr.setAttribute('data-status', customer.connect_status || 'not_connected');
+        const accountStatus = customer.account_status || 'not_ready';
+        const statusLabel = { ready: 'Ready', not_ready: 'Not Ready', blocked: 'Blocked' }[accountStatus] || 'Not Ready';
+        const isReady = accountStatus === 'ready';
+
+        tr.setAttribute('data-status', accountStatus);
         tr.setAttribute('data-active', activityStatus);
 
         let imageHtml = '';
@@ -596,63 +547,40 @@ document.addEventListener('DOMContentLoaded', function () {
             imageHtml = `<div class="avatar-fallback">${escapeHtml(firstLetter)}</div>`;
         }
 
-        let actionHtml = '';
-        if (customer.connect_status !== 'connected') {
-            actionHtml += `
-                <button
-                    type="button"
-                    class="open-user-modal"
-                    title="Connect"
-                    data-bs-toggle="modal"
-                    data-bs-target="#userModal"
-                    data-mode="connect"
-                    data-id="${escapeHtml(customer.id)}"
-                    data-bcno="${escapeHtml(displayBcNo)}"
-                    data-name="${escapeHtml(displayName)}"
-                    data-email="${escapeHtml(displayEmail)}"
-                    data-phone="${escapeHtml(displayPhone)}"
-                    data-role=""
-                    data-image-url="${escapeHtml(imageUrl)}"
-                >
-                    <img src="{{ asset('images/management/link (5).png') }}" alt="Connect" class="action-icon-img">
-                </button>
-            `;
-        } else {
-            actionHtml += `
-                <button
-                    type="button"
-                    class="open-user-modal"
-                    title="Edit"
-                    data-bs-toggle="modal"
-                    data-bs-target="#userModal"
-                    data-mode="edit"
-                    data-id="${escapeHtml(customer.id)}"
-                    data-bcno="${escapeHtml(displayBcNo)}"
-                    data-name="${escapeHtml(displayName)}"
-                    data-email="${escapeHtml(displayEmail)}"
-                    data-phone="${escapeHtml(displayPhone)}"
-                    data-role="${escapeHtml(displayRole)}"
-                    data-image-url="${escapeHtml(imageUrl)}"
-                >
-                    <i class="bi bi-pencil text-warning"></i>
-                </button>
-            `;
-        }
-
-        actionHtml += `
+        // Same three actions as the server-rendered rows: View, Edit (Ready)
+        // or set up a login (Not Ready / Blocked), and Block (Ready only).
+        let actionHtml = `
             <a href="${escapeHtml(customer.show_url)}" title="View">
-                <img src="{{ asset('images/management/eye.png') }}" alt="View" class="action-icon-img">
+                <img src="{{ asset('images/management/view.png') }}" alt="View" class="action-icon-img">
             </a>
+            <button
+                type="button"
+                class="open-user-modal"
+                title="${isReady ? 'Edit' : 'Set up login'}"
+                data-bs-toggle="modal"
+                data-bs-target="#userModal"
+                data-mode="${isReady ? 'edit' : 'connect'}"
+                data-id="${escapeHtml(customer.id)}"
+                data-bcno="${escapeHtml(displayBcNo)}"
+                data-name="${escapeHtml(displayName)}"
+                data-email="${escapeHtml(displayEmail)}"
+                data-phone="${escapeHtml(displayPhone)}"
+                data-role="${isReady ? escapeHtml(displayRole) : ''}"
+                data-image-url="${escapeHtml(imageUrl)}"
+            >
+                <img src="{{ asset('images/management/edit.png') }}" alt="Edit" class="action-icon-img">
+            </button>
         `;
 
-        if (customer.connect_status === 'connected') {
-            actionHtml += `
-                <button type="button" title="Disconnect" class="delete-icon open-delete-confirm"
+        actionHtml += isReady
+            ? `<button type="button" title="Block" class="open-delete-confirm"
                     data-url="${escapeHtml(customer.destroy_url)}" data-label="${escapeHtml(displayName)}">
-                    <img src="{{ asset('images/management/link (5).png') }}" alt="Disconnect" class="action-icon-img">
-                </button>
-            `;
-        }
+                    <img src="{{ asset('images/management/block.png') }}" alt="Block" class="action-icon-img">
+               </button>`
+            : `<button type="button" class="action-disabled" disabled
+                    title="${accountStatus === 'blocked' ? 'Already blocked' : 'No login to block yet'}">
+                    <img src="{{ asset('images/management/block.png') }}" alt="" class="action-icon-img">
+               </button>`;
 
         tr.innerHTML = `
             <td>
@@ -679,11 +607,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <td title="${escapeHtml(displayEmail)}">${escapeHtml(displayEmail)}</td>
             <td title="${escapeHtml(displayBcNo)}">${escapeHtml(displayBcNo)}</td>
             <td>
-                ${
-                    customer.connect_status === 'connected'
-                    ? `<button type="button" class="status-pill status-pill-connected open-user-modal" title="Edit" data-bs-toggle="modal" data-bs-target="#userModal" data-mode="edit" data-id="${escapeHtml(customer.id)}" data-bcno="${escapeHtml(displayBcNo)}" data-name="${escapeHtml(displayName)}" data-email="${escapeHtml(displayEmail)}" data-phone="${escapeHtml(displayPhone)}" data-role="${escapeHtml(displayRole)}" data-image-url="${escapeHtml(imageUrl)}"><span class="status-pill-main"><span class="status-pill-icon"><img src="{{ asset('images/management/connect (2).png') }}" alt=""></span><span class="status-pill-text">Connect</span></span><img src="{{ asset('images/management/chevron.png') }}" alt="" class="status-pill-chevron"></button>`
-                    : `<button type="button" class="status-pill status-pill-disconnected open-user-modal" title="Connect" data-bs-toggle="modal" data-bs-target="#userModal" data-mode="connect" data-id="${escapeHtml(customer.id)}" data-bcno="${escapeHtml(displayBcNo)}" data-name="${escapeHtml(displayName)}" data-email="${escapeHtml(displayEmail)}" data-phone="${escapeHtml(displayPhone)}" data-role="" data-image-url="${escapeHtml(imageUrl)}"><span class="status-pill-main"><span class="status-pill-icon"><img src="{{ asset('images/management/connect (2).png') }}" alt=""></span><span class="status-pill-text">Not Connect</span></span><img src="{{ asset('images/management/chevron.png') }}" alt="" class="status-pill-chevron"></button>`
-                }
+                <span class="account-status account-status-${escapeHtml(accountStatus)}">${escapeHtml(statusLabel)}</span>
             </td>
 
             <td class="role-text">${escapeHtml(displayRole)}</td>
@@ -717,7 +641,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!customers.length) {
             const emptyRow = document.createElement('tr');
             emptyRow.id = 'noDataRow';
-            emptyRow.innerHTML = `<td colspan="10" class="empty-text">No BC customers found.</td>`;
+            emptyRow.innerHTML = `<td colspan="10" class="empty-text">No customers found.</td>`;
             tableBody.appendChild(emptyRow);
         } else {
             customers.forEach(customer => {

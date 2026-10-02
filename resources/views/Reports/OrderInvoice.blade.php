@@ -31,9 +31,8 @@
             ? str_replace('\\', '/', public_path('images/no-image.png'))
             : asset('images/no-image.png');
 
-        $lineImage = fn($line) => $localImagePath(optional($line->itemVariant)->image_url) ??
-            ($localImagePath(optional($line->item)->custom_image_url) ??
-                ($localImagePath(optional($line->item)->image_url) ?? $noImageFallback));
+        // The picture saved when the order was placed (see OrderItem::snapshotImage).
+        $lineImage = fn($line) => $localImagePath($line->image_path) ?? $noImageFallback;
     @endphp
     <style>
         @page {

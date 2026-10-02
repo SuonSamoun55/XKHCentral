@@ -52,6 +52,9 @@ class StoreManagementController extends Controller
         $products = Item::query()
             ->with('locationInventories')
             ->where('company_id', $companyId)
+            // Series order (ITE001, ITE002, ...); items not numbered yet go last.
+            ->orderByRaw('series_number IS NULL')
+            ->orderBy('series_number')
             ->orderBy('display_name')
             ->get();
 
@@ -108,7 +111,11 @@ class StoreManagementController extends Controller
                 ->header('Expires', '0');
         }
 
-        return response(view('POSViews.POSAdminViews.StoreManagement.index', compact(
+        // No "no-store" here: it would stop the browser from keeping this page
+        // when leaving it, so Back from a product page would reload it and
+        // lose the filters, page and scroll. The page refreshes its data
+        // itself when a product was changed (see index.blade.php).
+        return view('POSViews.POSAdminViews.StoreManagement.index', compact(
             'products',
             'categories',
             'productCount',
@@ -116,10 +123,7 @@ class StoreManagementController extends Controller
             'sellingLocations',
             'storeSetting',
             'itemNumberSeries'
-        )))
-            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0');
+        ));
     }
 
     public function updateSellingLocation(Request $request)
@@ -625,7 +629,7 @@ class StoreManagementController extends Controller
 
         $item = Item::where('company_id', $companyId)->findOrFail($id);
 
-        $variants = ItemVariant::where('item_id', $item->id)->get();
+        $variants = ItemVariant::where('item_id', $item->id)->orderBy('id')->get();
 
         $status = ItemSetupStatus::where('item_id', $item->id)->first();
         $isUpdated = $status && $status->main_image_done && $status->variants_done;

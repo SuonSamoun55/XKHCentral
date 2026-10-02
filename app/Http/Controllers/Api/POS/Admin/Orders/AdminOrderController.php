@@ -32,8 +32,7 @@ class AdminOrderController extends Controller
         $companyId = session('selected_company_id');
 
         $query = Order::with(['user', 'items', 'actions.actionBy'])
-            ->when($companyId, fn($q) => $q->where('company_id', $companyId))
-            ->latest();
+            ->when($companyId, fn ($q) => $q->where('company_id', $companyId));
 
         if ($request->filled('search')) {
             $search = trim($request->search);
@@ -73,17 +72,26 @@ class AdminOrderController extends Controller
         }
 
         if ($tab === 'approved') {
-            $query->where('status', 'confirmed');
+            // Most recently approved first; approved_at is also shown in the
+            // Approved Date column.
+            $query->where('status', 'confirmed')
+                ->select('orders.*')
+                ->addSelect(['approved_at' => OrderAction::query()
+                    ->selectRaw('MAX(created_at)')
+                    ->whereColumn('order_actions.order_id', 'orders.id')
+                    ->whereIn('action_type', ['confirmed', 'approved'])])
+                ->orderByDesc('approved_at')
+                ->latest();
         } else {
-            $query->where('status', 'pending');
+            $query->where('status', 'pending')->latest();
         }
 
         $orders = $query->paginate(10);
         $orders->appends($request->query());
 
-        $newOrdersCount = Order::when($companyId, fn($q) => $q->where('company_id', $companyId))
+        $newOrdersCount = Order::when($companyId, fn ($q) => $q->where('company_id', $companyId))
             ->where('status', 'pending')->count();
-        $approvedOrdersCount = Order::when($companyId, fn($q) => $q->where('company_id', $companyId))
+        $approvedOrdersCount = Order::when($companyId, fn ($q) => $q->where('company_id', $companyId))
             ->where('status', 'confirmed')->count();
 
         // Lets the view show a "showing orders you approved for X" banner
@@ -117,7 +125,7 @@ class AdminOrderController extends Controller
         }
 
         $order = Order::with(['user', 'items.item', 'items.itemVariant'])
-            ->when(session('selected_company_id'), fn($q) => $q->where('company_id', session('selected_company_id')))
+            ->when(session('selected_company_id'), fn ($q) => $q->where('company_id', session('selected_company_id')))
             ->findOrFail($id);
 
         return view('POSViews.POSAdminViews.Orders.show', compact('order'));
@@ -133,7 +141,7 @@ class AdminOrderController extends Controller
         }
 
         $order = Order::with(['user', 'items.item', 'items.itemVariant'])
-            ->when(session('selected_company_id'), fn($q) => $q->where('company_id', session('selected_company_id')))
+            ->when(session('selected_company_id'), fn ($q) => $q->where('company_id', session('selected_company_id')))
             ->find($id);
 
         if (!$order) {
@@ -149,7 +157,7 @@ class AdminOrderController extends Controller
         }
 
         if (empty($order->user->bc_customer_no)) {
-            return back()->with('error', 'Customer BC number not found.');
+            return back()->with('error', 'This customer has no customer number yet, so the order cannot be confirmed.');
         }
 
         if (!NumberSeries::isConfigured($order->company_id, 'ENTRY')) {
@@ -175,8 +183,8 @@ class AdminOrderController extends Controller
             // out-of-stock order never leaves a dangling BC sales order behind.
             $requestedQtyByItemId = $orderItems
                 ->groupBy('item_id')
-                ->map(fn($rows) => round((float) $rows->sum('qty'), 2))
-                ->filter(fn($qty) => $qty > 0);
+                ->map(fn ($rows) => round((float) $rows->sum('qty'), 2))
+                ->filter(fn ($qty) => $qty > 0);
 
             $lockedItems = collect();
             $outOfStockNames = collect();
@@ -209,14 +217,14 @@ class AdminOrderController extends Controller
             if ($blockedNames->isNotEmpty()) {
                 throw new \Exception(
                     'Out of stock and oversell not allowed: ' . $blockedNames->unique()->implode(', ')
-                    . '. Enable "Oversell" for this product in Store Management to confirm this order anyway.'
+                    . '. Enable "Oversell" for this product in Product Management to confirm this order anyway.'
                 );
             }
 
             $token = $this->getToken();
 
             if (!$token) {
-                throw new \Exception('Failed to get Business Central access token.');
+                throw new \Exception('Could not connect for sending the order. Please check the API setup.');
             }
 
             // b2bSalesOrders (not the generic salesOrders) — this is the page
@@ -241,7 +249,7 @@ class AdminOrderController extends Controller
                 ]);
 
             if (!$orderResponse->successful()) {
-                throw new \Exception('Create BC sales order failed: ' . $orderResponse->body());
+                throw new \Exception('Creating the sales order failed: ' . $orderResponse->body());
             }
 
             $salesOrderData = $orderResponse->json();
@@ -249,7 +257,7 @@ class AdminOrderController extends Controller
             $salesOrderNo   = $salesOrderData['number'] ?? $salesOrderData['no'] ?? null;
 
             if (!$salesOrderId) {
-                throw new \Exception('BC sales order ID not returned.');
+                throw new \Exception('The sales order was not created (no order ID came back).');
             }
             foreach ($orderItems as $item) {
                 $discountPercent = $this->resolveDiscountPercent($item->item);
@@ -258,7 +266,10 @@ class AdminOrderController extends Controller
                     'lineType'         => 'Item',
                     'lineObjectNumber' => $item->item_no,
                     'quantity'         => (float) $item->qty,
-                    'unitPrice'       => 0,
+                    // 0 lets BC use its own price. A variant with its own
+                    // price set in Product Management sends that price instead,
+                    // so the BC order matches what the customer was charged.
+                    'unitPrice'       => $item->itemVariant?->hasOwnPrice() ? (float) $item->unit_price : 0,
                     'locationCode'    => '',
                     'discountPercent' => round($discountPercent, 2),
                     'variantCode'     => $variantCode,
@@ -273,7 +284,7 @@ class AdminOrderController extends Controller
 
                 if (!$lineResponse->successful()) {
                     throw new \Exception(
-                        'Create BC sales order line failed for item [' . $item->item_no . ']: ' . $lineResponse->body()
+                        'Adding item [' . $item->item_no . '] to the sales order failed: ' . $lineResponse->body()
                     );
                 }
             }
@@ -329,7 +340,7 @@ class AdminOrderController extends Controller
                 'action_by'   => $admin->id,
                 'action_type' => 'confirmed',
                 'status'      => 'confirmed',
-                'note'        => 'Order confirmed by admin and stored in Business Central Sales Order.',
+                'note'        => 'Order confirmed by admin and sent as a sales order.',
             ]);
 
             Notification::create([
@@ -353,7 +364,7 @@ class AdminOrderController extends Controller
             // making whoever opens the report next pay dompdf's render cost.
             app(OrderReportController::class)->warmCache($order);
 
-            $successMessage = 'Order confirmed and stored in BC Sales Order successfully.';
+            $successMessage = 'Order confirmed and sent as a sales order successfully.';
             if ($outOfStockNames->isNotEmpty()) {
                 $successMessage .= ' Warning: oversold and now out of stock — ' . $outOfStockNames->unique()->implode(', ') . '.';
             }
@@ -374,7 +385,7 @@ class AdminOrderController extends Controller
     private function issueEntryNo(int $companyId): ?string
     {
         try {
-            return DB::transaction(fn() => NumberSeries::issue($companyId, 'ENTRY'));
+            return DB::transaction(fn () => NumberSeries::issue($companyId, 'ENTRY'));
         } catch (\Throwable $e) {
             return null;
         }
@@ -396,7 +407,7 @@ class AdminOrderController extends Controller
         ]);
 
         $order = Order::with(['user', 'items'])
-            ->when(session('selected_company_id'), fn($q) => $q->where('company_id', session('selected_company_id')))
+            ->when(session('selected_company_id'), fn ($q) => $q->where('company_id', session('selected_company_id')))
             ->find($id);
 
         if (!$order) {
@@ -464,7 +475,7 @@ class AdminOrderController extends Controller
 
         $actions = OrderAction::with(['order', 'user', 'actionBy'])
             ->when(session('selected_company_id'), function ($q) {
-                $q->whereHas('order', fn($oq) => $oq->where('company_id', session('selected_company_id')));
+                $q->whereHas('order', fn ($oq) => $oq->where('company_id', session('selected_company_id')));
             })
             ->latest()
             ->paginate(20);
@@ -639,7 +650,7 @@ class AdminOrderController extends Controller
 
         $today = Carbon::today();
         $start = $item->discount_start_date ? Carbon::parse($item->discount_start_date)->startOfDay() : null;
-        $end   = $item->discount_end_date   ? Carbon::parse($item->discount_end_date)->endOfDay()   : null;
+        $end   = $item->discount_end_date ? Carbon::parse($item->discount_end_date)->endOfDay() : null;
 
         if ($start && $today->lt($start)) {
             return 0.0;
@@ -693,8 +704,12 @@ class AdminOrderController extends Controller
 
         if ($discountDropped || $variantDropped) {
             $logMessage = 'Line insert succeeded but fields were dropped: ';
-            if ($discountDropped) $logMessage .= 'discountPercent ';
-            if ($variantDropped) $logMessage .= 'variantCode ';
+            if ($discountDropped) {
+                $logMessage .= 'discountPercent ';
+            }
+            if ($variantDropped) {
+                $logMessage .= 'variantCode ';
+            }
             $logMessage .= 'in endpoint: ' . $endpoint;
             logger()->warning($logMessage);
         }

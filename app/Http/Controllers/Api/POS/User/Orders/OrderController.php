@@ -7,7 +7,6 @@ use App\Models\POS\{Cart, Order, OrderItem, OrderHistory, Item, NumberSeries};
 use App\Models\ManagementSystem\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, DB, Log};
-use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class OrderController extends Controller
@@ -33,7 +32,7 @@ class OrderController extends Controller
                 ->with('items')
                 ->when(
                     $r->status && $r->status != 'all',
-                    fn($q) =>
+                    fn ($q) =>
                     $q->where('status', strtolower(str_replace(' ', '-', $r->status)))
                 )
                 ->latest()
@@ -54,7 +53,9 @@ class OrderController extends Controller
         // The customer's own company, not an arbitrary/admin-session one —
         // checkout doesn't run inside the admin panel's tenant context.
         $companyId = $user->company_id;
-        if (!$companyId) return $this->fail('Your account is not linked to a company.');
+        if (!$companyId) {
+            return $this->fail('Your account is not linked to a company.');
+        }
 
         $cart = Cart::with('items.item', 'items.itemVariant')
             ->where('user_id', $user->id)
@@ -64,6 +65,18 @@ class OrderController extends Controller
 
         if (!$cart || $cart->items->isEmpty()) {
             return $this->fail('Cart is empty');
+        }
+
+        // Stock can change after items were added, so check again here
+        foreach ($cart->items->groupBy('item_id') as $lines) {
+            $item = $lines->first()->item;
+            $max = $item?->maxOrderableQty();
+            $qty = (float) $lines->sum('qty');
+            if ($item && $max !== null && $qty > $max + 0.0001) {
+                return $this->fail('Only ' . $item->stockLabel($max) . ' of "' . $item->display_name
+                    . '" left in stock, but your cart has ' . $item->stockLabel($qty)
+                    . '. Please lower the quantity before checking out.');
+            }
         }
 
         if (!NumberSeries::isConfigured($companyId, 'ORDER')) {
@@ -126,7 +139,7 @@ class OrderController extends Controller
                 throw new \Exception("Invalid item");
             }
 
-            $line = $this->calculateLinePricing($item, (float) ($i->qty ?? 0));
+            $line = $this->calculateLinePricing($item, (float) ($i->qty ?? 0), $item->unitPriceFor($i->itemVariant));
 
             $subtotal += $line['subtotal'];
             $discount += $line['discount_amount'];
@@ -140,7 +153,13 @@ class OrderController extends Controller
     {
         foreach ($cart->items as $i) {
             $item = $i->item;
-            $line = $this->calculateLinePricing($item, (float) ($i->qty ?? 0));
+            $unitPrice = $item->unitPriceFor($i->itemVariant);
+            $line = $this->calculateLinePricing($item, (float) ($i->qty ?? 0), $unitPrice);
+
+            // createHistory() stores these cart lines as the order history's
+            // items_summary, so give them the prices actually charged.
+            $i->unit_price = $unitPrice;
+            $i->line_total = $line['line_total'];
 
             OrderItem::create([
                 'order_id' => $order->id,
@@ -150,8 +169,14 @@ class OrderController extends Controller
                 'item_no' => $i->item->number,
                 'item_name' => $i->item->display_name,
                 'variant_description' => $i->itemVariant->description ?? null,
+                // A copy of today's picture, so the order still shows what
+                // was bought even if the product picture changes later.
+                'image_path' => OrderItem::snapshotImage($item, $i->itemVariant),
                 'qty' => $i->qty,
-                'unit_price' => $i->unit_price,
+                // The same price the line total is calculated from — the
+                // variant's own price when it has one. History, the admin
+                // order page, notifications and the invoice all read this.
+                'unit_price' => $unitPrice,
                 'discount_percent' => $line['discount_percent'],
                 'discount_amount' => $line['discount_amount'],
                 'tax_amount' => $line['tax_amount'],
@@ -244,7 +269,9 @@ class OrderController extends Controller
             ->where('user_id', auth()->id())
             ->first();
 
-        if (!$order) return redirect('/pos-system/cart');
+        if (!$order) {
+            return redirect('/pos-system/cart');
+        }
 
         return view('POSViews.POSUserViews.Cart.index', [
             'showOrderSuccess' => true,
@@ -254,9 +281,9 @@ class OrderController extends Controller
         ]);
     }
 
-    private function calculateLinePricing($item, float $qty): array
+    /** $unitPrice comes from Item::unitPriceFor(), so a variant's own price is used. */
+    private function calculateLinePricing($item, float $qty, float $unitPrice): array
     {
-        $unitPrice = (float) ($item->unit_price ?? 0);
         $subtotal = max(0, $unitPrice * $qty);
 
         $discountPercent = $this->resolveDiscountPercent($item);

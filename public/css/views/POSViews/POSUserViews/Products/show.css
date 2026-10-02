@@ -947,7 +947,8 @@
 /* ==========================================================
    TABLET  768 – 1024px  →  3 columns
    ========================================================== */
-@media (max-width: 768px) {
+/* Phone design — phones only; tablets (641px+) keep the sidebar layout */
+@media (max-width: 640px) {
 
 
     .aside-sidebar,
@@ -1345,8 +1346,65 @@
     }
 }
 
-@media (min-width: 769px) and (max-width: 1100px) {
+@media (min-width: 641px) and (max-width: 1100px) {
     #pos-product-detail-scope .related-grid {
         grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* Products with options and several photos were wider than the
+       screen: "38% 1fr" won't shrink the info column below its longest
+       row. minmax(0, …) lets both columns shrink, and the rows inside
+       wrap instead of pushing the page sideways. */
+    #pos-product-detail-scope .detail-grid {
+        grid-template-columns: minmax(0, 40%) minmax(0, 1fr);
+        gap: 14px;
+    }
+
+    #pos-product-detail-scope .gallery-col,
+    #pos-product-detail-scope .info-col {
+        min-width: 0;
+    }
+
+    #pos-product-detail-scope .variant-options {
+        flex-wrap: wrap;
+    }
+
+    /* Grow with the options instead of hiding the last row behind a
+       scroll inside the fixed 300px box */
+    #pos-product-detail-scope .info-col-bordered {
+        max-height: none;
+    }
+
+    #pos-product-detail-scope .info-col-bordered * {
+        overflow-wrap: anywhere;
+    }
+
+    #pos-product-detail-scope #pdAddToCartForm {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* "You may also like" cards: same look as the Products page cards —
+       the picture fills its box (no grey bands / white sides) and the
+       name stays on one line so every card has the same height. */
+    #pos-product-detail-scope .related-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    #pos-product-detail-scope .related-card-image {
+        height: 120px;
+        background: #fff;
+    }
+
+    #pos-product-detail-scope .related-card-image img {
+        object-fit: cover;
+    }
+
+    #pos-product-detail-scope .related-card-title {
+        display: block;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
     }
 }

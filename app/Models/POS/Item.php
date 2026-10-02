@@ -127,6 +127,27 @@ class Item extends Model
         return (bool) $this->allow_oversell;
     }
 
+    /**
+     * Most a customer may order of this item: null = no limit (Oversell is
+     * on), otherwise the stock left at the selling location (never below 0).
+     */
+    public function maxOrderableQty(): ?float
+    {
+        if ($this->allow_oversell) {
+            return null;
+        }
+
+        return max(0.0, (float) ($this->sellable_inventory ?? 0));
+    }
+
+    /** "5 PCS" style label for stock messages. */
+    public function stockLabel(float $qty): string
+    {
+        $number = rtrim(rtrim(number_format($qty, 2, '.', ''), '0'), '.');
+
+        return $number . ' ' . ($this->base_unit_of_measure_code ?: 'units');
+    }
+
     public function inventoryMovements()
     {
         return $this->hasMany(InventoryMovement::class, 'item_id');
@@ -156,19 +177,38 @@ class Item extends Model
         $discount = max(0, (float) ($this->discount_amount ?? 0));
         if ($discount <= 0) {
             return 0.0;
+        }
+
+        $today = \Carbon\Carbon::today();
+        $start = $this->discount_start_date ? \Carbon\Carbon::parse($this->discount_start_date)->startOfDay() : null;
+        $end = $this->discount_end_date ? \Carbon\Carbon::parse($this->discount_end_date)->endOfDay() : null;
+
+        if ($start && $today->lt($start)) {
+            return 0.0;
+        }
+        if ($end && $today->gt($end)) {
+            return 0.0;
+        }
+
+        return min(100, $discount);
     }
 
-    $today = \Carbon\Carbon::today();
-    $start = $this->discount_start_date ? \Carbon\Carbon::parse($this->discount_start_date)->startOfDay() : null;
-    $end = $this->discount_end_date ? \Carbon\Carbon::parse($this->discount_end_date)->endOfDay() : null;
-
-    if ($start && $today->lt($start)) {
-        return 0.0;
-    }
-    if ($end && $today->gt($end)) {
-        return 0.0;
+    public function variants()
+    {
+        return $this->hasMany(ItemVariant::class, 'item_id');
     }
 
-    return min(100, $discount);
-}
+    /**
+     * The price one unit sells for: the variant's own price when it has one,
+     * otherwise the product's unit_price. Every cart/checkout calculation goes
+     * through here so a variant's price is used the same way everywhere.
+     */
+    public function unitPriceFor(?ItemVariant $variant = null): float
+    {
+        if ($variant && $variant->item_id === $this->id && $variant->hasOwnPrice()) {
+            return (float) $variant->price;
+        }
+
+        return (float) ($this->unit_price ?? 0);
+    }
 }

@@ -4,7 +4,7 @@
 @section('hideMobileNav', '1')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSAdminViews/Chat/admin_chat_view.css') }}">
+    <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSAdminViews/Chat/admin_chat_view.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSAdminViews/Chat/admin_chat_view.css')) }}">
 @endpush
 
 @section('content')
@@ -510,6 +510,31 @@
                 if (chatBody) chatBody.scrollTop = chatBody.scrollHeight;
             }
 
+            // True while the admin is looking at the newest messages. New
+            // messages only pull the view down then, so reading older ones
+            // isn't interrupted by the 1-second poll.
+            function isNearBottom() {
+                return !chatBody || chatBody.scrollHeight - chatBody.scrollTop - chatBody.clientHeight < 120;
+            }
+
+            // Phones: size the chat to the visible screen, which shrinks when
+            // the keyboard opens (see --chat-app-height in admin_chat_view.css).
+            (function fitChatToScreen() {
+                const viewport = window.visualViewport;
+                const fit = function() {
+                    const stick = isNearBottom();
+                    document.documentElement.style.setProperty(
+                        '--chat-app-height', Math.round(viewport ? viewport.height : window.innerHeight) + 'px'
+                    );
+                    // iOS scrolls the page up when the keyboard opens; keep the header in view
+                    if (window.scrollY) window.scrollTo(0, 0);
+                    if (stick) scrollBottom();
+                };
+                fit();
+                (viewport || window).addEventListener('resize', fit);
+                window.addEventListener('orientationchange', fit);
+            })();
+
             function removeEmptyState() {
                 document.getElementById('emptyChatText')?.remove();
             }
@@ -706,6 +731,7 @@
                 if (msgId > 0 && renderedIds.has(msgId)) return;
                 appendDateDivider(toDateKey(msg?.created_at));
                 const isMine = Boolean(msg.is_mine ?? (Number(msg.sender_id) === currentUserId));
+                const followNewest = isMine || isNearBottom();
                 const avatar = isMine ? escapeHtml(myAvatar) : escapeHtml(peerAvatar);
                 const tick = isMine ? ' <span class="msg-tick">✓✓</span>' : '';
                 const time = escapeHtml(msg.sent_at || nowFormatted());
@@ -723,7 +749,11 @@
                 initVoicePlayers(row);
                 if (msgId > 0) renderedIds.add(msgId);
                 removeEmptyState();
-                scrollBottom();
+                if (followNewest) {
+                    scrollBottom();
+                    // Photos grow the row once loaded; stay at the bottom
+                    row.querySelectorAll('img').forEach(img => img.addEventListener('load', scrollBottom, { once: true }));
+                }
             }
 
             function resetMessageState() {
@@ -1227,8 +1257,11 @@
                     if (pushHistory) {
                         const url = new URL(chatIndexUrl, window.location.origin);
                         if (activeContactId) url.searchParams.set('user_id', String(activeContactId));
+                        // chatDepth = how many chat entries this page has pushed, so
+                        // the back buttons can step out of the chat in one tap.
                         window.history.pushState({
-                            user_id: activeContactId
+                            user_id: activeContactId,
+                            chatDepth: (window.history.state?.chatDepth || 0) + 1
                         }, '', url.toString());
                     }
                 } catch (err) {
@@ -1318,7 +1351,12 @@
                 if (!item) return;
                 e.preventDefault();
                 const userId = Number(item.dataset.userId || 0);
-                if (!userId || userId === activeContactId) return;
+                if (!userId) return;
+                // The first contact is auto-selected on load, but on phones
+                // the page still shows the list ('auto-selected'), so tapping
+                // that contact must still open its thread.
+                const autoSelected = chatPage?.classList.contains('auto-selected');
+                if (userId === activeContactId && !autoSelected) return;
                 loadConversation(userId, true);
             });
 
@@ -1329,13 +1367,23 @@
                     'bi bi-layout-sidebar-reverse';
             });
 
-            mobileChatBack?.addEventListener('click', function() {
+            function showContactList() {
                 chatPage?.classList.remove('has-active-chat', 'auto-selected');
                 chatPage?.classList.add('no-active-chat');
                 // Without this, re-tapping the same contact you just backed out of
                 // does nothing — the contact-list click handler below skips
                 // reloading whenever the tapped id already equals activeContactId.
                 activeContactId = 0;
+            }
+
+            mobileChatBack?.addEventListener('click', function() {
+                showContactList();
+                // Drop the ?user_id= from the URL without adding a new history
+                // entry. Before, the chat entry stayed in history, so the list's
+                // own back arrow first "went back" into that chat again and you
+                // had to tap it twice to leave.
+                const depth = window.history.state?.chatDepth || 0;
+                window.history.replaceState({ user_id: 0, chatDepth: depth }, '', chatIndexUrl);
             });
 
             toggleInfoPaneMobile?.addEventListener('click', function() {
@@ -1355,9 +1403,7 @@
                 } else if (!userId && activeContactId) {
                     // Same reset as the mobile back button — browser back landed on
                     // a URL with no ?user_id=, so show the list, not a stale thread.
-                    chatPage?.classList.remove('has-active-chat', 'auto-selected');
-                    chatPage?.classList.add('no-active-chat');
-                    activeContactId = 0;
+                    showContactList();
                 }
             });
 
@@ -1393,7 +1439,10 @@
             if (!el) return;
             el.addEventListener('click', function(e) {
                 e.preventDefault();
-                window.history.back();
+                // Skip every chat entry this page pushed (one per opened contact)
+                // plus one more, so a single tap returns to the page you came from.
+                var depth = (window.history.state && window.history.state.chatDepth) || 0;
+                window.history.go(-(depth + 1));
             });
         })();
     </script>

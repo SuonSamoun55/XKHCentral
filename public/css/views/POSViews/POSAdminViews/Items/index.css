@@ -586,10 +586,6 @@
         transition: background .18s ease, color .18s ease, border-color .18s ease;
     }
 
-    /* "Sync Products" gets a faint breathing glow (much subtler than the
-       LIVE-badge ring — a scaling border looked stretched/broken on a wide
-       rectangular button) so it reads as the button to click without being
-       distracting. */
     #syncBtn{
         animation:syncBtnLivePulse 2.4s ease-in-out infinite;
     }
@@ -598,10 +594,6 @@
         0%, 100% { box-shadow:0 0 0 0 rgba(59, 172, 180, 0.592); }
         50%      { box-shadow:0 0 0 1px rgba(59, 172, 180, 0.782); }
     }
-
-    /* Outline "Sync Products" / "Select all" buttons: hover turns solid
-       primary instead of the plain brightness dim used by solid buttons,
-       since dimming a white background is barely visible. */
     .sync-btn.sync-btn-alt:hover{
         filter:none;
         background:#3BACB4;
@@ -628,10 +620,6 @@
         gap:7px;
         cursor:pointer;
     }
-
-    /* The browser's default focus outline sits outside the box and made the
-       just-clicked button (Select all) look bigger than Grid/List. Draw the
-       focus ring inside the button instead so all three stay the same size. */
     .view-btn{
         -webkit-tap-highlight-color:transparent;
     }
@@ -730,7 +718,7 @@
     .product-title{
         font-size:14px;
         font-weight:700;
-        color:#111827;
+        color:#334155;
         line-height:1.35;
         margin-bottom:3px;
     }
@@ -752,9 +740,9 @@
     }
 
     .product-price{
-        font-size:15px;
-        font-weight:800;
-        color:#111827;
+        font-size:14px;
+        font-weight:500;
+        color:#334155;
         line-height:1;
     }
 
@@ -981,7 +969,30 @@
         }
     }
 
-    @media (max-width: 768px){
+    /* Tablet with the sidebar open: 3 smaller cards per row (4 when the
+       sidebar is collapsed) instead of 2 oversized ones. Phone (≤640) and
+       desktop keep their own grids. */
+    @media (min-width: 641px) and (max-width: 991px){
+        .item-grid{
+            grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
+        }
+
+        .app-shell.collapsed .item-grid{
+            grid-template-columns:repeat(4, minmax(0, 1fr)) !important;
+        }
+    }
+
+    /* Web Shop already draws its own white panel (.main-wrap), so undo the
+       shared small-tablet panel from POSAdminSidebar.css on this page. */
+    @media (min-width: 641px) and (max-width: 768px){
+        body .main-wrapper.app-shell > .content-wrapper{
+            padding:0 !important;
+            background:transparent;
+            overflow:hidden !important;
+        }
+    }
+
+    @media (max-width: 640px){
         .main-wrapper, .app-shell{
             height: 100%;
             padding: 0 0px 70px 0px;
@@ -1219,9 +1230,126 @@
         overflow:hidden;
     }
 
-    @media (max-width: 768px){
+    @media (max-width: 640px){
         .page-title{
             display:none;
         }
     }
 
+
+/* ===== Hover description on toolbar buttons (data-tip) ===== */
+.has-tip{
+    position:relative;
+}
+
+.has-tip::after{
+    content:attr(data-tip);
+    position:absolute;
+    top:calc(100% + 8px);
+    left:0;
+    z-index:50;
+    width:260px;
+    padding:8px 10px;
+    border-radius:6px;
+    background:#1F2937;
+    color:#fff;
+    font-size:12px;
+    font-weight:400;
+    line-height:1.45;
+    text-align:left;
+    white-space:normal;
+    box-shadow:0 6px 18px rgba(0,0,0,.18);
+    opacity:0;
+    visibility:hidden;
+    transform:translateY(-4px);
+    transition:opacity .15s ease, transform .15s ease, visibility .15s;
+    pointer-events:none;
+}
+
+/* Last button on the right: open the box to the left so it stays on screen. */
+.has-tip.tip-right::after{
+    left:auto;
+    right:0;
+}
+
+.has-tip:hover::after,
+.has-tip:focus-visible::after{
+    opacity:1;
+    visibility:visible;
+    transform:translateY(0);
+    transition-delay:.3s;
+}
+
+/* Touch screens have no hover. */
+@media (hover: none){
+    .has-tip::after{
+        display:none;
+    }
+}
+
+/* ===== Tablet toolbar (sidebar open) =====
+   Row 1: search box + Filter side by side.
+   Row 2: Grid / List on the left, Select all · Sync · Manage on the right.
+   Phone (≤640) and desktop keep their own toolbar layouts. */
+@media (min-width: 641px) and (max-width: 1024px),
+       (min-width: 1025px) and (max-width: 1366px) and (orientation: portrait){
+    .toolbar-row{
+        flex-direction:column;
+        align-items:stretch;
+        gap:10px;
+        margin-bottom:14px;
+    }
+
+    .toolbar-left{
+        max-width:none;
+        display:flex;
+        align-items:center;
+        gap:8px;
+    }
+
+    .toolbar-left .search-box{
+        flex:1;
+        margin-bottom:0;
+    }
+
+    .toolbar-left .search-box input,
+    .filter-btn{
+        height:32px;
+    }
+
+    .toolbar-right{
+        display:flex;
+        flex-wrap:wrap;
+        align-items:center;
+        justify-content:flex-start;
+        gap:8px;
+        width:100%;
+    }
+
+    .toolbar-right .view-switch{
+        order:1;
+        gap:6px;
+    }
+
+    .toolbar-right #pickAllBtn{
+        order:2;
+        width:auto;
+        margin-left:auto;
+    }
+
+    .toolbar-right #syncBtn{
+        order:3;
+    }
+
+    .toolbar-right .toolbar-secondary-row > a.sync-btn{
+        order:4;
+    }
+
+    .toolbar-right .sync-btn,
+    .toolbar-right .view-btn{
+        min-width:0;
+        height:32px;
+        padding:0 12px;
+        white-space:nowrap;
+    }
+}

@@ -980,3 +980,56 @@ screen and (max-width: 926px) and (orientation: landscape) {
 
 
 }
+
+/* Tablets (641px – 1024px): long order numbers broke in the middle of the
+   number ("#ORD-2026092114" / "53086RZJ"). Break at the dash instead, so
+   it reads "#ORD-" then the full number on the next line. */
+@media screen and (min-width: 641px) and (max-width: 1024px) {
+    .order-link {
+        max-width: none;
+        /* Only the dash is a break point; the number itself never splits,
+           so the table widens this column to fit it */
+        word-break: normal;
+        overflow-wrap: normal;
+        font-size: 10.5px;
+        line-height: 1.35;
+    }
+
+    /* Date, time and price stay on one line each */
+    .date-text,
+    .time-text,
+    .total-text {
+        white-space: nowrap;
+    }
+}
+
+/* Narrowest tablets (~753px): one size down so the full number fits on
+   its line instead of leaving its last letter on a third line */
+@media screen and (min-width: 641px) and (max-width: 767px) {
+    .order-link {
+        font-size: 10px;
+    }
+
+    .table thead th:first-child,
+    .table tbody td:first-child {
+        width: 32px;
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+}
+
+/* Small tablets (641px – 768px) sit beside the sidebar like desktop, so
+   keep the desktop rounded white card instead of the phone's square,
+   edge-to-edge page. The card scrolls inside itself. */
+@media screen and (min-width: 641px) and (max-width: 768px) {
+    body {
+        background: #f4f6f8;
+    }
+
+    .page-wrap {
+        border-radius: 14px;
+        height: 100vh;
+        min-height: 0;
+        overflow-y: auto;
+    }
+}

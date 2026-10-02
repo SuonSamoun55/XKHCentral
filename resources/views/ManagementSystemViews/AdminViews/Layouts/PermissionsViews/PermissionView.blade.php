@@ -1,7 +1,7 @@
 @extends('Layout.Management.app')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('/css/views/Management/PermissionPage/PermissionPage_List.css') }}">
+    <link rel="stylesheet" href="{{ asset('/css/views/Management/PermissionPage/PermissionPage_List.css') }}?v={{ filemtime(public_path('css/views/Management/PermissionPage/PermissionPage_List.css')) }}">
 @endpush
 
 @section('title', 'Permission Page')

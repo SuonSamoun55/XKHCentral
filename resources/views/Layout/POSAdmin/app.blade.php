@@ -12,6 +12,8 @@
     $companyName = $__posAdminCompany
         ? ($__posAdminCompany->display_name ?? $__posAdminCompany->name)
         : null;
+
+    $companyIsTest = (bool) $__posAdminCompany?->is_test;
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -99,11 +101,17 @@
             animation: companyLivePulse 1.6s ease-out infinite;
         }
 
+        /* Test company (cloned from a live one) */
+        .company-ticket-wrap.is-test .company-ticket-body { background: #E3F6F7; }
+        .company-ticket-wrap.is-test .company-ticket-text { color: #0EA8B2; }
+        .company-ticket-wrap.is-test .company-ticket-tab,
+        .company-ticket-wrap.is-test .company-live-badge { background: #0EA8B2; }
+
         @keyframes companyLivePulse {
             0%   { transform: scale(1); opacity: 0.8; }
             100% { transform: scale(1.5); opacity: 0; }
         }
-            @media (max-width: 768px) {
+            @media (max-width: 640px) {
 
 
             .company-ticket-wrap {
@@ -117,14 +125,14 @@
 <body class="{{ trim((string) $__env->yieldContent('hideMobileNav', '')) !== '' ? 'admin-chat-page' : '' }}">
 
     @if ($companyName ?? null)
-        <div class="company-ticket-wrap" id="companyTicketWrap">
+        <div class="company-ticket-wrap {{ ($companyIsTest ?? false) ? 'is-test' : '' }}" id="companyTicketWrap">
             <div class="company-ticket-body" id="companyTicketBody">
                 <span class="company-ticket-text">{{ $companyName }}</span>
             </div>
             <div class="company-ticket-tab">
                 <div class="company-live-badge" id="companyLiveBadge">
                     <span class="company-live-ring"></span>
-                    <span class="company-live-text">LIVE</span>
+                    <span class="company-live-text">{{ ($companyIsTest ?? false) ? 'TEST' : 'LIVE' }}</span>
                 </div>
             </div>
         </div>
@@ -165,6 +173,23 @@
         </div>
     </div>
 
+    <script>
+        // A back link with data-history-back returns to the previous page
+        // with the browser's Back, so that page comes back as it was
+        // (no reload, same tab, filters and scroll). If the page was opened
+        // directly (new tab, bookmark), there is nothing to go back to, so
+        // the link's own href is used instead.
+        document.addEventListener('click', function(event) {
+            const link = event.target.closest('a[data-history-back]');
+            if (!link) return;
+
+            const cameFromThisSite = document.referrer.startsWith(window.location.origin);
+            if (cameFromThisSite && window.history.length > 1) {
+                event.preventDefault();
+                window.history.back();
+            }
+        });
+    </script>
     <script src="{{ asset('js/admin/sidebar.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 

@@ -7,11 +7,11 @@ use App\Http\Controllers\Controller;
 use App\Models\POS\Cart;
 use App\Models\POS\Favorite;
 use App\Models\POS\Item;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
 use App\Models\POS\ItemVariant;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class ItemListController extends Controller
 {
@@ -20,366 +20,31 @@ class ItemListController extends Controller
     public function getItems()
     {
         $user = Auth::user();
-        $companyId = session('selected_company_id') ?? $user->company_id;
+        $companyId = $this->companyId();
 
-        $items = Item::query()
-            ->when($companyId, function ($q) use ($companyId) {
-                $q->where('company_id', $companyId);
-            })
-            ->where(function ($q) {
-                $q->where('blocked', false)->orWhereNull('blocked');
-            })
-            // A null is_visible means the item was just synced and hasn't been
-            // reviewed by the admin yet — keep it hidden from customers until decided.
-            ->where('is_visible', true)
-            ->where(function ($q) {
-                $q->where('category_visible', true)->orWhereNull('category_visible');
-            })
+        $items = $this->visibleItems($companyId)
             ->orderBy('display_name')
             ->get();
-        $itemIds = $items->pluck('id');
 
-        $variantsByItem = ItemVariant::whereIn('item_id', $itemIds)
-            ->get()
-            ->groupBy('item_id');
-
-        $items->transform(function (Item $item) use ($variantsByItem) {
-            $item->setRelation(
-                'variants',
-                $variantsByItem->get($item->id, collect())
-            );
-
-            return $this->decorateItem($item);
-        });
-
-        $items = $this->filterPurchasable($items);
-
-        $favoriteIds = Favorite::where('user_id', $user->id)
-            ->pluck('item_id')
-            ->toArray();
-
-        $cartCount = 0;
-        if ($user) {
-            $activeCart = Cart::where('user_id', $user->id)
-                ->where('company_id', $companyId)
-                ->where('status', 'active')
-                ->first();
-
-            if ($activeCart) {
-                $cartCount = (int) $activeCart->items()->sum('qty');
-            }
-        }
+        $items = $this->prepareForListing($items);
+        $favoriteIds = $this->favoriteIds($user->id);
+        $cartCount = $this->cartCount($user->id, $companyId);
 
         return view('POSViews.POSUserViews.Products.index', compact('items', 'favoriteIds', 'cartCount'));
     }
 
-    public function mobileCategories()
-    {
-        $categories = Item::query()
-            ->where(function ($q) {
-                $q->where('blocked', false)->orWhereNull('blocked');
-            })
-            // A null is_visible means the item was just synced and hasn't been
-            // reviewed by the admin yet — keep it hidden from customers until decided.
-            ->where('is_visible', true)
-            ->where(function ($q) {
-                $q->where('category_visible', true)->orWhereNull('category_visible');
-            })
-            ->whereNotNull('item_category_code')
-            ->where('item_category_code', '<>', '')
-            ->selectRaw('item_category_code as code, count(*) as count, max(image_url) as image_url')
-            ->groupBy('item_category_code')
-            ->orderBy('item_category_code')
-            ->get()
-            ->map(function ($category) {
-                return [
-                    'code' => $category->code,
-                    'title' => ucwords(str_replace(['-', '_'], [' ', ' '], $category->code)),
-                    'count' => (int) $category->count,
-                    'image' => $this->resolveImageUrl($category->image_url),
-                ];
-            });
-
-        return view('POSViews.POSUserViews.mobile.POSitemCategoriesMobileView', compact('categories'));
-    }
-
-    public function mobileCategoryProducts($category)
-    {
-        $categoryCode = $category;
-        $categoryTitle = ucwords(str_replace(['-', '_'], [' ', ' '], $categoryCode));
-
-        $items = Item::query()
-            ->where(function ($q) {
-                $q->where('blocked', false)->orWhereNull('blocked');
-            })
-            // A null is_visible means the item was just synced and hasn't been
-            // reviewed by the admin yet — keep it hidden from customers until decided.
-            ->where('is_visible', true)
-            ->where(function ($q) {
-                $q->where('category_visible', true)->orWhereNull('category_visible');
-            })
-            ->where('item_category_code', $categoryCode)
-            ->orderBy('display_name')
-            ->get();
-
-        // Same batch-load-and-attach pattern as getItems(), so the popup
-        // also works from category-filtered mobile listings.
-        $itemIds = $items->pluck('id');
-
-        $variantsByItem = ItemVariant::whereIn('item_id', $itemIds)
-            ->get()
-            ->groupBy('item_id');
-
-        $items->transform(function (Item $item) use ($variantsByItem) {
-            $item->setRelation(
-                'variants',
-                $variantsByItem->get($item->id, collect())
-            );
-
-            return $this->decorateItem($item);
-        });
-
-        $items = $this->filterPurchasable($items);
-
-        return view('POSViews.POSUserViews.mobile.POSitemCategoryProductsMobileView', compact('items', 'categoryTitle', 'categoryCode'));
-    }
-
     public function showProduct($id)
     {
-        return $this->detail($id);
-    }
-
-    public function mobileProducts()
-    {
         $user = Auth::user();
+        $companyId = $this->companyId();
 
-        // ✅ PRODUCTS
-        $items = Item::query()
-            ->where(function ($q) {
-                $q->where('blocked', false)->orWhereNull('blocked');
-            })
-            // A null is_visible means the item was just synced and hasn't been
-            // reviewed by the admin yet — keep it hidden from customers until decided.
-            ->where('is_visible', true)
-            ->where(function ($q) {
-                $q->where('category_visible', true)->orWhereNull('category_visible');
-            })
-            ->orderBy('display_name')
-            ->get();
-
-        // Same batch-load-and-attach pattern, so the mobile popup also works.
-        $itemIds = $items->pluck('id');
-
-        $variantsByItem = ItemVariant::whereIn('item_id', $itemIds)
-            ->get()
-            ->groupBy('item_id');
-
-        $items->transform(function (Item $item) use ($variantsByItem) {
-            $item->setRelation(
-                'variants',
-                $variantsByItem->get($item->id, collect())
-            );
-
-            return $this->decorateItem($item);
-        });
-
-        $items = $this->filterPurchasable($items);
-
-        // ✅ FAVORITES (for ❤️ state)
-        $favoriteIds = [];
-        if ($user) {
-            $favoriteIds = Favorite::where('user_id', $user->id)
-                ->pluck('item_id')
-                ->toArray();
-        }
-
-        // ✅ REAL CATEGORIES (same logic as category pages)
-        $categories = Item::query()
-            ->where(function ($q) {
-                $q->where('blocked', false)->orWhereNull('blocked');
-            })
-            // A null is_visible means the item was just synced and hasn't been
-            // reviewed by the admin yet — keep it hidden from customers until decided.
-            ->where('is_visible', true)
-            ->whereNotNull('item_category_code')
-            ->where('item_category_code', '!=', '')
-            ->selectRaw('item_category_code as code, COUNT(*) as count')
-            ->groupBy('item_category_code')
-            ->orderBy('item_category_code')
-            ->get()
-            ->map(function ($cat) {
-                return [
-                    'code' => $cat->code,
-                    'title' => ucwords(str_replace(['_', '-'], ' ', $cat->code)),
-                    'count' => (int) $cat->count,
-                ];
-            });
-
-        return view(
-            'POSViews.POSUserViews.mobile.POSItem_mobile',
-            compact('items', 'categories', 'favoriteIds')
-        );
-    }
-
-    public function filter(Request $request)
-    {
-        $categoryCode = $request->category;
-        $user = Auth::user();
-        $companyId = session('selected_company_id') ?? $user->company_id;
-
-        $items = Item::query()
-            ->when($companyId, function ($q) use ($companyId) {
-                $q->where('company_id', $companyId);
-            })
-            ->when($categoryCode, fn ($q) =>
-                $q->whereHas('category', fn ($c) =>
-                    $c->where('code', $categoryCode)
-                )
-            )
-            ->get();
-
-        $items->transform(function (Item $item) {
-            return $this->decorateItem($item);
-        });
-
-        $items = $this->filterPurchasable($items);
-
-        return response()->json([
-            'count' => $items->count(),
-            'html' => view(
-                'ManagementSystemViews.UserViews.partials.product-cards',
-                compact('items')
-            )->render()
-        ]);
-    }
-
-    public function index()
-    {
-        $items = Item::select(
-                'id',
-                'display_name',
-                'image_url',
-                'custom_image_url',
-                'final_price',
-                'unit_price',
-                'category_code'
-            )
-            ->where('is_active', 1)
-            ->get();
-
-        $items->transform(function (Item $item) {
-            return $this->decorateItem($item);
-        });
-
-        $categories = Category::select('code', 'title')
-            ->withCount('items')
-            ->get()
-            ->map(function ($cat) {
-                return [
-                    'code'  => $cat->code,
-                    'title' => $cat->title,
-                    'count' => $cat->items_count,
-                ];
-            });
-
-        return view('POSViews.POSUserViews.mobile.POSItem_mobile', compact(
-            'items',
-            'categories'
-        ));
-    }
-
-    public function add(Request $request)
-    {
-        $user = Auth::user();
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Not authenticated'
-            ], 401);
-        }
-
-        $validated = $request->validate([
-            'item_id' => ['required', 'integer', 'exists:items,id'],
-            'variant_id' => ['nullable', 'integer'],
-            'variant_ids' => ['nullable', 'array'],
-            'variant_ids.*' => ['integer'],
-            'qty' => ['nullable', 'numeric', 'min:0.01'],
-        ]);
-
-        $item = Item::findOrFail($validated['item_id']);
-
-        if (!$this->isItemPurchasable($item)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This product is out of stock and cannot be added to cart.',
-            ], 422);
-        }
-
-        $qty = round((float) ($validated['qty'] ?? 1), 2);
-        // A product can expose multiple option groups (Size, Beef Type, ...),
-        // but a cart line only tracks one variant, so the first selection wins.
-        $variantId = $validated['variant_id'] ?? ($validated['variant_ids'][0] ?? null);
-        $companyId = session('selected_company_id') ?? $user->company_id;
-
-        $count = DB::transaction(function () use ($user, $validated, $variantId, $qty, $companyId) {
-            $cart = Cart::firstOrCreate([
-                'user_id' => $user->id,
-                'company_id' => $companyId,
-                'status' => 'active',
-            ]);
-
-            $cartItem = $cart->items()
-                ->where('item_id', $validated['item_id'])
-                ->where('item_variant_id', $variantId)
-                ->lockForUpdate()
-                ->first();
-
-            if ($cartItem) {
-                $cartItem->increment('qty', $qty);
-            } else {
-                $cart->items()->create([
-                    'item_id' => $validated['item_id'],
-                    'item_variant_id' => $variantId,
-                    'qty' => $qty,
-                ]);
-            }
-
-            return (int) $cart->items()->sum('qty');
-        });
-
-        return response()->json([
-            'success' => true,
-            'count' => $count,
-            'cartCount' => $count,
-            'message' => 'Added to cart successfully.',
-        ]);
-    }
-
-    public function detail($id)
-    {
-        $user = Auth::user();
-        $companyId = session('selected_company_id') ?? $user->company_id;
-
-        $item = Item::query()
+        $item = $this->visibleItems($companyId)
             ->where('id', $id)
-            ->when($companyId, function ($q) use ($companyId) {
-                $q->where('company_id', $companyId);
-            })
-            ->where(function ($q) {
-                $q->where('blocked', false)->orWhereNull('blocked');
-            })
-            // A null is_visible means the item was just synced and hasn't been
-            // reviewed by the admin yet — keep it hidden from customers until decided.
-            ->where('is_visible', true)
-            ->where(function ($q) {
-                $q->where('category_visible', true)->orWhereNull('category_visible');
-            })
             ->firstOrFail();
 
         $item = $this->decorateItem($item);
 
-        if (!$this->isItemPurchasable($item)) {
+        if (!$item->isPurchasable()) {
             return redirect()->route('user.posinterface')
                 ->with('error', 'This product is currently out of stock and unavailable.');
         }
@@ -387,155 +52,92 @@ class ItemListController extends Controller
         $discountPercent = $item->effective_discount_percent;
         $finalPrice = $item->final_price;
         $unitPrice = (float) ($item->unit_price ?? 0);
-        $cartCount = 0;
+        $cartCount = $this->cartCount($user->id, $companyId);
+        $favoriteIds = $this->favoriteIds($user->id);
 
-        if ($user) {
-            $activeCart = Cart::where('user_id', $user->id)
-                ->where('company_id', $companyId)
-                ->where('status', 'active')
-                ->first();
-
-            if ($activeCart) {
-                $cartCount = (int) $activeCart->items()->sum('qty');
-            }
-        }
-
-        // ✅ FIX: this was missing entirely — the blade view reads
-        // $favoriteIds to decide whether to render the heart as filled on
-        // load, but it was never fetched or passed here, so the heart
-        // always reset to "not favorited" on every page refresh.
-        $favoriteIds = [];
-        if ($user) {
-            $favoriteIds = Favorite::where('user_id', $user->id)
-                ->pluck('item_id')
-                ->toArray();
-        }
-
-        // Pulled directly from item_variants, same pattern as ItemVariantPosController::index()
         $variants = ItemVariant::where('item_id', $item->id)
             ->where('blocked', false)
             ->get();
 
-        // ✅ Related products: up to 10 other items from the SAME category
-        // (item_category_code), same visibility rules as the main listing,
-        // current product excluded.
-        $relatedItems = Item::query()
-            ->where('id', '!=', $item->id)
-            ->when($companyId, function ($q) use ($companyId) {
-                $q->where('company_id', $companyId);
-            })
-            ->when($item->item_category_code, function ($q) use ($item) {
-                $q->where('item_category_code', $item->item_category_code);
-            }, function ($q) {
-                // current product has no category — don't show unrelated items
-                $q->whereRaw('1 = 0');
-            })
-            ->where(function ($q) {
-                $q->where('blocked', false)->orWhereNull('blocked');
-            })
-            // A null is_visible means the item was just synced and hasn't been
-            // reviewed by the admin yet — keep it hidden from customers until decided.
-            ->where('is_visible', true)
-            ->where(function ($q) {
-                $q->where('category_visible', true)->orWhereNull('category_visible');
-            })
-            ->orderBy('display_name')
-            ->limit(10)
-            ->get();
+        // Up to 10 other products from the same category. A product without
+        // a category shows no related products.
+        $relatedItems = collect();
 
-        // Same batch-load-and-attach pattern as getItems(), so the
-        // quick-add "+" button on each related card can also open the
-        // variant popup instead of always adding straight to cart.
-        $relatedItemIds = $relatedItems->pluck('id');
+        if ($item->item_category_code) {
+            $relatedItems = $this->visibleItems($companyId)
+                ->where('id', '!=', $item->id)
+                ->where('item_category_code', $item->item_category_code)
+                ->orderBy('display_name')
+                ->limit(10)
+                ->get();
 
-        $relatedVariantsByItem = ItemVariant::whereIn('item_id', $relatedItemIds)
-            ->get()
-            ->groupBy('item_id');
-
-        $relatedItems->transform(function (Item $relatedItem) use ($relatedVariantsByItem) {
-            $relatedItem->setRelation(
-                'variants',
-                $relatedVariantsByItem->get($relatedItem->id, collect())
-            );
-
-            return $this->decorateItem($relatedItem);
-        });
-
-        $relatedItems = $this->filterPurchasable($relatedItems);
+            $relatedItems = $this->prepareForListing($relatedItems);
+        }
 
         return view('POSViews.POSUserViews.Products.show', compact(
-            'item', 'discountPercent', 'finalPrice', 'unitPrice', 'cartCount', 'variants', 'favoriteIds', 'relatedItems'
+            'item',
+            'discountPercent',
+            'finalPrice',
+            'unitPrice',
+            'cartCount',
+            'variants',
+            'favoriteIds',
+            'relatedItems'
         ));
     }
 
-    /**
-     * Toggle favorite status for the given item for the current user.
-     * Returns { success: true, favorited: bool } so the frontend can
-     * reliably read the new state under the "favorited" key.
-     */
-    public function toggleFavorite(Request $request)
+    private function companyId(): ?int
     {
-        $user = Auth::user();
+        return session('selected_company_id') ?? Auth::user()->company_id;
+    }
 
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Not authenticated'
-            ], 401);
-        }
+    /**
+     * Products a customer may see: not blocked, approved by the admin
+     * (a null is_visible means the item was just synced and not reviewed
+     * yet) and not in a hidden category.
+     */
+    private function visibleItems(?int $companyId): Builder
+    {
+        return Item::query()
+            ->when($companyId, fn ($q) => $q->where('company_id', $companyId))
+            ->where(fn ($q) => $q->where('blocked', false)->orWhereNull('blocked'))
+            ->where('is_visible', true)
+            ->where(fn ($q) => $q->where('category_visible', true)->orWhereNull('category_visible'));
+    }
 
-        $itemId = $request->input('item_id');
+    /**
+     * Attach variants (so the "+" button can open the variant popup), add
+     * the display prices, and drop products that can't be bought.
+     */
+    private function prepareForListing(Collection $items): Collection
+    {
+        $variantsByItem = ItemVariant::whereIn('item_id', $items->pluck('id'))
+            ->get()
+            ->groupBy('item_id');
 
-        if (!$itemId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'item_id is required'
-            ], 422);
-        }
+        return $items
+            ->map(function (Item $item) use ($variantsByItem) {
+                $item->setRelation('variants', $variantsByItem->get($item->id, collect()));
 
-        $existing = Favorite::where('user_id', $user->id)
-            ->where('item_id', $itemId)
+                return $this->decorateItem($item);
+            })
+            ->filter(fn (Item $item) => $item->isPurchasable())
+            ->values();
+    }
+
+    private function favoriteIds(int $userId): array
+    {
+        return Favorite::where('user_id', $userId)->pluck('item_id')->all();
+    }
+
+    private function cartCount(int $userId, ?int $companyId): int
+    {
+        $cart = Cart::where('user_id', $userId)
+            ->where('company_id', $companyId)
+            ->where('status', 'active')
             ->first();
 
-        if ($existing) {
-            $existing->delete();
-            $favorited = false;
-        } else {
-            Favorite::create([
-                'user_id' => $user->id,
-                'item_id' => $itemId,
-            ]);
-            $favorited = true;
-        }
-
-        return response()->json([
-            'success' => true,
-            'favorited' => $favorited,
-            'message' => $favorited ? 'Added to favorites.' : 'Removed from favorites.',
-        ]);
-    }
-
-    /**
-     * A product is purchasable if it still has sellable stock, or if the
-     * admin has switched "Oversell" on for that specific product in Store
-     * Management (see StoreManagementController::toggleOversell /
-     * AdminOrderController::confirm) — a per-product decision, not a
-     * store-wide one, since some products may be fine to backorder and
-     * others may not.
-     */
-    private function isItemPurchasable(Item $item): bool
-    {
-        return $item->isPurchasable();
-    }
-
-    /**
-     * Drop out-of-stock items from a listing when that specific product
-     * doesn't allow oversell, so customers never see something they can't
-     * actually buy.
-     */
-    private function filterPurchasable($items)
-    {
-        return $items->filter(fn (Item $item) => $this->isItemPurchasable($item))->values();
+        return $cart ? (int) $cart->items()->sum('qty') : 0;
     }
 
     private function decorateItem(Item $item): Item
@@ -572,5 +174,4 @@ class ItemListController extends Controller
 
         return min(100, $discount);
     }
-
 }

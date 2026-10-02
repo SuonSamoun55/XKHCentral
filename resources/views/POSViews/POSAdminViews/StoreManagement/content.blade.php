@@ -1,5 +1,5 @@
 <div class="store-header-row">
-    <h2 class="store-page-title">Store Management</h2>
+    <h2 class="store-page-title">Product Management</h2>
 </div>
 
 <div class="store-top-tools">
@@ -54,14 +54,6 @@
                                     </option>
                                 @endforeach
                             </select>
-                        </div>
-
-                        <div class="store-menu-item" style="border-bottom:1px solid #e5e7eb; padding-bottom:8px; margin-bottom:4px;">
-                            <button type="button" class="store-action-btn btn-active-custom store-menu-btn" id="storeExportBtn"
-                                data-bs-toggle="modal" data-bs-target="#exportStoreModal">
-                                <i class="bi bi-download"></i>
-                                Download as Excel
-                            </button>
                         </div>
 
                         <div class="store-menu-item stock-filter-wrap">

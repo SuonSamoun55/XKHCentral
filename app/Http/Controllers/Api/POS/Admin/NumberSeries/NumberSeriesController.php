@@ -43,7 +43,7 @@ class NumberSeriesController extends Controller
     private function availablePurposes(int $companyId, ?int $ignoreId = null): array
     {
         $usedCodes = NumberSeries::where('company_id', $companyId)
-            ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
+            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
             ->pluck('code')
             ->all();
         return array_diff_key(self::$purposes, array_flip($usedCodes));
@@ -76,7 +76,7 @@ class NumberSeriesController extends Controller
             'code' => [
                 'required',
                 Rule::in(array_keys($availablePurposes)),
-                Rule::unique('number_series')->where(fn($q) => $q->where('company_id', $companyId)),
+                Rule::unique('number_series')->where(fn ($q) => $q->where('company_id', $companyId)),
             ],
             'name' => ['required', 'string', 'max:255'],
             'prefix' => ['required', 'string', 'max:10'],
@@ -135,7 +135,7 @@ class NumberSeriesController extends Controller
             $rules['code'] = [
                 'required',
                 Rule::in(array_keys($availablePurposes)),
-                Rule::unique('number_series')->where(fn($q) => $q->where('company_id', $companyId))->ignore($series->id),
+                Rule::unique('number_series')->where(fn ($q) => $q->where('company_id', $companyId))->ignore($series->id),
             ];
             $rules['prefix'] = ['required', 'string', 'max:10'];
             $rules['padding'] = ['required', 'integer', 'between:1,' . self::MAX_DIGIT_COUNT];

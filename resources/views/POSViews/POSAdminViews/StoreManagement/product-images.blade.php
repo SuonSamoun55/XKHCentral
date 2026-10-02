@@ -1,12 +1,12 @@
 @extends('Layout.POSAdmin.app')
 @section('title', 'Update Product Images')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSAdminViews/StoreManagement/StoreEdite.css') }}">
+<link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSAdminViews/StoreManagement/StoreEdite.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSAdminViews/StoreManagement/StoreEdite.css')) }}">
 @endpush
 @section('content')
 <main class="pim-page">
     <div class="pim-crumb">
-        <a href="{{ url()->previous() }}" class="pim-back">
+        <a href="{{ route('store.management.index') }}" class="pim-back" data-history-back aria-label="Back">
             <i class="bi bi-chevron-left"></i>
         </a>
         <div>
@@ -108,6 +108,28 @@
                                 <span class="pim-code-chip">{{ $variant->code }}</span>
                             </div>
 
+                            <div class="pim-price">
+                                <label class="pim-price-label" for="price-{{ $variant->id }}">Price</label>
+                                <div class="pim-price-field">
+                                    <span class="pim-price-currency">$</span>
+                                    <input
+                                        type="number"
+                                        id="price-{{ $variant->id }}"
+                                        class="pim-price-input"
+                                        data-variant-id="{{ $variant->id }}"
+                                        data-saved="{{ $variant->price !== null ? number_format((float) $variant->price, 2, '.', '') : '' }}"
+                                        value="{{ $variant->price !== null ? number_format((float) $variant->price, 2, '.', '') : '' }}"
+                                        placeholder="{{ number_format((float) $item->unit_price, 2, '.', '') }}"
+                                        min="0"
+                                        step="0.01"
+                                        inputmode="decimal">
+                                    <button type="button" class="pim-price-save" data-variant-id="{{ $variant->id }}" title="Save price" aria-label="Save price" hidden><i class="bi bi-check-lg"></i></button>
+                                </div>
+                                <div class="pim-price-hint" id="price-hint-{{ $variant->id }}">
+                                    {{ $variant->price !== null ? 'Own price' : 'Same as product ($' . number_format((float) $item->unit_price, 2) . ')' }}
+                                </div>
+                            </div>
+
                             <input
                                 type="file"
                                 accept="image/*"
@@ -134,7 +156,21 @@
 
 <script>
     const ITEM_ID = {{ $item->id }};
+    // Built from route names so the page follows any URL change in routes/web.php.
+    const URLS = {
+        mainImage: @json(route('store.management.product.image.upload', $item->id)),
+        description: @json(route('store.management.product.description.update', $item->id)),
+        markUpdated: @json(route('store.management.product.markUpdated', $item->id)),
+        variantImage: id => @json(route('store.management.variants.image', '__ID__')).replace('__ID__', id),
+        variantPrice: id => @json(route('store.management.variants.price', '__ID__')).replace('__ID__', id),
+    };
     const CSRF_TOKEN = '{{ csrf_token() }}';
+
+    // Tells the Product Management list that this product changed, so when
+    // the user goes Back it refreshes its data (without a full page reload).
+    function markProductListChanged() {
+        try { sessionStorage.setItem('productListChanged', '1'); } catch (_) {}
+    }
 
     // Show or hide an element by id.
     function toggle(id, on) {
@@ -215,9 +251,7 @@
         const barId = isMain ? 'mainBar' : 'bar-' + target;
         const checkId = isMain ? 'mainCheck' : 'check-' + target;
         const previewEl = document.getElementById(isMain ? 'mainItemPreview' : 'preview-' + target);
-        const url = isMain
-            ? '/store/management/products/' + ITEM_ID + '/image'
-            : '/items/variants/' + target + '/image';
+        const url = isMain ? URLS.mainImage : URLS.variantImage(target);
 
         if (!fileInput.files || !fileInput.files[0]) {
             return;
@@ -244,6 +278,7 @@
             if (data.success) {
                 previewEl.src = data.image_url;
                 showCheck(checkId);
+                markProductListChanged();
             } else {
                 alert('Upload failed.');
             }
@@ -273,7 +308,7 @@
             const oldText = saveBtn.textContent;
             saveBtn.textContent = 'Saving...';
 
-            fetch('/store/management/products/' + ITEM_ID + '/description', {
+            fetch(URLS.description, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -288,6 +323,7 @@
                     throw new Error(result.data?.message || 'Failed to save description.');
                 }
                 showDescriptionAlert('success', 'Description saved.');
+                markProductListChanged();
             })
             .catch(function (error) {
                 showDescriptionAlert('error', error?.message || 'Failed to save description.');
@@ -299,6 +335,88 @@
         });
     })();
 
+    // Variant prices: "Save" appears once the value differs from what's saved;
+    // Enter saves too. An empty box means "same price as the product".
+    (function () {
+        const PRODUCT_PRICE = {{ (float) $item->unit_price }};
+        const money = function (n) { return '$' + Number(n).toFixed(2); };
+
+        document.querySelectorAll('.pim-price-input').forEach(function (input) {
+            const id = input.dataset.variantId;
+            const saveBtn = document.querySelector('.pim-price-save[data-variant-id="' + id + '"]');
+            const hint = document.getElementById('price-hint-' + id);
+
+            function setHint(text, state) {
+                hint.textContent = text;
+                hint.className = 'pim-price-hint' + (state ? ' is-' + state : '');
+            }
+
+            function refresh() {
+                const changed = input.value.trim() !== (input.dataset.saved || '');
+                saveBtn.hidden = !changed;
+                if (changed) {
+                    setHint(input.value.trim() === ''
+                        ? 'Will use product price (' + money(PRODUCT_PRICE) + ')'
+                        : 'Not saved yet', 'pending');
+                }
+            }
+
+            function save() {
+                const raw = input.value.trim();
+                if (raw !== '' && (isNaN(raw) || Number(raw) < 0)) {
+                    setHint('Enter a price of 0 or more', 'error');
+                    return;
+                }
+
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+                fetch(URLS.variantPrice(id), {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': CSRF_TOKEN
+                    },
+                    body: JSON.stringify({ price: raw === '' ? null : Number(raw) })
+                })
+                .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+                .then(function (result) {
+                    if (!result.ok || !result.data.success) {
+                        throw new Error(result.data?.message || 'Could not save the price.');
+                    }
+                    const saved = result.data.price === null ? '' : Number(result.data.price).toFixed(2);
+                    input.value = saved;
+                    input.dataset.saved = saved;
+                    saveBtn.hidden = true;
+                    markProductListChanged();
+                    setHint(saved === '' ? 'Same as product (' + money(PRODUCT_PRICE) + ')' : 'Saved ✓', saved === '' ? '' : 'saved');
+                    if (saved !== '') {
+                        setTimeout(function () {
+                            if (input.dataset.saved === saved) setHint('Own price', '');
+                        }, 1800);
+                    }
+                })
+                .catch(function (error) {
+                    setHint(error.message || 'Could not save the price.', 'error');
+                })
+                .finally(function () {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="bi bi-check-lg"></i>';
+                });
+            }
+
+            input.addEventListener('input', refresh);
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (!saveBtn.hidden) save();
+                }
+            });
+            saveBtn.addEventListener('click', save);
+        });
+    })();
+
     function markAsUpdated() {
         const btn = document.getElementById('markUpdatedBtn');
         const label = document.getElementById('markUpdatedText');
@@ -307,7 +425,7 @@
         btn.disabled = true;
         label.textContent = 'Saving...';
 
-        fetch('/store/management/products/' + ITEM_ID + '/mark-updated', {
+        fetch(URLS.markUpdated, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': CSRF_TOKEN,
@@ -319,6 +437,7 @@
         .then(function (data) {
             btn.disabled = false;
             if (data.success) {
+                markProductListChanged();
                 if (data.is_updated) {
                     btn.classList.add('is-done');
                     label.textContent = 'Marked as Updated';

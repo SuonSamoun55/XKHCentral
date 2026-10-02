@@ -181,13 +181,21 @@
                             // $item the same way ItemListController::getItems() does
                             // (batch-load ItemVariant::whereIn('item_id', ...) and
                             // ->setRelation('variants', ...)). See note below.
-                            $itemVariants = collect($item->variants ?? [])->map(fn ($v) => [
-                                'id'      => $v->id,
-                                'group'   => $v->variant_group ?? 'Options',
-                                'label'   => $v->description ?? $v->code,
-                                'image'   => $v->image_url ?: ($item->image_url ?: asset('images/no-image.png')),
-                                'blocked' => (bool) ($v->sales_blocked ?? false),
-                            ])->values();
+                            $itemVariants = collect($item->variants ?? [])->map(function ($v) use ($item, $discountPercent) {
+                                // Each variant's own price (with the product's discount applied)
+                                $regular = $item->unitPriceFor($v);
+                                $sale = round(max(0, $regular * (1 - ($discountPercent / 100))), 2);
+
+                                return [
+                                    'id'        => $v->id,
+                                    'group'     => $v->variant_group ?? 'Options',
+                                    'label'     => $v->description ?? $v->code,
+                                    'image'     => $v->image_url ?: ($item->image_url ?: asset('images/no-image.png')),
+                                    'blocked'   => (bool) ($v->sales_blocked ?? false),
+                                    'price'     => number_format($sale, 2, '.', ''),
+                                    'old_price' => $regular > $sale ? number_format($regular, 2, '.', '') : '',
+                                ];
+                            })->values();
                         @endphp
 
                         <div class="product-card product-item"
@@ -557,6 +565,18 @@ document.addEventListener("DOMContentLoaded", () => {
         return groups;
     }
 
+    // Show a price (and struck-through old price) in the popup — the
+    // picked variant's own price, or the product's when none is given.
+    function setVariantModalPrice(price, oldPrice) {
+        els.variantModalPrice.textContent = `$${price}`;
+        if (oldPrice && parseFloat(oldPrice) > parseFloat(price)) {
+            els.variantModalOldPrice.textContent = `$${oldPrice}`;
+            els.variantModalOldPrice.style.display = "";
+        } else {
+            els.variantModalOldPrice.style.display = "none";
+        }
+    }
+
     function renderVariantModal(card) {
         const data = getCardData(card);
         activeVariantQty = 1;
@@ -567,17 +587,9 @@ document.addEventListener("DOMContentLoaded", () => {
         els.variantModalImage.src = data.image;
         els.variantModalImage.alt = data.displayName;
         els.variantModalTitle.textContent = data.displayName;
-        els.variantModalPrice.textContent = `$${data.price}`;
         els.variantModalQty.textContent = "1";
         els.variantModalViewDetail.href = data.detailUrl;
-
-        const oldPriceAttr = card.dataset.oldPrice;
-        if (oldPriceAttr && parseFloat(oldPriceAttr) > parseFloat(data.price)) {
-            els.variantModalOldPrice.textContent = `$${oldPriceAttr}`;
-            els.variantModalOldPrice.style.display = "";
-        } else {
-            els.variantModalOldPrice.style.display = "none";
-        }
+        setVariantModalPrice(data.price, card.dataset.oldPrice);
 
         els.variantModalOptions.innerHTML = "";
         els.variantModalOptions.style.display = "block";
@@ -591,6 +603,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const firstAvailable = groupList.find(v => !v.blocked) || groupList[0];
                 activeVariantSelections[groupName] = firstAvailable.id;
                 if (!firstGroupImage && firstAvailable.image) firstGroupImage = firstAvailable.image;
+                if (firstAvailable.price) setVariantModalPrice(firstAvailable.price, firstAvailable.old_price);
 
                 const label = document.createElement("div");
                 label.className = "variant-modal-label";
@@ -615,6 +628,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         if (btn.disabled) return;
                         activeVariantSelections[groupName] = v.id;
                         if (v.image) els.variantModalImage.src = v.image;
+                        if (v.price) setVariantModalPrice(v.price, v.old_price);
                         optionsRow.querySelectorAll(".variant-btn").forEach(b => b.classList.remove("active"));
                         btn.classList.add("active");
                     });

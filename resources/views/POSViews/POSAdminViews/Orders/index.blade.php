@@ -108,7 +108,8 @@
                                     <th style="width:36px;"><input type="checkbox" id="selectAllOrders"></th>
                                     <th>Customer</th>
                                     @if (($tab ?? 'new') === 'approved')
-                                        <th>Date</th>
+                                        <th>Order Date</th>
+                                        <th>Approved Date</th>
                                         <th>Approved By</th>
                                         <th>Role</th>
                                         <th>Status</th>
@@ -159,6 +160,16 @@
                                                     at
                                                     {{ \Carbon\Carbon::parse($order->checked_out_at ?? $order->created_at)->format('h:i A') }}
                                                 </span>
+                                            </td>
+
+                                            <td>
+                                                @php $approvedAt = $order->approved_at ?? $orderAction?->created_at; @endphp
+                                                @if ($approvedAt)
+                                                    <div class="date-text">{{ \Carbon\Carbon::parse($approvedAt)->format('m/d/y') }}</div>
+                                                    <span class="date-subtext">at {{ \Carbon\Carbon::parse($approvedAt)->format('h:i A') }}</span>
+                                                @else
+                                                    <span class="date-subtext">&mdash;</span>
+                                                @endif
                                             </td>
 
                                             <td>
@@ -291,6 +302,15 @@
                                 &bull;
                                 {{ \Carbon\Carbon::parse($order->checked_out_at ?? $order->created_at)->format('g:i A') }}
                             </div>
+
+                            @if (($tab ?? 'new') === 'approved' && $order->approved_at)
+                                <div class="mobile-order-date">
+                                    <i class="bi bi-check2-circle"></i>
+                                    Approved {{ \Carbon\Carbon::parse($order->approved_at)->format('F j, Y') }}
+                                    &bull;
+                                    {{ \Carbon\Carbon::parse($order->approved_at)->format('g:i A') }}
+                                </div>
+                            @endif
 
                             <div class="mobile-order-divider"></div>
 

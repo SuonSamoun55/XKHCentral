@@ -470,6 +470,22 @@
                 });
 
                 if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    // Over the stock left: tell the customer and snap back
+                    // to the most they can have.
+                    if (res.status === 422 && data.message) {
+                        alert(data.message);
+                        const allowed = Number(data.max_qty) > 0 ? Number(data.max_qty) : Number(data.qty) || 1;
+                        row.querySelector('.qty-val').value = allowed;
+                        row.dataset.qty = allowed;
+                        pendingQtyByItem.set(id, allowed);
+                        updateRowPrice(row);
+                        if (allowed !== qty) {
+                            syncingItems.delete(id);
+                            return syncQty(id, row);
+                        }
+                        return;
+                    }
                     throw new Error('Update failed');
                 }
 

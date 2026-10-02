@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSAdminViews/ReportSettings/index.css') }}">
 @endpush
 
-@section('title', 'Report Settings')
+@section('title', 'Document Display')
 
 @section('content')
 <div class="pagelist-page">
@@ -25,7 +25,7 @@
         @endif
     </div>
 
-    <h1>Report Settings</h1>
+    <h1>Document Display</h1>
 
         <form method="POST" action="{{ route('report-settings.update') }}" class="rs-form" enctype="multipart/form-data">
             @csrf
@@ -139,7 +139,7 @@
             </div>
 
             <div class="action-row">
-                <button type="submit" class="btn-main"><i class="bi bi-check-lg"></i> Save Report Settings</button>
+                <button type="submit" class="btn-main"><i class="bi bi-check-lg"></i> Save Document Display</button>
             </div>
         </form>
 

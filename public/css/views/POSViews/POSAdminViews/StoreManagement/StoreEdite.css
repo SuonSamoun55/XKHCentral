@@ -360,6 +360,12 @@
     gap: 16px;
 }
 
+.pim-variant-card {
+    /* Grid items default to min-width:auto, so the price input's intrinsic
+       width pushed cards past the screen edge on phones. */
+    min-width: 0;
+}
+
 .pim-variant-footer {
     display: flex;
     justify-content: center;
@@ -388,7 +394,7 @@
     color: var(--slate-soft);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
     .content-wrapper {
         border-radius: 0px;
         padding: 0px;
@@ -418,10 +424,6 @@
         align-items: stretch;
     }
 
-    .pim-variant-grid {
-        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-        gap: 12px;
-    }
 
     .pim-crumb {
         margin: 10px 0px;
@@ -429,10 +431,6 @@
 }
 
 @media (max-width: 380px) {
-    .pim-variant-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
     .pim-mark-btn {
         margin-left: 0;
         width: 100%;
@@ -441,5 +439,125 @@
     .pim-crumb {
         flex-direction: column;
         align-items: stretch;
+    }
+}
+
+/* ---------- Variant price (under each variant photo) ---------- */
+.pim-price {
+    margin-top: 8px;
+}
+
+.pim-price-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #667085;
+    margin-bottom: 4px;
+}
+
+.pim-price-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 4px 0 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.pim-price-field:focus-within {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px var(--teal-tint);
+}
+
+.pim-price-currency {
+    font-size: 13px;
+    color: #667085;
+}
+
+.pim-price-input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    padding: 7px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    background: transparent;
+}
+
+/* Placeholder = the product price the variant falls back to */
+.pim-price-input::placeholder {
+    font-weight: 400;
+    color: #98A2B3;
+}
+
+.pim-price-save {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: 6px;
+    padding: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--teal-deep);
+    cursor: pointer;
+}
+
+.pim-price-save[hidden] {
+    display: none;
+}
+
+.pim-price-save:disabled {
+    opacity: .7;
+    cursor: wait;
+}
+
+.pim-price-hint {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #98A2B3;
+    min-height: 14px;
+}
+
+.pim-price-hint.is-pending {
+    color: #B54708;
+}
+
+.pim-price-hint.is-saved {
+    color: #067647;
+}
+
+.pim-price-hint.is-error {
+    color: #D92D20;
+}
+
+/* Phone: two variant cards per row that always fit the screen, plus price
+   block sizing. Kept after the base .pim-price-* rules so these win. */
+@media (max-width: 640px) {
+    .pim-variant-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .pim-price-field {
+        padding-left: 8px;
+    }
+
+    .pim-price-input {
+        font-size: 13px;
+        width: 100%;
+    }
+
+    .pim-price-hint {
+        font-size: 11px;
+        overflow-wrap: anywhere;
     }
 }

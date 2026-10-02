@@ -3,6 +3,7 @@
 
 @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('/css/shared/toast.css') }}">
     <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSUserViews/Notifications/notification.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSUserViews/Notifications/notification.css')) }}" />
     <style>
         .tab-icon-active {
@@ -236,6 +237,10 @@
                             <div class="notification-side-meta">
                                 <span class="row-date">{{ $notification->created_at->format('H:i') }}</span>
                                 <span class="row-day">{{ $notification->created_at->format('m/d/Y') }}</span>
+                                <button type="button" class="mobile-delete-btn" title="Delete" aria-label="Delete notification"
+                                    onclick="event.stopPropagation(); deleteNotificationById({{ $notification->id }})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </div>
                         </div>
                     @empty
@@ -352,6 +357,10 @@
                             <div class="notification-side-meta">
                                 <span class="row-date">{{ $notification->created_at->format('H:i') }}</span>
                                 <span class="row-day">{{ $notification->created_at->format('m/d/Y') }}</span>
+                                <button type="button" class="mobile-delete-btn" title="Delete" aria-label="Delete notification"
+                                    onclick="event.stopPropagation(); deleteNotificationById({{ $notification->id }})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </div>
                         </div>
                     @empty
@@ -466,6 +475,21 @@
         @include('Layout.POSUser.footer')
     </div>
 
+    {{-- Delete confirmation popup (reuses the sidebar's logout-confirm styles) --}}
+    <div class="logout-confirm-overlay" id="notifDeleteOverlay">
+        <div class="logout-confirm-box">
+            <div class="logout-confirm-icon"><i class="bi bi-trash"></i></div>
+            <h3 class="logout-confirm-title" id="notifDeleteTitle">Delete notification?</h3>
+            <p class="logout-confirm-text">This action is permanent and cannot be undone.</p>
+            <div class="logout-confirm-actions">
+                <button type="button" class="logout-confirm-btn cancel" id="notifDeleteCancel">Cancel</button>
+                <button type="button" class="logout-confirm-btn confirm" id="notifDeleteOk">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+
+    @include('partials.app-toast')
+
 @endsection
 
 @push('scripts')
@@ -556,18 +580,45 @@
                 document.querySelectorAll(`.notification-select[value="${id}"]`).forEach(input => {
                     input.closest('.table-row, .notification-card')?.remove();
                 });
+                // Mobile cards carry no checkbox, only data-id.
+                document.querySelectorAll(`.notification-card[data-id="${id}"]`).forEach(card => card.remove());
             });
             updateDeleteSelectedVisibility();
         }
 
+        const notifDeleteOverlay = document.getElementById('notifDeleteOverlay');
+        let pendingDeleteIds = [];
+
+        function closeDeleteConfirm() {
+            notifDeleteOverlay.classList.remove('show');
+            pendingDeleteIds = [];
+        }
+
+        document.getElementById('notifDeleteCancel').addEventListener('click', closeDeleteConfirm);
+        notifDeleteOverlay.addEventListener('click', e => { if (e.target === notifDeleteOverlay) closeDeleteConfirm(); });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && notifDeleteOverlay.classList.contains('show')) closeDeleteConfirm();
+        });
+        document.getElementById('notifDeleteOk').addEventListener('click', function() {
+            const ids = pendingDeleteIds;
+            closeDeleteConfirm();
+            performDelete(ids);
+        });
+
         function deleteNotifications(ids) {
             if (!ids.length) {
-                alert('Please select at least one message.');
+                showAppToast('error', 'Nothing selected', 'Please select at least one message.');
                 return;
             }
 
-            if (!confirm('Delete selected message(s)?')) return;
+            pendingDeleteIds = ids;
+            document.getElementById('notifDeleteTitle').textContent = ids.length > 1
+                ? `Delete ${ids.length} notifications?`
+                : 'Delete notification?';
+            notifDeleteOverlay.classList.add('show');
+        }
 
+        function performDelete(ids) {
             fetch('{{ route('user.notifications.deleteSelected') }}', {
                 method: 'DELETE',
                 headers: {
@@ -580,8 +631,11 @@
                 .then(response => {
                     if (!response.ok) throw new Error('Delete failed.');
                     removeNotificationRows(ids);
+                    showAppToast('success', 'Deleted', ids.length > 1
+                        ? `${ids.length} notifications deleted successfully.`
+                        : 'Notification deleted successfully.');
                 })
-                .catch(error => alert(error.message || 'Delete failed.'));
+                .catch(error => showAppToast('error', 'Error', error.message || 'Delete failed.'));
         }
 
         function deleteSelectedNotifications() {

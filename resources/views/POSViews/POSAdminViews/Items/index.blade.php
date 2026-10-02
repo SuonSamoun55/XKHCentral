@@ -1,15 +1,14 @@
 @extends('Layout.POSAdmin.app')
-@section('title', 'B2B Order')
+@section('title', 'Web Shop')
 
 @push('styles')
-    {{-- ?v= = file modified time, so browsers never keep serving an old copy of this CSS --}}
     <link rel="stylesheet"
         href="{{ asset('css/views/POSViews/POSAdminViews/Items/index.css') }}?v={{ @filemtime(public_path('css/views/POSViews/POSAdminViews/Items/index.css')) }}">
 @endpush
 
 @section('content')
     <main class="main-wrap">
-        <h1 class="page-title">B2B Order</h1>
+        <h1 class="page-title">Web Shop</h1>
 
         <div class="toolbar-row">
             <div class="toolbar-left">
@@ -94,13 +93,14 @@
             <div class="toolbar-right">
 
                 <div class="sync-actions-row">
-                    <button id="pickAllBtn" type="button" class="sync-btn sync-btn-alt" onclick="togglePickAll()"
-                        title="Select all items whose image should be replaced on the next sync">
+                    <button id="pickAllBtn" type="button" class="sync-btn sync-btn-alt has-tip" onclick="togglePickAll()"
+                        data-tip="Tick every shown item, so its picture is replaced with the latest one on the next sync.">
                         <i class="bi bi-check2-square" id="pickAllIcon"></i>
                         <span id="pickAllLabel">Select all</span>
                     </button>
 
-                    <button id="syncBtn" type="button" class="sync-btn sync-btn-alt" onclick="updateItems()">
+                    <button id="syncBtn" type="button" class="sync-btn sync-btn-alt has-tip tip-right" onclick="updateItems()"
+                        data-tip="Get the latest items, prices, stock, discounts and variants. Only ticked items get a new picture.">
                         <i class="bi bi-arrow-repeat"></i>
                         Sync Products
                     </button>
@@ -118,7 +118,7 @@
 
                     <a href="{{ route('store.management.index') }}" class="sync-btn sync-btn-alt">
                         <i class="bi bi-shop"></i>
-                        Manage Store
+                        Manage Products
                     </a>
                 </div>
             </div>
@@ -146,6 +146,9 @@
 
     <script>
         const PRODUCTS = @json($items ?? []);
+        // Built from route names so the page follows any URL change in routes/web.php.
+        const ITEM_DETAIL_URL = id => @json(route('pos.items.detail', '__ID__')).replace('__ID__', id);
+        const SYNC_URL = @json(route('pos.items.sync'));
         let currentView = 'grid';
         let filteredProducts = [...PRODUCTS];
 
@@ -444,7 +447,9 @@
 
             const icon = document.getElementById('pickAllIcon');
             if (icon) icon.className = allPicked ? 'bi bi-x-square' : 'bi bi-check2-square';
-            btn.title = `${allPicked ? 'Clear the selection' : 'Select all shown items'} — ${replaceImageSelection.size} selected for image replacement`;
+            btn.dataset.tip = allPicked
+                ? `Untick all items. ${replaceImageSelection.size} item(s) are ticked for a new picture now.`
+                : 'Tick every shown item, so its picture is replaced with the latest one on the next sync.';
 
             // Sync Products always works (a sync with nothing checked just
             // pulls data without replacing any images) — checking items only
@@ -518,7 +523,7 @@
 
                             ${stockText(inventory)}
 
-                            <a href="/pos/items/${item.id}" class="view-more-btn">
+                            <a href="${ITEM_DETAIL_URL(item.id)}" class="view-more-btn">
                                 View More
                             </a>
                         </div>
@@ -534,7 +539,7 @@
                     const pricing = getPricing(item);
 
                     return `
-                    <a href="/pos/items/${item.id}" class="list-card">
+                    <a href="${ITEM_DETAIL_URL(item.id)}" class="list-card">
                         ${pickBox(item)}
                         <div class="list-image">
                             <img
@@ -602,7 +607,7 @@
                 text: 'Are you sure you want to allow image replacement for all shown items?',
                 note: {
                     className: 'sync-confirm-note replace',
-                    html: `<i class="bi bi-image"></i> On the next sync, <strong>${count}</strong> item(s) will have their image <strong>replaced</strong> with the latest picture from Business Central.`,
+                    html: `<i class="bi bi-image"></i> On the next sync, <strong>${count}</strong> item(s) will have their image <strong>replaced</strong> with the latest picture.`,
                 },
                 okLabel: 'Yes, select all',
             });
@@ -666,7 +671,7 @@
             try {
                 // The server fetches from Business Central itself and saves the
                 // result — the browser no longer talks to BC directly.
-                const res = await fetch('/items/sync-from-al', {
+                const res = await fetch(SYNC_URL, {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',

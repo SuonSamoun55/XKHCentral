@@ -167,6 +167,12 @@
 
         .sidebar-top {
         min-height: 0;
+        flex: 1 1 auto;
+        /* When the menu and an open Settings list don't both fit, this part
+           scrolls instead of sliding under Settings / Log out. */
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-width: thin;
         }
 
         .brand {
@@ -326,6 +332,7 @@
 }
         .sidebar-bottom {
         padding-top: 10px;
+        flex-shrink: 0;
         }
 
 
@@ -387,7 +394,7 @@
         text-decoration: none;
         color: #222;
         font-size: 12px;
-        padding: 12px 18px 12px 38px;
+        padding: 7px 18px 7px 38px;
         transition: 0.2s ease;
         }
 
@@ -744,3 +751,40 @@
     color: rgba(255, 255, 255, 0.75);
 }
 
+
+/* =======================================================================
+   SMALL TABLETS (641px – 768px, e.g. iPad Mini 768, Galaxy Tab ~753)
+   Every user page keeps the desktop sidebar here instead of the phone
+   header + bottom bar. Several page stylesheets hide the sidebar at
+   767/768px, so these rules use !important to win across all pages.
+======================================================================= */
+@media (min-width: 641px) and (max-width: 768px) {
+    body .app-shell {
+        flex-direction: row !important;
+        height: 100vh !important;
+        overflow: hidden !important;
+    }
+
+    body .app-shell > .sidebar-wrap {
+        display: block !important;
+    }
+
+    /* Some pages also hide the sidebar itself (not just its wrapper) at
+       767/768px — Order History, Order Detail, Notifications, Chat, Cart —
+       which left an empty grey column. Show its contents too. */
+    body .app-shell > .sidebar-wrap > .sidebar {
+        display: flex !important;
+    }
+
+    body .content-area {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    /* Phone-only chrome: the sidebar covers navigation on tablets */
+    body .mobile,
+    body .mobile-bottom-nav,
+    body .mobile-topbar {
+        display: none !important;
+    }
+}

@@ -1,83 +1,11 @@
 @extends('Layout.POSAdmin.app')
-@section('title', 'Store Management')
+@section('title', 'Product Management')
 @section('content')
     <div class="store-page-wrap">
         <div class="store-panel">
             <div id="storeFlashBox" class="alert-container"></div>
             <div id="storeAjaxContainer">
                 @include('POSViews.POSAdminViews.StoreManagement.content')
-            </div>
-        </div>
-    </div>
-    <div class="modal fade export-columns-modal" id="exportStoreModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content export-columns-content">
-                <div class="modal-body">
-                    <h5 class="export-columns-title">Choose columns to export</h5>
-                    <p class="export-columns-sub" id="exportStoreSub">Downloads whatever is currently visible — respects
-                        your search and status filters.</p>
-
-                    <label class="export-column-row export-column-all">
-                        <input type="checkbox" id="exportStoreSelectAll" checked>
-                        <span>Select all</span>
-                    </label>
-
-                    <div class="export-column-list" id="exportProductColumns">
-                        <label class="export-column-row">
-                            <input type="checkbox" class="export-column-checkbox" value="series" checked>
-                            <span>Number Series</span>
-                        </label>
-                        <label class="export-column-row">
-                            <input type="checkbox" class="export-column-checkbox" value="number" checked>
-                            <span>Item No.</span>
-                        </label>
-                        <label class="export-column-row">
-                            <input type="checkbox" class="export-column-checkbox" value="name" checked>
-                            <span>Product</span>
-                        </label>
-                        <label class="export-column-row">
-                            <input type="checkbox" class="export-column-checkbox" value="category" checked>
-                            <span>Category</span>
-                        </label>
-                        <label class="export-column-row">
-                            <input type="checkbox" class="export-column-checkbox" value="price" checked>
-                            <span>Price</span>
-                        </label>
-                        <label class="export-column-row">
-                            <input type="checkbox" class="export-column-checkbox" value="stock" checked>
-                            <span>Stock</span>
-                        </label>
-                        <label class="export-column-row">
-                            <input type="checkbox" class="export-column-checkbox" value="location" checked>
-                            <span>Location</span>
-                        </label>
-                        <label class="export-column-row">
-                            <input type="checkbox" class="export-column-checkbox" value="visible" checked>
-                            <span>Visible</span>
-                        </label>
-                    </div>
-
-                    <div class="export-column-list d-none" id="exportCategoryColumns">
-                        <label class="export-column-row">
-                            <input type="checkbox" class="export-column-checkbox" value="category" checked>
-                            <span>Category</span>
-                        </label>
-                        <label class="export-column-row">
-                            <input type="checkbox" class="export-column-checkbox" value="total_items" checked>
-                            <span>Total Items</span>
-                        </label>
-                        <label class="export-column-row">
-                            <input type="checkbox" class="export-column-checkbox" value="visible" checked>
-                            <span>Visible</span>
-                        </label>
-                    </div>
-                </div>
-                <div class="modal-footer export-columns-footer">
-                    <button type="button" class="export-cancel-btn" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="export-confirm-btn" id="exportStoreConfirmBtn">
-                        <i class="bi bi-download"></i> Download
-                    </button>
-                </div>
             </div>
         </div>
     </div>
@@ -954,145 +882,28 @@
                 updateSelectedCounts();
             }
         });
-        /* ── Export to CSV/Excel — modal lives outside #storeAjaxContainer, so
-           it's bound once here rather than re-bound on every AJAX refresh. */
-        function getVisibleExportColumnList() {
-            return activeTab === 'products' ?
-                document.getElementById('exportProductColumns') :
-                document.getElementById('exportCategoryColumns');
-        }
-
-        function syncExportSelectAll() {
-            const list = getVisibleExportColumnList();
-            const selectAll = document.getElementById('exportStoreSelectAll');
-            if (!list || !selectAll) return;
-            const boxes = Array.from(list.querySelectorAll('.export-column-checkbox'));
-            selectAll.checked = boxes.every(cb => cb.checked);
-            selectAll.indeterminate = !selectAll.checked && boxes.some(cb => cb.checked);
-        }
-
-        document.getElementById('exportStoreModal')?.addEventListener('show.bs.modal', function() {
-            const isProducts = activeTab === 'products';
-            document.getElementById('exportProductColumns')?.classList.toggle('d-none', !isProducts);
-            document.getElementById('exportCategoryColumns')?.classList.toggle('d-none', isProducts);
-            syncExportSelectAll();
-        });
-
-        document.getElementById('exportStoreSelectAll')?.addEventListener('change', function() {
-            getVisibleExportColumnList()?.querySelectorAll('.export-column-checkbox').forEach(cb => cb
-                .checked = this.checked);
-        });
-
-        document.addEventListener('change', function(e) {
-            if (e.target.classList && e.target.classList.contains('export-column-checkbox')) {
-                syncExportSelectAll();
-            }
-        });
-
-        function csvCell(value) {
-            const s = String(value ?? '');
-            return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-        }
-
-        const EXPORT_PRODUCT_LABELS = {
-            number: 'Item No.',
-            name: 'Product',
-            series: 'Number Series',
-            category: 'Category',
-            price: 'Price',
-            stock: 'Stock',
-            location: 'Location',
-            visible: 'Visible',
-        };
-
-        const EXPORT_CATEGORY_LABELS = {
-            category: 'Category',
-            total_items: 'Total Items',
-            visible: 'Visible',
-        };
-
-        // Reads straight from the DOM's data-* attributes and rendered cell
-        // text — rows stay in the DOM (just display:none) across pagination,
-        // so this naturally covers every filtered row, not only the current page.
-        function collectExportRows() {
-            const keyword = (document.getElementById('storeSearchInput')?.value || '').toLowerCase().trim();
-            const status = document.getElementById('storeStatusFilter')?.value || 'all';
-
-            if (activeTab === 'products') {
-                const stock = document.getElementById('storeStockFilter')?.value || 'all';
-                const setup = document.getElementById('storeSetupFilter')?.value || 'all';
-
-                return Array.from(document.querySelectorAll('.product-row')).filter(row => {
-                    const text = [row.dataset.name, row.dataset.number, row.dataset.category].join(' ');
-                    const matchKeyword = !keyword || text.includes(keyword);
-                    const matchStatus = status === 'all' || row.dataset.status === status;
-                    const matchStock = stock === 'all' || row.dataset.stock === stock;
-                    const matchSetup = setup === 'all' || row.dataset.setup === setup;
-                    return matchKeyword && matchStatus && matchStock && matchSetup;
-                }).map(row => {
-                    const cellText = (selector) => row.querySelector(selector)?.textContent.trim() || '-';
-                    return {
-                        number: row.querySelector('.product-sub-line')?.textContent.trim() || '-',
-                        name: row.querySelector('.product-main-name')?.textContent.trim() || '-',
-                        series: row.dataset.series || '-',
-                        category: cellText('.col-category'),
-                        price: cellText('.col-price'),
-                        stock: cellText('.col-stock'),
-                        location: row.dataset.location || '-',
-                        visible: row.dataset.status === 'active' ? 'Active' : row.dataset.status ===
-                            'inactive' ? 'Inactive' : 'Not Reviewed',
-                    };
-                });
-            }
-
-            return Array.from(document.querySelectorAll('.category-card')).filter(card => {
-                const matchKeyword = !keyword || (card.dataset.name || '').includes(keyword);
-                const matchStatus = status === 'all' || card.dataset.status === status;
-                return matchKeyword && matchStatus;
-            }).map(card => ({
-                category: card.querySelector('.category-title-text')?.textContent.trim() || '-',
-                total_items: (card.querySelector('.category-sub-text')?.textContent || '').replace(
-                    /[^\d]/g, '') || '0',
-                visible: card.dataset.status === 'active' ? 'Active' : 'Inactive',
-            }));
-        }
-
-        document.getElementById('exportStoreConfirmBtn')?.addEventListener('click', function() {
-            const list = getVisibleExportColumnList();
-            const selected = Array.from(list?.querySelectorAll('.export-column-checkbox') || [])
-                .filter(cb => cb.checked)
-                .map(cb => cb.value);
-
-            if (!selected.length) {
-                alert('Please select at least one column to export.');
-                return;
-            }
-
-            const labels = activeTab === 'products' ? EXPORT_PRODUCT_LABELS : EXPORT_CATEGORY_LABELS;
-            const rows = collectExportRows();
-            const header = selected.map(col => csvCell(labels[col]));
-            const body = rows.map(row => selected.map(col => csvCell(row[col])));
-            const csv = '﻿' + [header, ...body].map(r => r.join(',')).join('\r\n');
-
-            const blob = new Blob([csv], {
-                type: 'text/csv;charset=utf-8;'
-            });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${activeTab}-${new Date().toISOString().slice(0, 10)}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
-
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('exportStoreModal')).hide();
-        });
-
         fixAjaxTabLayout();
         bindClientFiltering();
         bindMenuToggle();
         updateSelectedCounts();
         switchTab(activeTab);
+
+        // Coming Back from a product page, the browser shows this page exactly
+        // as it was left. If that product was changed there (new image,
+        // price, ...), only the data is fetched again; filters, page and
+        // scroll stay the same.
+        window.addEventListener('pageshow', function(event) {
+            let changed = false;
+            try {
+                changed = sessionStorage.getItem('productListChanged') === '1';
+                sessionStorage.removeItem('productListChanged');
+            } catch (_) {}
+
+            if (event.persisted && changed) {
+                fetchPage({
+                    preserveState: true
+                });
+            }
+        });
     });
 </script>

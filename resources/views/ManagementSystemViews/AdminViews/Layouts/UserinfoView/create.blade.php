@@ -7,7 +7,7 @@
                 <div id="methodBox"></div>
 
                 <div class="modal-header custom-modal-header">
-                    <h5 id="modalTitle" class="modal-title">Connect BC Customer</h5>
+                    <h5 id="modalTitle" class="modal-title">Set Up Login</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
@@ -83,7 +83,7 @@
 
                 <div class="modal-footer custom-modal-footer">
                     <button type="button" class="btn modal-cancel-btn" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn modal-save-btn" id="submitBtn">Connect</button>
+                    <button type="submit" class="btn modal-save-btn" id="submitBtn">Save &amp; Make Ready</button>
                 </div>
             </form>
 
@@ -172,12 +172,12 @@ document.addEventListener('click', function (e) {
         password.removeAttribute('required');
         passwordConfirmation.removeAttribute('required');
     } else {
-        modalTitle.textContent = 'Connect BC Customer';
-        submitBtn.textContent = 'Connect';
+        modalTitle.textContent = 'Set Up Login';
+        submitBtn.textContent = 'Save & Make Ready';
         userForm.action = '/users/store/' + id;
         roleInput.value = '';
 
-        // Connect mode: always needs a password, no toggle involved.
+        // Set-up mode (Not Ready / Blocked): always needs a password, no toggle involved.
         editPasswordToggleGroup.style.display = 'none';
         passwordFieldLabel.textContent = 'Password:';
         passwordFieldsGroup.style.display = 'block';

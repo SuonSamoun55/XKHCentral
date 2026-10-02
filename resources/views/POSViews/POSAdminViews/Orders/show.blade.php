@@ -34,9 +34,8 @@
 
                 $resolveOrderImg = fn($path) => $path ? (str_starts_with($path, 'http') ? $path : asset($path)) : null;
 
-                $orderLineImage = fn($line) => $resolveOrderImg(optional($line->itemVariant)->image_url) ??
-                    ($resolveOrderImg(optional($line->item)->custom_image_url) ??
-                        ($resolveOrderImg(optional($line->item)->image_url) ?? asset('images/no-image.png')));
+                // The picture saved when the order was placed (see OrderItem::snapshotImage).
+                $orderLineImage = fn($line) => $resolveOrderImg($line->image_path) ?? asset('images/no-image.png');
             @endphp
 
             <div class="info-cards-row">

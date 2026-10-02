@@ -687,7 +687,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     height: 18px;
 }
 
-@media (min-width: 769px) {
+@media (min-width: 641px) {
     .mobile-bottom-nav {
         display: none !important;
     }
@@ -708,7 +708,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     }
 }
 
-@media screen and (max-width: 767px) {
+/* Phone design — phones only; tablets (641px+) keep the sidebar */
+@media screen and (max-width: 640px) {
 
     .sidebar,
     .sidebar-wrap,
@@ -1254,7 +1255,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     }
 }
 
-@media (min-width: 769px) {
+@media (min-width: 641px) {
     body {
         background: #ffffff;
     }
@@ -1733,7 +1734,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
 
     .desktop-notification-toolbar,
     .desktop-notification-pager {
@@ -1920,5 +1921,42 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
     .mobile-bottom-nav {
         display: flex;
+    }
+
+    .mobile-delete-btn {
+        align-items: center;
+        background: #fef2f2;
+        border: none;
+        border-radius: 8px;
+        color: #ef4444;
+        display: inline-flex;
+        font-size: 14px;
+        height: 28px;
+        justify-content: center;
+        margin-top: 4px;
+        padding: 0;
+        width: 28px;
+    }
+
+    .mobile-delete-btn:active {
+        background: #fee2e2;
+    }
+}
+
+/* Narrow tablets (641px – 900px): the middle column repeated the title
+   that's already on the left ("Order Confirmed - …") and ran out of room
+   after "Order Confi". Show only the message there. */
+@media (min-width: 641px) and (max-width: 900px) {
+    .row-center .desktop-subject,
+    .row-center .desktop-separator {
+        display: none;
+    }
+
+    /* Desktop columns are 235px | message | 160px, which left the message
+       ~100px here. Tighter side columns give it about twice the room. */
+    .table-row {
+        grid-template-columns: 190px minmax(0, 1fr) 84px;
+        gap: 10px;
+        padding: 10px 12px;
     }
 }

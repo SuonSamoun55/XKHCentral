@@ -24,34 +24,34 @@
         <div class="onboarding-slide slide-1 active">
             <div class="onboarding-card">
                 <div class="onboarding-badge"></div>
-                <img src="{{ asset('images/pos/xtricate.png') }}" alt="xtricate logo" class="onboarding-logo">
-                <img src="{{ asset('images/pos/image 11.png') }}" alt="Welcome to Xtricate" class="onboarding-image1">
+                <img src="{{ $loginSetting->mediaUrl('welcome_logo') }}" alt="xtricate logo" class="onboarding-logo">
+                <img src="{{ $loginSetting->mediaUrl('welcome_image') }}" alt="Welcome to Xtricate" class="onboarding-image1">
             </div>
         </div>
         <div class="onboarding-slide slide-2">
             <div class="onboarding-card">
-                <img src="{{ asset('images/pos/login.png') }}" alt="login" class="onboarding-image">
+                <img src="{{ $loginSetting->mediaUrl('slide_1_image') }}" alt="login" class="onboarding-image">
                 <img src="{{ asset('images/pos/Fader.png') }}" alt="fader" class="onboarding-fader">
-                <h5>Tons of furniture collections</h5>
-                <p>Experience the future of POS with our innovative system.</p>
+                <h5>{{ $loginSetting->text('slide_1_title') }}</h5>
+                <p>{{ $loginSetting->text('slide_1_text') }}</p>
                 <button type="button" class="btn onboarding-btn next-btn">Next</button>
             </div>
         </div>
         <div class="onboarding-slide slide-3">
             <div class="onboarding-card">
-                <img src="{{ asset('images/pos/image3.png') }}" alt="login" class="onboarding-image">
+                <img src="{{ $loginSetting->mediaUrl('slide_2_image') }}" alt="login" class="onboarding-image">
                 <img src="{{ asset('images/pos/Fader.png') }}" alt="fader" class="onboarding-fader">
-                <h5>Fast Deliveries to your doorstep</h5>
-                <p>Intuitive interface designed for seamless user experience.</p>
+                <h5>{{ $loginSetting->text('slide_2_title') }}</h5>
+                <p>{{ $loginSetting->text('slide_2_text') }}</p>
                 <button type="button" class="btn onboarding-btn next-btn">Next</button>
             </div>
         </div>
         <div class="onboarding-slide slide-4">
             <div class="onboarding-card">
-                <img src="{{ asset('images/pos/image4.png') }}" alt="login" class="onboarding-image">
+                <img src="{{ $loginSetting->mediaUrl('slide_3_image') }}" alt="login" class="onboarding-image">
                 <img src="{{ asset('images/pos/Fader.png') }}" alt="fader" class="onboarding-fader">
-                <h5>Bring aesthetics to your home</h5>
-                <p>Your data is protected with top-tier security measures.</p>
+                <h5>{{ $loginSetting->text('slide_3_title') }}</h5>
+                <p>{{ $loginSetting->text('slide_3_text') }}</p>
                 <button type="button" class="btn onboarding-btn next-btn" id="finalNextBtn">Next</button>
             </div>
         </div>
@@ -62,7 +62,7 @@
             {{-- 1. Left Side (Top on Mobile) --}}
             <div class="login-left">
                 <video autoplay muted loop playsinline>
-                    <source src="{{ asset('/videos/grokvideo.mp4') }}" type="video/mp4">
+                    <source src="{{ $loginSetting->mediaUrl('desktop_video') }}">
                 </video>
             </div>
 
@@ -72,7 +72,7 @@
 
             <div class="login-right">
                 <div class="login-form-box">
-                    <img src="{{ asset('images/pos/image 14.png') }}" alt="second login image"
+                    <img src="{{ $loginSetting->mediaUrl('mobile_image') }}" alt="second login image"
                         class="login-form-image">
                     <h1 class="login-title">Account Login</h1>
                     <p class="login-subtitle">

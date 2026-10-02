@@ -588,3 +588,190 @@
         display: none;
     }
 }
+
+/* ---------- Test company tag + clone dialog ---------- */
+.companies-page .test-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .03em;
+    color: #0EA8B2;
+    background: #E3F6F7;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+.pw-confirm-box.clone-box {
+    max-width: 420px;
+    text-align: left;
+}
+
+.clone-box .pw-confirm-title,
+.clone-box > .pw-confirm-text {
+    text-align: center;
+}
+
+.clone-box .pw-confirm-icon.clone-icon {
+    background: #E7F5F4;
+    color: #12958E;
+}
+
+.clone-field {
+    display: block;
+    margin-bottom: 14px;
+}
+
+.clone-field span {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1C2622;
+    margin-bottom: 6px;
+}
+
+.clone-field input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #E7ECEA;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+}
+
+.clone-field input:focus {
+    border-color: #12958E;
+}
+
+.clone-note {
+    font-size: 12px;
+    color: #6B7570;
+    background: #F4F6F5;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin: 4px 0 18px;
+}
+
+.clone-box .pw-confirm-btn.clone-submit {
+    background: #12958E;
+}
+
+.clone-box .pw-confirm-btn.clone-submit:hover {
+    background: #0D7A74;
+}
+
+.clone-box .pw-confirm-btn.clone-submit:disabled {
+    opacity: .7;
+    cursor: wait;
+}
+
+.clone-box {
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+}
+
+.clone-group-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1C2622;
+    margin-bottom: 6px;
+}
+
+/* What the clone copies / skips */
+.clone-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.clone-summary-col {
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #E7F5F4;
+}
+
+.clone-summary-col.is-skipped {
+    background: #F4F6F5;
+}
+
+.clone-summary-col ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.clone-summary-col li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    color: #1C2622;
+}
+
+.clone-summary-col li i {
+    color: #12958E;
+}
+
+.clone-summary-col.is-skipped li {
+    color: #6B7570;
+}
+
+.clone-summary-col.is-skipped li i {
+    color: #9AA39D;
+}
+
+
+/* The phone rules above hide every <p> on this page (meant for the header
+   subtitle); the clone dialog's short notes should stay visible. */
+@media (max-width: 768px) {
+    .clone-box p {
+        display: block;
+    }
+}
+
+/* ---------- tablets (641px – 1024px, and upright tablets up to 1366px
+   such as the iPad Pro 13") ----------
+   The desktop single row squeezed the company name into a narrow column
+   where it overlapped "Users / Status". Two lines instead:
+     1) logo + name, tags and email / ID across the full width
+     2) Users / Status on the left, buttons on the right
+   Landscape desktops are not affected. */
+@media (min-width: 641px) and (max-width: 1024px),
+       (min-width: 1025px) and (max-width: 1366px) and (orientation: portrait) {
+    .companies-page .company-card {
+        flex-wrap: wrap;
+        row-gap: 12px;
+    }
+
+    .companies-page .info {
+        flex: 1 1 calc(100% - 70px);
+        min-width: 0;
+    }
+
+    .companies-page .info-sub {
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .companies-page .meta {
+        order: 2;
+        flex: 1 1 auto;
+        justify-content: flex-start;
+        gap: 24px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border-soft);
+        /* stretch the divider across the gap to the buttons */
+        margin-right: -14px;
+        padding-right: 14px;
+    }
+
+    .companies-page .actions {
+        order: 3;
+        flex: 0 0 auto;
+        padding-top: 12px;
+        border-top: 1px solid var(--border-soft);
+    }
+}

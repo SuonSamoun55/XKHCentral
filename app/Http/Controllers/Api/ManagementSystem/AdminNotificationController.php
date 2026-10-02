@@ -174,12 +174,20 @@ class AdminNotificationController extends Controller
         $stockReserved = 0;
         $stockLevel = null;
         $stockOrder = null;
+        $stockLocation = null;
 
         if ($notification->type === 'out_of_stock' && $notification->item_id) {
             $stockItem = Item::find($notification->item_id);
 
             if ($stockItem) {
-                $stockCurrent = (float) $stockItem->inventory;
+                // Stock at the store's selling location — the same figure the
+                // alert message was built from (Item::sellable_inventory) —
+                // not the item's total across every location.
+                $stockCurrent = (float) $stockItem->sellable_inventory;
+                $setting = \App\Models\POS\StoreSetting::forCompany($stockItem->company_id);
+                $stockLocation = $setting->selling_location_code
+                    ? trim($setting->selling_location_code . ($setting->selling_location_name ? ' - ' . $setting->selling_location_name : ''))
+                    : null;
 
                 $stockReserved = (int) \App\Models\POS\OrderItem::query()
                     ->from('order_items as oi')
@@ -213,6 +221,7 @@ class AdminNotificationController extends Controller
                 'orderItemsTotal',
                 'orderVat',
                 'stockItem',
+                'stockLocation',
                 'stockCurrent',
                 'stockReserved',
                 'stockLevel',

@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Http\Controllers\Api\POS\Admin\Profile;
+
 use App\Http\Controllers\Controller;
 use App\Models\POS\Order;
 use Illuminate\Http\Request;

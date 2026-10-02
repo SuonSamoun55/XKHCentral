@@ -614,7 +614,7 @@
         margin-bottom: 12px;
     }
 
-    @media (max-width: 768px){
+    @media (max-width: 640px){
         .header-title{
             display: none;
         }
@@ -633,7 +633,7 @@
     }
 
 
-    @media (max-width: 768px){
+    @media (max-width: 640px){
         .info-cards-row{
             grid-template-columns: 1fr;
         }

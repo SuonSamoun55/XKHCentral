@@ -1365,3 +1365,46 @@
             text-align:center;
         }
     }
+
+    /* Phones: the calendar button next to search already opens this date
+       picker, so the date box in the filter row was a duplicate. It's
+       hidden visually but stays rendered, because showPicker() (used by
+       that button) doesn't work on a display:none input. */
+    @media (max-width: 768px){
+        .filter-controls-row .date-filter{
+            position:absolute;
+            width:1px;
+            height:1px;
+            min-width:0;
+            padding:0;
+            border:0;
+            overflow:hidden;
+            opacity:0;
+            pointer-events:none;
+        }
+
+        /* Status + Category dropdowns: one row, splitting the full width */
+        .filter-controls-row.show{
+            flex-wrap:nowrap;
+        }
+
+        .filter-controls-row.show .filter-select{
+            flex:1 1 0;
+            min-width:0;
+            max-width:none;
+            width:100%;
+            height:38px;
+            font-size:13px;
+            text-overflow:ellipsis;
+        }
+
+        /* Shows a date filter is on, since the date box itself is hidden */
+        .mobile-date-toggle-btn.has-date{
+            background:var(--primary);
+        }
+
+        .mobile-date-toggle-btn.has-date .mobile-toggle-icon{
+            filter:brightness(0) invert(1);
+        }
+    }
+

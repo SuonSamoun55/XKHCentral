@@ -170,13 +170,21 @@
                                 // (e.g. $v->attribute_name, $v->type, $v->option_group, etc).
                                 // If your variants table has no such column yet, you'll need to
                                 // add one — otherwise every variant falls into a single "Options" row.
-                                $itemVariants = collect($item->variants ?? [])->map(fn ($v) => [
-                                    'id'      => $v->id,
-                                    'group'   => $v->variant_group ?? 'Options', // <-- adjust field name
-                                    'label'   => $v->description ?? $v->code,
-                                    'image'   => $v->image_url ?: ($item->image_url ?: asset('images/no-image.png')),
-                                    'blocked' => (bool) ($v->sales_blocked ?? false),
-                                ])->values();
+                                $itemVariants = collect($item->variants ?? [])->map(function ($v) use ($item, $discountPercent) {
+                                    // Each variant's own price (with the product's discount applied)
+                                    $regular = $item->unitPriceFor($v);
+                                    $sale = round(max(0, $regular * (1 - ($discountPercent / 100))), 2);
+
+                                    return [
+                                        'id'        => $v->id,
+                                        'group'     => $v->variant_group ?? 'Options', // <-- adjust field name
+                                        'label'     => $v->description ?? $v->code,
+                                        'image'     => $v->image_url ?: ($item->image_url ?: asset('images/no-image.png')),
+                                        'blocked'   => (bool) ($v->sales_blocked ?? false),
+                                        'price'     => number_format($sale, 2, '.', ''),
+                                        'old_price' => $regular > $sale ? number_format($regular, 2, '.', '') : '',
+                                    ];
+                                })->values();
                             @endphp
 
                             <div class="pl-product-card pl-product-item"
@@ -726,6 +734,18 @@
             return groups;
         }
 
+        // Show a price (and struck-through old price) in the popup — the
+        // picked variant's own price, or the product's when none is given.
+        function setVariantModalPrice(price, oldPrice) {
+            els.variantModalPrice.textContent = `$${price}`;
+            if (oldPrice && parseFloat(oldPrice) > parseFloat(price)) {
+                els.variantModalOldPrice.textContent = `$${oldPrice}`;
+                els.variantModalOldPrice.style.display = "";
+            } else {
+                els.variantModalOldPrice.style.display = "none";
+            }
+        }
+
         function renderVariantModal(card) {
             const data = getCardData(card);
             const cardQtyEl = card.querySelector(".pl-qty");
@@ -737,17 +757,9 @@
             els.variantModalImage.src = data.image;
             els.variantModalImage.alt = data.displayName;
             els.variantModalTitle.textContent = data.displayName;
-            els.variantModalPrice.textContent = `$${data.price}`;
             els.variantModalQty.value = activeVariantQty;
             els.variantModalViewDetail.href = card.dataset.detailUrl || "#";
-
-            const oldPriceAttr = card.dataset.oldPrice;
-            if (oldPriceAttr && parseFloat(oldPriceAttr) > parseFloat(data.price)) {
-                els.variantModalOldPrice.textContent = `$${oldPriceAttr}`;
-                els.variantModalOldPrice.style.display = "";
-            } else {
-                els.variantModalOldPrice.style.display = "none";
-            }
+            setVariantModalPrice(data.price, card.dataset.oldPrice);
 
             els.variantModalOptions.innerHTML = "";
             // reset to block layout so groups stack vertically (Size above Beef Type),
@@ -763,6 +775,7 @@
                     const firstAvailable = groupList.find(v => !v.blocked) || groupList[0];
                     activeVariantSelections[groupName] = firstAvailable.id;
                     if (!firstGroupImage && firstAvailable.image) firstGroupImage = firstAvailable.image;
+                    if (firstAvailable.price) setVariantModalPrice(firstAvailable.price, firstAvailable.old_price);
 
                     const label = document.createElement("div");
                     label.className = "pl-variant-modal-label";
@@ -787,6 +800,7 @@
                             if (btn.disabled) return;
                             activeVariantSelections[groupName] = v.id;
                             if (v.image) els.variantModalImage.src = v.image;
+                            if (v.price) setVariantModalPrice(v.price, v.old_price);
                             optionsRow.querySelectorAll(".pl-variant-btn").forEach(b => b.classList.remove("active"));
                             btn.classList.add("active");
                         });

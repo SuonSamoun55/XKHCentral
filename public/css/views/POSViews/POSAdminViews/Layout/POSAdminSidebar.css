@@ -169,6 +169,12 @@
 
         .sidebar-top {
         min-height: 0;
+        flex: 1 1 auto;
+        /* When the menu and an open Settings list don't both fit, this part
+           scrolls instead of sliding under Settings / Log out. */
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-width: thin;
         }
 
         .brand {
@@ -384,6 +390,7 @@
 
         .sidebar-bottom {
         padding-top: 10px;
+        flex-shrink: 0;
         }
 
 
@@ -445,7 +452,7 @@
         text-decoration: none;
         color: #222;
         font-size: 12px;
-        padding: 12px 18px 12px 38px;
+        padding: 7px 18px 7px 38px;
         transition: 0.2s ease;
         }
 
@@ -532,7 +539,7 @@
 
 
 }
-@media (max-width: 768px) {
+@media (max-width: 640px) {
 
 .content-area{
     width:100%;
@@ -770,7 +777,7 @@
     display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
     .sidebar-wrap {
         display: none;
     }
@@ -1024,5 +1031,43 @@
     .mobile-menu-backdrop.show {
         opacity: 1;
         pointer-events: auto;
+    }
+}
+
+/* ── Small tablets (641–768px): the sidebar stays (phone top/bottom bars are
+   only ≤640), while the list pages keep their compact card layout. Put that
+   content back on a white rounded panel that scrolls on its own, and show
+   the page titles again since there is no mobile top bar to show them. ── */
+@media (min-width: 641px) and (max-width: 768px) {
+    body .main-wrapper.app-shell {
+        padding: 0 !important;
+    }
+
+    body .main-wrapper.app-shell > .content-wrapper {
+        height: 100vh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        background: #fff;
+        border-radius: 12px;
+        padding: 16px !important;
+    }
+
+    body .content-wrapper .store-header-row {
+        display: flex !important;
+    }
+
+    body .content-wrapper .store-page-title,
+    body .content-wrapper .approval-title,
+    body .content-wrapper .pagelist-page h1,
+    body .content-wrapper .page-title {
+        display: block !important;
+        font-size: 22px !important;
+        font-weight: 700;
+        color: #3BACB4;
+        margin: 0 0 12px !important;
+    }
+
+    body .content-wrapper .mobile-page-header {
+        display: none !important;
     }
 }

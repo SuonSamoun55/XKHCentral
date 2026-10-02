@@ -17,6 +17,7 @@ class ItemVariant extends Model
         'sales_blocked',
         'purchasing_blocked',
         'is_visible',
+        'price',
         'image_url',
     ];
 
@@ -25,7 +26,14 @@ class ItemVariant extends Model
         'sales_blocked' => 'boolean',
         'purchasing_blocked' => 'boolean',
         'is_visible' => 'boolean',
+        'price' => 'decimal:2',
     ];
+
+    /** True when this variant has its own price instead of the product's. */
+    public function hasOwnPrice(): bool
+    {
+        return $this->price !== null;
+    }
 
     public function item()
     {

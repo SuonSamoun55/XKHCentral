@@ -60,17 +60,23 @@ class ManagementSidebarComposer
             'userAvatar' => $this->resolveUserAvatar($authUser),
             'canAccessPage' => $canAccessPage,
             'navItems' => $navItems,
-            'mobileMenuItems' => $this->flattenForMobile($navItems),
-            'bottomNavItems' => array_values(array_filter(
-                $navItems,
-                fn($item) => $item['name'] !== 'Approval Entries'
+            // Dashboard, Web Shop and Number Series already sit in the mobile
+            // footer, so the hamburger menu skips them.
+            'mobileMenuItems' => array_values(array_filter(
+                $this->flattenForMobile($navItems),
+                fn ($item) => !in_array($item['name'], ['Dashboard', 'Web Shop', 'Number Series'], true)
             )),
+            'bottomNavItems' => $this->bottomNavItems($navItems),
             'onCompanySelectScreen' => $onCompanySelectScreen,
             'activeNavItem' => $activeNavItem,
             'activeNavIcon' => $activeNavItem['icon_active'] ?? ($activeNavItem['icon'] ?? null),
             'backUrl' => trim((string) $factory->yieldContent('backUrl', '')),
             'hideMobileChrome' => trim((string) $factory->yieldContent('hideMobileNav', '')) !== '',
             'companyName' => $company ? ($company->display_name ?? $company->name) : null,
+            'companyIsTest' => (bool) $company?->is_test,
+            // Same checks as the route's permission:login_settings + no-company-scope.
+            'canAccessLoginSetup' => $authUser && $canAccessPage('login_settings')
+                && (!$authUser->company_id || $authUser->canManageStaffAcrossCompanies()),
         ]);
     }
 
@@ -139,7 +145,7 @@ class ManagementSidebarComposer
             if (!empty($item['children'])) {
                 $item['children'] = array_values(array_filter(
                     $item['children'],
-                    fn($child) => $canAccessPage($child['permission'])
+                    fn ($child) => $canAccessPage($child['permission'])
                 ));
 
                 return empty($item['children']) ? null : $item;
@@ -148,6 +154,40 @@ class ManagementSidebarComposer
             return $canAccessPage($item['permission']) ? $item : null;
         }, $navItems)));
     }
+    /**
+     * Mobile footer: the single-page top-level items plus Number Series
+     * pulled out of the Management group. The Users & Access and Management
+     * groups stay out — their pages live in the hamburger menu.
+     */
+    private function bottomNavItems(array $navItems): array
+    {
+        $items = [];
+        $numberSeries = null;
+
+        foreach ($navItems as $item) {
+            if (!empty($item['children'])) {
+                foreach ($item['children'] as $child) {
+                    if ($child['name'] === 'Number Series') {
+                        $numberSeries = $child;
+                    }
+                }
+                continue;
+            }
+
+            if ($item['name'] === 'Approval Entries') {
+                continue;
+            }
+
+            $items[] = $item;
+        }
+
+        if ($numberSeries) {
+            $items[] = $numberSeries;
+        }
+
+        return $items;
+    }
+
     private function flattenForMobile(array $items): array
     {
         $flat = [];
@@ -175,9 +215,9 @@ class ManagementSidebarComposer
                 'permission' => 'dashboard',
             ],
             [
-                'name' => 'B2B Orders',
-                'url' => '/pos/interface',
-                'match' => ['pos/interface', 'pos/*'],
+                'name' => 'Web Shop',
+                'url' => '/web-shop',
+                'match' => ['web-shop', 'web-shop/*'],
                 'icon' => '/images/management/managemetn_POS.png',
                 'icon_active' => '/images/management/management_POS_active.png',
                 'permission' => 'pos',
@@ -240,12 +280,8 @@ class ManagementSidebarComposer
                         'name' => 'Number Series',
                         'url' => '/number-series',
                         'match' => ['number-series', 'number-series/*'],
-                        // Only the active-state PNG exists on disk
-                        // (public/images/management/NumberSeries.png is
-                        // missing) — falls back to the bootstrap icon when
-                        // this item isn't the active page.
-                        'icon' => '/images/management/AumberSeries.png',
-                        'icon_active' => '/images/management/NumberSeriesActive.png',
+                        'icon' => '/images/management/number_sarie.png',
+                        'icon_active' => '/images/management/number_sarie_active.png',
                         'permission' => 'number_series',
                     ],
                 ],

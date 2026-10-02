@@ -3,7 +3,7 @@
 @section('title', 'POS Dashboard')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSUserViews/Daskboard/dashboard.css') }}" />
+    <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSUserViews/Daskboard/dashboard.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSUserViews/Daskboard/dashboard.css')) }}" />
 @endpush
 
 @section('content')
@@ -129,10 +129,7 @@
                                     $name = $oi->item?->display_name ?? ($oi->item_name ?? 'Item');
                                     return [
                                         'name' => $name,
-                                        'image' =>
-                                            $resolveThumbSrc(optional($oi->itemVariant)->image_url) ??
-                                            ($resolveThumbSrc(optional($oi->item)->custom_image_url) ??
-                                                $resolveThumbSrc(optional($oi->item)->image_url)),
+                                        'image' => $resolveThumbSrc($oi->image_path),
                                         'initial' => mb_strtoupper(mb_substr(trim($name), 0, 1)) ?: '?',
                                     ];
                                 })
@@ -229,7 +226,9 @@
                                         {{ \Illuminate\Support\Str::limit($notification->title ?? 'Notification', 30) }}
                                     </div>
                                     <div class="notif-sub">
-                                        {{ \Illuminate\Support\Str::limit($notification->message ?? 'Get discount codes from sharing with friends.', 45) }}
+                                        {{-- Strips rich-text tags (bold/italic) and turns [Icon]/[Voice message]/[Image]
+                                             placeholders into icons; line breaks are flattened to keep one line. --}}
+                                        {!! str_replace(['<br />', "\n"], ' ', \App\Models\ManagementSystem\Notification::cleanMessagePreview($notification->message ?? 'Get discount codes from sharing with friends.', 45)) !!}
                                     </div>
                                 </div>
                             </div>

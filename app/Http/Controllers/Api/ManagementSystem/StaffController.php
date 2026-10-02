@@ -43,7 +43,7 @@ class StaffController extends Controller
         // Cross-company staff managers need roles from every company (since
         // they can assign staff into any of them); everyone else only ever
         // sees roles belonging to their own company.
-        $roles = Role::when(!$crossCompany && $actingUser->company_id, fn($q) => $q->where('company_id', $actingUser->company_id))
+        $roles = Role::when(!$crossCompany && $actingUser->company_id, fn ($q) => $q->where('company_id', $actingUser->company_id))
             ->orderBy('name')
             ->get();
         $companies = Company::orderBy('name')->get();

@@ -1062,3 +1062,112 @@ body {
         background-color: white;
     }
 }
+
+/* =======================================================================
+   TABLETS (641px – 1024px, e.g. iPad / Galaxy Tab)
+   - minmax(0, 1fr) lets columns shrink, so long order numbers no longer
+     push the cards past the right edge of the screen.
+   - Rows size to their content (no half-height Report card with an empty
+     gap under it), and a right gutter matches the space on the left.
+======================================================================= */
+@media (min-width: 641px) and (max-width: 1024px) {
+    .area-hero {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        padding-right: 12px;
+    }
+
+    .dashboard {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-rows: auto;
+        align-items: stretch;
+        padding-right: 12px;
+        padding-bottom: 12px;
+    }
+
+    .dashboard > * {
+        min-width: 0;
+    }
+
+    .report-card {
+        max-height: none;
+        height: 100%;
+    }
+}
+
+/* Narrow tablets held upright (~800px): one card per row, full width, in
+   the same order as on phones, so nothing is squeezed. */
+@media (min-width: 641px) and (max-width: 900px) and (orientation: portrait) {
+    .dashboard {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "actions"
+            "report"
+            "recent"
+            "notif"
+            "topitem";
+    }
+
+    .report-card {
+        height: auto;
+        min-height: 320px;
+    }
+}
+
+/* Small tablets (641px – 768px, e.g. Galaxy Tab upright at ~753px):
+   the layout hides the sidebar at 768px and below, but this dashboard only
+   switches to its phone header at 640px — so these tablets had no menu at
+   all. Keep the desktop sidebar here instead. */
+@media (min-width: 641px) and (max-width: 768px) {
+    /* aside.css is loaded again after this file (from the sidebar partial),
+       so these selectors are one step more specific to win over it. */
+    body .app-shell {
+        flex-direction: row;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .app-shell > .sidebar-wrap {
+        display: block;
+    }
+
+    body .content-area {
+        min-width: 0;
+        padding: 0;
+    }
+}
+
+/* Tablets: the hero picture has a fixed 355px width, which is wider than
+   each of the three cards here — it got cropped and lost its padding.
+   Scale it to the card instead, keeping its shape. */
+@media (min-width: 641px) and (max-width: 1024px) {
+    .hero-card-image {
+        flex: 1 0 auto;
+        padding: 8px;
+        gap: 4px;
+    }
+
+    /* flex-shrink: 0 — otherwise the column squeezes its height and the
+       aspect ratio shrinks the width with it */
+    .hero-card-image img {
+        flex-shrink: 0;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 355 / 179;
+        padding: 0;
+    }
+
+    /* Same space on both sides, so the label sits in the true centre
+       and the › arrow doesn't pull it off to one side */
+    .hero-card-info {
+        padding: 0 16px;
+    }
+
+    .hero-chevron {
+        right: 2px;
+    }
+
+    .hero-card-label,
+    .hero-card-value {
+        font-size: 15px;
+    }
+}

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ManagementSystem\Notification;
 use App\Models\ManagementSystem\OrderAction;
 use App\Models\POS\Order;
+use App\Models\POS\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -101,9 +102,10 @@ class HistoryController extends Controller
             'is_numeric'
         );
 
-        $deleted = $this->orders()
-            ->whereIn('id', $ids)
-            ->delete();
+        $orderIds = $this->orders()->whereIn('id', $ids)->pluck('id')->all();
+
+        OrderItem::deleteSnapshotImages($orderIds);
+        $deleted = Order::whereIn('id', $orderIds)->delete();
 
         return back()->with(
             'success',
@@ -139,8 +141,11 @@ class HistoryController extends Controller
 
         return $this->orders()
             ->with($relations)
-            ->when($search, fn ($query) =>
-                $query->where(fn ($query) =>
+            ->when(
+                $search,
+                fn ($query) =>
+                $query->where(
+                    fn ($query) =>
                     $query->where('order_no', 'like', "%{$search}%")
                         ->orWhere('status', 'like', "%{$search}%")
                         ->orWhere('customer_no', 'like', "%{$search}%")

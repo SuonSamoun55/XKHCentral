@@ -34,7 +34,7 @@ class WebUserController extends Controller
 
         $customers = $this->buildCustomerCollection($companyId);
 
-        $roles = Role::when($companyId, fn($q) => $q->where('company_id', $companyId))
+        $roles = Role::when($companyId, fn ($q) => $q->where('company_id', $companyId))
             ->orderBy('name')
             ->get();
         return view(
@@ -74,6 +74,7 @@ class WebUserController extends Controller
                 'phone' => $displayPhone,
                 'role' => $displayRole,
                 'connect_status' => $customer->connect_status ?? 'not_connected',
+                'account_status' => $customer->account_status ?? 'not_ready',
                 'activity_status' => $activityStatus,
                 'is_online' => (bool) ($customer->is_online ?? false),
                 'last_seen_at' => $lastSeenText,
@@ -92,7 +93,7 @@ class WebUserController extends Controller
         ]);
     }
 
- 
+
 
     protected function getCustomerImageDisplay($customer, $linkedUser = null)
     {
@@ -121,16 +122,16 @@ class WebUserController extends Controller
                 'id', 'company_id', 'bc_customer_no', 'bc_id', 'display_name',
                 'name', 'email', 'phone_number', 'profile_image_url', 'local_customer_no',
             ])
-            ->when($companyId, fn($q) => $q->where('company_id', $companyId))
+            ->when($companyId, fn ($q) => $q->where('company_id', $companyId))
             ->orderBy('id', 'desc')
             ->get();
         $userMap = User::select([
                 'id', 'company_id', 'bc_customer_no', 'status', 'role', 'name',
                 'email', 'phone', 'profile_image', 'profile_image_url', 'last_seen_at',
             ])
-            ->when($companyId, fn($q) => $q->where('company_id', $companyId))
+            ->when($companyId, fn ($q) => $q->where('company_id', $companyId))
             ->get()
-            ->keyBy(fn($u) => $u->company_id . '|' . $u->bc_customer_no);
+            ->keyBy(fn ($u) => $u->company_id . '|' . $u->bc_customer_no);
 
         foreach ($customers as $customer) {
             $linkedUser = $userMap->get($customer->company_id . '|' . $customer->bc_customer_no);
@@ -138,6 +139,14 @@ class WebUserController extends Controller
             $bcName = $customer->display_name ?? $customer->name ?? '-';
             $bcEmail = $customer->email ?? '-';
             $bcPhone = $customer->phone_number ?? '-';
+
+            // Login status shown on the Customers page:
+            //   ready     - has an active portal login (password set up here)
+            //   not_ready - no portal login yet
+            //   blocked   - had a login that was blocked (destroy()/deleteSelected())
+            $customer->account_status = !$linkedUser
+                ? 'not_ready'
+                : ($linkedUser->status ? 'ready' : 'blocked');
 
             if ($linkedUser && $linkedUser->status) {
                 $customer->connect_status = 'connected';
@@ -175,7 +184,7 @@ class WebUserController extends Controller
 
                 $customer->last_seen_at = null;
                 $customer->is_online = false;
-                $customer->offline_duration = 'Not connected';
+                $customer->offline_duration = $customer->account_status === 'blocked' ? 'Blocked' : 'Not ready';
             }
 
             $customer->name = $bcName;
@@ -191,7 +200,7 @@ class WebUserController extends Controller
 
         if (!$companyId) {
             return redirect()->route('users.index')
-                ->with('error', 'Select a company first (Companies list) before syncing BC customers.');
+                ->with('error', 'Select a company first (Companies list) before syncing customers.');
         }
 
         if (!NumberSeries::isConfigured($companyId, 'CUSTOMER')) {
@@ -203,7 +212,7 @@ class WebUserController extends Controller
 
         if (!$token) {
             return redirect()->route('users.index')
-                ->with('error', 'Business Central authentication failed.');
+                ->with('error', 'Could not connect for syncing. Please check the API setup.');
         }
 
         $url = $this->bcEndpoint(
@@ -213,7 +222,7 @@ class WebUserController extends Controller
 
         if (!$url) {
             return redirect()->route('users.index')
-                ->with('error', 'Unable to build Business Central URL.');
+                ->with('error', 'The sync URL could not be built. Please check the API setup.');
         }
 
         try {
@@ -228,12 +237,12 @@ class WebUserController extends Controller
                     'url' => $url,
                 ]);
                 return redirect()->route('users.index')
-                    ->with('error', 'Failed to fetch BC customers.');
+                    ->with('error', 'Failed to get the latest customers.');
             }
             $data = $response->json('value', []);
             foreach ($data as $row) {
-                
-                
+
+
                 $fields = $this->extractBcCustomerFields($row);
 
                 if (!$this->toBool($fields['allow_api'], true)) {
@@ -276,14 +285,14 @@ class WebUserController extends Controller
             }
 
             return redirect()->route('users.index')
-                ->with('success', 'BC customers synced successfully.');
+                ->with('success', 'Customers synced successfully.');
         } catch (\Throwable $e) {
             Log::error('BC sync exception', [
                 'message' => $e->getMessage(),
             ]);
 
             return redirect()->route('users.index')
-                ->with('error', 'Error while syncing BC customers: ' . $e->getMessage());
+                ->with('error', 'Error while syncing customers: ' . $e->getMessage());
         }
     }
 
@@ -360,7 +369,7 @@ class WebUserController extends Controller
         if (empty($customer->bc_id)) {
             return response()->json([
                 'success' => false,
-                'message' => 'This customer has no Business Central ID to sync from.',
+                'message' => 'This customer cannot be synced yet.',
             ], 422);
         }
 
@@ -377,7 +386,7 @@ class WebUserController extends Controller
         if (!$token) {
             return response()->json([
                 'success' => false,
-                'message' => 'Business Central authentication failed.',
+                'message' => 'Could not connect for syncing. Please check the API setup.',
             ], 502);
         }
 
@@ -398,7 +407,7 @@ class WebUserController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to fetch this customer from Business Central.',
+                    'message' => 'Failed to get the latest details for this customer.',
                 ], 502);
             }
 
@@ -582,7 +591,7 @@ class WebUserController extends Controller
 
         if ($existingUser && $existingUser->status) {
             return redirect()->route('users.index')
-                ->with('error', 'This customer is already connected.');
+                ->with('error', 'This customer is already Ready (their login is set up).');
         }
         $uploadedImagePath = $existingUser?->profile_image;
         if ($request->hasFile('profile_image')) {
@@ -617,7 +626,7 @@ class WebUserController extends Controller
         }
 
         return redirect()->route('users.index')
-            ->with('success', 'User connected successfully.');
+            ->with('success', 'Customer login set up — status is now Ready.');
     }
 
     public function show($id)
@@ -740,7 +749,7 @@ class WebUserController extends Controller
         }
 
         return redirect()->route('users.index')
-            ->with('success', 'Customer disconnected successfully.');
+            ->with('success', 'Customer blocked successfully.');
     }
 
     public function deleteSelected(Request $request)
@@ -755,7 +764,7 @@ class WebUserController extends Controller
         $companyId = session('selected_company_id');
 
         $customers = BcCustomer::whereIn('id', $ids)
-            ->when($companyId, fn($q) => $q->where('company_id', $companyId))
+            ->when($companyId, fn ($q) => $q->where('company_id', $companyId))
             ->get();
 
         foreach ($customers as $customer) {
@@ -772,6 +781,6 @@ class WebUserController extends Controller
         }
 
         return redirect()->route('users.index')
-            ->with('success', 'Selected customers disconnected successfully.');
+            ->with('success', 'Selected customers blocked successfully.');
     }
 }

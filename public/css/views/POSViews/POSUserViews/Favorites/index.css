@@ -921,18 +921,23 @@ body.filter-sheet-open {
 }
 
 /* ==========================================================
-   TABLET  768–1024px
+   TABLET  641–1024px (sidebar beside the page)
+   Cards size to their content — the old fixed 300px height left a big
+   empty gap and squashed the Add to cart button.
    ========================================================== */
-@media (min-width: 768px) and (max-width: 1024px) {
+@media (min-width: 641px) and (max-width: 1024px) {
+    /* Same spacing as the Products page (item-list.css tablet rules):
+       cards line up with the title/search, no side padding, and the grid
+       fills the rest of the page instead of a fixed height. */
     .products-grid {
-        grid-template-columns: repeat(3, 1fr);
-        padding: 14px 14px 20px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        padding: 14px 0 12px;
         gap: 12px;
-        height: calc(100vh - 100px);
     }
 
     .product-card {
-        height: 300px;
+        height: auto;
+        min-height: 250px;
     }
 
     .product-img-box {
@@ -950,13 +955,14 @@ body.filter-sheet-open {
     }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 641px) {
     .mobile-bottom-nav {
         display: none !important;
     }
 }
 
-@media (max-width: 767px) {
+/* Phone design — phones only; tablets (641px+) keep the sidebar */
+@media (max-width: 640px) {
     html {
         height: 100%;
         overflow-y: hidden;
@@ -1686,5 +1692,12 @@ body.filter-sheet-open {
         width: 36px;
         height: 36px;
         font-size: 15px;
+    }
+}
+
+/* Tablet with the sidebar collapsed: the freed space fits a 4th card */
+@media (min-width: 641px) and (max-width: 1024px) {
+    .app-shell.collapsed .products-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }

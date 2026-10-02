@@ -123,7 +123,7 @@ class VatPostingSetupController extends Controller
 
         return preg_replace_callback(
             '/_x([0-9A-Fa-f]{4})_/',
-            fn($m) => mb_chr((int) hexdec($m[1])),
+            fn ($m) => mb_chr((int) hexdec($m[1])),
             $value
         );
     }

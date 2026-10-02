@@ -72,11 +72,4 @@ class UserProfileController extends Controller
             ->with('success', 'Password updated successfully.')
             ->with('new_password', $request->password);
     }
-
-    public function index_mobile()
-    {
-        $user = Auth::user(); // optional, ready for later use
-
-        return view('POSViews.POSUserViews.mobile.POSprofile_mobile', compact('user'));
-    }
 }

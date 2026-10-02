@@ -4,7 +4,7 @@
 @section('backUrl', route('discounts.index'))
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSAdminViews/Discounts/create.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/views/POSViews/POSAdminViews/Discounts/create.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSAdminViews/Discounts/create.css')) }}">
 @endpush
 
 @section('content')
@@ -171,7 +171,7 @@
             const startDateInput = document.getElementById('discount_start_date');
             const endDateInput = document.getElementById('discount_end_date');
 
-            const items = {!! $discountItemsJson !!};
+            const items = @json($discountItems);
 
             function toggleTarget() {
                 const type = discountType.value;

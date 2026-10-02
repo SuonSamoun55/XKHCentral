@@ -1925,7 +1925,7 @@
 
 /* The shared mobile top bar (hamburger/back + title + bell) already shows
    "Admin Notifications" below 768px, so this in-page heading is a duplicate. */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
     .page-title {
         display: none;
     }
@@ -1968,7 +1968,7 @@ body.admin-notifications-page .content-area {
     overflow: hidden;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
 
     body.admin-notifications-page,
     body.admin-notifications-page .main-wrapper,
@@ -2824,7 +2824,7 @@ body.admin-notifications-page .content-area {
     border-radius: 0;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 640px) {
     #sendModal .modal-dialog {
         max-width: calc(100% - 20px);
         margin: 10px auto;

@@ -90,10 +90,7 @@
                         <div class="order-card-img item-thumb-stack">
                             @foreach ($order->items->take(3) as $index => $oi)
                                 @php
-                                    $thumb = $resolveThumb(optional($oi->itemVariant)->image_url)
-                                        ?? $resolveThumb(optional($oi->item)->custom_image_url)
-                                        ?? $resolveThumb(optional($oi->item)->image_url)
-                                        ?? $resolveThumb(optional($oi->item)->image);
+                                    $thumb = $resolveThumb($oi->image_path);
                                 @endphp
                                 <div class="item-thumb" style="z-index: {{ 10 - $index }};">
                                     <img
@@ -193,10 +190,7 @@
                                     <div class="item-thumb-stack">
                                         @foreach ($orderItems as $index => $oi)
                                             @php
-                                                $thumb = $resolveThumb(optional($oi->itemVariant)->image_url)
-                                                    ?? $resolveThumb($oi->item->custom_image_url ?? null)
-                                                    ?? $resolveThumb($oi->item->image_url ?? null)
-                                                    ?? $resolveThumb($oi->item->image ?? null);
+                                                $thumb = $resolveThumb($oi->image_path);
                                             @endphp
                                             <div class="item-thumb" style="z-index: {{ 10 - $index }};">
                                                 <img

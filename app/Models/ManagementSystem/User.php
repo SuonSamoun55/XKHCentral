@@ -3,7 +3,6 @@
 namespace App\Models\ManagementSystem;
 
 use App\Models\BcCustomer;
-use App\Models\ManagementSystem\ChatMessage;
 use App\Models\Role;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,7 +14,9 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens;
+    use HasFactory;
+    use Notifiable;
     protected $fillable = [
         'name',
         'email',
@@ -42,7 +43,7 @@ class User extends Authenticatable
         'remember_token',
     ];
 
- 
+
     protected $appends = [
         'profile_image_display',
         'is_online',
@@ -96,6 +97,15 @@ class User extends Authenticatable
         return $this->roleRelation
             ? $this->roleRelation->permissions->contains('name', $permission)
             : false;
+    }
+
+    /**
+     * Whether a `permission:{$page}` route lets this user in — the same
+     * check as CheckPagePermission, so menus only show links that work.
+     */
+    public function canAccessPage(string $page): bool
+    {
+        return strtolower((string) $this->role) === 'admin' || $this->hasPermission($page);
     }
 
     /**

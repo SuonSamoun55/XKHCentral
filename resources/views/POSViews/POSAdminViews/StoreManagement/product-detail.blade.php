@@ -8,7 +8,7 @@
 @section('content')
 <div class="sm-detail-page">
     <div class="sm-crumb">
-        <a href="{{ route('store.management.index') }}" class="sm-back">
+        <a href="{{ route('store.management.index') }}" class="sm-back" data-history-back aria-label="Back">
             <i class="bi bi-chevron-left"></i>
         </a>
         <div>
@@ -183,9 +183,10 @@
     </div>
 
     <div class="sm-card">
+        @php($buyersOpen = request()->has('buyer_search') || request()->has('buyer_filter'))
         <div class="sm-head">
             <h2 class="sm-title" style="font-size:20px;">Buyer Tracking</h2>
-            <button type="button" id="toggleBuyerBtn" class="sm-btn sm-btn-primary">Show Buyers</button>
+            <button type="button" id="toggleBuyerBtn" class="sm-btn sm-btn-primary">{{ $buyersOpen ? 'Hide Buyers' : 'Show Buyers' }}</button>
         </div>
 
         <div class="sm-stats">
@@ -203,8 +204,8 @@
             </div>
         </div>
 
-        <div id="buyerPanel" class="d-none">
-            <form method="GET" action="{{ route('store.management.products.detail', $item->id) }}" class="sm-tools">
+        <div id="buyerPanel" class="{{ $buyersOpen ? '' : 'd-none' }}">
+            <form method="GET" action="{{ route('store.management.products.detail', $item->id) }}" class="sm-tools" id="buyerFilterForm">
                 <input
                     type="text"
                     name="buyer_search"
@@ -262,6 +263,14 @@ document.addEventListener('DOMContentLoaded', function () {
     btn.addEventListener('click', function () {
         const hidden = panel.classList.toggle('d-none');
         btn.textContent = hidden ? 'Show Buyers' : 'Hide Buyers';
+    });
+
+    // Filtering buyers replaces this page in the history instead of adding
+    // a new entry, so Back still goes straight to the product list.
+    document.getElementById('buyerFilterForm')?.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const query = new URLSearchParams(new FormData(this)).toString();
+        window.location.replace(this.action + '?' + query);
     });
 });
 

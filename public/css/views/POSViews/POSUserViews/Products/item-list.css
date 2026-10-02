@@ -561,7 +561,7 @@
        or a new row of cards is added, silently clipping the last row with
        no way to reach it (mobile already had to work around the same
        problem below, see "reset desktop height:0 trick"). */
-    @media (min-width: 768px) {
+    @media (min-width: 641px) {
         .pl-content-area {
 
 
@@ -1148,7 +1148,7 @@
     /* ==========================================================
     TABLET  768 – 1024px  →  3 columns
     ========================================================== */
-    @media (min-width: 768px) and (max-width: 1024px) {
+    @media (min-width: 641px) and (max-width: 1024px) {
         .pl-products-grid {
             grid-template-columns: repeat(3, 1fr);
             padding: 14px 0px 0px 0px;
@@ -1185,12 +1185,14 @@
 
     }
 
-    @media (min-width: 768px) {
+    @media (min-width: 641px) {
         .pl-mobile-bottom-nav {
             display: none !important;
         }
     }
-    @media (max-width: 767px) {
+    /* Phone design — phones only; tablets (641px+) keep the sidebar and
+       the full cards with Add to cart / View detail */
+    @media (max-width: 640px) {
 
         .aside-sidebar {
             display: none;
@@ -1968,3 +1970,17 @@
             display: block;
         }
     }
+
+/* Tablet with the sidebar collapsed: the freed space fits a 4th card
+   (same as Favorites) */
+@media (min-width: 641px) and (max-width: 1024px) {
+    .app-shell.collapsed .pl-products-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    /* The desktop 280px height cap squashed "Add to cart" into a thin
+       line on tablets — let the card grow to fit its buttons. */
+    .pl-product-card {
+        max-height: none;
+    }
+}

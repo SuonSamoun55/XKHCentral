@@ -24,7 +24,7 @@
     border-right: 1px solid #e5e7eb;
     display: flex;
     flex-direction: column;
-    padding: 0;
+    padding: 10px 10px;
 }
 .company-ticket-wrap{
     display: none;
@@ -33,7 +33,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 14px 10px;
+    padding: 0px 0px 10px 0px;
     border-bottom: 1px solid #f0f1f3;
 }
 
@@ -115,7 +115,7 @@
 .search-wrap {
     position: relative;
     display: block;
-    margin: 10px 14px 8px;
+    margin: 10px 0px;
 }
 
 .search-wrap i {
@@ -1538,5 +1538,42 @@
 @media (max-width: 768px) {
     .order-detail-header {
         padding-top: 20px;
+    }
+}
+
+/* ===== Phones: fit the chat to the *visible* screen =====
+   100vh on phones includes the browser's hidden address bar and never
+   shrinks for the keyboard, so the composer ended up below the screen and
+   the whole page scrolled along with the chat. --chat-app-height is set
+   from window.visualViewport by the page script (100dvh as the fallback). */
+@media (max-width: 768px) {
+    html,
+    body {
+        height: var(--chat-app-height, 100dvh);
+        overflow: hidden;
+        overscroll-behavior: none;
+    }
+
+    .chat-page,
+    .message-pane,
+    .chat-page.no-active-chat .conversation-pane {
+        height: var(--chat-app-height, 100dvh) !important;
+        min-height: 0 !important;
+    }
+
+    /* Only the message list scrolls, and it doesn't drag the page along */
+    .message-stream {
+        min-height: 0;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* iOS Safari auto-zooms the page when a focused field is under 16px,
+   leaving the chat cut off on the right with a gap above the keyboard. */
+@media (max-width: 768px) {
+    .composer-input,
+    .search-input {
+        font-size: 16px;
     }
 }

@@ -1,7 +1,7 @@
 @extends('Layout.Management.app')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('/css/views/Management/Company/company_list.css') }}">
+    <link rel="stylesheet" href="{{ asset('/css/views/Management/Company/company_list.css') }}?v={{ filemtime(public_path('css/views/Management/Company/company_list.css')) }}">
     <link rel="stylesheet" href="{{ asset('/css/views/Management/Password/adminchangepassword.css') }}">
 @endpush
 
@@ -93,6 +93,9 @@
                             @if ($isSelected)
                                 <span class="selected-tag">CURRENT</span>
                             @endif
+                            @if ($company->is_test)
+                                <span class="test-tag" title="Cloned from {{ optional($company->clonedFrom)->name ?? 'a deleted company' }}">TEST</span>
+                            @endif
                         </div>
                         <div class="info-sub">
                             {{ $company->email ?? '—' }}
@@ -148,6 +151,15 @@
                                     d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
                             </svg>
                         </a>
+                        <button type="button" class="icon-btn open-clone-dialog" title="Clone as test company"
+                            data-url="{{ route('companies.clone', $company->id) }}"
+                            data-label="{{ ucwords($company->display_name ?? $company->name) }}">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" />
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                            </svg>
+                        </button>
                         <button type="button" class="icon-btn danger open-delete-confirm" title="Delete"
                             data-url="{{ route('companies.destroy', $company->id) }}"
                             data-label="{{ ucwords($company->display_name ?? $company->name) }}">
@@ -183,6 +195,45 @@
         @csrf
         @method('DELETE')
     </form>
+
+    {{-- Clone as test company --}}
+    <div class="pw-confirm-overlay" id="cloneOverlay">
+        <form method="POST" class="pw-confirm-box clone-box" id="cloneForm">
+            @csrf
+            <div class="pw-confirm-icon clone-icon"><i class="bi bi-copy"></i></div>
+            <h3 class="pw-confirm-title" id="cloneTitle">Clone as test company</h3>
+            <p class="pw-confirm-text">A new company marked <b>TEST</b>. The original is not changed.</p>
+
+            <label class="clone-field">
+                <span>Name</span>
+                <input type="text" name="name" id="cloneName" required maxlength="255">
+            </label>
+
+            <div class="clone-summary">
+                <div class="clone-summary-col">
+                    <span class="clone-group-label">Copied</span>
+                    <ul>
+                        <li><i class="bi bi-check-lg"></i> Company setup</li>
+                        <li><i class="bi bi-check-lg"></i> Roles</li>
+                        <li><i class="bi bi-check-lg"></i> Items &amp; stock</li>
+                    </ul>
+                </div>
+                <div class="clone-summary-col is-skipped">
+                    <span class="clone-group-label">Not copied</span>
+                    <ul>
+                        <li><i class="bi bi-x-lg"></i> Customers</li>
+                        <li><i class="bi bi-x-lg"></i> Staff</li>
+                        <li><i class="bi bi-x-lg"></i> Orders &amp; carts</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="pw-confirm-actions">
+                <button type="button" class="pw-confirm-btn cancel" id="cloneCancel">Cancel</button>
+                <button type="submit" class="pw-confirm-btn confirm clone-submit" id="cloneSubmit">Create test company</button>
+            </div>
+        </form>
+    </div>
 @endsection
 
 @push('scripts')
@@ -251,6 +302,46 @@
                     form.submit();
                 });
                 cancelBtn?.addEventListener('click', closeModal);
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === overlay) closeModal();
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && overlay.classList.contains('show')) closeModal();
+                });
+            })();
+
+            // Clone as test company
+            (function() {
+                const overlay = document.getElementById('cloneOverlay');
+                const form = document.getElementById('cloneForm');
+                const titleEl = document.getElementById('cloneTitle');
+                const nameInput = document.getElementById('cloneName');
+                const submitBtn = document.getElementById('cloneSubmit');
+                if (!overlay || !form) return;
+
+                function closeModal() {
+                    overlay.classList.remove('show');
+                }
+
+                document.querySelectorAll('.open-clone-dialog').forEach(function(trigger) {
+                    trigger.addEventListener('click', function() {
+                        form.action = trigger.dataset.url;
+                        titleEl.textContent = 'Clone ' + trigger.dataset.label;
+                        // Cloning a test company: don't stack a second "(Test)".
+                        form.reset(); // back to the default choices each time
+                        nameInput.value = trigger.dataset.label.replace(/(\s*\(test\))+\s*$/i, '') + ' (Test)';                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Create test company';
+                        overlay.classList.add('show');
+                        nameInput.focus();
+                        nameInput.select();
+                    });
+                });
+
+                form.addEventListener('submit', function() {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Cloning…';
+                });
+                document.getElementById('cloneCancel')?.addEventListener('click', closeModal);
                 overlay.addEventListener('click', function(e) {
                     if (e.target === overlay) closeModal();
                 });

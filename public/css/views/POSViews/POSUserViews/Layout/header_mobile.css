@@ -46,6 +46,7 @@
     background: #f2f2f2;
 }
 .logo-wrap {
+    display: block;
     padding: 5px;
 }
 

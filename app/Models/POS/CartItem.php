@@ -1,6 +1,9 @@
 <?php
+
 namespace App\Models\POS;
+
 use Illuminate\Database\Eloquent\Model;
+
 class CartItem extends Model
 {
     protected $fillable = [

@@ -27,7 +27,7 @@
                         onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';">
                 @endif
                 <span class="avatar-fallback" style="{{ $ndSenderImage ? 'display:none;' : 'display:flex;' }}">
-                    @if ($notification->type === 'admin_message' || $notification->type === 'global_message' || $ndActionAdmin)
+                    @if (!$isOrderNotification || $ndActionAdmin)
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
@@ -68,6 +68,8 @@
                             Admin Message
                         @elseif ($notification->type === 'global_message')
                             Global Message
+                        @elseif ($notification->type === 'user_contact')
+                            Chat Message
                         @else
                             Order
                         @endif
@@ -128,7 +130,7 @@
                             @foreach ($orderItems as $orderItem)
                                 <div class="item-row">
                                     <img class="item-img"
-                                        src="{{ $orderItem->display_image ?? asset('images/no-image.png') }}"
+                                        src="{{ $orderItem->image_path ?? asset('images/no-image.png') }}"
                                         alt="{{ $orderItem->item_name ?? 'Item' }}"
                                         onerror="this.onerror=null;this.src='{{ asset('images/no-image.png') }}';">
 

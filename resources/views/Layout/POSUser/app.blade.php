@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -87,6 +86,12 @@
             animation: companyLivePulse 1.6s ease-out infinite;
         }
 
+        /* Test company (cloned from a live one) */
+        .company-ticket-wrap.is-test .company-ticket-body { background: #E3F6F7; }
+        .company-ticket-wrap.is-test .company-ticket-text { color: #0EA8B2; }
+        .company-ticket-wrap.is-test .company-ticket-tab,
+        .company-ticket-wrap.is-test .company-live-badge { background: #0EA8B2; }
+
         @keyframes companyLivePulse {
             0% {
                 transform: scale(1);
@@ -118,14 +123,14 @@
 <body>
 
     @if ($companyName ?? null)
-        <div class="company-ticket-wrap" id="companyTicketWrap">
+        <div class="company-ticket-wrap {{ ($companyIsTest ?? false) ? 'is-test' : '' }}" id="companyTicketWrap">
             <div class="company-ticket-body" id="companyTicketBody">
                 <span class="company-ticket-text">{{ $companyName }}</span>
             </div>
             <div class="company-ticket-tab">
                 <div class="company-live-badge" id="companyLiveBadge">
                     <span class="company-live-ring"></span>
-                    <span class="company-live-text">LIVE</span>
+                    <span class="company-live-text">{{ ($companyIsTest ?? false) ? 'TEST' : 'LIVE' }}</span>
                 </div>
             </div>
         </div>

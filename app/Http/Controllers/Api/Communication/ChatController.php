@@ -679,6 +679,3 @@ class ChatController extends Controller
             ->update(['is_read' => true, 'unread_count' => 0]);
     }
 }
-
-
-

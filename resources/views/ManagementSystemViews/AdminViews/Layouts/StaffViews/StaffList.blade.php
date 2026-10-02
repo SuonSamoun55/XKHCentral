@@ -2,8 +2,8 @@
 @section('title', 'Staff Accounts')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('/css/views/Management/userinfo/UserList.css') }}">
-    <link rel="stylesheet" href="{{ asset('/css/views/Management/userinfo/StaffList.css') }}">
+    <link rel="stylesheet" href="{{ asset('/css/views/Management/userinfo/UserList.css') }}?v={{ filemtime(public_path('css/views/Management/userinfo/UserList.css')) }}">
+    <link rel="stylesheet" href="{{ asset('/css/views/Management/userinfo/StaffList.css') }}?v={{ filemtime(public_path('css/views/Management/userinfo/StaffList.css')) }}">
     <link rel="stylesheet" href="{{ asset('/css/views/Management/userinfo/create.css') }}">
     <link rel="stylesheet" href="{{ asset('/css/views/Management/Password/adminchangepassword.css') }}">
     <link rel="stylesheet" href="{{ asset('/css/shared/toast.css') }}">
@@ -103,20 +103,20 @@
                                                     data-name="{{ $member->name }}" data-email="{{ $member->email }}"
                                                     data-role="{{ $member->role }}"
                                                     data-company-id="{{ $member->company_id }}" class="open-staff-edit">
-                                                    <i class="bi bi-pencil text-warning"></i>
+                                                    <img src="{{ asset('images/management/edit.png') }}" alt="Edit" class="action-icon-img">
                                                 </button>
 
                                                 <button type="button" title="Update Password" data-bs-toggle="modal"
                                                     data-bs-target="#staffPasswordModal" data-id="{{ $member->id }}"
                                                     data-name="{{ $member->name }}" class="open-staff-password">
-                                                    <i class="bi bi-key-fill text-primary"></i>
+                                                    <i class="bi bi-key-fill staff-action-key"></i>
                                                 </button>
 
                                                 <button type="button" title="Delete"
                                                     class="delete-icon open-delete-confirm"
                                                     data-url="{{ route('staff.destroy', $member->id) }}"
                                                     data-label="{{ $member->name }}">
-                                                    <i class="bi bi-trash text-danger"></i>
+                                                    <i class="bi bi-trash-fill staff-action-delete"></i>
                                                 </button>
                                             </div>
                                         </td>
@@ -173,10 +173,10 @@
 
                         <div class="mb-3">
                             <label class="form-label custom-label">Role:</label>
-                            <select name="role" class="form-select custom-input" required>
+                            <select name="role" id="staffCreateRole" class="form-select custom-input" required>
                                 <option value="">Select Role</option>
                                 @foreach ($roles as $roleOption)
-                                    <option value="{{ $roleOption->name }}">
+                                    <option value="{{ $roleOption->name }}" data-company="{{ $roleOption->company_id }}">
                                         {{ $roleOption->display_name ?? ucfirst($roleOption->name) }}</option>
                                 @endforeach
                             </select>
@@ -185,7 +185,7 @@
                         @if (!auth()->user()->company_id || $crossCompany)
                             <div class="mb-3">
                                 <label class="form-label custom-label">Company:</label>
-                                <select name="company_id" class="form-select custom-input">
+                                <select name="company_id" id="staffCreateCompany" class="form-select custom-input">
                                     <option value="" {{ session('selected_company_id') ? '' : 'selected' }}>All
                                         Companies (cross-tenant)</option>
                                     @foreach ($companies as $companyOption)
@@ -256,7 +256,7 @@
                             <select name="role" id="staffEditRole" class="form-select custom-input" required>
                                 <option value="">Select Role</option>
                                 @foreach ($roles as $roleOption)
-                                    <option value="{{ $roleOption->name }}">
+                                    <option value="{{ $roleOption->name }}" data-company="{{ $roleOption->company_id }}">
                                         {{ $roleOption->display_name ?? ucfirst($roleOption->name) }}</option>
                                 @endforeach
                             </select>
@@ -378,6 +378,34 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Every company has its own copy of its roles (cloned companies
+            // too), so cross-company admins would see "admin" once per
+            // company. Show only the roles of the company picked in the form
+            // (the global roles for "All Companies") — the server looks the
+            // role up by name within that same company.
+            function filterRolesForCompany(roleSelect, companySelect) {
+                if (!roleSelect || !companySelect) return;
+                const companyId = companySelect.value || '';
+                Array.from(roleSelect.options).forEach(function(option) {
+                    if (option.value === '') return;
+                    const matches = (option.dataset.company || '') === companyId;
+                    option.hidden = !matches;
+                    option.disabled = !matches;
+                });
+                if (roleSelect.selectedOptions[0]?.disabled) {
+                    roleSelect.value = '';
+                }
+            }
+
+            const createRole = document.getElementById('staffCreateRole');
+            const createCompany = document.getElementById('staffCreateCompany');
+            const editRole = document.getElementById('staffEditRole');
+            const editCompany = document.getElementById('staffEditCompany');
+
+            filterRolesForCompany(createRole, createCompany);
+            createCompany?.addEventListener('change', () => filterRolesForCompany(createRole, createCompany));
+            editCompany?.addEventListener('change', () => filterRolesForCompany(editRole, editCompany));
+
             // Populate the edit modal from the clicked row's data-* attributes.
             document.querySelectorAll('.open-staff-edit').forEach(function(btn) {
                 btn.addEventListener('click', function() {
@@ -385,12 +413,12 @@
                     document.getElementById('staffEditForm').action = '/staff/' + id;
                     document.getElementById('staffEditName').value = btn.dataset.name || '';
                     document.getElementById('staffEditEmail').value = btn.dataset.email || '';
-                    document.getElementById('staffEditRole').value = btn.dataset.role || '';
 
-                    const companySelect = document.getElementById('staffEditCompany');
-                    if (companySelect) {
-                        companySelect.value = btn.dataset.companyId || '';
+                    if (editCompany) {
+                        editCompany.value = btn.dataset.companyId || '';
+                        filterRolesForCompany(editRole, editCompany);
                     }
+                    editRole.value = btn.dataset.role || '';
                 });
             });
 

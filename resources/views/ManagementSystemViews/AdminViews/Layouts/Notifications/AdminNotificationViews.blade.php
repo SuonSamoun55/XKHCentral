@@ -1,9 +1,8 @@
 @extends('Layout.POSAdmin.app')
 
 @section('title', 'Admin Notifications')
-
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSAdminViews/AdminNotification/admin_notification.css') }}">
+    <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSAdminViews/AdminNotification/admin_notification.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSAdminViews/AdminNotification/admin_notification.css')) }}">
 @endpush
 @section('content')
     <div class="app-shell" id="appShell">
@@ -163,7 +162,6 @@
                                 $displayName =
                                     optional($contactUser)->name ??
                                     (($notification->sender_name ?: optional($sender)->name) ?? 'System');
-
                                 $messagePreview = trim(
                                     preg_replace(
                                         '/\s+/',
@@ -175,22 +173,19 @@
                                         ),
                                     ),
                                 );
-                                // Escape first, then wrap order numbers in a highlight span — safe
-                                // because the regex only ever inserts our own trusted markup
-                                // around text that's already been through e().
-$messagePreviewHtml = preg_replace(
-    '/\b(ORD-[A-Za-z0-9]+)\b/',
-    '<span class="order-id-highlight">$1</span>',
-    e(
-        $messagePreview !== ''
-            ? $messagePreview
-            : 'Enter your message description here...',
-    ),
-);
-$rowUrl =
-    $isUserContact && optional($contactUser)->id && $canAccessChat
-        ? route('admin.chat.index', ['user_id' => $contactUser->id])
-        : route('admin.notifications.show', $notification->id);
+                                $messagePreviewHtml = preg_replace(
+                                    '/\b(ORD-[A-Za-z0-9]+)\b/',
+                                    '<span class="order-id-highlight">$1</span>',
+                                    e(
+                                        $messagePreview !== ''
+                                            ? $messagePreview
+                                            : 'Enter your message description here...',
+                                    ),
+                                );
+                                $rowUrl =
+                                    $isUserContact && optional($contactUser)->id && $canAccessChat
+                                        ? route('admin.chat.index', ['user_id' => $contactUser->id])
+                                        : route('admin.notifications.show', $notification->id);
                             @endphp
                             <a class="notification-item-link" data-id="{{ $notification->id }}"
                                 data-href="{{ $rowUrl }}" href="{{ $rowUrl }}">
@@ -336,11 +331,11 @@ $rowUrl =
                                 <div class="recipient-top">
                                     <select name="send_type" id="send_type" class="recipient-type-select"
                                         onchange="toggleRecipientMode()">
-                                        <option value="all"
-                                            {{ old('send_type', 'all') === 'all' ? 'selected' : '' }}>All Customers
+                                        <option value="all" {{ old('send_type', 'all') === 'all' ? 'selected' : '' }}>
+                                            All Customers
                                         </option>
-                                        <option value="multiple"
-                                            {{ old('send_type') === 'multiple' ? 'selected' : '' }}>Select Customers
+                                        <option value="multiple" {{ old('send_type') === 'multiple' ? 'selected' : '' }}>
+                                            Select Customers
                                         </option>
                                     </select>
 
@@ -386,7 +381,7 @@ $rowUrl =
                             </div>
 
                             <div id="message_editor" class="send-message-editor" contenteditable="true"
-                                data-placeholder="Write your message...">{!! old('message') !!}</div>
+                                data-placeholder="Write your message...">{!! \App\Models\ManagementSystem\Notification::safeHtml(old('message')) !!}</div>
 
                             <textarea name="message" id="message" class="send-message-textarea d-none">{{ old('message') }}</textarea>
 
@@ -696,7 +691,7 @@ $rowUrl =
         document.getElementById('sendModal').addEventListener('hidden.bs.modal', function() {
             this.classList.remove('is-fullscreen', 'is-minimized');
             document.getElementById('fullscreenModalBtn').querySelector('i').className =
-            'bi bi-arrows-angle-expand';
+                'bi bi-arrows-angle-expand';
             document.getElementById('sendMinimizedTab').classList.remove('visible');
         });
 
@@ -1102,26 +1097,26 @@ $rowUrl =
             if (!url) return;
 
             showConfirmModal('This action is permanent and cannot be undone. This notification will be deleted.',
-        function() {
-                const token = document.querySelector('input[name="_token"]')?.value || '';
-                btn.disabled = true;
+                function() {
+                    const token = document.querySelector('input[name="_token"]')?.value || '';
+                    btn.disabled = true;
 
-                postNotificationAction(url, {
-                        method: 'POST',
-                        headers: {
-                            'X-HTTP-Method-Override': 'DELETE',
-                            'X-CSRF-TOKEN': token,
-                        },
-                    })
-                    .then(data => {
-                        showAlert(data.message || 'Notification deleted successfully.');
-                        return loadNotificationPage(window.location.href, false);
-                    })
-                    .catch(err => {
-                        btn.disabled = false;
-                        showAlert(err.message, 'error');
-                    });
-            });
+                    postNotificationAction(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-HTTP-Method-Override': 'DELETE',
+                                'X-CSRF-TOKEN': token,
+                            },
+                        })
+                        .then(data => {
+                            showAlert(data.message || 'Notification deleted successfully.');
+                            return loadNotificationPage(window.location.href, false);
+                        })
+                        .catch(err => {
+                            btn.disabled = false;
+                            showAlert(err.message, 'error');
+                        });
+                });
         }
 
         /* ────────────────────────────────────────────────
@@ -1235,9 +1230,9 @@ $rowUrl =
                 <div class="notification-main-left">
                     <input type="checkbox" class="notification-checkbox" name="notification_ids[]" value="${item.id}" onclick="event.stopPropagation();">
                     ${item.type === 'user_contact' ? `
-                        <button type="button" class="star-btn" title="Star" onclick="event.preventDefault();event.stopPropagation();">
-                            <i class="bi bi-star"></i>
-                        </button>` : ''}
+                            <button type="button" class="star-btn" title="Star" onclick="event.preventDefault();event.stopPropagation();">
+                                <i class="bi bi-star"></i>
+                            </button>` : ''}
                     <div class="avatar-box">
                         <img src="${item.avatar}" alt="avatar" onerror="this.onerror=null;this.src='${defaultAvatar}'">
                         <span class="online-dot"></span>
@@ -1246,11 +1241,11 @@ $rowUrl =
                         <div class="notification-name-row">
                             <div class="notification-name">${escHtmlStr(item.user_name||'Unknown')}</div>
                             ${item.type === 'user_contact' && item.contact_user_id ? `
-                                <button type="button" class="start-chat-btn"
-                                    onclick="event.preventDefault();event.stopPropagation();window.location.href='${item.chat_url || '#'}';">
-                                    <i class="bi bi-chat-dots-fill"></i>
-                                    <span>Start Chat</span>
-                                </button>` : ''}
+                                    <button type="button" class="start-chat-btn"
+                                        onclick="event.preventDefault();event.stopPropagation();window.location.href='${item.chat_url || '#'}';">
+                                        <i class="bi bi-chat-dots-fill"></i>
+                                        <span>Start Chat</span>
+                                    </button>` : ''}
                         </div>
                         <div class="notification-message">${highlightOrderId(item.message||'')}</div>
                     </div>

@@ -37,7 +37,7 @@ class ItemPosController extends Controller
             })
             ->orderBy('display_name')
             ->get()
-            ->map(fn(Item $item) => $this->toDisplayItem($item))
+            ->map(fn (Item $item) => $this->toDisplayItem($item))
             ->values()
             ->all();
 
@@ -452,8 +452,8 @@ class ItemPosController extends Controller
             $localItem = Item::where('company_id', $companyId)
                 ->when(
                     $itemBcId,
-                    fn($q) => $q->where('bc_id', $itemBcId),
-                    fn($q) => $q->where('number', $itemNumber)
+                    fn ($q) => $q->where('bc_id', $itemBcId),
+                    fn ($q) => $q->where('number', $itemNumber)
                 )
                 ->first();
 
@@ -462,7 +462,7 @@ class ItemPosController extends Controller
                 continue;
             }
             $existingVariant = ItemVariant::where('bc_id', $bcId)
-                ->whereHas('item', fn($q) => $q->where('company_id', $companyId))
+                ->whereHas('item', fn ($q) => $q->where('company_id', $companyId))
                 ->first();
 
             if ($existingVariant) {

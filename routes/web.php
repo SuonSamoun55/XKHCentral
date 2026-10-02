@@ -1,48 +1,48 @@
 <?php
-use Illuminate\Support\Facades\Route;
-use App\Models\ManagementSystem\User;
-use App\Http\Controllers\Api\ManagementSystem\WebUserController;
-use App\Http\Controllers\Api\ManagementSystem\AuthController;
-use App\Http\Controllers\Api\POS\Admin\Items\ItemPosController;
-use App\Http\Controllers\Api\ManagementSystem\DashboardController;
-use App\Http\Controllers\Api\POS\User\Daskboard\DashboardUserController;
-use App\Http\Controllers\Api\POS\User\Cart\CartController;
-use App\Http\Controllers\Api\POS\User\Products\ItemListController;
-use App\Http\Controllers\Api\POS\User\Orders\OrderController;
-use App\Http\Controllers\Api\ManagementSystem\AdminNotificationController;
+
+use App\Http\Controllers\Api\BusinessCentral\OrderStatusController;
 use App\Http\Controllers\Api\Communication\ChatController;
-use App\Http\Controllers\Api\POS\Admin\Orders\AdminOrderController;
-use App\Http\Controllers\Api\POS\User\Favorites\FavoriteController;
-use App\Http\Controllers\Api\POS\User\Notifications\NotificationController;
-use App\Http\Controllers\Api\POS\User\Profile\UserProfileController;
-use App\Http\Controllers\Api\POS\User\Orders\HistoryController;
+use App\Http\Controllers\Api\ManagementSystem\AdminNotificationController;
+use App\Http\Controllers\Api\ManagementSystem\AuthController;
 use App\Http\Controllers\Api\ManagementSystem\CompanyController;
-use App\Http\Controllers\Api\POS\Admin\StoreManagement\StoreManagementController;
+use App\Http\Controllers\Api\ManagementSystem\DashboardController;
+use App\Http\Controllers\Api\ManagementSystem\LoginSettingsController;
+use App\Http\Controllers\Api\ManagementSystem\PermissionController;
+use App\Http\Controllers\Api\ManagementSystem\RoleController;
+use App\Http\Controllers\Api\ManagementSystem\StaffController;
+use App\Http\Controllers\Api\ManagementSystem\WebUserController;
+use App\Http\Controllers\Api\POS\Admin\ApprovalEntries\ApprovalEntriesController;
 use App\Http\Controllers\Api\POS\Admin\Discounts\DiscountController;
+use App\Http\Controllers\Api\POS\Admin\Items\ItemPosController;
+use App\Http\Controllers\Api\POS\Admin\Items\ItemVariantPosController;
 use App\Http\Controllers\Api\POS\Admin\NumberSeries\NumberSeriesController;
+use App\Http\Controllers\Api\POS\Admin\Orders\AdminOrderController;
+use App\Http\Controllers\Api\POS\Admin\Profile\AdminProfileController;
+use App\Http\Controllers\Api\POS\Admin\StoreManagement\StoreManagementController;
 use App\Http\Controllers\Api\POS\Admin\Tax\VatPostingSetupController;
 use App\Http\Controllers\Api\POS\Reports\OrderReportController;
 use App\Http\Controllers\Api\POS\Reports\ReportSettingsController;
-use App\Http\Controllers\Api\POS\Admin\ApprovalEntries\ApprovalEntriesController;
-use App\Http\Controllers\Api\POS\Admin\Profile\AdminProfileController;
-use App\Http\Controllers\Api\POS\User\Legal\PolicyController;
-use App\Http\Controllers\Api\BusinessCentral\OrderStatusController;
-use App\Http\Controllers\Api\POS\Admin\Items\ItemVariantPosController;
-use App\Http\Controllers\Api\ManagementSystem\RoleController;
-use App\Http\Controllers\Api\ManagementSystem\PermissionController;
-use App\Http\Controllers\Api\ManagementSystem\StaffController;
+use App\Http\Controllers\Api\POS\User\Cart\CartController;
+use App\Http\Controllers\Api\POS\User\Daskboard\DashboardUserController;
+use App\Http\Controllers\Api\POS\User\Favorites\FavoriteController;
+use App\Http\Controllers\Api\POS\User\Notifications\NotificationController;
+use App\Http\Controllers\Api\POS\User\Orders\HistoryController;
+use App\Http\Controllers\Api\POS\User\Orders\OrderController;
+use App\Http\Controllers\Api\POS\User\Products\ItemListController;
+use App\Http\Controllers\Api\POS\User\Profile\UserProfileController;
+use App\Models\ManagementSystem\User;
+use Illuminate\Support\Facades\Route;
 
-Route::view('/test-ui', 'POSViews.POSUserViews.Testing.test-ui')
-    ->name('user.pos.test_ui');
-    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+// ================= LOGIN =================
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])
     ->name('logout')
     ->middleware('auth');
 
-Route::middleware(['auth'])->post('/heartbeat', function () {
-
+// Keeps "last seen" fresh while a page is open.
+Route::middleware('auth')->post('/heartbeat', function () {
     /** @var User|null $user */
     $user = auth()->user();
 
@@ -55,55 +55,57 @@ Route::middleware(['auth'])->post('/heartbeat', function () {
         'success' => true,
         'time' => now()->toDateTimeString(),
     ]);
-
 })->name('heartbeat');
-// ================= AUTHENTICATED ROUTES =================
+
+// ================= LOGGED-IN PAGES =================
+// Every group below is locked to one page permission (see CheckPagePermission).
 Route::middleware(['auth', 'last.seen'])->group(function () {
-Route::middleware('permission:store_management')->group(function () {
-Route::get('/store-management', [StoreManagementController::class, 'index'])->name('store.management.index');
-Route::get('/store-management/tracking', [StoreManagementController::class, 'tracking'])->name('store.management.tracking');
-Route::get('/store-management/products/{id}/detail', [StoreManagementController::class, 'productDetail'])->name('store.management.products.detail');
-Route::post('/store-management/products/{id}/toggle', [StoreManagementController::class, 'toggleProduct'])->name('store.management.products.toggle');
-Route::post('/store-management/categories/{code}/toggle', [StoreManagementController::class, 'toggleCategory'])->name('store.management.categories.toggle');
-Route::post('/store-management/products/bulk-update', [StoreManagementController::class, 'bulkUpdateProducts'])->name('store.management.products.bulkUpdate');
-Route::post('/store-management/categories/bulk-update', [StoreManagementController::class, 'bulkUpdateCategories'])->name('store.management.categories.bulkUpdate');
-Route::post('/store-management/selling-location', [StoreManagementController::class, 'updateSellingLocation'])->name('store.management.sellingLocation.update');
-Route::post('/store-management/products/{id}/toggle-oversell', [StoreManagementController::class, 'toggleOversell'])->name('store.management.products.toggleOversell');
-Route::post('/store-management/products/oversell/bulk-out-of-stock', [StoreManagementController::class, 'bulkUpdateOversellOutOfStock'])->name('store.management.products.oversell.bulkOutOfStock');
-Route::get('/store/management/products/{id}/images', [StoreManagementController::class, 'editImages'])
-    ->name('store.management.product.images');
-Route::post('/store/management/products/{id}/image', [StoreManagementController::class, 'uploadMainImage'])
-    ->name('store.management.product.image.upload');
-Route::post('/store/management/products/{id}/mark-updated', [StoreManagementController::class, 'markUpdated'])
-    ->name('store.management.product.markUpdated');
-Route::put('/store/management/products/{id}/description', [StoreManagementController::class, 'updateDescription'])
-    ->name('store.management.product.description.update');
-});
-    // ---------- Dashboard ----------
+
+    // ---------- Dashboards ----------
     Route::middleware('permission:dashboard')->group(function () {
         Route::get('/admin', [DashboardController::class, 'index'])->name('pos.index');
         Route::get('/admin/dashboard/report-chart', [DashboardController::class, 'reportChart'])->name('admin.dashboard.report-chart');
         Route::get('/admin/dashboard/top-products', [DashboardController::class, 'topProductsData'])->name('admin.dashboard.top-products');
         Route::get('/admin/dashboard/overview-stats', [DashboardController::class, 'overviewStats'])->name('admin.dashboard.overview-stats');
     });
+
     Route::middleware('permission:home')->group(function () {
         Route::get('/', [DashboardUserController::class, 'index'])->name('user.index');
     });
 
-    // ---------- Admin Notification ----------
-    Route::middleware('permission:notifications')->group(function () {
-        Route::get('/admin/notification', [AdminNotificationController::class, 'index'])->name('admin.notification');
+    // ---------- Product Management (route names keep the old store.management.* prefix) ----------
+    Route::middleware('permission:store_management')->prefix('product-management')->group(function () {
+        Route::get('/', [StoreManagementController::class, 'index'])->name('store.management.index');
+        Route::get('/tracking', [StoreManagementController::class, 'tracking'])->name('store.management.tracking');
+        Route::get('/products/{id}/detail', [StoreManagementController::class, 'productDetail'])->name('store.management.products.detail');
+        Route::post('/products/{id}/toggle', [StoreManagementController::class, 'toggleProduct'])->name('store.management.products.toggle');
+        Route::post('/categories/{code}/toggle', [StoreManagementController::class, 'toggleCategory'])->name('store.management.categories.toggle');
+        Route::post('/products/bulk-update', [StoreManagementController::class, 'bulkUpdateProducts'])->name('store.management.products.bulkUpdate');
+        Route::post('/categories/bulk-update', [StoreManagementController::class, 'bulkUpdateCategories'])->name('store.management.categories.bulkUpdate');
+        Route::post('/selling-location', [StoreManagementController::class, 'updateSellingLocation'])->name('store.management.sellingLocation.update');
+        Route::post('/products/{id}/toggle-oversell', [StoreManagementController::class, 'toggleOversell'])->name('store.management.products.toggleOversell');
+        Route::post('/products/oversell/bulk-out-of-stock', [StoreManagementController::class, 'bulkUpdateOversellOutOfStock'])->name('store.management.products.oversell.bulkOutOfStock');
+        Route::get('/products/{id}/images', [StoreManagementController::class, 'editImages'])->name('store.management.product.images');
+        Route::post('/products/{id}/image', [StoreManagementController::class, 'uploadMainImage'])->name('store.management.product.image.upload');
+        Route::post('/products/{id}/mark-updated', [StoreManagementController::class, 'markUpdated'])->name('store.management.product.markUpdated');
+        Route::put('/products/{id}/description', [StoreManagementController::class, 'updateDescription'])->name('store.management.product.description.update');
+
+        Route::get('/variants', [ItemVariantPosController::class, 'manage'])->name('store.management.variants');
+        Route::get('/items/{itemId}/variants', [ItemVariantPosController::class, 'index'])->name('store.management.item.variants');
+        Route::post('/variants/{variantId}/image', [ItemVariantPosController::class, 'uploadImage'])->name('store.management.variants.image');
+        Route::put('/variants/{variantId}/price', [ItemVariantPosController::class, 'updatePrice'])->name('store.management.variants.price');
     });
 
-    // ---------- POS Admin ----------
-    Route::middleware('permission:pos')->group(function () {
-        Route::get('/pos/interface', [ItemPosController::class, 'index'])->name('pos.interface');
-        Route::get('/pos/item-detail/{id}', [ItemPosController::class, 'showItem'])->name('pos.item');
-        Route::post('/items/sync-from-al', [ItemPosController::class, 'syncFromAl']);
-        Route::get('/pos/items/{id}', [ItemPosController::class, 'detail'])->name('pos.items.detail');
-        Route::get('/pos/items/{id}/json', [ItemPosController::class, 'showItem'])->name('pos.items.json');
+    // ---------- Web Shop (route names keep the old pos.* prefix) ----------
+    Route::middleware('permission:pos')->prefix('web-shop')->group(function () {
+        Route::get('/', [ItemPosController::class, 'index'])->name('pos.interface');
+        Route::get('/item-detail/{id}', [ItemPosController::class, 'showItem'])->name('pos.item');
+        Route::post('/sync', [ItemPosController::class, 'syncFromAl'])->name('pos.items.sync');
+        Route::get('/items/{id}', [ItemPosController::class, 'detail'])->name('pos.items.detail');
+        Route::get('/items/{id}/json', [ItemPosController::class, 'showItem'])->name('pos.items.json');
     });
 
+    // ---------- Orders (admin) ----------
     Route::middleware('permission:orders')->group(function () {
         Route::get('/admin/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
         Route::post('/admin/orders/{id}/confirm', [AdminOrderController::class, 'confirm'])->name('admin.orders.confirm');
@@ -112,57 +114,15 @@ Route::put('/store/management/products/{id}/description', [StoreManagementContro
         Route::get('/admin/orders/{id}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
     });
 
-    // ---------- POS User ----------
+    // ---------- Customer shop ----------
     Route::middleware('permission:storefront')->group(function () {
         Route::get('/pos-system', [ItemListController::class, 'getItems'])->name('user.posinterface');
         Route::get('/pos-system/product/{id}', [ItemListController::class, 'showProduct'])->name('user.pos.product.detail');
-        Route::get('/pos/products/filter', [ItemListController::class, 'filter'])->name('user.pos.products.filter');
     });
 
     Route::middleware('permission:favorites')->group(function () {
         Route::get('/pos-system/favorites', [FavoriteController::class, 'getFavorites'])->name('user.pos.favorites');
         Route::post('/pos-system/favorite-toggle', [FavoriteController::class, 'toggle'])->name('user.pos.favorite.toggle');
-    });
-
-    Route::middleware('permission:user_notifications')->group(function () {
-        Route::get('/pos-system/notifications', [NotificationController::class, 'getNotifications'])->name('user.notifications');
-        Route::get('/pos-system/notifications/unread', [NotificationController::class, 'unreadNotifications'])->name('user.notifications.unread');
-        Route::get('/pos-system/notifications/{id}', [NotificationController::class, 'show'])->name('user.notifications.show');
-        Route::get('/pos-system/notifications/{id}/items', [NotificationController::class, 'getNotificationItems'])->name('user.notifications.items');
-        Route::post('/pos-system/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('user.notifications.read');
-        Route::post('/pos-system/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('user.notifications.markAllRead');
-        Route::delete('/pos-system/notifications/delete-selected', [NotificationController::class, 'deleteSelected'])->name('user.notifications.deleteSelected');
-    });
-
-    Route::middleware('permission:chat')->group(function () {
-        Route::get('/pos-system/chat', [ChatController::class, 'userIndex'])->name('user.chat.index');
-        Route::post('/pos-system/chat/send', [ChatController::class, 'userSend'])->name('user.chat.send');
-        Route::get('/pos-system/chat/messages', [ChatController::class, 'userMessages'])->name('user.chat.messages');
-    });
-
-    Route::middleware('permission:store_management')->group(function () {
-        Route::get('/store/management/variants', [ItemVariantPosController::class, 'manage'])
-            ->name('store.management.variants');
-
-        Route::get('/items/{itemId}/variants', [ItemVariantPosController::class, 'index']);
-
-        Route::post('/items/variants/{variantId}/image', [ItemVariantPosController::class, 'uploadImage']);
-    });
-
-    Route::middleware('permission:profile')->group(function () {
-        Route::get('/profile', [UserProfileController::class, 'index'])->name('profile');
-        Route::get('/profile/edit', [UserProfileController::class, 'edit'])->name('profile.edit');
-        Route::put('/profile/update', [UserProfileController::class, 'update'])->name('profile.update');
-        Route::get('/profile/change-password', [UserProfileController::class, 'showChangePasswordForm'])->name('user.password.change');
-        Route::put('/profile/change-password', [UserProfileController::class, 'updatePassword'])->name('user.password.update');
-    });
-
-    Route::middleware('permission:order_history')->group(function () {
-        Route::get('/pos-system/order/{order}/bc-status', [OrderStatusController::class, 'show'])->name('user.pos.order.bc-status');
-        Route::get('/pos-system/order/{id}', [HistoryController::class, 'show'])->name('user.pos.order.show');
-        Route::post('/pos-system/order/{id}/cancel', [HistoryController::class, 'cancel'])->name('user.pos.order.cancel');
-        Route::get('/pos-system/order-history', [HistoryController::class, 'history'])->name('user.pos.order.history');
-        Route::delete('/orders/delete-multiple', [HistoryController::class, 'deleteMultiple'])->name('user.pos.order.deleteMultiple');
     });
 
     Route::middleware('permission:cart')->group(function () {
@@ -180,38 +140,64 @@ Route::put('/store/management/products/{id}/description', [StoreManagementContro
         Route::get('/pos-system/order-success', [OrderController::class, 'success'])->name('user.pos.checkout.success');
     });
 
-    // ---------- Admin Notifications (Canonical) ----------
-    Route::middleware('permission:notifications')->prefix('admin/notifications')->name('admin.notifications.')->group(function () {
-        Route::get('/', [AdminNotificationController::class, 'index'])->name('index');
-        Route::get('/{id}', [AdminNotificationController::class, 'show'])->name('show');
-        Route::post('/store', [AdminNotificationController::class, 'store'])->name('store');
-        Route::post('/read/{id}', [AdminNotificationController::class, 'markAsRead'])->name('read');
-        Route::post('/read-all', [AdminNotificationController::class, 'markAllAsRead'])->name('read.all');
-        Route::post('/read-selected', [AdminNotificationController::class, 'markSelectedAsRead'])->name('read.selected');
-        Route::delete('/delete-selected', [AdminNotificationController::class, 'deleteSelected'])->name('delete.selected');
-        Route::delete('/destroy/{id}', [AdminNotificationController::class, 'destroy'])->name('destroy');
-        Route::get('/ajax/search-customers', [AdminNotificationController::class, 'searchCustomers'])->name('ajax.search.customers');
-        Route::get('/ajax/latest', [AdminNotificationController::class, 'latestNotifications'])->name('ajax.latest');
+    Route::middleware('permission:order_history')->group(function () {
+        Route::get('/pos-system/order-history', [HistoryController::class, 'history'])->name('user.pos.order.history');
+        Route::get('/pos-system/order/{order}/bc-status', [OrderStatusController::class, 'show'])->name('user.pos.order.bc-status');
+        Route::get('/pos-system/order/{id}', [HistoryController::class, 'show'])->name('user.pos.order.show');
+        Route::post('/pos-system/order/{id}/cancel', [HistoryController::class, 'cancel'])->name('user.pos.order.cancel');
+        Route::delete('/orders/delete-multiple', [HistoryController::class, 'deleteMultiple'])->name('user.pos.order.deleteMultiple');
     });
 
-    // ---------- Admin Notifications (Legacy /admin/notification path) ----------
-    Route::middleware('permission:notifications')->prefix('admin/notification')->group(function () {
-        Route::get('/', [AdminNotificationController::class, 'index']);
-        Route::post('/store', [AdminNotificationController::class, 'store']);
-        Route::post('/read/{id}', [AdminNotificationController::class, 'markAsRead']);
-        Route::post('/read-all', [AdminNotificationController::class, 'markAllAsRead']);
-        Route::delete('/delete-selected', [AdminNotificationController::class, 'deleteSelected']);
-        Route::delete('/destroy/{id}', [AdminNotificationController::class, 'destroy']);
+    Route::middleware('permission:user_notifications')->group(function () {
+        Route::get('/pos-system/notifications', [NotificationController::class, 'getNotifications'])->name('user.notifications');
+        Route::get('/pos-system/notifications/unread', [NotificationController::class, 'unreadNotifications'])->name('user.notifications.unread');
+        Route::get('/pos-system/notifications/{id}', [NotificationController::class, 'show'])->name('user.notifications.show');
+        Route::get('/pos-system/notifications/{id}/items', [NotificationController::class, 'getNotificationItems'])->name('user.notifications.items');
+        Route::post('/pos-system/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('user.notifications.read');
+        Route::delete('/pos-system/notifications/delete-selected', [NotificationController::class, 'deleteSelected'])->name('user.notifications.deleteSelected');
     });
-    // Chat is its own permission, separate from Notifications, so a role
-    // (e.g. "Support") can be granted chat access without full Notifications
-    // management, or vice versa.
+
+    Route::middleware('permission:chat')->group(function () {
+        Route::get('/pos-system/chat', [ChatController::class, 'userIndex'])->name('user.chat.index');
+        Route::post('/pos-system/chat/send', [ChatController::class, 'userSend'])->name('user.chat.send');
+        Route::get('/pos-system/chat/messages', [ChatController::class, 'userMessages'])->name('user.chat.messages');
+    });
+
+    Route::middleware('permission:profile')->group(function () {
+        Route::get('/profile', [UserProfileController::class, 'index'])->name('profile');
+        Route::get('/profile/edit', [UserProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile/update', [UserProfileController::class, 'update'])->name('profile.update');
+        Route::get('/profile/change-password', [UserProfileController::class, 'showChangePasswordForm'])->name('user.password.change');
+        Route::put('/profile/change-password', [UserProfileController::class, 'updatePassword'])->name('user.password.update');
+    });
+
+    // ---------- Admin notifications ----------
+    Route::middleware('permission:notifications')->group(function () {
+        Route::get('/admin/notification', [AdminNotificationController::class, 'index'])->name('admin.notification');
+
+        Route::prefix('admin/notifications')->name('admin.notifications.')->group(function () {
+            Route::get('/', [AdminNotificationController::class, 'index'])->name('index');
+            Route::get('/ajax/search-customers', [AdminNotificationController::class, 'searchCustomers'])->name('ajax.search.customers');
+            Route::get('/ajax/latest', [AdminNotificationController::class, 'latestNotifications'])->name('ajax.latest');
+            Route::get('/{id}', [AdminNotificationController::class, 'show'])->name('show');
+            Route::post('/store', [AdminNotificationController::class, 'store'])->name('store');
+            Route::post('/read/{id}', [AdminNotificationController::class, 'markAsRead'])->name('read');
+            Route::post('/read-all', [AdminNotificationController::class, 'markAllAsRead'])->name('read.all');
+            Route::post('/read-selected', [AdminNotificationController::class, 'markSelectedAsRead'])->name('read.selected');
+            Route::delete('/delete-selected', [AdminNotificationController::class, 'deleteSelected'])->name('delete.selected');
+            Route::delete('/destroy/{id}', [AdminNotificationController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    // Chat has its own permission, so a role (e.g. "Support") can chat
+    // without managing notifications, or the other way round.
     Route::middleware('permission:admin_chat')->group(function () {
         Route::get('/admin/notification/chat', [ChatController::class, 'adminIndex'])->name('admin.chat.index');
         Route::post('/admin/notification/chat/send', [ChatController::class, 'adminSend'])->name('admin.chat.send');
         Route::get('/admin/notification/chat/messages', [ChatController::class, 'adminMessages'])->name('admin.chat.messages');
     });
-    ///-----------admin settings----------
+
+    // ---------- Admin profile (every logged-in admin/staff) ----------
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/profile', [AdminProfileController::class, 'index'])->name('profile');
         Route::put('/profile/update', [AdminProfileController::class, 'update'])->name('profile.update');
@@ -229,11 +215,18 @@ Route::put('/store/management/products/{id}/description', [StoreManagementContro
         Route::get('/companies/{id}/api-setup', [CompanyController::class, 'apiSetup'])->name('companies.api.setup');
         Route::put('/companies/{id}/api-setup', [CompanyController::class, 'updateApiSetup'])->name('companies.api.setup.update');
         Route::delete('/companies/{id}', [CompanyController::class, 'destroy'])->name('companies.destroy');
+        Route::post('/companies/{id}/clone', [CompanyController::class, 'cloneAsTest'])->name('companies.clone');
         Route::post('/companies/{id}/select', [CompanyController::class, 'select'])->name('companies.select');
         Route::post('/companies/clear-selection', [CompanyController::class, 'clearSelection'])->name('companies.clearSelection');
     });
 
-    // ---------- Roles & Page Management ----------
+    // ---------- Login page media (app-wide, so cross-company users only) ----------
+    Route::middleware(['permission:login_settings', 'no-company-scope'])->group(function () {
+        Route::get('/login-settings', [LoginSettingsController::class, 'index'])->name('login-settings.index');
+        Route::put('/login-settings', [LoginSettingsController::class, 'update'])->name('login-settings.update');
+    });
+
+    // ---------- Roles & pages ----------
     Route::middleware('permission:roles')->group(function () {
         Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
         Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create');
@@ -243,27 +236,24 @@ Route::put('/store/management/products/{id}/description', [StoreManagementContro
         Route::delete('/roles/{id}', [RoleController::class, 'destroy'])->name('roles.destroy');
     });
 
+    // Read-only: the pages come from RoleAndPermissionSeeder and are checked
+    // by the permission:* middleware, so they aren't edited here.
     Route::middleware('permission:page_management')->group(function () {
-        // Read-only — these "pages" are really the app's own permission
-        // directory (App\Models\Permission), tightly coupled to
-        // Database\Seeders\RoleAndPermissionSeeder::$pages and the
-        // permission:* route middleware. Letting admins create/edit/delete
-        // them freely risked drifting a permission's name/urls away from
-        // what's actually seeded and checked, or deleting one a live route
-        // still depends on. They already exist from the seeder, so this is
-        // just a directory to look at, not something to manage here.
         Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
         Route::post('/permissions/sync', [PermissionController::class, 'sync'])->name('permissions.sync');
     });
 
-});
-Route::middleware(['auth', 'last.seen'])->prefix('users')->name('users.')->group(function () {
+    // ---------- Customers ----------
+    Route::prefix('users')->name('users.')->group(function () {
+        // Used by customers too (their own picture and sync), so these two
+        // check access inside the controller instead of by permission.
         Route::get('/bc-image/{bcId}', [WebUserController::class, 'getBCImage'])->name('bc-image');
         Route::post('/{id}/sync-bc', [WebUserController::class, 'syncSingleCustomer'])->name('syncOne');
 
         Route::middleware('permission:users')->group(function () {
             Route::get('/', [WebUserController::class, 'index'])->name('index');
             Route::get('/sync', [WebUserController::class, 'syncBCCustomers'])->name('sync');
+            Route::get('/data', [WebUserController::class, 'getUsers'])->name('data');
             Route::get('/create/{id}', [WebUserController::class, 'create'])->name('create');
             Route::post('/store/{id}', [WebUserController::class, 'store'])->name('store');
             Route::get('/show/{id}', [WebUserController::class, 'show'])->name('show');
@@ -272,54 +262,67 @@ Route::middleware(['auth', 'last.seen'])->prefix('users')->name('users.')->group
             Route::put('/{id}/contact-details', [WebUserController::class, 'updateContactDetails'])->name('contactDetails.update');
             Route::delete('/destroy/{id}', [WebUserController::class, 'destroy'])->name('destroy');
             Route::post('/delete-selected', [WebUserController::class, 'deleteSelected'])->name('deleteSelected');
-            Route::get('/data', [WebUserController::class, 'getUsers'])->name('data');
         });
     });
 
-Route::middleware(['auth', 'last.seen', 'permission:users'])->prefix('staff')->name('staff.')->group(function () {
-    Route::get('/', [StaffController::class, 'index'])->name('index');
-    Route::post('/', [StaffController::class, 'store'])->name('store');
-    Route::put('/{id}', [StaffController::class, 'update'])->name('update');
-    Route::put('/{id}/password', [StaffController::class, 'updatePassword'])->name('updatePassword');
-    Route::delete('/{id}', [StaffController::class, 'destroy'])->name('destroy');
-});
-Route::middleware(['auth', 'last.seen', 'permission:discounts'])->group(function () {
-    Route::get('/discounts', [DiscountController::class, 'index'])->name('discounts.index');
-    Route::get('/discounts/create', [DiscountController::class, 'create'])->name('discounts.create');
-    Route::post('/discounts', [DiscountController::class, 'store'])->name('discounts.store');
-    Route::get('/discounts/{id}/edit', [DiscountController::class, 'edit'])->name('discounts.edit');
-    Route::put('/discounts/{id}', [DiscountController::class, 'update'])->name('discounts.update');
-    Route::delete('/discounts/{id}', [DiscountController::class, 'destroy'])->name('discounts.destroy');
-});
-Route::middleware(['auth', 'last.seen', 'permission:number_series'])->group(function () {
-    Route::get('/number-series', [NumberSeriesController::class, 'index'])->name('number-series.index');
-    Route::get('/number-series/create', [NumberSeriesController::class, 'create'])->name('number-series.create');
-    Route::post('/number-series', [NumberSeriesController::class, 'store'])->name('number-series.store');
-    Route::get('/number-series/{id}/edit', [NumberSeriesController::class, 'edit'])->name('number-series.edit');
-    Route::put('/number-series/{id}', [NumberSeriesController::class, 'update'])->name('number-series.update');
-    Route::delete('/number-series/{id}', [NumberSeriesController::class, 'destroy'])->name('number-series.destroy');
-});
-Route::middleware(['auth', 'last.seen', 'permission:vat_posting_setup'])->group(function () {
-    Route::get('/vat-posting-setup', [VatPostingSetupController::class, 'index'])->name('vat-posting-setup.index');
-    Route::post('/vat-posting-setup/sync', [VatPostingSetupController::class, 'syncFromBc'])->name('vat-posting-setup.sync');
-});
-Route::middleware(['auth', 'last.seen', 'permission:approval_entries'])->group(function () {
-    Route::get('/approval-entries', [ApprovalEntriesController::class, 'index'])->name('approval-entries.index');
-    Route::get('/approval-entries/export', [ApprovalEntriesController::class, 'export'])->name('approval-entries.export');
-});
+    // ---------- Staff ----------
+    Route::middleware('permission:users')->prefix('staff')->name('staff.')->group(function () {
+        Route::get('/', [StaffController::class, 'index'])->name('index');
+        Route::post('/', [StaffController::class, 'store'])->name('store');
+        Route::put('/{id}', [StaffController::class, 'update'])->name('update');
+        Route::put('/{id}/password', [StaffController::class, 'updatePassword'])->name('updatePassword');
+        Route::delete('/{id}', [StaffController::class, 'destroy'])->name('destroy');
+    });
 
-// Order report (Laravel-native PDF — no Business Central report/PDF API
-// involved). Access is checked inside the controller (order owner or an
-// admin/staff with the 'orders' permission), since this is used from both
-// the admin and customer sides.
-Route::middleware(['auth', 'last.seen'])->group(function () {
+    // ---------- Setup pages ----------
+    Route::middleware('permission:discounts')->group(function () {
+        Route::get('/discounts', [DiscountController::class, 'index'])->name('discounts.index');
+        Route::get('/discounts/create', [DiscountController::class, 'create'])->name('discounts.create');
+        Route::post('/discounts', [DiscountController::class, 'store'])->name('discounts.store');
+        Route::get('/discounts/{id}/edit', [DiscountController::class, 'edit'])->name('discounts.edit');
+        Route::put('/discounts/{id}', [DiscountController::class, 'update'])->name('discounts.update');
+        Route::delete('/discounts/{id}', [DiscountController::class, 'destroy'])->name('discounts.destroy');
+    });
+
+    Route::middleware('permission:number_series')->group(function () {
+        Route::get('/number-series', [NumberSeriesController::class, 'index'])->name('number-series.index');
+        Route::get('/number-series/create', [NumberSeriesController::class, 'create'])->name('number-series.create');
+        Route::post('/number-series', [NumberSeriesController::class, 'store'])->name('number-series.store');
+        Route::get('/number-series/{id}/edit', [NumberSeriesController::class, 'edit'])->name('number-series.edit');
+        Route::put('/number-series/{id}', [NumberSeriesController::class, 'update'])->name('number-series.update');
+        Route::delete('/number-series/{id}', [NumberSeriesController::class, 'destroy'])->name('number-series.destroy');
+    });
+
+    Route::middleware('permission:vat_posting_setup')->group(function () {
+        Route::get('/vat-posting-setup', [VatPostingSetupController::class, 'index'])->name('vat-posting-setup.index');
+        Route::post('/vat-posting-setup/sync', [VatPostingSetupController::class, 'syncFromBc'])->name('vat-posting-setup.sync');
+    });
+
+    Route::middleware('permission:approval_entries')->group(function () {
+        Route::get('/approval-entries', [ApprovalEntriesController::class, 'index'])->name('approval-entries.index');
+    });
+
+    // Document Display (route names keep the old report-settings.* prefix)
+    Route::middleware('permission:report_settings')->group(function () {
+        Route::get('/document-display', [ReportSettingsController::class, 'index'])->name('report-settings.index');
+        Route::put('/document-display', [ReportSettingsController::class, 'update'])->name('report-settings.update');
+    });
+
+    // Order PDF, used by both admins and customers, so access (order owner,
+    // or staff with the "orders" permission) is checked in the controller.
     Route::get('/orders/{id}/report', [OrderReportController::class, 'preview'])->name('orders.report.preview');
     Route::get('/orders/{id}/report/raw', [OrderReportController::class, 'raw'])->name('orders.report.raw');
     Route::get('/orders/{id}/report/stream', [OrderReportController::class, 'stream'])->name('orders.report.stream');
     Route::get('/orders/{id}/report/download', [OrderReportController::class, 'download'])->name('orders.report.download');
 });
 
-Route::middleware(['auth', 'last.seen', 'permission:report_settings'])->group(function () {
-    Route::get('/report-settings', [ReportSettingsController::class, 'index'])->name('report-settings.index');
-    Route::put('/report-settings', [ReportSettingsController::class, 'update'])->name('report-settings.update');
-});
+// ================= OLD ADDRESSES =================
+// Pages that were renamed: permanent redirects keep bookmarks working.
+Route::permanentRedirect('/pos/interface', '/web-shop');
+Route::permanentRedirect('/pos/items/{id}', '/web-shop/items/{id}');
+Route::permanentRedirect('/pos/item-detail/{id}', '/web-shop/item-detail/{id}');
+Route::permanentRedirect('/store-management', '/product-management');
+Route::permanentRedirect('/store-management/tracking', '/product-management/tracking');
+Route::permanentRedirect('/store/management/products/{id}/images', '/product-management/products/{id}/images');
+Route::permanentRedirect('/store/management/variants', '/product-management/variants');
+Route::permanentRedirect('/report-settings', '/document-display');

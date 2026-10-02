@@ -156,6 +156,12 @@
 
         .sidebar-top {
         min-height: 0;
+        flex: 1 1 auto;
+        /* When the menu and an open Settings list don't both fit, this part
+           scrolls instead of sliding under Settings / Log out. */
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-width: thin;
         }
 
         .brand {
@@ -310,6 +316,7 @@
 }
         .sidebar-bottom {
         padding-top: 10px;
+        flex-shrink: 0;
         }
 
 
@@ -428,7 +435,7 @@
         text-decoration: none;
         color: #222;
         font-size: 12px;
-        padding: 12px 18px 12px 38px;
+        padding: 7px 18px 7px 38px;
         transition: 0.2s ease;
         }
 
@@ -735,7 +742,9 @@
     display: none;
 }
 
-@media (max-width: 768px) {
+/* Phone layout (top bar + bottom bar, no sidebar) — phones only.
+   Tablets (641px+) keep the desktop sidebar. */
+@media (max-width: 640px) {
     .sidebar-wrap {
         display: none;
     }

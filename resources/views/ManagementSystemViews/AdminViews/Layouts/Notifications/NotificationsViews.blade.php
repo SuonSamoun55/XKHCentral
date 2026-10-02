@@ -7,6 +7,7 @@
         href="{{ asset('/css/views/POSViews/POSAdminViews/AdminNotification/NotificationsViews.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSAdminViews/AdminNotification/NotificationsViews.css')) }}">
 @endpush
 @section('content')
+@section('content')
     @php
         $user = $notification->user;
         $sender = $notification->sender;
@@ -32,75 +33,79 @@
         );
         $messageDate = optional($notification->updated_at)->format('D d/m/Y h:i A');
         $rawMessage = (string) ($notification->message ?? '');
+
+        // "Sent to": the recipient, or the "Recipients: ..." line a broadcast
+        // message carries, which is then removed from the message body.
         $sentToNames = $recipientEmail ?: $recipientName;
-        $sentToHtml = e($recipientEmail ?: $recipientName);
-        $messageTextForScan = html_entity_decode(
-        strip_tags(preg_replace('/<br\s*\/@endphp/i', "\n", $rawMessage)),
-    ENT_QUOTES | ENT_HTML5,
-    'UTF-8',
-);
+        $sentToHtml = e($sentToNames);
+        $messageText = html_entity_decode(
+            strip_tags(preg_replace('/<br\s*\/{0,1}>/i', "\n", $rawMessage)),
+            ENT_QUOTES | ENT_HTML5,
+            'UTF-8',
+        );
 
-if (preg_match('/Recipients:\s*(.+)/i', $messageTextForScan, $matches)) {
-    $extractedRecipients = trim(preg_replace('/\s+/', ' ', (string) $matches[1]));
-    if ($extractedRecipients !== '') {
-        $sentToNames = $extractedRecipients;
-        $sentToHtml = e($extractedRecipients);
-    }
-}
+        if (preg_match('/Recipients:\s*(.+)/i', $messageText, $matches)) {
+            $extractedRecipients = trim(preg_replace('/\s+/', ' ', (string) $matches[1]));
+            if ($extractedRecipients !== '') {
+                $sentToNames = $extractedRecipients;
+                $sentToHtml = e($extractedRecipients);
+            }
+        }
 
-if (preg_match('/Recipients:\s*(.+?)(?:<\/p>|<\/div>|<br\s*\/?>|\r?\n|$)/is', $rawMessage, $htmlMatches)) {
-    $extractedRecipientsHtml = trim(strip_tags((string) $htmlMatches[1]));
-    if ($extractedRecipientsHtml !== '') {
-        $sentToHtml = e($extractedRecipientsHtml);
-    }
-}
+        if (preg_match('/Recipients:\s*(.+?)(?:<\/p>|<\/div>|<br\s*\/{0,1}>|\r?\n|$)/is', $rawMessage, $htmlMatches)) {
+            $extractedRecipientsHtml = trim(strip_tags((string) $htmlMatches[1]));
+            if ($extractedRecipientsHtml !== '') {
+                $sentToHtml = e($extractedRecipientsHtml);
+            }
+        }
 
-$cleanMessage = preg_replace('/<p[^>]*>\s*Recipients:\s*.*?<\/p>/is', '', $rawMessage);
-$cleanMessage = preg_replace('/<div[^>]*>\s*Recipients:\s*.*?<\/div>/is', '', $cleanMessage);
-$cleanMessage = preg_replace('/<span[^>]*>\s*Recipients:\s*.*?<\/span>/is', '', $cleanMessage);
-$cleanMessage = preg_replace('/Recipients:\s*.*?(?:<br\s*\/?>|\r?\n|$)/is', '', $cleanMessage);
-if ($sentToNames !== $recipientName) {
-    $cleanMessage = str_ireplace('Recipients: ' . $sentToNames, '', $cleanMessage);
-}
-$cleanMessage = trim((string) $cleanMessage);
+        $cleanMessage = preg_replace('/<p[^>]*>\s*Recipients:\s*.*?<\/p>/is', '', $rawMessage);
+        $cleanMessage = preg_replace('/<div[^>]*>\s*Recipients:\s*.*?<\/div>/is', '', $cleanMessage);
+        $cleanMessage = preg_replace('/<span[^>]*>\s*Recipients:\s*.*?<\/span>/is', '', $cleanMessage);
+        $cleanMessage = preg_replace('/Recipients:\s*.*?(?:<br\s*\/{0,1}>|\r?\n|$)/is', '', $cleanMessage);
+        if ($sentToNames !== $recipientName) {
+            $cleanMessage = str_ireplace('Recipients: ' . $sentToNames, '', $cleanMessage);
+        }
+        // Printed with {!! !!} below, so only safe formatting tags are kept.
+        $cleanMessage = \App\Models\ManagementSystem\Notification::safeHtml(trim((string) $cleanMessage));
 
-$order = $notification->order;
-$isOrderNotification = $notification->type === 'order' && $order;
-$isStockNotification = $notification->type === 'out_of_stock' && $stockItem;
-$isGlobalMessageNotification = $notification->type === 'global_message';
+        $order = $notification->order;
+        $isOrderNotification = $notification->type === 'order' && $order;
+        $isStockNotification = $notification->type === 'out_of_stock' && $stockItem;
+        $isGlobalMessageNotification = $notification->type === 'global_message';
 
-if ($isOrderNotification) {
-    $shipping = (float) ($order->shipping_amount ?? 0);
-    $orderDiscount = (float) ($order->discount_amount ?? 0);
-    $orderTotalUsd = (float) $order->total_amount + $shipping;
-    $orderPlacedAt = optional($order->checked_out_at ?? $order->created_at)->format('d M Y, h:i A');
-    $orderNotifiedAt = optional($notification->updated_at)->format('d M Y, h:i A');
+        if ($isOrderNotification) {
+            $shipping = (float) ($order->shipping_amount ?? 0);
+            $orderDiscount = (float) ($order->discount_amount ?? 0);
+            $orderTotalUsd = (float) $order->total_amount + $shipping;
+            $orderPlacedAt = optional($order->checked_out_at ?? $order->created_at)->format('d M Y, h:i A');
+            $orderNotifiedAt = optional($notification->updated_at)->format('d M Y, h:i A');
 
-    $orderStatusMap = [
-        'cancelled' => [
-            'class' => 'cancelled',
-            'pillIcon' => 'bi-x-circle-fill',
-            'alertIcon' => 'bi-cart-x-fill',
-            'label' => 'Cancelled',
-            'note' => 'Order cancelled',
-        ],
-        'pending' => [
-            'class' => 'pending',
-            'pillIcon' => 'bi-hourglass-split',
-            'alertIcon' => 'bi-cart-x-fill',
-            'label' => 'Pending',
-            'note' => 'Order pending',
-        ],
-    ];
-    $orderStatusInfo = $orderStatusMap[$order->status] ?? [
-        'class' => 'confirmed',
-        'pillIcon' => 'bi-check-circle-fill',
-        'alertIcon' => 'bi-check-circle-fill',
-        'label' => ucfirst($order->status),
-        'note' => 'Order ' . $order->status,
-    ];
-}
-?>
+            $orderStatusMap = [
+                'cancelled' => [
+                    'class' => 'cancelled',
+                    'pillIcon' => 'bi-x-circle-fill',
+                    'alertIcon' => 'bi-cart-x-fill',
+                    'label' => 'Cancelled',
+                    'note' => 'Order cancelled',
+                ],
+                'pending' => [
+                    'class' => 'pending',
+                    'pillIcon' => 'bi-hourglass-split',
+                    'alertIcon' => 'bi-cart-x-fill',
+                    'label' => 'Pending',
+                    'note' => 'Order pending',
+                ],
+            ];
+            $orderStatusInfo = $orderStatusMap[$order->status] ?? [
+                'class' => 'confirmed',
+                'pillIcon' => 'bi-check-circle-fill',
+                'alertIcon' => 'bi-check-circle-fill',
+                'label' => ucfirst($order->status),
+                'note' => 'Order ' . $order->status,
+            ];
+        }
+    @endphp
 
     <div class="notification-detail-page {{ $isOrderNotification ? 'has-mobile-receipt' : '' }}">
         <div class="alert-container" id="alertContainer"></div>
@@ -135,7 +140,7 @@ if ($isOrderNotification) {
                             <div class="avatar-box large">
                                 @if ($hasRealAvatar)
 <img src="{{ $avatarSrc }}" alt="{{ $displayName }}"
-                                        onerror="this.onerror=null;this.parentElement.innerHTML='{{ $avatarInitial }}';this.parentElement.classList.add('letter-avatar');">
+                                        onerror="this.onerror=null;this.parentElement.textContent=@js($avatarInitial);this.parentElement.classList.add('letter-avatar');">
 @else
 <span class="letter-avatar">{{ $avatarInitial }}</span>
 @endif
@@ -228,11 +233,7 @@ if ($isOrderNotification) {
                                     <tbody>
                                         @foreach ($orderItems as $line)
 @php
-                                                $lineImage =
-                                                    optional($line->itemVariant)->image_url ??
-                                                    (optional($line->item)->custom_image_url ??
-                                                        optional($line->item)->image_url)
-;
+                                                $lineImage = $line->image_path;
                                                 $lineImage = $lineImage
                                                     ? (str_starts_with($lineImage, 'http')
                                                         ? $lineImage
@@ -341,7 +342,7 @@ if ($isOrderNotification) {
                     <div class="avatar-box large">
                         @if ($hasRealAvatar)
                             <img src="{{ $avatarSrc }}" alt="{{ $displayName }}"
-                                onerror="this.onerror=null;this.parentElement.innerHTML='{{ $avatarInitial }}';this.parentElement.classList.add('letter-avatar');">
+                                onerror="this.onerror=null;this.parentElement.textContent=@js($avatarInitial);this.parentElement.classList.add('letter-avatar');">
                         @else
                             <span class="letter-avatar">{{ $avatarInitial }}</span>
                         @endif
@@ -420,8 +421,8 @@ if ($isOrderNotification) {
                 <span class="stock-card-label">STOCK SUMMARY</span>
                 <div class="stock-stat-row">
                     <div class="stock-stat-box current">
-                        <span class="stock-stat-label">Current Stock</span>
-                        <span class="stock-stat-value">{{ $stockCurrent }}</span>
+                        <span class="stock-stat-label">Current Stock{{ $stockLocation ? ' (' . $stockLocation . ')' : '' }}</span>
+                        <span class="stock-stat-value">{{ rtrim(rtrim(number_format($stockCurrent, 2, '.', ''), '0'), '.') }}</span>
                     </div>
                     <div class="stock-stat-box reserved">
                         <span class="stock-stat-label">Reserved</span>
@@ -471,7 +472,7 @@ if ($isOrderNotification) {
             <div class="avatar-box large">
                 @if ($hasRealAvatar)
                     <img src="{{ $avatarSrc }}" alt="{{ $displayName }}"
-                        onerror="this.onerror=null;this.parentElement.innerHTML='{{ $avatarInitial }}';this.parentElement.classList.add('letter-avatar');">
+                        onerror="this.onerror=null;this.parentElement.textContent=@js($avatarInitial);this.parentElement.classList.add('letter-avatar');">
                 @else
                     <span class="letter-avatar">{{ $avatarInitial }}</span>
                 @endif
@@ -513,7 +514,7 @@ if ($isOrderNotification) {
                 <div class="avatar-box large">
                     @if ($hasRealAvatar)
                         <img src="{{ $avatarSrc }}" alt="{{ $displayName }}"
-                            onerror="this.onerror=null;this.parentElement.innerHTML='{{ $avatarInitial }}';this.parentElement.classList.add('letter-avatar');">
+                            onerror="this.onerror=null;this.parentElement.textContent=@js($avatarInitial);this.parentElement.classList.add('letter-avatar');">
                     @else
                         <span class="letter-avatar">{{ $avatarInitial }}</span>
                     @endif
@@ -546,9 +547,7 @@ if ($isOrderNotification) {
             <div class="receipt-items">
                 @foreach ($allOrderItems as $line)
                     @php
-                        $lineImage =
-                            optional($line->itemVariant)->image_url ??
-                            (optional($line->item)->custom_image_url ?? optional($line->item)->image_url);
+                        $lineImage = $line->image_path;
                         $lineImage = $lineImage
                             ? (str_starts_with($lineImage, 'http')
                                 ? $lineImage

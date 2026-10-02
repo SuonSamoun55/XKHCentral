@@ -588,3 +588,38 @@
         padding: 8px 6px;
     }
 }
+
+/* ── Tablet (641–900px, sidebar open): fit all four columns, URL(s) included,
+   inside the content area. Phone (≤640) keeps its card layout. ── */
+@media (min-width: 641px) and (max-width: 900px) {
+    .pagelist-page table {
+        min-width: 0;
+    }
+
+    .pagelist-page thead th {
+        font-size: 12.5px;
+        padding: 12px 8px;
+    }
+
+    .pagelist-page tbody td {
+        font-size: 12.5px;
+        padding: 10px 8px;
+    }
+
+    .pagelist-page .key-cell code {
+        display: inline-block;
+        font-size: 11px;
+        padding: 2px 7px;
+        word-break: break-all;
+    }
+
+    .pagelist-page .url-list {
+        max-width: 160px;
+        gap: 4px;
+    }
+
+    .pagelist-page .url-chip {
+        max-width: 160px;
+        font-size: 11px;
+    }
+}

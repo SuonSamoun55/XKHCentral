@@ -381,47 +381,42 @@
             let lbZoomed = false;
             let lightboxImages = [];
             let lightboxIndex = 0;
-            if (activeContactId) {
-                const listAlreadySeen = sessionStorage.getItem('chatListSeen') === '1';
-                if (!listAlreadySeen) {
-                    history.pushState({ chatBackGuard: true }, '', location.href);
-                    window.addEventListener('popstate', function guardFirstBack() {
-                        window.removeEventListener('popstate', guardFirstBack);
-                        window.location.href = chatListUrl;
-                    }, { once: true });
-                }
-            } else {
-                sessionStorage.setItem('chatListSeen', '1');
-            }
+            // Back navigation: every back press should do exactly one visible
+            // step. The old code pushed extra history entries (a "back guard"
+            // and a pushState on "Back to inbox") that changed the URL without
+            // changing the screen, so users had to press back 2-3 times.
+            const notificationsUrl = @json(route('user.notifications'));
+            const referrerUrl = (function () {
+                try { return document.referrer ? new URL(document.referrer) : null; } catch (_) { return null; }
+            })();
+            const cameFrom = function (targetUrl, needsNoAdminId) {
+                if (!referrerUrl) return false;
+                const target = new URL(targetUrl, window.location.origin);
+                if (referrerUrl.origin !== target.origin || referrerUrl.pathname !== target.pathname) return false;
+                return needsNoAdminId ? !referrerUrl.searchParams.get('admin_id') : true;
+            };
 
-            // "Back to inbox" (inside an open thread) — both panes already
-            // live on this same page, so swap them client-side instead of
-            // doing a full page reload like a plain <a href> would.
-            const chatPageEl = document.querySelector('.chat-page');
-            const chatBackToInboxBtn = document.getElementById('chatBackToInboxBtn');
-            chatBackToInboxBtn?.addEventListener('click', function (e) {
+            // Thread -> Inbox: if we came here from the inbox, step back to it
+            // (no new entry); otherwise swap this page for the inbox.
+            document.getElementById('chatBackToInboxBtn')?.addEventListener('click', function (e) {
                 e.preventDefault();
-                if (chatPageEl) {
-                    chatPageEl.classList.remove('has-active-chat');
-                    chatPageEl.classList.add('no-active-chat');
+                if (cameFrom(chatListUrl, true) && window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.replace(chatListUrl);
                 }
-                history.pushState({}, '', chatListUrl);
-                sessionStorage.setItem('chatListSeen', '1');
             });
 
-            // Inbox -> Notifications: behave like Chrome's back button (use
-            // browser history instead of a fresh navigation) when we
-            // actually arrived here from the notifications page.
-            (function () {
-                const btn = document.getElementById('inboxBackBtn');
-                if (!btn) return;
-                const cameFromSameOrigin = document.referrer && document.referrer.indexOf(window.location.origin) === 0;
-                if (!cameFromSameOrigin || window.history.length <= 1) return;
-                btn.addEventListener('click', function (e) {
-                    e.preventDefault();
+            // Inbox -> Notifications: step back only when the previous page
+            // really was Notifications; otherwise open it directly.
+            document.getElementById('inboxBackBtn')?.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (cameFrom(notificationsUrl, false) && window.history.length > 1) {
                     window.history.back();
-                });
-            })();
+                } else {
+                    window.location.href = notificationsUrl;
+                }
+            });
 
             // ===== Auto-grow composer textarea (caps at 15vh) =====
             function autoGrowInput() {
@@ -688,6 +683,31 @@
                 chatBody.scrollTop = chatBody.scrollHeight;
             }
 
+            // True while the user is looking at the newest messages. New
+            // messages only pull the view down then, so reading older ones
+            // isn't interrupted by the 1-second poll.
+            function isNearBottom() {
+                return chatBody.scrollHeight - chatBody.scrollTop - chatBody.clientHeight < 120;
+            }
+
+            // Phones: size the chat to the visible screen, which shrinks when
+            // the keyboard opens (see --chat-app-height in chat.css).
+            (function fitChatToScreen() {
+                const viewport = window.visualViewport;
+                const fit = function() {
+                    const stick = isNearBottom();
+                    document.documentElement.style.setProperty(
+                        '--chat-app-height', Math.round(viewport ? viewport.height : window.innerHeight) + 'px'
+                    );
+                    // iOS scrolls the page up when the keyboard opens; keep the header in view
+                    if (window.scrollY) window.scrollTo(0, 0);
+                    if (stick) scrollToBottom();
+                };
+                fit();
+                (viewport || window).addEventListener('resize', fit);
+                window.addEventListener('orientationchange', fit);
+            })();
+
             function removeEmptyState() {
                 const empty = document.getElementById('emptyChatText');
                 if (empty) {
@@ -737,6 +757,7 @@
                 }
 
                 const isMine = Boolean(message.is_mine ?? (Number(message.sender_id) === currentUserId));
+                const followNewest = isMine || isNearBottom();
                 const row = document.createElement('div');
                 row.className = `msg-row ${isMine ? 'mine' : 'other'}`;
 
@@ -789,7 +810,11 @@
                 removeEmptyState();
                 attachLightbox(row);
                 initVoicePlayers(row);
-                scrollToBottom();
+                if (followNewest) {
+                    scrollToBottom();
+                    // Photos grow the row once loaded; stay at the bottom
+                    row.querySelectorAll('img').forEach(img => img.addEventListener('load', scrollToBottom, { once: true }));
+                }
             }
 
             async function pollMessages() {

@@ -6,7 +6,6 @@
     use App\Models\POS\Order;
 
     $authUser = Auth::user();
-
     $company = null;
     if (session('selected_company_id')) {
         $company = Company::find(session('selected_company_id'));
@@ -18,7 +17,6 @@
     $pendingOrdersCount = Order::where('status', 'pending')
         ->when(session('selected_company_id'), fn ($q) => $q->where('company_id', session('selected_company_id')))
         ->count();
-
     $userAvatar = asset('images/default-user.png');
 
     if ($authUser) {
@@ -64,12 +62,6 @@
             break;
         }
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | COMPANY NAME / LOGO
-    |--------------------------------------------------------------------------
-    */
     $companyName = $company->display_name ?? $company->name ?? 'Orange';
     $companyLogoUrl = asset('images/default-company.png');
 
@@ -85,28 +77,30 @@
         [
             'name' => 'Management',
             'match' => [
-                'pos/interface', 'pos/*',
-                'store-management', 'store-management/*', 'store/management/*',
+                'web-shop', 'web-shop/*',
+                'product-management', 'product-management/*',
                 'discounts', 'discounts/*',
                 'vat-posting-setup', 'vat-posting-setup/*',
-                'report-settings', 'report-settings/*',
+                'document-display', 'document-display/*',
             ],
             'icon' => '/images/management/managemetn_POS.png',
             'icon_active' => '/images/management/management_POS_active.png',
             'children' => [
                 [
-                    'name' => 'B2B Orders',
-                    'url' => '/pos/interface',
-                    'match' => ['pos/interface', 'pos/*'],
+                    'name' => 'Web Shop',
+                    'url' => '/web-shop',
+                    'match' => ['web-shop', 'web-shop/*'],
                     'icon' => '/images/management/managemetn_POS.png',
                     'icon_active' => '/images/management/management_POS_active.png',
+                    'permission' => 'pos',
                 ],
                 [
-                    'name' => 'Stores',
-                    'url' => '/store-management',
-                    'match' => ['store-management', 'store-management/*', 'store/management/*'],
+                    'name' => 'Products',
+                    'url' => '/product-management',
+                    'match' => ['product-management', 'product-management/*'],
                     'icon' => '/images/AdminPOS/admin_store_management.png',
                     'icon_active' => '/images/AdminPOS/admin_store_management_active.png',
+                    'permission' => 'store_management',
                 ],
                 [
                     'name' => 'Discount',
@@ -114,6 +108,7 @@
                     'match' => ['discounts', 'discounts/*'],
                     'icon' => '/images/AdminPOS/Admin_POS_Discount.png',
                     'icon_active' => '/images/AdminPOS/Admin_POS_Discount_Active.png',
+                    'permission' => 'discounts',
                 ],
                 [
                     'name' => 'Tax Groups',
@@ -121,13 +116,15 @@
                     'match' => ['vat-posting-setup', 'vat-posting-setup/*'],
                     'icon' => '/images/management/tax.png',
                     'icon_active' => '/images/management/tax_active.png',
+                    'permission' => 'vat_posting_setup',
                 ],
                 [
-                    'name' => 'Report Settings',
-                    'url' => '/report-settings',
-                    'match' => ['report-settings', 'report-settings/*'],
+                    'name' => 'Document Display',
+                    'url' => '/document-display',
+                    'match' => ['document-display', 'document-display/*'],
                     'icon' => '/images/pos/Report.png',
                     'icon_active' => '/images/pos/ReportActive.png',
+                    'permission' => 'report_settings',
                 ],
             ],
         ],
@@ -145,6 +142,7 @@
                     'icon' => '/images/AdminPOS/Admin_POS_Approval_Order.png',
                     'icon_active' => '/images/AdminPOS/Admin_POS_Approval_Order_active.png',
                     'notification' => $pendingOrdersCount > 0,
+                    'permission' => 'orders',
                 ],
                 [
                     'name' => 'Approval Entry',
@@ -152,6 +150,7 @@
                     'match' => ['approval-entries', 'approval-entries/*'],
                     'icon' => '/images/pos/ApprovalEntry.png',
                     'icon_active' => '/images/pos/ApprovalEntryActive.png',
+                    'permission' => 'approval_entries',
                 ],
             ],
         ],
@@ -162,13 +161,23 @@
             'icon' => '/images/aside/SidebarNotifications.png',
             'icon_active' => '/images/aside/NotificationActive.png',
             'notification' => $unreadNotificationCount > 0,
+            'permission' => 'notifications',
         ],
     ];
 
-    // Mobile header/footer have no dropdown interaction, so grouped desktop
-    // items (e.g. "Item" -> B2B Orders/Store/Discount/Tax Groups) are shown
-    // flattened back into their individual icons there, same as before
-    // grouping existed on desktop.
+    $canAccessPage = fn(string $page) => $authUser?->canAccessPage($page) ?? false;
+    $navItems = array_values(array_filter(array_map(function ($item) use ($canAccessPage) {
+        if (!empty($item['children'])) {
+            $item['children'] = array_values(array_filter(
+                $item['children'],
+                fn($child) => $canAccessPage($child['permission'])
+            ));
+
+            return empty($item['children']) ? null : $item;
+        }
+
+        return $canAccessPage($item['permission']) ? $item : null;
+    }, $navItems)));
     $flattenForMobile = function (array $items) {
         $flat = [];
         foreach ($items as $item) {
@@ -183,19 +192,24 @@
         return $flat;
     };
 
-    $mobileMenuItems = $flattenForMobile($navItems);
-    // "Notification" is dropped from the mobile footer since the bell
-    // already sits in the mobile topbar (see .mobile-topbar-bell above) —
-    // "Report Settings" takes its old last slot instead, shortened to
-    // "Report" to fit the footer label width.
+    // Web Shop already sits in the mobile footer, so the hamburger menu skips it.
+    $mobileMenuItems = array_values(array_filter(
+        $flattenForMobile($navItems),
+        fn($item) => $item['name'] !== 'Web Shop'
+    ));
     $bottomNavItems = array_values(array_filter(
         $flattenForMobile($navItems),
         fn($item) => !in_array($item['name'], ['Discount', 'Tax Groups', 'Approval Entry', 'Notification'])
     ));
     foreach ($bottomNavItems as $idx => $item) {
-        if ($item['name'] === 'Report Settings') {
+        if ($item['name'] === 'Product Management') {
+            $bottomNavItems[$idx]['name'] = 'Products';
+        }
+    }
+    foreach ($bottomNavItems as $idx => $item) {
+        if ($item['name'] === 'Document Display') {
             $reportItem = $bottomNavItems[$idx];
-            $reportItem['name'] = 'Report';
+            $reportItem['name'] = 'Documents';
             unset($bottomNavItems[$idx]);
             $bottomNavItems = array_values($bottomNavItems);
             $bottomNavItems[] = $reportItem;
@@ -235,10 +249,14 @@
         @yield('title', 'POS Admin')
     </span>
 
-    <a href="{{ route('admin.notifications.index') }}" class="mobile-topbar-btn mobile-topbar-bell" aria-label="Notifications">
-        <i class="bi bi-bell-fill"></i>
-        <span id="mobileNotiDot" class="noti-dot {{ $unreadNotificationCount > 0 ? 'show' : '' }}" aria-hidden="true"></span>
-    </a>
+    @if ($canAccessPage('notifications'))
+        <a href="{{ route('admin.notifications.index') }}" class="mobile-topbar-btn mobile-topbar-bell" aria-label="Notifications">
+            <i class="bi bi-bell-fill"></i>
+            <span id="mobileNotiDot" class="noti-dot {{ $unreadNotificationCount > 0 ? 'show' : '' }}" aria-hidden="true"></span>
+        </a>
+    @else
+        <span class="mobile-topbar-btn" style="visibility:hidden" aria-hidden="true"></span>
+    @endif
 
     @if ($backUrl === '')
         <nav class="mobile-menu-panel" id="mobileMenuPanel">
@@ -269,14 +287,18 @@
 
             <div class="mobile-menu-divider"></div>
 
-            <a href="{{ route('user.index') }}" class="mobile-menu-link">
-                <img src="{{ asset('images/aside/open admin (2).png') }}" alt="" class="mobile-menu-link-icon">
-                Open User
-            </a>
-            <a href="{{ route('pos.index') }}" class="mobile-menu-link">
-                <img src="{{ asset('images/aside/open admin active.png') }}" alt="" class="mobile-menu-link-icon">
-                Open Management
-            </a>
+            @if ($canAccessPage('home'))
+                <a href="{{ route('user.index') }}" class="mobile-menu-link">
+                    <img src="{{ asset('images/aside/open admin (2).png') }}" alt="" class="mobile-menu-link-icon">
+                    Open User
+                </a>
+            @endif
+            @if ($canAccessPage('dashboard'))
+                <a href="{{ route('pos.index') }}" class="mobile-menu-link">
+                    <img src="{{ asset('images/aside/open admin active.png') }}" alt="" class="mobile-menu-link-icon">
+                    Open Management
+                </a>
+            @endif
             <a href="/logout" class="mobile-menu-link mobile-menu-link-danger">
                 <img src="{{ asset('images/aside/logout.png') }}" alt="" class="mobile-menu-link-icon">
                 Log out
@@ -325,10 +347,12 @@
         <div class="sidebar-top">
             <div class="brand">
                 <div class="company-logo-box">
+                    <a href="{{ route('pos.index') }}" style="display:contents" aria-label="Go to dashboard">
                     <img src="{{ $companyLogoUrl }}"
                          alt="Company Logo"
                          class="company-logo-img"
                          onerror="this.onerror=null;this.src='{{ asset('images/default-company.png') }}';">
+                    </a>
                 </div>
             </div>
 
@@ -427,8 +451,12 @@
                 </button>
 
                 <div class="settings-menu">
-                    <a href="{{ route('user.index') }}" class="settings-link nav-link-mobile-close">Open User</a>
-                    <a href="{{ route('pos.index') }}" class="settings-link nav-link-mobile-close">Open Management</a>
+                    @if ($canAccessPage('home'))
+                        <a href="{{ route('user.index') }}" class="settings-link nav-link-mobile-close">Open User</a>
+                    @endif
+                    @if ($canAccessPage('dashboard'))
+                        <a href="{{ route('pos.index') }}" class="settings-link nav-link-mobile-close">Open Management</a>
+                    @endif
                 </div>
             </div>
 
@@ -460,10 +488,6 @@
         </div>
     </div>
 </div>
-{{--
-<link rel="stylesheet" href="{{ asset('/') }}">
-<link rel="stylesheet" href="{{ asset('/css/views/Layout/POSAdmin/mobile-nav.css') }}"> --}}
-
 <script>
 (function () {
     const overlay = document.getElementById('logoutConfirmOverlay');
@@ -518,14 +542,8 @@
             }
             localStorage.setItem(STORAGE_KEY, JSON.stringify([...open]));
         } catch (_) {
-            // localStorage unavailable — state just won't persist across page loads.
         }
     }
-
-    // Restore the open group from the last page before this one navigated
-    // away — full page loads otherwise reset every group shut. Only the
-    // first match is restored (accordion: at most one group open), in
-    // case an older stored value still lists more than one key.
     const openGroups = new Set(getOpenGroups());
     let restoredOne = false;
     document.querySelectorAll('.nav-group[data-nav-group-key]').forEach(function (group) {
@@ -541,10 +559,9 @@
             if (!group) return;
 
             const willOpen = !group.classList.contains('open');
-
-            // Accordion behavior: only one submenu open at a time, so the
-            // sidebar's total height never grows enough to push/overlap
-            // the profile and settings area pinned at the bottom.
+            if (willOpen && document.getElementById('settingsBox')?.classList.contains('open')) {
+                document.getElementById('settingsBtn')?.click();
+            }
             document.querySelectorAll('.nav-group[data-nav-group-key].open').forEach(function (openGroup) {
                 if (openGroup === group) return;
                 openGroup.classList.remove('open');
@@ -553,6 +570,15 @@
 
             group.classList.toggle('open', willOpen);
             setGroupOpen(group.dataset.navGroupKey, willOpen);
+        });
+    });
+    document.getElementById('settingsBtn')?.addEventListener('click', function() {
+        setTimeout(function() {
+            if (!document.getElementById('settingsBox')?.classList.contains('open')) return;
+            document.querySelectorAll('.nav-group[data-nav-group-key].open').forEach(function(openGroup) {
+                openGroup.classList.remove('open');
+                setGroupOpen(openGroup.dataset.navGroupKey, false);
+            });
         });
     });
 })();

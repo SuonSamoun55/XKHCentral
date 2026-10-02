@@ -248,7 +248,7 @@ body {
 
 
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
     .detail-grid {
         grid-template-columns: 1fr;
     }

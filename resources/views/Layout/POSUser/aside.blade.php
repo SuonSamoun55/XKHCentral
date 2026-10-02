@@ -4,8 +4,10 @@
         <div class="sidebar-top">
             <div class="brand">
                 <div class="company-logo-box">
+                    <a href="{{ route('user.index') }}" style="display:contents" aria-label="Go to dashboard">
                     <img src="{{ $companyLogoUrl }}" alt="Company Logo" class="company-logo-img"
                         onerror="this.onerror=null;this.src='{{ asset('images/default-company.png') }}';">
+                    </a>
                 </div>
             </div>
             <nav class="nav-list">
@@ -65,10 +67,12 @@
                 </button>
 
                 <div class="settings-menu">
-                    <a href="{{ route('profile') }}" class="settings-link nav-link-mobile-close">My Profile</a>
-                    <a href="{{ route('user.password.change') }}" class="settings-link nav-link-mobile-close">Change
-                        password</a>
-                    <a href="{{ route('profile') }}" class="settings-link">Policy</a>
+                    @if ($authUser->canAccessPage('profile'))
+                        <a href="{{ route('profile') }}" class="settings-link nav-link-mobile-close">My Profile</a>
+                        <a href="{{ route('user.password.change') }}" class="settings-link nav-link-mobile-close">Change
+                            password</a>
+                        <a href="{{ route('profile') }}" class="settings-link">Policy</a>
+                    @endif
                     @if ($isAdmin)
                         <a href="{{ url('/admin') }}" class="settings-link nav-link-mobile-close">Open Admin</a>
                     @endif
@@ -106,7 +110,7 @@
     </div>
 </div>
 
-<link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSUserViews/Layout/aside.css') }}">
+<link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSUserViews/Layout/aside.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSUserViews/Layout/aside.css')) }}">
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {

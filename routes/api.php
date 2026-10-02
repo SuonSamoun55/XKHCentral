@@ -1,35 +1,23 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\BusinessCentral\OrderStatusController;
 use App\Http\Controllers\Api\ManagementSystem\AuthController;
-use App\Http\Controllers\Api\ManagementSystem\WebUserController;
-use App\Http\Controllers\Api\POS\Admin\Items\ItemPosController;
 use App\Http\Controllers\Api\POS\User\Cart\CartController;
 use App\Http\Controllers\Api\POS\User\Orders\OrderController;
-use App\Http\Controllers\Api\POS\User\Favorites\FavoriteController;
-use App\Http\Controllers\Api\BusinessCentral\OrderStatusController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| API Routes
+| API Routes (token login with Sanctum)
 |--------------------------------------------------------------------------
 */
 
 Route::post('/login', [AuthController::class, 'apiLogin']);
 
-Route::post('/users', [WebUserController::class, 'store']);
-Route::get('/users', [WebUserController::class, 'index']);
-Route::get('/bc-customers', [WebUserController::class, 'getBCCustomers']);
-Route::post('/items/sync-from-al', [ItemPosController::class, 'syncFromAl']);
-Route::get('/items/image/{itemId}', [ItemPosController::class, 'getItemImage']);
-Route::get('/orders/{order}/bc-status', [OrderStatusController::class, 'show']);
-
 Route::middleware('auth:sanctum')->group(function () {
-
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+    Route::get('/user', fn (Request $request) => $request->user());
+    Route::post('/logout', [AuthController::class, 'apiLogout']);
 
     Route::get('/cart', [CartController::class, 'getCart']);
     Route::post('/cart/add', [CartController::class, 'addToCart']);
@@ -39,10 +27,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/checkout', [OrderController::class, 'checkout']);
     Route::get('/orders/history', [OrderController::class, 'history']);
-    Route::get('/favorites', [FavoriteController::class, 'index']);
-
-    Route::post('/favorites/add', [FavoriteController::class, 'addFavorite']);
-
-    Route::delete('/favorites/remove/{id}', [FavoriteController::class, 'removeFavorite']);
-
+    Route::get('/orders/{order}/bc-status', [OrderStatusController::class, 'show']);
 });

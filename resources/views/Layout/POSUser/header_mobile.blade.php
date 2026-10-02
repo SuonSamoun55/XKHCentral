@@ -26,10 +26,6 @@
 
     /** @var \App\Models\ManagementSystem\User $authUser */
     $authUser = Auth::user();
-    // Mirrors the 'permission:dashboard' gate on the /admin route itself, so
-    // "Open Admin" only shows for roles that can actually get in.
-    $isAdmin = $authUser->isAdmin() || $authUser->hasPermission('dashboard');
-
     $mobileNavItems = [
         [
             'name' => 'Dashboard',
@@ -37,6 +33,7 @@
             'match' => ['/'],
             'icon' => 'images/aside/SidbarDaskboards.png',
             'icon_active' => 'images/aside/UserDaskboardActive.png',
+            'permission' => 'home',
         ],
         [
             'name' => 'Cart',
@@ -44,6 +41,7 @@
             'match' => ['pos-system/cart'],
             'icon' => 'images/aside/SidebarCarts.png',
             'icon_active' => 'images/aside/UserCartActive.png',
+            'permission' => 'cart',
         ],
         [
             'name' => 'Favorite',
@@ -51,6 +49,7 @@
             'match' => ['pos-system/favorites'],
             'icon' => 'images/aside/SidebarFavorites.png',
             'icon_active' => 'images/aside/FavoriteActive.png',
+            'permission' => 'favorites',
         ],
         [
             'name' => 'Order History',
@@ -58,6 +57,7 @@
             'match' => ['pos-system/order-history'],
             'icon' => '/images/AdminPOS/Admin_POS_Approval_Order.png',
             'icon_active' => '/images/AdminPOS/Admin_POS_Approval_Order_active.png',
+            'permission' => 'order_history',
         ],
         [
             'name' => 'Notification',
@@ -65,6 +65,7 @@
             'match' => ['pos-system/notifications'],
             'icon' => 'images/aside/SidebarNotifications.png',
             'icon_active' => 'images/aside/NotificationActive.png',
+            'permission' => 'user_notifications',
         ],
         [
             'name' => 'Open Admin',
@@ -72,7 +73,7 @@
             'match' => ['admin', 'admin/*'],
             'icon' => '/images/aside/open admin (2).png',
             'icon_active' => '/images/aside/open admin (2).png',
-            'admin_only' => true,
+            'permission' => 'dashboard',
         ],
         [
             'name' => 'Log out',
@@ -82,6 +83,13 @@
             'icon_active' => 'images/aside/logout.png',
         ],
     ];
+
+    // Only pages this user's role can open (same check as the routes'
+    // permission:* middleware); items without a permission always show.
+    $mobileNavItems = array_filter(
+        $mobileNavItems,
+        fn($item) => empty($item['permission']) || $authUser->canAccessPage($item['permission'])
+    );
 @endphp
 
 <div class="mobile">
@@ -91,7 +99,7 @@
         <i class="bi bi-list"></i>
     </button>
 
-    <div class="logo-wrap">
+    <a href="{{ route('user.index') }}" class="logo-wrap" aria-label="Go to dashboard">
         {{-- This is the page's LCP element (Chrome flagged ~2.8s). Explicit
              width/height stop the browser waiting on the image to know its
              box size (avoids a layout shift too), and fetchpriority tells
@@ -104,19 +112,21 @@
              height="50"
              fetchpriority="high"
              onerror="this.onerror=null;this.src='{{ asset('images/default-company.png') }}';">
-    </div>
-
-    <a href="{{ route('user.pos.cart') }}" class="cart">
-        <img src="{{ asset('images/pos/Button - Square.png') }}" alt="Cart" class="cart-icon">
-        <span class="cart-count {{ (int) ($cartCount ?? 0) > 0 ? '' : 'is-empty' }}" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
     </a>
+
+    @if ($authUser->canAccessPage('cart'))
+        <a href="{{ route('user.pos.cart') }}" class="cart">
+            <img src="{{ asset('images/pos/Button - Square.png') }}" alt="Cart" class="cart-icon">
+            <span class="cart-count {{ (int) ($cartCount ?? 0) > 0 ? '' : 'is-empty' }}" id="cartCount">{{ (int) ($cartCount ?? 0) }}</span>
+        </a>
+    @else
+        {{-- Keeps the logo centred when the cart is hidden --}}
+        <span class="cart" style="visibility:hidden" aria-hidden="true"></span>
+    @endif
 </header>
 
 <nav class="mobile-menu-panel" id="mobileMenuPanel">
     @foreach ($mobileNavItems as $item)
-        @if (!empty($item['admin_only']) && !$isAdmin)
-            @continue
-        @endif
 
         @php
             $isActive = false;

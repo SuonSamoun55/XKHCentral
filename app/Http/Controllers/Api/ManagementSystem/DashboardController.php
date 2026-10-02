@@ -44,13 +44,13 @@ class DashboardController extends Controller
         $now = Carbon::now();
 
         $orderQuery = Order::query()
-            ->when($selectedCompanyId, fn($q) => $q->where('company_id', $selectedCompanyId));
+            ->when($selectedCompanyId, fn ($q) => $q->where('company_id', $selectedCompanyId));
 
         $availableYears = (clone $orderQuery)
             ->selectRaw('DISTINCT YEAR(created_at) as yr')
             ->orderByDesc('yr')
             ->pluck('yr')
-            ->map(fn($yr) => (int) $yr)
+            ->map(fn ($yr) => (int) $yr)
             ->values();
         if ($availableYears->isEmpty()) {
             $availableYears = collect([$now->year]);
@@ -67,15 +67,20 @@ class DashboardController extends Controller
         }
         // hero 3 card
         $totalProducts = Item::query()
-            ->when($selectedCompanyId, fn($q) => $q->where('company_id', $selectedCompanyId))
+            ->when($selectedCompanyId, fn ($q) => $q->where('company_id', $selectedCompanyId))
             ->count();
         $totalCustomers = User::where('bc_customer_no', 'not like', 'STAFF-%')
-            ->when($selectedCompanyId, fn($q) => $q->where('company_id', $selectedCompanyId))
+            ->when($selectedCompanyId, fn ($q) => $q->where('company_id', $selectedCompanyId))
             ->count();
         $onlineCustomers = User::where('bc_customer_no', 'not like', 'STAFF-%')
-            ->when($selectedCompanyId, fn($q) => $q->where('company_id', $selectedCompanyId))
+            ->when($selectedCompanyId, fn ($q) => $q->where('company_id', $selectedCompanyId))
             ->online()
             ->count();
+
+        // Approval cards (same statuses as the Approval Order tabs)
+        $approvedOrdersCount = (clone $orderQuery)->where('status', 'confirmed')->count();
+        $pendingOrdersCount = (clone $orderQuery)->where('status', 'pending')->count();
+
         [$chartData, $yAxisSteps, $yAxisMax] = $this->buildReportChart($orderQuery, $reportPeriod, $now, $selectedYear);
 
         //unread notification
@@ -123,6 +128,8 @@ class DashboardController extends Controller
         ] = $this->buildOverviewStats($orderQuery, $selectedCompanyId, $now, $statsPeriod);
 
         return view('ManagementSystemViews.AdminViews.Layouts.DashboardView.Dashboard', compact(
+            'approvedOrdersCount',
+            'pendingOrdersCount',
             'totalCustomers',
             'onlineCustomers',
             'totalProducts',
@@ -155,13 +162,13 @@ class DashboardController extends Controller
         $now = Carbon::now();
 
         $orderQuery = Order::query()
-            ->when($selectedCompanyId, fn($q) => $q->where('company_id', $selectedCompanyId));
+            ->when($selectedCompanyId, fn ($q) => $q->where('company_id', $selectedCompanyId));
 
         $availableYears = (clone $orderQuery)
             ->selectRaw('DISTINCT YEAR(created_at) as yr')
             ->orderByDesc('yr')
             ->pluck('yr')
-            ->map(fn($yr) => (int) $yr)
+            ->map(fn ($yr) => (int) $yr)
             ->values();
         if ($availableYears->isEmpty()) {
             $availableYears = collect([$now->year]);
@@ -216,7 +223,7 @@ class DashboardController extends Controller
         $now = Carbon::now();
 
         $orderQuery = Order::query()
-            ->when($selectedCompanyId, fn($q) => $q->where('company_id', $selectedCompanyId));
+            ->when($selectedCompanyId, fn ($q) => $q->where('company_id', $selectedCompanyId));
 
         $period = request()->get('period', 'month');
         if (!in_array($period, ['today', 'week', 'month', 'year'], true)) {
@@ -256,7 +263,7 @@ class DashboardController extends Controller
             ? $this->niceAxisSteps($maxValue)
             : [[0, 5, 10, 15, 20], 20.0];
 
-        $yAxisSteps = array_map(fn($v) => $this->formatAxisValue((float) $v), $rawSteps);
+        $yAxisSteps = array_map(fn ($v) => $this->formatAxisValue((float) $v), $rawSteps);
 
         return [$chartData, $yAxisSteps, $yAxisMax];
     }
@@ -396,7 +403,7 @@ class DashboardController extends Controller
     {
         [$from, $to, $prevFrom, $prevTo] = $this->periodRange($now, $period);
 
-        $confirmedOrders = fn(Carbon $from, Carbon $to) => (clone $orderQuery)
+        $confirmedOrders = fn (Carbon $from, Carbon $to) => (clone $orderQuery)
             ->where('status', 'confirmed')
             ->whereBetween('created_at', [$from, $to]);
 
@@ -408,9 +415,9 @@ class DashboardController extends Controller
         $totalConfirmedPrev = $confirmedOrders($prevFrom, $prevTo)->count();
         $totalConfirmedChangePct = $this->percentChange((float) $totalConfirmedPrev, (float) $totalConfirmedOrders);
 
-        $pendingProductBase = fn() => Item::query()
+        $pendingProductBase = fn () => Item::query()
             ->where('is_visible', false)
-            ->when($companyId, fn($q) => $q->where('company_id', $companyId));
+            ->when($companyId, fn ($q) => $q->where('company_id', $companyId));
         $pendingProductCount = $pendingProductBase()->count();
         $pendingProductPrevCount = $pendingProductBase()->where('created_at', '<', $from)->count();
         $pendingProductChangePct = $this->percentChange((float) $pendingProductPrevCount, (float) $pendingProductCount);
@@ -435,7 +442,7 @@ class DashboardController extends Controller
                 ->leftJoin('items', 'items.id', '=', 'order_items.item_id')
                 ->where('orders.status', 'confirmed')
                 ->whereBetween('orders.created_at', [$from, $to])
-                ->when($companyId, fn($q) => $q->where('orders.company_id', $companyId))
+                ->when($companyId, fn ($q) => $q->where('orders.company_id', $companyId))
                 ->select(
                     'order_items.item_id',
                     DB::raw('COALESCE(MAX(items.display_name), MAX(order_items.item_name), MAX(order_items.item_no)) as item_name'),

@@ -2,7 +2,7 @@
 @section('title', 'Dashboard')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('/css/views/Management/Daskboard/POSadminDaskboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('/css/views/Management/Daskboard/POSadminDaskboard.css') }}?v={{ filemtime(public_path('css/views/Management/Daskboard/POSadminDaskboard.css')) }}">
 @endpush
 
 @section('content')
@@ -38,6 +38,41 @@
                         class="hero-card-value">{{ number_format($onlineCustomers) }}</span><span class="hero-chevron">&rsaquo;</span>
                 </span>
             </div>
+        </section>
+
+        {{-- Real links, so a click (or middle-click / long-press) opens the
+             Approval Order page. Only clickable for users who can open it. --}}
+        @php $canOpenOrders = auth()->user()?->canAccessPage('orders') ?? false; @endphp
+        <section class="order-status-row">
+            <{{ $canOpenOrders ? 'a' : 'div' }} class="order-status-card approved {{ $canOpenOrders ? '' : 'is-static' }}"
+                @if ($canOpenOrders) href="{{ route('admin.orders.index', ['tab' => 'approved']) }}" @endif>
+                <span class="order-status-icon">
+                    <img src="{{ asset('images/management/approved.png') }}" alt="" onerror="this.style.display='none'">
+                </span>
+                <div class="order-status-info">
+                    <span class="order-status-title">Approved Orders</span>
+                    <strong class="order-status-value">{{ number_format($approvedOrdersCount) }}</strong>
+                    <span class="order-status-sub">Completed &amp; Ready</span>
+                </div>
+                @if ($canOpenOrders)
+                    <i class="bi bi-chevron-right order-status-chevron"></i>
+                @endif
+            </{{ $canOpenOrders ? 'a' : 'div' }}>
+
+            <{{ $canOpenOrders ? 'a' : 'div' }} class="order-status-card pending {{ $canOpenOrders ? '' : 'is-static' }}"
+                @if ($canOpenOrders) href="{{ route('admin.orders.index', ['tab' => 'new']) }}" @endif>
+                <span class="order-status-icon">
+                    <img src="{{ asset('images/management/pending_approval.png') }}" alt="" onerror="this.style.display='none'">
+                </span>
+                <div class="order-status-info">
+                    <span class="order-status-title">Pending Orders</span>
+                    <strong class="order-status-value">{{ number_format($pendingOrdersCount) }}</strong>
+                    <span class="order-status-sub">Requires Your Attention</span>
+                </div>
+                @if ($canOpenOrders)
+                    <i class="bi bi-chevron-right order-status-chevron"></i>
+                @endif
+            </{{ $canOpenOrders ? 'a' : 'div' }}>
         </section>
 
         <div class="dashboard-grid">
@@ -129,10 +164,9 @@
                             </div>
                         </li>
                     @empty
-                        <li class="product-item">
-                            <div class="product-info">
-                                <div class="product-sub">No sales for this period.</div>
-                            </div>
+                        <li class="dash-empty-state">
+                            <img src="{{ asset('images/management/no_sale.png') }}" alt="">
+                            <span>No sales for this period.</span>
                         </li>
                     @endforelse
                 </ul>
@@ -168,10 +202,9 @@
                             <a href="{{ route('admin.notifications.show', $n['id']) }}" class="chat-btn">Chat</a>
                         </li>
                     @empty
-                        <li class="notif-item notif-empty">
-                            <div class="notif-name-block">
-                                <div class="notif-role">No notifications yet.</div>
-                            </div>
+                        <li class="dash-empty-state">
+                            <img src="{{ asset('images/management/no_notification.png') }}" alt="">
+                            <span>No notifications yet.</span>
                         </li>
                     @endforelse
                 </ul>
@@ -267,10 +300,9 @@
                 }) => {
                     if (!topProducts.length) {
                         listEl.innerHTML = `
-                    <li class="product-item">
-                        <div class="product-info">
-                            <div class="product-sub">No sales for this period.</div>
-                        </div>
+                    <li class="dash-empty-state">
+                        <img src="{{ asset('images/management/no_sale.png') }}" alt="">
+                        <span>No sales for this period.</span>
                     </li>
                 `;
                         return;

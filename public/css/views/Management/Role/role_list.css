@@ -452,3 +452,51 @@
         width: 100%;
     }
 }
+
+/* ---------- tablets (641px – 1024px, and upright tablets up to 1366px
+   such as the iPad Pro 13") ----------
+   The table had a fixed minimum width of 860px, wider than the space
+   beside the sidebar, so it scrolled sideways. Let it fit the screen;
+   the page chips already wrap onto extra lines. Landscape desktops are
+   not affected. */
+@media (min-width: 641px) and (max-width: 1024px),
+       (min-width: 1025px) and (max-width: 1366px) and (orientation: portrait) {
+    .role-list-page table {
+        min-width: 0;
+    }
+
+    .role-list-page thead th,
+    .role-list-page tbody td {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .role-list-page .chip-list {
+        max-width: none;
+    }
+
+    .role-list-page .label-cell {
+        white-space: normal;
+    }
+}
+
+/* ---------- Pages Accessible: first 6 chips + "See more" ---------- */
+.role-list-page .chip-list:not(.is-expanded) .chip-extra {
+    display: none;
+}
+
+.role-list-page .chip-toggle {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--teal-dark);
+    background: transparent;
+    border: 1px dashed #9ED8D2;
+    padding: 4px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.role-list-page .chip-toggle:hover {
+    background: var(--teal-tint);
+}

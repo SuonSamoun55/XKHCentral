@@ -48,4 +48,3 @@ class InventoryMovement extends Model
         return $this->belongsTo(\App\Models\ManagementSystem\User::class, 'buyer_user_id');
     }
 }
-

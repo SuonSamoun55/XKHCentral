@@ -13,4 +13,3 @@ class Favorite extends Model
     'item_id'
 ];
 }
-

@@ -17,11 +17,16 @@
             @yield('title', 'Management')
         </span>
 
-        <a href="{{ route('admin.notifications.index') }}" class="mobile-topbar-btn mobile-topbar-bell"
-            aria-label="Notifications">
-            <i class="bi bi-bell-fill"></i>
-            <span class="noti-dot {{ $unreadNotificationCount > 0 ? 'show' : '' }}" aria-hidden="true"></span>
-        </a>
+        @if ($canAccessPage('notifications'))
+            <a href="{{ route('admin.notifications.index') }}" class="mobile-topbar-btn mobile-topbar-bell"
+                aria-label="Notifications">
+                <i class="bi bi-bell-fill"></i>
+                <span class="noti-dot {{ $unreadNotificationCount > 0 ? 'show' : '' }}" aria-hidden="true"></span>
+            </a>
+        @else
+            {{-- Keeps the title centred when the bell is hidden --}}
+            <span class="mobile-topbar-btn" style="visibility:hidden" aria-hidden="true"></span>
+        @endif
 
         @if ($backUrl === '')
             <nav class="mobile-menu-panel" id="mobileMenuPanel">
@@ -55,10 +60,12 @@
                 @endforeach
                 <div class="mobile-menu-divider"></div>
 
-                <a href="{{ route('user.index') }}" class="mobile-menu-link">
-                    <img src="{{ asset('/images/aside/open admin (2).png') }}" alt="" class="mobile-menu-link-icon">
-                    Open User
-                </a>
+                @if ($canAccessPage('home'))
+                    <a href="{{ route('user.index') }}" class="mobile-menu-link">
+                        <img src="{{ asset('/images/aside/open admin (2).png') }}" alt="" class="mobile-menu-link-icon">
+                        Open User
+                    </a>
+                @endif
                 @if ($canAccessPage('orders'))
                     <a href="{{ route('admin.orders.index') }}" class="mobile-menu-link">
                         <img src="{{ asset('/images/management/management.png') }}" alt=""
@@ -66,14 +73,18 @@
                         Open POS system
                     </a>
                 @endif
-                <a href="{{ route('admin.profile') }}" class="mobile-menu-link">
-                    <img src="{{ asset('/images/aside/edit profile.png') }}" alt="" class="mobile-menu-link-icon">
-                    My Profile
-                </a>
                 <a href="{{ route('admin.password.change') }}" class="mobile-menu-link">
                     <i class="bi bi-key"></i>
                     Change password
                 </a>
+                @if ($canAccessLoginSetup)
+                    @php $loginSetupActive = request()->is('login-settings', 'login-settings/*'); @endphp
+                    <a href="{{ route('login-settings.index') }}" class="mobile-menu-link {{ $loginSetupActive ? 'active' : '' }}">
+                        <img src="{{ asset('images/management/login_setup_active.png') }}" alt=""
+                            class="mobile-menu-link-icon">
+                        Login page setup
+                    </a>
+                @endif
                 <a href="/logout" class="mobile-menu-link mobile-menu-link-danger">
                     <img src="{{ asset('images/aside/logout.png') }}" alt="" class="mobile-menu-link-icon">
                     Log out
@@ -129,6 +140,14 @@
                 </a>
             @endif
         @endforeach
+
+        @php $profileActive = request()->is('admin/profile', 'admin/profile/*'); @endphp
+        <a href="{{ route('admin.profile') }}" class="mobile-bottom-nav-item {{ $profileActive ? 'active' : '' }}">
+            <span class="mobile-bottom-nav-icon">
+                <img src="{{ asset($profileActive ? '/images/aside/edit profile.png' : '/images/management/admin_profile.png') }}" alt="My Profile Icon">
+            </span>
+            <span class="mobile-bottom-nav-label">My Profile</span>
+        </a>
     </nav>
 @endunless
 
@@ -137,8 +156,10 @@
         <div class="sidebar-top">
             <div class="brand">
                 <div class="company-logo-box">
+                    <a href="{{ route('pos.index') }}" style="display:contents" aria-label="Go to dashboard">
                     <img src="{{ $companyLogoUrl }}" alt="Company Logo" class="company-logo-img"
                         onerror="this.onerror=null;this.src='{{ asset('images/default-company.png') }}';">
+                    </a>
                 </div>
             </div>
             {{-- <div class="brand-text">{{ $companyName }}</div> --}}
@@ -246,7 +267,9 @@ if ($isActive && !empty($item['icon_active'])) {
                 </button>
 
                 <div class="settings-menu">
-                    <a href="{{ route('user.index') }}" class="settings-link nav-link-mobile-close">Open User</a>
+                    @if ($canAccessPage('home'))
+                        <a href="{{ route('user.index') }}" class="settings-link nav-link-mobile-close">Open User</a>
+                    @endif
                     @if ($canAccessPage('orders'))
                         <a href="{{ route('admin.orders.index') }}" class="settings-link nav-link-mobile-close">Open
                             POS system</a>
@@ -255,6 +278,10 @@ if ($isActive && !empty($item['icon_active'])) {
                         Profile</a>
                     <a href="{{ route('admin.password.change') }}" class="settings-link nav-link-mobile-close">Change
                         password</a>
+                    @if ($canAccessLoginSetup)
+                        <a href="{{ route('login-settings.index') }}" class="settings-link nav-link-mobile-close">Login
+                            page setup</a>
+                    @endif
                     {{-- <a href="#" class="settings-link">Policy</a> --}}
                 </div>
             </div>
@@ -507,6 +534,12 @@ if ($isActive && !empty($item['icon_active'])) {
 
                 const willOpen = !group.classList.contains('open');
 
+                // Settings and the menu groups share the space: opening a
+                // group closes Settings, so the sidebar never needs to scroll.
+                if (willOpen && document.getElementById('settingsBox')?.classList.contains('open')) {
+                    document.getElementById('settingsBtn')?.click();
+                }
+
                 // Accordion behavior: only one submenu open at a time, so the
                 // sidebar's total height never grows enough to push/overlap
                 // the profile and settings area pinned at the bottom.
@@ -518,6 +551,18 @@ if ($isActive && !empty($item['icon_active'])) {
 
                 group.classList.toggle('open', willOpen);
                 setGroupOpen(group.dataset.navGroupKey, willOpen);
+            });
+        });
+
+        // ...and opening Settings closes the open menu group. Checked just
+        // after the click, once Settings' own handler has opened it.
+        document.getElementById('settingsBtn')?.addEventListener('click', function() {
+            setTimeout(function() {
+                if (!document.getElementById('settingsBox')?.classList.contains('open')) return;
+                document.querySelectorAll('.nav-group[data-nav-group-key].open').forEach(function(openGroup) {
+                    openGroup.classList.remove('open');
+                    setGroupOpen(openGroup.dataset.navGroupKey, false);
+                });
             });
         });
     })();

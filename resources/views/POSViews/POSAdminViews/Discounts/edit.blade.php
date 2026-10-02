@@ -3,7 +3,7 @@
 @section('backUrl', route('discounts.index'))
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/views/POSViews/POSAdminViews/Discounts/edit.css') }}">
+<link rel="stylesheet" href="{{ asset('css/views/POSViews/POSAdminViews/Discounts/edit.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSAdminViews/Discounts/edit.css')) }}">
 @endpush
 
 @section('content')

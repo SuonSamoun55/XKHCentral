@@ -55,6 +55,29 @@ class ItemVariantPosController extends Controller
         ]);
     }
 
+    /**
+     * Set or clear a variant's own price. Empty = sell at the product's price.
+     */
+    public function updatePrice(Request $request, $variantId)
+    {
+        $validated = $request->validate([
+            'price' => ['nullable', 'numeric', 'min:0', 'max:9999999999'],
+        ]);
+
+        $variant = ItemVariant::with('item')->whereHas('item', function ($q) {
+            $q->where('company_id', session('selected_company_id'));
+        })->findOrFail($variantId);
+
+        $variant->price = $validated['price'] ?? null;
+        $variant->save();
+
+        return response()->json([
+            'success' => true,
+            'price' => $variant->price,
+            'effective_price' => $variant->item->unitPriceFor($variant),
+        ]);
+    }
+
     public function manage()
     {
         $companyId = session('selected_company_id');

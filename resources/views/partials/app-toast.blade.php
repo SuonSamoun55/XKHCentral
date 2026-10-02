@@ -1,9 +1,4 @@
-{{--
-    Reusable toast notification — include once per page (after @push('styles')
-    has pulled in /css/shared/toast.css). Auto-fires from session('success'),
-    session('error'), and validation errors on page load; call
-    showAppToast(type, title, message) from your own JS for anything else.
---}}
+
 <div id="appToastWrap" class="app-toast-wrap"></div>
 
 <script>
