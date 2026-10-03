@@ -1,7 +1,7 @@
 @extends('Layout.POSAdmin.app')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSAdminViews/ApprovalEntries/index.css') }}">
+    <link rel="stylesheet" href="{{ asset('/css/views/POSViews/POSAdminViews/ApprovalEntries/index.css') }}?v={{ filemtime(public_path('css/views/POSViews/POSAdminViews/ApprovalEntries/index.css')) }}">
 @endpush
 
 @section('title', 'Approval Entries')

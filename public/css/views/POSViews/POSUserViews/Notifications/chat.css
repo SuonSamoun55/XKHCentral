@@ -1577,3 +1577,10 @@
         font-size: 16px;
     }
 }
+
+/* Keep the line breaks typed with Enter in the composer, so a multi-line
+   message shows on several lines instead of one run-on line. */
+.msg-bubble > div:not([class]) {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}

@@ -1150,16 +1150,8 @@
                     });
                 });
 
-                input?.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        sendPayload({
-                            message: input.value,
-                            imageFile: selectedImageFile,
-                            voiceFile: selectedVoiceFile
-                        });
-                    }
-                });
+                // Enter just creates a new line (same as the user chat) — only
+                // the Send button submits.
 
                 input?.addEventListener('input', autoGrowInput);
                 autoGrowInput();
@@ -1176,7 +1168,7 @@
                     if (imgThumb) imgThumb.src = URL.createObjectURL(file);
                     if (imgFileName) imgFileName.textContent = file.name;
                     imgPreviewBar?.classList.add('show');
-                    setHint('Image ready — press Send or Enter.');
+                    setHint('Image ready — press Send.');
                 });
 
                 removeImgBtn?.addEventListener('click', function() {

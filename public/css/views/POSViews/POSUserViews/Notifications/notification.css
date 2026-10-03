@@ -1,6 +1,3 @@
-* {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
 
 body {
     background-color: #f5f5f5;
@@ -1779,11 +1776,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         background: #ffffff;
         flex: 0 0 auto;
     }
-
-    /* Everything the user scrolls through (tab lists, cards, pagination)
-       lives inside .content-scroll. This is the ONLY part that scrolls;
-       the header group above stays put because it's a fixed-size flex
-       item, not because of position. */
     .content-scroll {
         display: flex;
         flex-direction: column;
@@ -1832,10 +1824,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         align-items: center;
         display: flex !important;
     }
-
-    /* Toggled ON by JS (filterUnreadMobile) when the unread switch is
-       checked. Needs equal-or-higher specificity than the !important
-       .mf-date display:flex rules above/below in order to win. */
     .mf-date.hidden {
         display: none !important;
     }
@@ -1858,10 +1846,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         overflow: visible;
         width: 100%;
     }
-
-    /* Only the active sub-tab's list renders; this attribute selector has
-       higher specificity than the plain .notification-list rule above, so
-       it reliably wins even though both use !important. */
     .notification-list[data-mobile-list] {
         display: none !important;
     }
@@ -1943,17 +1927,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     }
 }
 
-/* Narrow tablets (641px – 900px): the middle column repeated the title
-   that's already on the left ("Order Confirmed - …") and ran out of room
-   after "Order Confi". Show only the message there. */
 @media (min-width: 641px) and (max-width: 900px) {
     .row-center .desktop-subject,
     .row-center .desktop-separator {
         display: none;
     }
-
-    /* Desktop columns are 235px | message | 160px, which left the message
-       ~100px here. Tighter side columns give it about twice the room. */
     .table-row {
         grid-template-columns: 190px minmax(0, 1fr) 84px;
         gap: 10px;

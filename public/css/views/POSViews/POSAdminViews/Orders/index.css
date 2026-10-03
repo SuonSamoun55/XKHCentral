@@ -783,7 +783,7 @@
         background: #0ea5b7;
     }
 
-    @media (max-width: 768px){
+    @media (max-width: 1024px), (max-width: 1366px) and (orientation: portrait){
         .main-wrapper, .app-shell{
             height: 100%;
             max-height: 100%;

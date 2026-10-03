@@ -19,13 +19,12 @@ class StaffController extends Controller
     {
         $query = User::where('bc_customer_no', 'like', 'STAFF-%');
 
-        // Cross-company roles see/manage staff in every company; everyone
-        // else stays locked to their own.
-        if ($request->user()->canManageStaffAcrossCompanies()) {
-            return $query;
-        }
-
-        $companyId = $request->user()->company_id ?? session('selected_company_id');
+        // Cross-company roles see/manage staff in every company — or only the
+        // selected one, so a live company's list never shows its test copy's
+        // staff. Everyone else stays locked to their own.
+        $companyId = $request->user()->canManageStaffAcrossCompanies()
+            ? session('selected_company_id')
+            : ($request->user()->company_id ?? session('selected_company_id'));
 
         if ($companyId) {
             $query->where('company_id', $companyId);

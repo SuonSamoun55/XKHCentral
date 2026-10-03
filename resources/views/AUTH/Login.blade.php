@@ -19,7 +19,6 @@
             <div class="progress-step"></div>
             <div class="progress-step"></div>
             <div class="progress-step"></div>
-            <div class="progress-step"></div>
         </div>
         <div class="onboarding-slide slide-1 active">
             <div class="onboarding-card">
@@ -32,8 +31,10 @@
             <div class="onboarding-card">
                 <img src="{{ $loginSetting->mediaUrl('slide_1_image') }}" alt="login" class="onboarding-image">
                 <img src="{{ asset('images/pos/Fader.png') }}" alt="fader" class="onboarding-fader">
-                <h5>{{ $loginSetting->text('slide_1_title') }}</h5>
-                <p>{{ $loginSetting->text('slide_1_text') }}</p>
+                <div class="onboarding-text">
+                    <h5>{{ $loginSetting->text('slide_1_title') }}</h5>
+                    <p>{{ $loginSetting->text('slide_1_text') }}</p>
+                </div>
                 <button type="button" class="btn onboarding-btn next-btn">Next</button>
             </div>
         </div>
@@ -41,8 +42,10 @@
             <div class="onboarding-card">
                 <img src="{{ $loginSetting->mediaUrl('slide_2_image') }}" alt="login" class="onboarding-image">
                 <img src="{{ asset('images/pos/Fader.png') }}" alt="fader" class="onboarding-fader">
-                <h5>{{ $loginSetting->text('slide_2_title') }}</h5>
-                <p>{{ $loginSetting->text('slide_2_text') }}</p>
+                <div class="onboarding-text">
+                    <h5>{{ $loginSetting->text('slide_2_title') }}</h5>
+                    <p>{{ $loginSetting->text('slide_2_text') }}</p>
+                </div>
                 <button type="button" class="btn onboarding-btn next-btn">Next</button>
             </div>
         </div>
@@ -50,8 +53,10 @@
             <div class="onboarding-card">
                 <img src="{{ $loginSetting->mediaUrl('slide_3_image') }}" alt="login" class="onboarding-image">
                 <img src="{{ asset('images/pos/Fader.png') }}" alt="fader" class="onboarding-fader">
-                <h5>{{ $loginSetting->text('slide_3_title') }}</h5>
-                <p>{{ $loginSetting->text('slide_3_text') }}</p>
+                <div class="onboarding-text">
+                    <h5>{{ $loginSetting->text('slide_3_title') }}</h5>
+                    <p>{{ $loginSetting->text('slide_3_text') }}</p>
+                </div>
                 <button type="button" class="btn onboarding-btn next-btn" id="finalNextBtn">Next</button>
             </div>
         </div>

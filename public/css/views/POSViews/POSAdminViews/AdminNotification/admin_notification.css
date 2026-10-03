@@ -2856,3 +2856,12 @@ body.admin-notifications-page .content-area {
         left: 14px;
     }
 }
+
+/* Tablets (641–991px, sidebar open): the ≤991px block above strips the
+   panel padding for phones, which left the list touching the card edges
+   on tablets. Keep the desktop padding there; phones (≤640) keep theirs. */
+@media (min-width: 641px) and (max-width: 991px) {
+    #appShell .notification-wrapper {
+        padding: 16px 16px 0 16px;
+    }
+}

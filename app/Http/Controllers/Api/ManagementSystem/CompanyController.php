@@ -238,17 +238,19 @@ class CompanyController extends Controller
             }
         }
 
-        foreach ([
-            'api_scope',
-            'customers_endpoint',
-            'items_endpoint',
-            'item_variants_endpoint',
-            'sales_orders_endpoint',
-            'sales_order_lines_endpoint',
-            'sales_orders_by_number_endpoint',
-            'posted_sales_invoice_endpoint',
-            'posted_sales_invoice_lines_endpoint',
-        ] as $endpointField) {
+        foreach (
+            [
+                'api_scope',
+                'customers_endpoint',
+                'items_endpoint',
+                'item_variants_endpoint',
+                'sales_orders_endpoint',
+                'sales_order_lines_endpoint',
+                'sales_orders_by_number_endpoint',
+                'posted_sales_invoice_endpoint',
+                'posted_sales_invoice_lines_endpoint',
+            ] as $endpointField
+        ) {
             if ($request->has($endpointField)) {
                 $connectionData[$endpointField] = $validated[$endpointField] ?? null;
             }
@@ -349,12 +351,23 @@ class CompanyController extends Controller
                 ->with('error', 'Run "php artisan migrate" first to enable test companies.');
         }
 
+        if (!Schema::hasColumn('companies', 'staff_email_tag')) {
+            return redirect()->route('companies.index')
+                ->with('error', 'Run "php artisan migrate" first to enable copying staff into test companies.');
+        }
+
+        $request->merge(['staff_email_tag' => trim((string) $request->input('staff_email_tag'))]);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            // Empty = don't copy staff; they can be added to the test company by hand.
+            'staff_email_tag' => ['nullable', 'string', 'max:20', 'regex:/^[A-Za-z0-9._-]+$/'],
+        ], [
+            'staff_email_tag.regex' => 'The staff email tag may only contain letters, numbers, ".", "-" and "_".',
         ]);
 
         try {
-            $clone = $cloner->clone($source, ['name' => $validated['name']]);
+            $clone = $cloner->clone($source, $validated);
         } catch (\Throwable $e) {
             report($e);
 
@@ -363,7 +376,8 @@ class CompanyController extends Controller
         }
 
         return redirect()->route('companies.index')
-            ->with('success', 'Test company "' . $clone->name . '" created with its setup, roles and items.');
+            ->with('success', 'Test company "' . $clone->name . '" created with its setup, roles'
+                . (filled($validated['staff_email_tag'] ?? null) ? ', staff' : '') . ' and items.');
     }
 
     public function destroy($id)
@@ -408,8 +422,10 @@ class CompanyController extends Controller
 
         DB::transaction(function () use ($company, $disk) {
             $users = User::where('company_id', $company->id);
-            foreach ((clone $users)->whereNotNull('profile_image')->pluck('profile_image') as $path) {
-                $disk->delete($path);
+            foreach (['profile_image', 'avatar'] as $fileColumn) {
+                foreach ((clone $users)->whereNotNull($fileColumn)->pluck($fileColumn) as $path) {
+                    $disk->delete($path);
+                }
             }
 
             $reportLogo = DB::table('report_settings')->where('company_id', $company->id)->value('logo');

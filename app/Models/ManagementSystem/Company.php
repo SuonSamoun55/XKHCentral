@@ -24,6 +24,7 @@ class Company extends Model
         'is_active',
         'is_test',
         'cloned_from_id',
+        'staff_email_tag',
     ];
 
     protected $casts = [

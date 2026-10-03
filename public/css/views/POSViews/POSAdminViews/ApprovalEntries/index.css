@@ -594,7 +594,7 @@
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .pagelist-page .page-head {
         margin-bottom: 4px;
     }

@@ -711,6 +711,10 @@
     color: #1C2622;
 }
 
+.clone-summary-col li[hidden] {
+    display: none;
+}
+
 .clone-summary-col li i {
     color: #12958E;
 }

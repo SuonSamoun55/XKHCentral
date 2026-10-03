@@ -18,10 +18,10 @@
                 </div>
             @endif
 
-            @if (session('error'))
+            @if (session('error') || $errors->any())
                 <div class="custom-alert alert-danger">
                     <i class="bi bi-exclamation-triangle-fill"></i>
-                    <span>{{ session('error') }}</span>
+                    <span>{{ session('error') ?? $errors->first() }}</span>
                 </div>
             @endif
         </div>
@@ -209,12 +209,21 @@
                 <input type="text" name="name" id="cloneName" required maxlength="255">
             </label>
 
+            <label class="clone-field">
+                <span>Staff email tag (optional)</span>
+                <input type="text" name="staff_email_tag" id="cloneStaffTag" maxlength="20"
+                    pattern="[A-Za-z0-9._\-]+" placeholder="e.g. .xkh"
+                    title="Letters, numbers, &quot;.&quot;, &quot;-&quot; and &quot;_&quot; only">
+                <p class="clone-note" id="cloneStaffTagNote"></p>
+            </label>
+
             <div class="clone-summary">
                 <div class="clone-summary-col">
                     <span class="clone-group-label">Copied</span>
                     <ul>
                         <li><i class="bi bi-check-lg"></i> Company setup</li>
                         <li><i class="bi bi-check-lg"></i> Roles</li>
+                        <li id="cloneStaffCopied"><i class="bi bi-check-lg"></i> Staff (new emails)</li>
                         <li><i class="bi bi-check-lg"></i> Items &amp; stock</li>
                     </ul>
                 </div>
@@ -222,7 +231,7 @@
                     <span class="clone-group-label">Not copied</span>
                     <ul>
                         <li><i class="bi bi-x-lg"></i> Customers</li>
-                        <li><i class="bi bi-x-lg"></i> Staff</li>
+                        <li id="cloneStaffSkipped"><i class="bi bi-x-lg"></i> Staff</li>
                         <li><i class="bi bi-x-lg"></i> Orders &amp; carts</li>
                     </ul>
                 </div>
@@ -317,7 +326,23 @@
                 const titleEl = document.getElementById('cloneTitle');
                 const nameInput = document.getElementById('cloneName');
                 const submitBtn = document.getElementById('cloneSubmit');
+                const tagInput = document.getElementById('cloneStaffTag');
+                const tagNote = document.getElementById('cloneStaffTagNote');
+                const staffCopied = document.getElementById('cloneStaffCopied');
+                const staffSkipped = document.getElementById('cloneStaffSkipped');
                 if (!overlay || !form) return;
+
+                // Empty tag = staff aren't copied; with a tag they're copied as separate test accounts.
+                function updateTagPreview() {
+                    const tag = tagInput.value.trim();
+                    staffCopied.hidden = !tag;
+                    staffSkipped.hidden = !!tag;
+                    tagNote.innerHTML = tag ?
+                        'Staff are copied as separate test accounts: <b>admin@gmail.com</b> &rarr; <b></b>' :
+                        'Leave empty to skip staff &mdash; add test staff yourself later.';
+                    if (tag) tagNote.querySelector('b:last-child').textContent = 'admin' + tag + '@gmail.com';
+                }
+                tagInput.addEventListener('input', updateTagPreview);
 
                 function closeModal() {
                     overlay.classList.remove('show');
@@ -329,7 +354,9 @@
                         titleEl.textContent = 'Clone ' + trigger.dataset.label;
                         // Cloning a test company: don't stack a second "(Test)".
                         form.reset(); // back to the default choices each time
-                        nameInput.value = trigger.dataset.label.replace(/(\s*\(test\))+\s*$/i, '') + ' (Test)';                        submitBtn.disabled = false;
+                        nameInput.value = trigger.dataset.label.replace(/(\s*\(test\))+\s*$/i, '') + ' (Test)';
+                        updateTagPreview();
+                        submitBtn.disabled = false;
                         submitBtn.textContent = 'Create test company';
                         overlay.classList.add('show');
                         nameInput.focus();

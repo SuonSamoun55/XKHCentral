@@ -297,45 +297,54 @@ body {
         text-align: center;
     }
 
-    .onboarding-slide.slide-2 h5,
-    .onboarding-slide.slide-3 h5,
-    .onboarding-slide.slide-4 h5 {
+    /* Title + text stacked in one box that grows upward from above the
+       progress bar, so a title that wraps pushes the text instead of
+       overlapping it. Bottom of the slide, from the bottom up:
+       Next button (60px + 52px) -> progress bar (130px) -> this box (150px). */
+    .onboarding-text {
         position: absolute;
-        bottom: 180px;
+        bottom: 150px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 10;
+        width: 85%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
         color: white;
         text-align: center;
-        font-weight: 700;
-        font-size: 22px;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-        margin: 0;
-        width: 80%;
     }
 
-    .onboarding-slide.slide-2 p,
-    .onboarding-slide.slide-3 p,
-    .onboarding-slide.slide-4 p {
-        position: absolute;
-        bottom: 145px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 10;
-        color: white;
-        text-align: center;
+    /* Slide texts are editable in Login Settings (up to 120 / 500 chars);
+       cap the lines so long text can't climb over the whole image. */
+    .onboarding-text h5,
+    .onboarding-text p {
+        margin: 0;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .onboarding-text h5 {
+        font-weight: 700;
+        font-size: 22px;
+        line-height: 1.25;
+        -webkit-line-clamp: 2;
+    }
+
+    .onboarding-text p {
         font-weight: 500;
         font-size: 14px;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-        margin: 0;
-        width: 85%;
+        line-height: 1.45;
+        -webkit-line-clamp: 4;
     }
 
     .onboarding-progress-container {
         position: absolute;
         left: 0;
+        bottom: 130px;
         width: 100%;
-        margin-top: 158%;
         height: 5px;
         display: flex;
         justify-content: center;
@@ -445,7 +454,8 @@ body {
     }
 
     .login-shell {
-        background: white;
+        /* Transparent so the full-screen background image shows through. */
+        background: transparent;
         width: 100%;
         min-height: 100vh;
         /* FIX: was height:100vh, which trapped the layout
@@ -459,26 +469,42 @@ body {
 
     /* 2. Top Teal Section (The Wave) */
     /* Hide the video on mobile to match the image exactly */
-    .login-left video {
+    .login-left {
         display: none;
     }
 
+    /* The mobile image fills the whole screen behind the form. Fixed, so it
+       stays put when the keyboard opens and the page scrolls. */
     .login-form-image {
         display: block;
+        position: fixed;
+        inset: 0;
         width: 100%;
-        height: 350px;
+        height: 100%;
         object-fit: cover;
-        /* margin-bottom: 0px; */
+        z-index: -1;
     }
 
-    /* 3. The White Floating Card */
+    /* 3. The form card, sitting at the bottom over the background image */
     .login-right {
         width: 100%;
-        margin-top: -350px;
-        /* Pulls the card up into the teal area */
+        height: auto;
+        min-height: 100vh;
         z-index: 2;
         background: transparent;
         padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: stretch;
+    }
+
+    .login-form-box {
+        max-width: none;
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 18px;
+        padding: 24px 20px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
     }
 
     /* 4. Form Elements (Minimalist lines) */

@@ -8,16 +8,23 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use RuntimeException;
 use Throwable;
 
 /**
- * Copies a company's setup (roles included) and items into a new "test"
- * company.
+ * Copies a company's setup (roles included), staff and items into a new
+ * "test" company.
  *
- * No user accounts are copied — neither customers nor staff — and so neither
- * is anything that belongs to one (orders, carts, favorites, notifications,
- * chat): copies of those would have to point at the real accounts, and some
- * customer screens don't filter by company, so real users would see test data.
+ * Staff are copied only when a staff email tag is given, as new, separate
+ * accounts pinned to the test company, with the tag added to their email
+ * (admin@gmail.com + "xkh" -> adminxkh@gmail.com, + ".xkh" -> admin.xkh@gmail.com) so each
+ * login reaches exactly one company. Editing or deleting a test staff account
+ * never touches the live one, and the other way round.
+ *
+ * Customers are not copied, and neither is anything that belongs to a user
+ * (orders, carts, favorites, notifications, chat): copies of those would have
+ * to point at the real accounts, and some customer screens don't filter by
+ * company, so real users would see test data.
  *
  * Rows are copied column-for-column with the query builder (not Eloquent),
  * so columns added later are cloned automatically. Foreign keys pointing at
@@ -41,17 +48,21 @@ class CompanyCloneService
     private string $testTag;
 
     /**
-     * @param array{name: string} $options
+     * @param array{name: string, staff_email_tag?: ?string} $options staff are copied only when a tag is given
      */
     public function clone(Company $source, array $options): Company
     {
         $this->map = [];
         $this->copiedFiles = [];
+        $staffEmailTag = filled($options['staff_email_tag'] ?? null) ? $options['staff_email_tag'] : null;
 
         try {
-            return DB::transaction(function () use ($source, $options) {
-                $this->cloneCompany($source, $options['name']);
+            return DB::transaction(function () use ($source, $options, $staffEmailTag) {
+                $this->cloneCompany($source, $options['name'], $staffEmailTag);
                 $this->cloneSetup($source->id);
+                if ($staffEmailTag !== null) {
+                    $this->cloneStaff($source, $staffEmailTag);
+                }
                 $this->cloneItems($source->id);
 
                 return Company::findOrFail($this->newCompanyId);
@@ -65,13 +76,16 @@ class CompanyCloneService
         }
     }
 
-    private function cloneCompany(Company $source, string $name): void
+    private function cloneCompany(Company $source, string $name, ?string $staffEmailTag): void
     {
-        $this->copyRows('companies', DB::table('companies')->where('id', $source->id), [], function (array $row) use ($name, $source) {
+        $this->copyRows('companies', DB::table('companies')->where('id', $source->id), [], function (array $row) use ($name, $source, $staffEmailTag) {
             $row['name'] = $name;
             $row['display_name'] = $name;
             $row['is_test'] = true;
             $row['cloned_from_id'] = $source->id;
+            if (array_key_exists('staff_email_tag', $row)) {
+                $row['staff_email_tag'] = $staffEmailTag;
+            }
             // The clone is a new company: it's created now, not when the source was.
             $row['created_at'] = $row['updated_at'] = now();
 
@@ -124,6 +138,64 @@ class CompanyCloneService
 
             return $row;
         });
+    }
+
+    /**
+     * Copy the company's staff as new accounts of the test company. Each gets
+     * a tagged email, its own staff code and its own copy of its photo, and
+     * keeps its password so it signs in the same way as the live account.
+     */
+    private function cloneStaff(Company $source, string $tag): void
+    {
+        $staff = $this->scoped('users', $source->id)->where('bc_customer_no', 'like', 'STAFF-%');
+
+        // When cloning a test company, swap its tag instead of stacking a second one.
+        $sourceTag = $source->is_test ? $source->staff_email_tag : null;
+
+        $emails = [];
+        foreach ((clone $staff)->whereNotNull('email')->pluck('email') as $email) {
+            $emails[$email] = $this->taggedEmail($email, $tag, $sourceTag);
+        }
+
+        $taken = DB::table('users')->whereIn('email', array_values($emails))->pluck('email');
+        if ($taken->isNotEmpty()) {
+            throw new RuntimeException(
+                'these staff emails are already in use: ' . $taken->implode(', ') . '. Use a different email tag.'
+            );
+        }
+
+        $this->copyRows('users', $staff, ['role_id' => 'roles'], function (array $row) use ($emails) {
+            if ($row['email'] !== null) {
+                $row['email'] = $emails[$row['email']];
+            }
+            $row['bc_customer_no'] = 'STAFF-' . strtoupper(Str::random(10));
+            $row['last_company_id'] = null;
+            $row['remember_token'] = null;
+            $row['last_seen_at'] = null;
+            $row['created_at'] = $row['updated_at'] = now();
+
+            foreach (['profile_image', 'avatar'] as $fileColumn) {
+                if (array_key_exists($fileColumn, $row)) {
+                    $row[$fileColumn] = $this->copyFile($row[$fileColumn]);
+                }
+            }
+
+            return $row;
+        });
+    }
+
+    /** The tag is added exactly as typed: admin@gmail.com + ".xkh" -> admin.xkh@gmail.com, + "xkh" -> adminxkh@gmail.com. A trailing $sourceTag is swapped out first. */
+    private function taggedEmail(string $email, string $tag, ?string $sourceTag): string
+    {
+        $at = strrpos($email, '@');
+        $local = $at === false ? $email : substr($email, 0, $at);
+        $domain = $at === false ? '' : substr($email, $at);
+
+        if (filled($sourceTag)) {
+            $local = preg_replace('/' . preg_quote($sourceTag, '/') . '$/i', '', $local);
+        }
+
+        return $local . $tag . $domain;
     }
 
     private function cloneItems(int $sourceId): void

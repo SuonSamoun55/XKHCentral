@@ -1071,3 +1071,55 @@
         display: none !important;
     }
 }
+
+/* ── Mid tablets (769–900px, e.g. Galaxy Tab S7 at 800px): Approval Order,
+   Approval Entries and Discounts keep their compact card layout up to
+   900px (their tables don't fit beside the sidebar), so give those pages
+   the same white panel + title as above. Other pages keep their own
+   desktop layout at this width. ── */
+@media (min-width: 769px) and (max-width: 900px) {
+    body .main-wrapper.app-shell > .content-wrapper:has(.approval-table, .discount-table, .pagelist-page .page-head-row) {
+        height: 100vh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        background: #fff;
+        border-radius: 12px;
+        padding: 16px !important;
+    }
+
+    body .content-wrapper .approval-title,
+    body .content-wrapper .pagelist-page:has(.page-head-row) h1,
+    body .content-wrapper:has(.discount-table) .page-title {
+        display: block !important;
+        font-size: 22px !important;
+        font-weight: 700;
+        color: #3BACB4;
+        margin: 0 0 12px !important;
+    }
+
+    body .content-wrapper:has(.discount-table) .mobile-page-header {
+        display: none !important;
+    }
+}
+
+/* Approval Order keeps its order cards on every tablet (up to 1024px, or
+   portrait up to 1366px like iPad Pro 13") — same white panel + title. */
+@media (min-width: 901px) and (max-width: 1024px),
+       (min-width: 1025px) and (max-width: 1366px) and (orientation: portrait) {
+    body .main-wrapper.app-shell > .content-wrapper:has(.approval-table) {
+        height: 100vh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        background: #fff;
+        border-radius: 12px;
+        padding: 16px !important;
+    }
+
+    body .content-wrapper .approval-title {
+        display: block !important;
+        font-size: 22px !important;
+        font-weight: 700;
+        color: #3BACB4;
+        margin: 0 0 12px !important;
+    }
+}
